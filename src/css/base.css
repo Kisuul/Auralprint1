@@ -1,0 +1,85 @@
+@import "./panels.css";
+@import "./audio-panel.css";
+@import "./queue-panel.css";
+@import "./sim-panel.css";
+@import "./bands-panel.css";
+@import "./record-panel.css";
+
+    :root {
+      --ui-panel-bg: rgba(0,0,0,0.72);
+      --ui-panel-blur: 6px;
+      --ui-pad: 10px;
+      --ui-gap: 10px;
+      --ui-radius: 10px;
+      --ui-font: system-ui, sans-serif;
+
+      /* Two-row audio panel clearance. Value is derived, not guessed:
+         --ui-audio-h = pad(10) + scrubber(36) + gap(10) + --ui-icon(40) + pad(10) = 106px.
+         #audioPanel uses grid-template-rows: 36px var(--ui-icon) (scrubber row first).
+         Side panels and #queuePanel use this for their bottom clearance anchor.
+         setCssVarsFromConfig() overrides this at boot from CONFIG.ui.audioPanelHeightPx. */
+      --ui-audio-h: 106px;
+      --ui-queue-clearance: calc(var(--ui-audio-h) + var(--ui-gap));
+      --ui-icon: 40px;
+
+      /* Build 113 recording UI placement hooks.
+         The dedicated record panel/launcher reads these directly. */
+      --ui-record-panel-left: auto;
+      --ui-record-panel-right: calc(var(--ui-pad) + var(--ui-safe-r));
+      --ui-record-panel-top: auto;
+      --ui-record-panel-bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-queue-clearance));
+      --ui-record-launcher-left: auto;
+      --ui-record-launcher-right: calc(var(--ui-pad) + var(--ui-safe-r));
+      --ui-record-launcher-top: auto;
+      --ui-record-launcher-bottom: calc(var(--ui-pad) + var(--ui-safe-b));
+      --ui-record-launcher-pulse-period: 1400ms;
+      --ui-record-launcher-pulse-scale-min: 1;
+      --ui-record-launcher-pulse-scale-max: 1.08;
+      --ui-record-launcher-pulse-opacity-min: 0.78;
+      --ui-record-launcher-pulse-opacity-max: 1;
+      --ui-record-launcher-rest-opacity: 0.96;
+      --ui-record-launcher-border-color: rgba(255,255,255,0.22);
+      --ui-record-launcher-shadow: 0 8px 18px rgba(0,0,0,0.28);
+      --ui-record-panel-shadow-recording: 0 0 0 1px rgba(255, 112, 112, 0.28), 0 12px 24px rgba(0,0,0,0.24);
+      --ui-record-panel-shadow-finalizing: 0 0 0 1px rgba(255, 214, 102, 0.26), 0 12px 24px rgba(0,0,0,0.24);
+      --ui-record-panel-shadow-complete: 0 0 0 1px rgba(134, 255, 196, 0.22), 0 12px 24px rgba(0,0,0,0.24);
+      --ui-record-panel-shadow-error: 0 0 0 1px rgba(255, 118, 118, 0.34), 0 12px 24px rgba(0,0,0,0.24);
+
+      --ui-safe-b: env(safe-area-inset-bottom, 0px);
+      --ui-safe-r: env(safe-area-inset-right, 0px);
+      --ui-safe-l: env(safe-area-inset-left, 0px);
+      --ui-safe-t: env(safe-area-inset-top, 0px);
+
+      /* Shared focus styling for interactive controls on dark translucent UI. */
+      --ui-focus-ring-color: rgba(125, 213, 255, 0.95);
+      --ui-focus-ring-glow: rgba(125, 213, 255, 0.28);
+      --ui-focus-ring-width: 2px;
+      --ui-focus-ring-offset: 2px;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: var(--ui-font);
+      overflow: hidden;
+    }
+
+	#c {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		display: block;
+	}
+    button, select { cursor: pointer; font: inherit; }
+    input[type="range"] { width: 260px; }
+    input[type="color"] {
+      width: 44px;
+      height: 26px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }

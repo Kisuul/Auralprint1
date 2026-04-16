@@ -1,0 +1,229 @@
+    .panel {
+		background: var(--ui-panel-bg);
+		backdrop-filter: blur(var(--ui-panel-blur));
+		border-radius: var(--ui-radius);
+		box-sizing: border-box;
+    }
+
+    button, select { cursor: pointer; font: inherit; }
+    input[type="range"] { width: 260px; }
+
+    .muted {
+      opacity: 0.85;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sectionTitle { margin: 10px 0 6px; font-size: 12px; opacity: 0.75; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 160px 1fr 140px;
+      gap: 10px;
+      align-items: center;
+      margin: 6px 0;
+    }
+
+    .val {
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      opacity: 0.85;
+      justify-self: end;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Launchers shown when panels are hidden */
+    .launcher {
+      position: fixed;
+      width: var(--ui-icon);
+      height: var(--ui-icon);
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      z-index: 40;
+      user-select: none;
+    }
+
+    #openAudio { left: calc(var(--ui-pad) + var(--ui-safe-l)); bottom: calc(var(--ui-pad) + var(--ui-safe-b)); }
+    #openSim { left: calc(var(--ui-pad) + var(--ui-safe-l)); top: calc(var(--ui-pad) + var(--ui-safe-t)); }
+    #openBands { right: calc(var(--ui-pad) + var(--ui-safe-r)); top: calc(var(--ui-pad) + var(--ui-safe-t)); }
+    .launcher button {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--ui-panel-bg);
+      backdrop-filter: blur(var(--ui-panel-blur));
+      border: none;
+      color: #fff;
+      font-size: 18px;
+    }
+    /* Responsive panel layout on <=980px: clamp #bandsPanel/#simPanel widths to viewport-safe bounds,
+       and anchor #bandsPanel to the left edge (clear right anchor) so both side panels share alignment. */
+    @media (max-width: 980px) {
+      #bandsPanel { width: min(520px, calc(100vw - 2 * var(--ui-pad))); left: calc(var(--ui-pad) + var(--ui-safe-l)); right: auto; }
+      #simPanel { width: min(520px, calc(100vw - 2 * var(--ui-pad))); }
+    }
+
+    @media (max-width: 920px) {
+      #bandTable {
+        grid-template-columns: 30px minmax(86px, 1fr) minmax(72px, 1fr) minmax(74px, 0.9fr);
+        gap: 6px 8px;
+      }
+
+      .bandRange {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bandBar {
+        min-width: 72px;
+      }
+
+      #recordPanel .recordRow {
+        grid-template-columns: 1fr;
+      }
+
+      #recordPanel .recordActions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      #recordPanel .recordTimerBlock,
+      #recordPanel .recordInlineValue,
+      #recordPanel .recordRow .val {
+        justify-self: start;
+      }
+    }
+    /* First-run hint: visible until audio is loaded */
+    #loadHint {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.6s ease;
+    }
+    #loadHint.hidden { opacity: 0; }
+    #loadHint .hint-title {
+      font-size: clamp(18px, 3vw, 28px);
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      opacity: 0.45;
+      text-transform: uppercase;
+    }
+    #loadHint .hint-sub {
+      font-size: clamp(12px, 1.5vw, 15px);
+      opacity: 0.25;
+      letter-spacing: 0.08em;
+    }
+    /* Z-index stack for all fixed panels (documented once, here):
+         canvas    : 0  (no z-index; sits behind everything)
+         loadHint  : 10 (full-screen hint overlay; below all UI)
+         audioPanel: 20 (bottom transport bar)
+         queuePanel: 25 (floats above audio panel; below side config panels)
+         recordPanel: 26 (dedicated recording panel; above queue, below side panels)
+         simPanel  : 30 (left config panel)
+         bandsPanel: 30 (right config panel)
+         launchers : 40 (always reachable; must clear all panels)
+    */
+
+    /* Queue panel — floats above the audio panel, full-width like audio panel.
+       Bottom offset is derived from audio dock height + one intentional gap. */
+    #queuePanel {
+      position: fixed;
+      left: calc(var(--ui-pad) + var(--ui-safe-l));
+      right: calc(var(--ui-pad) + var(--ui-safe-r));
+      bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-queue-clearance));
+      max-height: 240px;
+      overflow-y: auto;
+      padding: var(--ui-pad);
+      z-index: 25;
+    }
+
+    #queuePanel .queue-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    #queuePanel .queue-title {
+      font-size: 12px;
+      opacity: 0.75;
+      flex: 1;
+    }
+
+    /* Each queue item row: index | filename | remove button */
+    .queue-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .queue-item:hover { background: rgba(255,255,255,0.07); }
+    .queue-item.active { background: rgba(255,255,255,0.12); }
+    .queue-item .q-idx {
+      font-size: 11px;
+      opacity: 0.55;
+      text-align: right;
+      user-select: none;
+    }
+    .queue-item .q-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 0.9;
+    }
+    .queue-item.active .q-name { opacity: 1.0; }
+    .queue-item .q-remove {
+      font-size: 11px;
+      opacity: 0.4;
+      padding: 2px 6px;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 4px;
+      background: none;
+      border: none;
+      color: inherit;
+    }
+    .queue-item .q-remove:hover { opacity: 0.9; background: rgba(255,80,80,0.2); }
+
+    /* Queue row keyboard focus visibility (112): row is now an explicit activator. */
+    .queue-item:focus-visible {
+      outline: var(--ui-focus-ring-width) solid var(--ui-focus-ring-color);
+      outline-offset: var(--ui-focus-ring-offset);
+      box-shadow: 0 0 0 4px var(--ui-focus-ring-glow);
+    }
+
+    /* Shared focus visibility framework (112) for current interactive controls. */
+    button:focus-visible,
+    select:focus-visible,
+    input[type="range"]:focus-visible,
+    input[type="checkbox"]:focus-visible,
+    input[type="color"]:focus-visible,
+    .queue-item .q-remove:focus-visible {
+      outline: var(--ui-focus-ring-width) solid var(--ui-focus-ring-color);
+      outline-offset: var(--ui-focus-ring-offset);
+      box-shadow: 0 0 0 4px var(--ui-focus-ring-glow);
+    }
+
+    /* Prevent duplicate rings where :focus-visible is supported. */
+    button:focus:not(:focus-visible),
+    select:focus:not(:focus-visible),
+    input[type="range"]:focus:not(:focus-visible),
+    input[type="checkbox"]:focus:not(:focus-visible),
+    input[type="color"]:focus:not(:focus-visible) {
+      outline: none;
+      box-shadow: none;
+    }

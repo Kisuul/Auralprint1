@@ -1,0 +1,111 @@
+import { clamp } from "./core/utils.js";
+import { TAU } from "./core/constants.js";
+import { CONFIG } from "./core/config.js";
+import { runtime, resolveSettings } from "./core/preferences.js";
+import { state } from "./core/state.js";
+import { resizeCanvasToDisplaySize } from "./core/spaces.js";
+import { UrlPreset } from "./presets/url-preset.js";
+import { BandBankController } from "./audio/band-bank-controller.js";
+import { AudioEngine } from "./audio/audio-engine.js";
+import { Scrubber } from "./audio/scrubber.js";
+import { Renderer } from "./render/renderer.js";
+import { RecorderEngine } from "./recording/recorder-engine.js";
+import { UI } from "./ui/ui.js";
+import { initOrbs, getBandForOrb } from "./render/orb-runtime.js";
+
+/* =============================================================================
+   Boot / loop
+   ========================================================================== */
+let lastBandSnapshot = null;
+
+function onAnimationFrame(tsMs) {
+  requestAnimationFrame(onAnimationFrame);
+
+  resizeCanvasToDisplaySize();
+
+  if (state.time.lastTimestampMs === null) {
+    state.time.lastTimestampMs = tsMs;
+    return;
+  }
+
+  const dtSecRaw = (tsMs - state.time.lastTimestampMs) / 1000;
+  state.time.lastTimestampMs = tsMs;
+
+  // Integrate with real frame time, but cap to a single "slow frame" (~33 ms)
+  // so tab-switch or GC spikes can't cause huge jumps. Normal 60/120 Hz frames
+  // stay untouched, lower bound remains 0, and downstream emit overflow guards stay valid.
+  const dtSec = clamp(dtSecRaw, 0, runtime.settings.timing.maxDeltaTimeSec);
+  const nowSec = performance.now() / 1000;
+
+  lastBandSnapshot = AudioEngine.sample();
+  const bandC = (lastBandSnapshot && lastBandSnapshot.ready) ? lastBandSnapshot.bands.C : null;
+
+  // Ring phase:
+  // - orb: lock to carrier orb angle (coherent)
+  // - free: integrate a ring angular velocity independent of the orb
+  const o = runtime.settings.bands.overlay;
+  if (o.phaseMode === "orb") {
+    state.bands.ringPhaseRad = (state.orbs.length ? state.orbs[0].angleRad : state.bands.ringPhaseRad);
+  } else {
+    state.bands.ringPhaseRad = ((state.bands.ringPhaseRad + o.ringSpeedRadPerSec * dtSec) % TAU + TAU) % TAU;
+  }
+
+  if (!state.time.simPaused) {
+    for (const orb of state.orbs) {
+      const selection = (lastBandSnapshot && lastBandSnapshot.ready)
+        ? getBandForOrb(orb, lastBandSnapshot)
+        : null;
+      const orbBand = selection ? selection.band : null;
+      const energyOverride01 = selection ? selection.energyOverride01 : null;
+      orb.step(dtSec, nowSec, orbBand, energyOverride01);
+    }
+  }
+
+  Renderer.renderFrame(nowSec, bandC);
+  UI.refreshAllUiText(lastBandSnapshot);
+  Scrubber.draw(); // update playhead position every frame
+}
+
+function main() {
+  UI.setCssVarsFromConfig();
+
+  state.canvas = document.getElementById("c");
+  state.ctx = state.canvas.getContext("2d", { alpha: false });
+
+  resolveSettings();
+  UrlPreset.applyFromLocationHash();
+  resolveSettings();
+
+  BandBankController.syncFromSettings();
+  BandBankController.rebuildNow();
+  initOrbs();
+
+  // RecorderEngine bootstraps against read-only app seams only.
+  RecorderEngine.init({
+    config: CONFIG.recording,
+    stateRef: state.recording,
+    // Renderer owns the canonical display canvas. Recording reads it through
+    // a tap descriptor only; it does not create an alternate render path.
+    getRenderTap: Renderer.getRecorderTap,
+    // Delegate to AudioEngine's canonical tap interface.
+    // This returns { isLoaded, isPlaying, filename, ensureStream(), releaseStream() }.
+    // ensureStream() creates a passive MediaStreamDestination branched from outputGain,
+    // which captures playback audio without altering the outputGain → destination path.
+    getAudioTap: () => AudioEngine.getRecorderTap(),
+  });
+
+  UI.wireControls();
+  UI.applyPrefs(null); // null = silent boot; no "Updated: boot" toast on first load
+  UI.refreshRecordingUi();
+
+  Scrubber.init(document.getElementById("scrubberCanvas"));
+
+  resizeCanvasToDisplaySize();
+  window.addEventListener("resize", resizeCanvasToDisplaySize);
+
+  requestAnimationFrame(onAnimationFrame);
+}
+
+main();
+
+export { onAnimationFrame, main };

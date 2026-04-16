@@ -1,0 +1,134 @@
+    /* Build 113 recording panel.
+       Ownership: dedicated recording/export UI only.
+       It must not share controls with #audioPanel. */
+    #recordPanel {
+      position: fixed;
+      left: var(--ui-record-panel-left);
+      right: var(--ui-record-panel-right);
+      top: var(--ui-record-panel-top);
+      bottom: var(--ui-record-panel-bottom);
+      width: auto;
+      max-width: calc(100vw - 2 * var(--ui-pad));
+      min-width: 0;
+      padding: var(--ui-pad);
+      overflow: auto;
+      z-index: 26;
+    }
+
+    #recordPanel[data-recording-phase="recording"] {
+      box-shadow: var(--ui-record-panel-shadow-recording);
+    }
+
+    #recordPanel[data-recording-phase="finalizing"] {
+      box-shadow: var(--ui-record-panel-shadow-finalizing);
+    }
+
+    #recordPanel[data-recording-phase="complete"] {
+      box-shadow: var(--ui-record-panel-shadow-complete);
+    }
+
+    #recordPanel[data-recording-phase="error"] {
+      box-shadow: var(--ui-record-panel-shadow-error);
+    }
+
+    #recordPanel .recordHeader {
+      display: flex;
+      gap: var(--ui-gap);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #recordPanel .recordHeaderText {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    #recordPanel .recordHeaderText .sectionTitle {
+      margin: 0 0 var(--ui-gap);
+    }
+
+    #recordPanel .recordTimerBlock {
+      display: grid;
+      justify-items: end;
+      min-width: 0;
+    }
+
+    #recordPanel .recordTimerLabel {
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    #recordPanel .recordActions {
+      display: flex;
+      gap: var(--ui-gap);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #recordPanel .recordRow { min-width: 0; }
+
+    #recordPanel .recordFieldLabel {
+      min-width: 0;
+    }
+
+    #recordPanel .recordInlineValue {
+      justify-self: end;
+    }
+
+    #recordPanel .recordSelect {
+      width: 100%;
+      min-width: 0;
+    }
+
+    #recordPanel .recordCheckbox {
+      justify-self: start;
+    }
+
+    #recordPanel .recordExportMeta,
+    #recordPanel .recordSettingsNote {
+      margin-top: var(--ui-gap);
+      white-space: normal;
+      line-height: 1.35;
+    }
+
+    #recordPanel .recordCopy {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.35;
+    }
+
+    #openRecord {
+      left: var(--ui-record-launcher-left);
+      right: var(--ui-record-launcher-right);
+      top: var(--ui-record-launcher-top);
+      bottom: var(--ui-record-launcher-bottom);
+    }
+
+    /* Canonical recording launcher: same launcher family, dedicated camera identity. */
+    #openRecord button {
+      border: 1px solid var(--ui-record-launcher-border-color);
+      box-shadow: var(--ui-record-launcher-shadow);
+      opacity: var(--ui-record-launcher-rest-opacity);
+    }
+    @keyframes recordLauncherPulse {
+      0%, 100% {
+        transform: scale(var(--ui-record-launcher-pulse-scale-min));
+        opacity: var(--ui-record-launcher-pulse-opacity-min);
+      }
+      50% {
+        transform: scale(var(--ui-record-launcher-pulse-scale-max));
+        opacity: var(--ui-record-launcher-pulse-opacity-max);
+      }
+    }
+
+    #openRecord.is-recording button {
+      animation: recordLauncherPulse var(--ui-record-launcher-pulse-period) ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #openRecord.is-recording button {
+        animation: none;
+      }
+    }

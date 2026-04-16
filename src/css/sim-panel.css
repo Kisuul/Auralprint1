@@ -1,0 +1,11 @@
+    /* Sim config panel (left) */
+    #simPanel {
+      position: fixed;
+      top: calc(var(--ui-pad) + var(--ui-safe-t));
+      left: calc(var(--ui-pad) + var(--ui-safe-l));
+      bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-audio-h) + var(--ui-gap));
+      width: min(460px, calc(100vw - 2 * var(--ui-pad)));
+      padding: var(--ui-pad);
+      overflow: auto;
+      z-index: 30;
+    }

@@ -1,0 +1,47 @@
+    /* Bottom audio panel — two-row grid.
+      */
+#audioPanel {
+  position: fixed;
+  left: calc(var(--ui-pad) + var(--ui-safe-l));
+  right: calc(var(--ui-pad) + var(--ui-safe-r));
+  bottom: calc(var(--ui-pad) + var(--ui-safe-b));
+  height: auto;
+  padding: var(--ui-pad);
+  display: grid;
+  grid-template-columns: auto auto auto auto auto auto auto auto 1fr auto auto;
+  grid-template-rows: 36px var(--ui-icon);
+  gap: var(--ui-gap);
+  align-items: center;
+  z-index: 20;
+}
+
+    #audioPanel .track { min-width: 0; }
+    /* Scrubber row — second row inside #audioPanel.
+       grid-column: 1 / -1 spans all 10 columns so the scrubber fills the full width.
+       The canvas element draws: waveform overview + live playhead + seek affordance. */
+	
+	#scrubberRow {
+		grid-column: 1 / -1;
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		gap: var(--ui-gap);
+		min-width: 0;
+	}
+    
+	#scrubberCanvas {
+      width: 100%;
+      height: 36px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      cursor: pointer;
+      display: block;
+    }
+    #scrubberTime {
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.7;
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: right;
+    }
