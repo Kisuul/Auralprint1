@@ -91,10 +91,10 @@ function main() {
     // Renderer owns the canonical display canvas. Recording reads it through
     // a tap descriptor only; it does not create an alternate render path.
     getRenderTap: Renderer.getRecorderTap,
-    // Delegate to AudioEngine's canonical tap interface.
+    // Delegate to AudioEngine's canonical recorder-audio interface.
     // This returns { isLoaded, isPlaying, filename, ensureStream(), releaseStream() }.
-    // ensureStream() creates a passive MediaStreamDestination branched from outputGain,
-    // which captures playback audio without altering the outputGain → destination path.
+    // ensureStream() yields the current recordable source audio without turning on
+    // local monitoring for live inputs.
     getAudioTap: () => AudioEngine.getRecorderTap(),
   });
 

@@ -53,9 +53,23 @@ function readLiveSourceStatusText(kind, sourceState, bandText) {
   return "Stream input is unavailable.";
 }
 
+function isSourceSwitchLocked(recordingState = state.recording) {
+  const phase = recordingState && typeof recordingState.phase === "string"
+    ? recordingState.phase
+    : "";
+  return phase === "recording" || phase === "finalizing";
+}
+
+function readSourceSwitchLockText(recordingState = state.recording) {
+  return recordingState && recordingState.phase === "finalizing"
+    ? "Source changes are unavailable while recording finalizes the current export."
+    : "Source changes are unavailable during active recording.";
+}
+
 function readSourceUiModel({
   sourceState = state.source,
   audioState = state.audio,
+  recordingState = state.recording,
   queueLength = Queue.length,
   currentIndex = Queue.currentIndex,
   bandText = "n/a",
@@ -68,6 +82,7 @@ function readSourceUiModel({
   // The selector expresses the current workflow side, not guaranteed active media.
   // Idle state stays on File so users land back in the canonical file workflow.
   const selectedSourceKind = sourceKind === "mic" || sourceKind === "stream" ? sourceKind : "file";
+  const sourceSwitchLocked = isSourceSwitchLocked(recordingState);
   const disableFileControls = !fileWorkflowSelected;
   const pressedSources = {
     file: selectedSourceKind === "file",
@@ -94,6 +109,7 @@ function readSourceUiModel({
   return {
     selectedSourceKind,
     pressedSources,
+    sourceSwitchLocked,
     disableFileControls,
     showActiveQueueItem: hasActiveFileSource(sourceState, audioState),
     audioPanelSourceMode: selectedSourceKind,
@@ -103,6 +119,7 @@ function readSourceUiModel({
 
 const UI = (() => {
   const ui = state.ui;
+  let sourceSwitchDispatcher = async () => false;
 
   function readRecordPanelEdgeVars() {
     const placement = CONFIG.recording && CONFIG.recording.panelPlacement
@@ -634,9 +651,13 @@ const UI = (() => {
     ].includes(recording.lastCode);
   }
 
+  function hasRecordableSource() {
+    return !!(state.audio.isLoaded || (state.source && state.source.sessionActive));
+  }
+
   function isRecordingAudioCurrentlyUnavailable(recording) {
     if (!recording || recording.phase !== "recording") return false;
-    return !state.audio.isLoaded
+    return !hasRecordableSource()
       || recording.lastCode === "audio-unloaded"
       || recording.lastCode === "track-change-failed";
   }
@@ -661,7 +682,7 @@ const UI = (() => {
         return "Latest export ready";
       case "idle":
         if (recording.isSupported !== true) return "Checking recording support";
-        if (!state.audio.isLoaded) return "Load audio to start recording";
+        if (!hasRecordableSource()) return "Activate a source to start recording";
         return includeAudio ? "Ready to record" : "Ready to record video only";
       default:
         return recording.lastMessage || "Checking recording support";
@@ -804,7 +825,7 @@ const UI = (() => {
       panelVisible: !!ui.recordingPanelVisible,
       canStart: recording.hooksEnabled
         && recording.isSupported === true
-        && !!state.audio.isLoaded
+        && hasRecordableSource()
         && canStartPhase,
       canStop: recording.phase === "recording",
       canDownload: hasCompleteExport,
@@ -826,6 +847,42 @@ const UI = (() => {
     };
   }
 
+  function syncSourceSelectorUi(sourceUi = readSourceUiModel()) {
+    const sourceSwitchLocked = !!sourceUi.sourceSwitchLocked;
+    const lockedSwitchText = readSourceSwitchLockText();
+    const streamSupported = !!(state.source && state.source.support && state.source.support.stream);
+    const fileButtonText = sourceSwitchLocked
+      ? lockedSwitchText
+      : "Switch to file playback workflow";
+    const micButtonText = sourceSwitchLocked
+      ? lockedSwitchText
+      : "Analyze microphone input";
+    const streamButtonText = !streamSupported
+      ? "Stream capture is unavailable in this browser."
+      : (sourceSwitchLocked
+        ? lockedSwitchText
+        : "Analyze a shared display, tab, or system stream");
+
+    if (ui.btnSourceFile) {
+      ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
+      ui.btnSourceFile.disabled = sourceSwitchLocked;
+      ui.btnSourceFile.title = fileButtonText;
+      ui.btnSourceFile.setAttribute("aria-label", fileButtonText);
+    }
+    if (ui.btnSourceMic) {
+      ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
+      ui.btnSourceMic.disabled = sourceSwitchLocked;
+      ui.btnSourceMic.title = micButtonText;
+      ui.btnSourceMic.setAttribute("aria-label", micButtonText);
+    }
+    if (ui.btnSourceStream) {
+      ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
+      ui.btnSourceStream.disabled = sourceSwitchLocked || !streamSupported;
+      ui.btnSourceStream.title = streamButtonText;
+      ui.btnSourceStream.setAttribute("aria-label", streamButtonText);
+    }
+  }
+
   function buildRecordingUiSyncKey() {
     const recording = state.recording;
     return [
@@ -838,6 +895,8 @@ const UI = (() => {
       recording.lastExportUrl || "",
       recording.lastExportFileName || "",
       state.audio.isLoaded ? "1" : "0",
+      state.source && state.source.kind ? state.source.kind : "none",
+      state.source && state.source.sessionActive ? "1" : "0",
       ui.recordingPanelVisible ? "1" : "0",
     ].join("|");
   }
@@ -845,6 +904,7 @@ const UI = (() => {
   function refreshRecordingUi() {
     const model = getRecordingUiModel();
     const recording = model.recording;
+    syncSourceSelectorUi();
 
     // Build 113 record UI reads directly from state.recording. Keep one status authority.
     if (ui.recordPanel && ui.recordPanel.dataset.recordingPhase !== recording.phase) {
@@ -950,6 +1010,10 @@ const UI = (() => {
     return result;
   }
 
+  async function dispatchSourceSwitchAction(kind) {
+    return sourceSwitchDispatcher(kind);
+  }
+
   function refreshAllUiText(bandSnapshot) {
     const p = preferences;
     maybeRefreshRecordingUi();
@@ -974,18 +1038,7 @@ const UI = (() => {
 
     ui.audioStatus.textContent = sourceUi.audioStatusText;
     if (ui.audioPanel) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
-    if (ui.btnSourceFile) ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
-    if (ui.btnSourceMic) ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
-    if (ui.btnSourceStream) {
-      const streamSupported = !!(state.source && state.source.support && state.source.support.stream);
-      const streamButtonText = streamSupported
-        ? "Analyze a shared display, tab, or system stream"
-        : "Stream capture is unavailable in this browser.";
-      ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
-      ui.btnSourceStream.disabled = !streamSupported;
-      ui.btnSourceStream.title = streamButtonText;
-      ui.btnSourceStream.setAttribute("aria-label", streamButtonText);
-    }
+    syncSourceSelectorUi(sourceUi);
 
     ui.btnLoad.disabled = fileControlsDisabled;
     ui.btnPlay.disabled = fileControlsDisabled || !state.audio.isLoaded;
@@ -1188,6 +1241,7 @@ const UI = (() => {
     }
 
     async function switchToMicMode() {
+      if (isSourceSwitchLocked()) return false;
       if (state.source.kind === "mic" && (state.source.status === "requesting" || state.source.status === "active")) {
         return false;
       }
@@ -1200,11 +1254,13 @@ const UI = (() => {
         reason: "switch-to-mic",
       });
       const activation = await InputSourceManager.activateMic();
+      RecorderEngine.getSupportStatus();
       refreshQueuePanel();
       return !!(activation && activation.ok);
     }
 
     async function switchToStreamMode() {
+      if (isSourceSwitchLocked()) return false;
       if (state.source.kind === "stream" && (state.source.status === "requesting" || state.source.status === "active")) {
         return false;
       }
@@ -1217,11 +1273,13 @@ const UI = (() => {
         reason: "switch-to-stream",
       });
       const activation = await InputSourceManager.activateStream();
+      RecorderEngine.getSupportStatus();
       refreshQueuePanel();
       return !!(activation && activation.ok);
     }
 
     async function switchToFileMode() {
+      if (isSourceSwitchLocked()) return false;
       if (isFileWorkflowMode(state.source)) return false;
 
       invalidatePendingTrackLoads();
@@ -1232,9 +1290,23 @@ const UI = (() => {
       RecorderEngine.onTransportMutation("audio-unloaded", {
         reason: "switch-to-file-mode",
       });
+      RecorderEngine.getSupportStatus();
       refreshQueuePanel();
       return true;
     }
+
+    sourceSwitchDispatcher = async (kind) => {
+      switch (kind) {
+        case "file":
+          return switchToFileMode();
+        case "mic":
+          return switchToMicMode();
+        case "stream":
+          return switchToStreamMode();
+        default:
+          return false;
+      }
+    };
 
     async function loadAndPlay(file, opts = {}) {
       if (!file) return false;
@@ -1434,13 +1506,13 @@ const UI = (() => {
 
     /* Events */
     if (ui.btnSourceFile) ui.btnSourceFile.addEventListener("click", () => {
-      switchToFileMode();
+      dispatchSourceSwitchAction("file");
     });
     if (ui.btnSourceMic) ui.btnSourceMic.addEventListener("click", () => {
-      switchToMicMode();
+      dispatchSourceSwitchAction("mic");
     });
     if (ui.btnSourceStream) ui.btnSourceStream.addEventListener("click", () => {
-      switchToStreamMode();
+      dispatchSourceSwitchAction("stream");
     });
 
     // fileInput.value reset (checklist 3.7): cleared before every picker open so
@@ -1731,6 +1803,7 @@ const UI = (() => {
     refreshAllUiText,
     refreshRecordingUi,
     getRecordingUiModel,
+    dispatchSourceSwitchAction,
     showRecordPanel,
     hideRecordPanel,
     dispatchRecordingAction,

@@ -6,9 +6,10 @@ import { rename, rm } from "node:fs/promises";
 import { normalizeOrbDef } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
+import { InputSourceManager } from "../src/js/audio/input-source-manager.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
-import { readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
+import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
 
@@ -157,13 +158,22 @@ function createAudioEngineHarness() {
   const previousURL = globalThis.URL;
   const previousAudioState = { ...state.audio };
   const revokedUrls = [];
+  const connectionLog = [];
+  let destinationNode = null;
 
   function createNode(extra = {}) {
-    return {
-      connect() {},
-      disconnect() {},
+    const node = {
+      connections: [],
+      connect(target) {
+        this.connections.push(target);
+        connectionLog.push({ from: this, to: target });
+      },
+      disconnect() {
+        this.connections = [];
+      },
       ...extra,
     };
+    return node;
   }
 
   const audioEl = {
@@ -217,7 +227,8 @@ function createAudioEngineHarness() {
     constructor() {
       this.sampleRate = 48000;
       this.state = "running";
-      this.destination = createNode();
+      this.destination = createNode({ kind: "destination" });
+      destinationNode = this.destination;
     }
     resume() {
       this.state = "running";
@@ -271,6 +282,10 @@ function createAudioEngineHarness() {
 
   return {
     audioEl,
+    connectionLog,
+    get destinationNode() {
+      return destinationNode;
+    },
     revokedUrls,
     restore() {
       try { AudioEngine.unload(); } catch {}
@@ -292,6 +307,8 @@ function createRecorderHarness() {
   const previousSource = JSON.parse(JSON.stringify(state.source));
   const previousAudio = { ...state.audio };
   const previousRecording = JSON.parse(JSON.stringify(state.recording));
+  const previousUi = { ...state.ui };
+  const mediaRecorders = [];
 
   const videoTrack = { kind: "video", stop() {} };
   const audioTrack = { kind: "audio", stop() {} };
@@ -325,6 +342,7 @@ function createRecorderHarness() {
       this.ondataavailable = null;
       this.onstop = null;
       this.onerror = null;
+      mediaRecorders.push(this);
     }
     start() {
       this.state = "recording";
@@ -375,6 +393,11 @@ function createRecorderHarness() {
   });
 
   return {
+    mediaRecorders,
+    renderStream,
+    audioStream,
+    videoTrack,
+    audioTrack,
     restore() {
       try { RecorderEngine.dispose(); } catch {}
       state.source.kind = previousSource.kind;
@@ -394,9 +417,147 @@ function createRecorderHarness() {
       state.audio.filename = previousAudio.filename;
       state.audio.transportError = previousAudio.transportError;
       Object.assign(state.recording, previousRecording);
+      Object.assign(state.ui, previousUi);
       globalThis.window = previousWindow;
       globalThis.MediaStream = previousMediaStream;
       globalThis.MediaRecorder = previousMediaRecorder;
+    },
+  };
+}
+
+function createStubUiElement(tagName = "div") {
+  const listeners = new Map();
+  const attributes = new Map();
+  const classes = new Set();
+
+  return {
+    tagName: String(tagName).toUpperCase(),
+    style: { display: "block" },
+    dataset: {},
+    children: [],
+    options: [],
+    hidden: false,
+    disabled: false,
+    checked: false,
+    title: "",
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    tabIndex: 0,
+    addEventListener(type, handler) {
+      const entries = listeners.get(type) || [];
+      entries.push(handler);
+      listeners.set(type, entries);
+    },
+    removeEventListener(type, handler) {
+      const entries = listeners.get(type) || [];
+      listeners.set(type, entries.filter((entry) => entry !== handler));
+    },
+    dispatch(type, event = {}) {
+      const entries = listeners.get(type) || [];
+      for (const handler of entries) {
+        handler({
+          preventDefault() {},
+          stopPropagation() {},
+          target: this,
+          currentTarget: this,
+          ...event,
+        });
+      }
+    },
+    click() {
+      if (this.disabled) return;
+      this.dispatch("click");
+    },
+    appendChild(child) {
+      this.children.push(child);
+      if (child && child.tagName === "OPTION") this.options.push(child);
+      return child;
+    },
+    remove() {},
+    focus() {},
+    contains() {
+      return false;
+    },
+    closest() {
+      return null;
+    },
+    querySelector() {
+      return null;
+    },
+    setAttribute(name, value) {
+      attributes.set(name, String(value));
+    },
+    getAttribute(name) {
+      return attributes.has(name) ? attributes.get(name) : null;
+    },
+    classList: {
+      add(...names) {
+        for (const name of names) classes.add(name);
+      },
+      remove(...names) {
+        for (const name of names) classes.delete(name);
+      },
+      toggle(name, force) {
+        if (force === true) {
+          classes.add(name);
+          return true;
+        }
+        if (force === false) {
+          classes.delete(name);
+          return false;
+        }
+        if (classes.has(name)) {
+          classes.delete(name);
+          return false;
+        }
+        classes.add(name);
+        return true;
+      },
+      contains(name) {
+        return classes.has(name);
+      },
+    },
+  };
+}
+
+function createUiWireHarness() {
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  const previousUi = { ...state.ui };
+  const previousCanvas = state.canvas;
+  const elements = new Map();
+
+  function getElement(id) {
+    if (!elements.has(id)) elements.set(id, createStubUiElement(id === "fileInput" ? "input" : "div"));
+    return elements.get(id);
+  }
+
+  globalThis.window = {
+    ...(previousWindow || {}),
+    addEventListener() {},
+  };
+  globalThis.document = {
+    activeElement: null,
+    getElementById(id) {
+      return getElement(id);
+    },
+    createElement(tag) {
+      return createStubUiElement(tag);
+    },
+    querySelectorAll() {
+      return [];
+    },
+  };
+  state.canvas = createStubUiElement("canvas");
+
+  return {
+    getElement,
+    restore() {
+      Object.assign(state.ui, previousUi);
+      state.canvas = previousCanvas;
+      globalThis.window = previousWindow;
+      globalThis.document = previousDocument;
     },
   };
 }
@@ -696,6 +857,48 @@ test("AudioEngine.loadFile does not tear down the freshly created media element 
   }
 });
 
+test("AudioEngine.getRecorderTap reuses active live-stream audio without local playback or lifecycle ownership", async () => {
+  const harness = createAudioEngineHarness();
+  const liveAudioTrack = {
+    kind: "audio",
+    stopCount: 0,
+    stop() {
+      this.stopCount += 1;
+    },
+  };
+  const liveStream = {
+    getTracks() {
+      return [liveAudioTrack];
+    },
+    getAudioTracks() {
+      return [liveAudioTrack];
+    },
+    getVideoTracks() {
+      return [];
+    },
+  };
+
+  try {
+    await AudioEngine.attachMediaStreamSource(liveStream, {
+      kind: "stream",
+      label: "Browser Tab",
+      monitorOutput: false,
+    });
+
+    const tap = AudioEngine.getRecorderTap();
+    assert.equal(tap.ensureStream(), liveStream);
+    assert.equal(
+      harness.connectionLog.some((entry) => entry.to === harness.destinationNode),
+      false
+    );
+
+    tap.releaseStream();
+    assert.equal(liveAudioTrack.stopCount, 0);
+  } finally {
+    harness.restore();
+  }
+});
+
 test("readSourceUiModel keeps microphone mode honest about file-only affordances", () => {
   const model = readSourceUiModel({
     sourceState: {
@@ -790,6 +993,89 @@ test("readSourceUiModel treats File as the idle workflow side without implying a
   assert.equal(shouldShowActiveQueueItem({ kind: "none" }, { isLoaded: false }, { active: true }), false);
 });
 
+test("UI blocks live-source switching during active recording without touching the active source session", async () => {
+  const harness = createUiWireHarness();
+  const previous = {
+    source: JSON.parse(JSON.stringify(state.source)),
+    audio: { ...state.audio },
+    recording: JSON.parse(JSON.stringify(state.recording)),
+    ui: { ...state.ui },
+  };
+  const originalActivateMic = InputSourceManager.activateMic;
+  const originalActivateStream = InputSourceManager.activateStream;
+  const originalTeardownActiveSource = InputSourceManager.teardownActiveSource;
+  let activateMicCalls = 0;
+  let activateStreamCalls = 0;
+  let teardownCalls = 0;
+
+  InputSourceManager.activateMic = async () => {
+    activateMicCalls += 1;
+    return { ok: true };
+  };
+  InputSourceManager.activateStream = async () => {
+    activateStreamCalls += 1;
+    return { ok: true };
+  };
+  InputSourceManager.teardownActiveSource = async () => {
+    teardownCalls += 1;
+    return { ok: true };
+  };
+
+  try {
+    state.audio.isLoaded = false;
+    state.audio.isPlaying = false;
+    state.audio.filename = "";
+    state.audio.transportError = "";
+    state.source.kind = "stream";
+    state.source.status = "active";
+    state.source.label = "Browser Tab";
+    state.source.sessionActive = true;
+    state.source.support.stream = true;
+    state.source.support.mic = true;
+    state.source.permission.stream = "granted";
+    state.source.streamMeta.hasAudio = true;
+    state.source.streamMeta.hasVideo = true;
+    state.recording.hooksEnabled = true;
+    state.recording.phase = "recording";
+    state.recording.isSupported = true;
+    state.recording.includePlaybackAudio = true;
+    state.recording.lastUpdatedAtMs = 7;
+
+    UI.wireControls();
+    UI.refreshRecordingUi();
+
+    const model = readSourceUiModel({
+      sourceState: state.source,
+      audioState: state.audio,
+      recordingState: state.recording,
+    });
+
+    assert.equal(model.sourceSwitchLocked, true);
+    assert.equal(state.ui.btnSourceFile.disabled, true);
+    assert.equal(state.ui.btnSourceMic.disabled, true);
+    assert.equal(state.ui.btnSourceStream.disabled, true);
+    assert.match(state.ui.btnSourceMic.title, /Source changes are unavailable/);
+
+    assert.equal(await UI.dispatchSourceSwitchAction("mic"), false);
+    assert.equal(await UI.dispatchSourceSwitchAction("stream"), false);
+    assert.equal(await UI.dispatchSourceSwitchAction("file"), false);
+
+    assert.equal(activateMicCalls, 0);
+    assert.equal(activateStreamCalls, 0);
+    assert.equal(teardownCalls, 0);
+    assert.equal(state.source.kind, "stream");
+    assert.equal(state.source.status, "active");
+    assert.equal(state.source.sessionActive, true);
+  } finally {
+    InputSourceManager.activateMic = originalActivateMic;
+    InputSourceManager.activateStream = originalActivateStream;
+    InputSourceManager.teardownActiveSource = originalTeardownActiveSource;
+    applySourceAndAudioState(previous);
+    Object.assign(state.recording, previous.recording);
+    harness.restore();
+  }
+});
+
 test("RecorderEngine.start allows an active microphone source without file transport state", () => {
   const harness = createRecorderHarness();
 
@@ -801,6 +1087,101 @@ test("RecorderEngine.start allows an active microphone source without file trans
     assert.notEqual(status.code, "no-active-source");
   } finally {
     harness.restore();
+  }
+});
+
+test("RecorderEngine.start merges live stream audio even when no file transport is loaded", () => {
+  const harness = createRecorderHarness();
+
+  state.audio.isLoaded = false;
+  state.audio.isPlaying = false;
+  state.audio.filename = "";
+  state.source.kind = "stream";
+  state.source.status = "active";
+  state.source.label = "Browser Tab";
+  state.source.sessionActive = true;
+  state.source.permission.stream = "granted";
+  state.source.streamMeta.hasAudio = true;
+  state.source.streamMeta.hasVideo = true;
+
+  try {
+    const status = RecorderEngine.start();
+
+    assert.equal(status.ok, true);
+    assert.equal(status.phase, "recording");
+    assert.equal(status.code, "recorder-input-audio-video");
+    assert.equal(harness.mediaRecorders.length, 1);
+    assert.equal(harness.mediaRecorders[0].stream.getVideoTracks().length, 1);
+    assert.equal(harness.mediaRecorders[0].stream.getAudioTracks().length, 1);
+  } finally {
+    harness.restore();
+  }
+});
+
+test("RecorderEngine.start keeps active stream capture video-only when recording audio is disabled", () => {
+  const harness = createRecorderHarness();
+
+  state.audio.isLoaded = false;
+  state.audio.isPlaying = false;
+  state.audio.filename = "";
+  state.source.kind = "stream";
+  state.source.status = "active";
+  state.source.label = "Browser Tab";
+  state.source.sessionActive = true;
+  state.source.permission.stream = "granted";
+  state.source.streamMeta.hasAudio = true;
+  state.source.streamMeta.hasVideo = true;
+  state.recording.includePlaybackAudio = false;
+
+  try {
+    const status = RecorderEngine.start();
+
+    assert.equal(status.ok, true);
+    assert.equal(status.phase, "recording");
+    assert.equal(status.code, "recorder-input-video-only");
+    assert.equal(harness.mediaRecorders.length, 1);
+    assert.equal(harness.mediaRecorders[0].stream.getVideoTracks().length, 1);
+    assert.equal(harness.mediaRecorders[0].stream.getAudioTracks().length, 0);
+  } finally {
+    harness.restore();
+  }
+});
+
+test("UI.getRecordingUiModel allows active stream sessions to start recording without a loaded file", () => {
+  const previous = {
+    source: JSON.parse(JSON.stringify(state.source)),
+    audio: { ...state.audio },
+    recording: JSON.parse(JSON.stringify(state.recording)),
+    ui: { ...state.ui },
+  };
+
+  try {
+    state.audio.isLoaded = false;
+    state.audio.isPlaying = false;
+    state.audio.filename = "";
+    state.audio.transportError = "";
+    state.source.kind = "stream";
+    state.source.status = "active";
+    state.source.label = "Browser Tab";
+    state.source.sessionActive = true;
+    state.source.streamMeta.hasAudio = true;
+    state.source.streamMeta.hasVideo = true;
+    state.recording.hooksEnabled = true;
+    state.recording.phase = "idle";
+    state.recording.isSupported = true;
+    state.recording.includePlaybackAudio = true;
+    state.recording.lastUpdatedAtMs = 42;
+
+    UI.refreshRecordingUi();
+    const model = UI.getRecordingUiModel();
+
+    assert.equal(model.canStart, true);
+    assert.equal(model.primaryStatusText, "Ready to record");
+    assert.notEqual(model.primaryStatusText, "Load audio to start recording");
+  } finally {
+    applySourceAndAudioState(previous);
+    Object.assign(state.recording, previous.recording);
+    Object.assign(state.ui, previous.ui);
   }
 });
 

@@ -10,7 +10,7 @@ const RecorderEngine = (() => {
   // and must not take ownership of playback, analysis, queue, or presets.
   // Integration map:
   // - Render tap enters only through deps.getRenderTap from init().
-  // - Passive audio tap enters only through deps.getAudioTap from init().
+  // - Source audio tap enters only through deps.getAudioTap from init().
   // - MIME negotiation, session lifecycle, export ownership, and cleanup live here.
   // - UI observes state.recording and dispatches actions back into this module.
   const runtime = {
@@ -230,7 +230,7 @@ const RecorderEngine = (() => {
       supportProbeStatus = "unsupported";
       availableMimeTypes = [];
       supportCode = "audio-stream-destination-unavailable";
-      supportMessage = "Playback audio capture is unavailable in this browser.";
+      supportMessage = "Source audio capture is unavailable in this browser.";
     }
 
     selectedMimeType = recording && availableMimeTypes.includes(recording.selectedMimeType)
@@ -568,6 +568,8 @@ const RecorderEngine = (() => {
   // replace the analysis path (analysers sit upstream on the splitter branch).
   // The recording subsystem only holds the stream reference; AudioEngine
   // owns the graph node and its connection lifecycle via releaseStream().
+  // Source-audio capture can come from either a playback tap or a live upstream
+  // MediaStream. RecorderEngine treats both as the same recorder-audio seam.
   function acquireAudioStream() {
     releaseAudioStream();
     const audioTap = runtime.deps.getAudioTap();
@@ -576,7 +578,7 @@ const RecorderEngine = (() => {
         ok: false,
         stream: null,
         code: "audio-tap-unavailable",
-        message: "Playback audio tap is unavailable.",
+        message: "Source audio tap is unavailable.",
         audioTrackCount: 0,
       };
     }
@@ -585,7 +587,7 @@ const RecorderEngine = (() => {
         ok: false,
         stream: null,
         code: "audio-stream-destination-unavailable",
-        message: "Playback audio capture is unavailable in this browser.",
+        message: "Source audio capture is unavailable in this browser.",
         audioTrackCount: 0,
       };
     }
@@ -594,7 +596,7 @@ const RecorderEngine = (() => {
         ok: false,
         stream: null,
         code: "audio-tap-unimplemented",
-        message: "Playback audio tap does not expose a capture stream.",
+        message: "Source audio tap does not expose a capture stream.",
         audioTrackCount: 0,
       };
     }
@@ -610,7 +612,7 @@ const RecorderEngine = (() => {
           ok: false,
           stream: null,
           code: "audio-stream-destination-unavailable",
-          message: "Playback audio capture did not provide an audio track.",
+          message: "Source audio capture did not provide an audio track.",
           audioTrackCount: 0,
         };
       }
@@ -618,7 +620,7 @@ const RecorderEngine = (() => {
         ok: true,
         stream: runtime.audioStream,
         code: "audio-capture-ready",
-        message: "Playback audio capture is ready.",
+        message: "Source audio capture is ready.",
         audioTrackCount,
       };
     } catch (err) {
@@ -629,8 +631,8 @@ const RecorderEngine = (() => {
         stream: null,
         code: "audio-stream-destination-failed",
         message: err && err.message
-          ? `Playback audio capture failed: ${err.message}`
-          : "Playback audio capture failed.",
+          ? `Source audio capture failed: ${err.message}`
+          : "Source audio capture failed.",
         audioTrackCount: 0,
       };
     }
@@ -644,8 +646,8 @@ const RecorderEngine = (() => {
     let releasedByOwner = false;
 
     if (audioTap && typeof audioTap.releaseStream === "function") {
-      // AudioEngine owns the passive tap node and must disconnect/release it.
-      // This must not touch speaker playback ownership.
+      // AudioEngine owns recorder-audio cleanup. For live upstream streams this
+      // can be a deliberate no-op so recording never stops the active source.
       try {
         audioTap.releaseStream();
         releasedByOwner = true;
@@ -766,7 +768,7 @@ const RecorderEngine = (() => {
   // Fallback rules:
   //   renderStream required — null renderStream means unsupported.
   //   audioStream required only when includeAudio is enabled.
-  //     If playback-audio capture is disabled, video-only capture remains valid.
+  //     If source-audio capture is disabled, video-only capture remains valid.
   // Returns an explicit merge result descriptor:
   // { ok, stream, mode, code, message, videoTrackCount, audioTrackCount }.
   function buildMergedStream(
@@ -846,7 +848,7 @@ const RecorderEngine = (() => {
       stream: null,
       mode: "unsupported",
       code: audioFailureCode || "audio-capture-required-but-unavailable",
-      message: audioFailureMessage || "Playback audio capture is required but unavailable.",
+      message: audioFailureMessage || "Source audio capture is required but unavailable.",
       includeAudio,
       videoTrackCount: videoTracks.length,
       audioTrackCount: 0,

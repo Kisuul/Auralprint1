@@ -1204,6 +1204,12 @@
       const proto = AudioContextCtor && AudioContextCtor.prototype;
       return !!(proto && typeof proto.createMediaStreamDestination === "function");
     }
+    function readRecorderUpstreamStream() {
+      if (!activeUpstream || activeUpstream.sourceType !== "media-stream") return null;
+      if (!mediaStream || typeof mediaStream.getAudioTracks !== "function") return null;
+      const audioTracks = mediaStream.getAudioTracks();
+      return audioTracks && audioTracks.length ? mediaStream : null;
+    }
     function disconnectRecorderTapConnection(node = recorderTapConnectedOutputGain) {
       if (!node || !recorderTapDestination) {
         if (node === recorderTapConnectedOutputGain) recorderTapConnectedOutputGain = null;
@@ -1572,15 +1578,17 @@
       // Future recorder methods consume this descriptor only. They must not reach
       // into AudioEngine internals or mutate the playback/analyser graph directly.
       getRecorderTap() {
+        const upstreamRecorderStream = readRecorderUpstreamStream();
         return {
           isLoaded: state.audio.isLoaded,
           isPlaying: state.audio.isPlaying,
           filename: state.audio.filename,
-          supportsStreamDestination: canCreateRecorderTapStream(),
+          supportsStreamDestination: !!upstreamRecorderStream || canCreateRecorderTapStream(),
           ensureStream() {
-            return ensureRecorderTapStream();
+            return upstreamRecorderStream || ensureRecorderTapStream();
           },
           releaseStream() {
+            if (upstreamRecorderStream) return;
             releaseRecorderTapStream();
           }
         };
@@ -2764,7 +2772,7 @@
         supportProbeStatus = "unsupported";
         availableMimeTypes = [];
         supportCode = "audio-stream-destination-unavailable";
-        supportMessage = "Playback audio capture is unavailable in this browser.";
+        supportMessage = "Source audio capture is unavailable in this browser.";
       }
       selectedMimeType = recording && availableMimeTypes.includes(recording.selectedMimeType) ? recording.selectedMimeType : availableMimeTypes[0] || null;
       resolvedMimeType = isSupported ? selectedMimeType : null;
@@ -3017,7 +3025,7 @@
           ok: false,
           stream: null,
           code: "audio-tap-unavailable",
-          message: "Playback audio tap is unavailable.",
+          message: "Source audio tap is unavailable.",
           audioTrackCount: 0
         };
       }
@@ -3026,7 +3034,7 @@
           ok: false,
           stream: null,
           code: "audio-stream-destination-unavailable",
-          message: "Playback audio capture is unavailable in this browser.",
+          message: "Source audio capture is unavailable in this browser.",
           audioTrackCount: 0
         };
       }
@@ -3035,7 +3043,7 @@
           ok: false,
           stream: null,
           code: "audio-tap-unimplemented",
-          message: "Playback audio tap does not expose a capture stream.",
+          message: "Source audio tap does not expose a capture stream.",
           audioTrackCount: 0
         };
       }
@@ -3049,7 +3057,7 @@
             ok: false,
             stream: null,
             code: "audio-stream-destination-unavailable",
-            message: "Playback audio capture did not provide an audio track.",
+            message: "Source audio capture did not provide an audio track.",
             audioTrackCount: 0
           };
         }
@@ -3057,7 +3065,7 @@
           ok: true,
           stream: runtime2.audioStream,
           code: "audio-capture-ready",
-          message: "Playback audio capture is ready.",
+          message: "Source audio capture is ready.",
           audioTrackCount
         };
       } catch (err) {
@@ -3067,7 +3075,7 @@
           ok: false,
           stream: null,
           code: "audio-stream-destination-failed",
-          message: err && err.message ? `Playback audio capture failed: ${err.message}` : "Playback audio capture failed.",
+          message: err && err.message ? `Source audio capture failed: ${err.message}` : "Source audio capture failed.",
           audioTrackCount: 0
         };
       }
@@ -3231,7 +3239,7 @@
         stream: null,
         mode: "unsupported",
         code: audioFailureCode || "audio-capture-required-but-unavailable",
-        message: audioFailureMessage || "Playback audio capture is required but unavailable.",
+        message: audioFailureMessage || "Source audio capture is required but unavailable.",
         includeAudio,
         videoTrackCount: videoTracks.length,
         audioTrackCount: 0
@@ -4150,9 +4158,17 @@
     if (sourceState.errorMessage) return sourceState.errorMessage;
     return "Stream input is unavailable.";
   }
+  function isSourceSwitchLocked(recordingState = state.recording) {
+    const phase = recordingState && typeof recordingState.phase === "string" ? recordingState.phase : "";
+    return phase === "recording" || phase === "finalizing";
+  }
+  function readSourceSwitchLockText(recordingState = state.recording) {
+    return recordingState && recordingState.phase === "finalizing" ? "Source changes are unavailable while recording finalizes the current export." : "Source changes are unavailable during active recording.";
+  }
   function readSourceUiModel({
     sourceState = state.source,
     audioState = state.audio,
+    recordingState = state.recording,
     queueLength = Queue.length,
     currentIndex = Queue.currentIndex,
     bandText = "n/a",
@@ -4163,6 +4179,7 @@
     const sourceKind = sourceState && typeof sourceState.kind === "string" ? sourceState.kind : "none";
     const fileWorkflowSelected = isFileWorkflowMode(sourceState);
     const selectedSourceKind = sourceKind === "mic" || sourceKind === "stream" ? sourceKind : "file";
+    const sourceSwitchLocked = isSourceSwitchLocked(recordingState);
     const disableFileControls = !fileWorkflowSelected;
     const pressedSources = {
       file: selectedSourceKind === "file",
@@ -4187,6 +4204,7 @@
     return {
       selectedSourceKind,
       pressedSources,
+      sourceSwitchLocked,
       disableFileControls,
       showActiveQueueItem: hasActiveFileSource(sourceState, audioState),
       audioPanelSourceMode: selectedSourceKind,
@@ -4195,6 +4213,7 @@
   }
   var UI = (() => {
     const ui = state.ui;
+    let sourceSwitchDispatcher = async () => false;
     function readRecordPanelEdgeVars() {
       const placement = CONFIG.recording && CONFIG.recording.panelPlacement ? CONFIG.recording.panelPlacement : {};
       const edgeX = placement.edgeX === "left" ? "left" : "right";
@@ -4620,9 +4639,12 @@ ${liveTitle}` : liveTitle;
         "unknown-recording-action"
       ].includes(recording.lastCode);
     }
+    function hasRecordableSource() {
+      return !!(state.audio.isLoaded || state.source && state.source.sessionActive);
+    }
     function isRecordingAudioCurrentlyUnavailable(recording) {
       if (!recording || recording.phase !== "recording") return false;
-      return !state.audio.isLoaded || recording.lastCode === "audio-unloaded" || recording.lastCode === "track-change-failed";
+      return !hasRecordableSource() || recording.lastCode === "audio-unloaded" || recording.lastCode === "track-change-failed";
     }
     function formatRecordingPrimaryStatus(recording) {
       if (!recording || !recording.hooksEnabled) return "Recording disabled";
@@ -4643,7 +4665,7 @@ ${liveTitle}` : liveTitle;
           return "Latest export ready";
         case "idle":
           if (recording.isSupported !== true) return "Checking recording support";
-          if (!state.audio.isLoaded) return "Load audio to start recording";
+          if (!hasRecordableSource()) return "Activate a source to start recording";
           return includeAudio ? "Ready to record" : "Ready to record video only";
         default:
           return recording.lastMessage || "Checking recording support";
@@ -4754,7 +4776,7 @@ ${liveTitle}` : liveTitle;
         recording,
         includeAudio,
         panelVisible: !!ui.recordingPanelVisible,
-        canStart: recording.hooksEnabled && recording.isSupported === true && !!state.audio.isLoaded && canStartPhase,
+        canStart: recording.hooksEnabled && recording.isSupported === true && hasRecordableSource() && canStartPhase,
         canStop: recording.phase === "recording",
         canDownload: hasCompleteExport,
         canSelectMime: canEditSettings && recording.isSupported === true,
@@ -4772,6 +4794,32 @@ ${liveTitle}` : liveTitle;
         targetFpsOptions: Array.isArray(CONFIG.recording && CONFIG.recording.targetFpsOptions) ? CONFIG.recording.targetFpsOptions.slice() : []
       };
     }
+    function syncSourceSelectorUi(sourceUi = readSourceUiModel()) {
+      const sourceSwitchLocked = !!sourceUi.sourceSwitchLocked;
+      const lockedSwitchText = readSourceSwitchLockText();
+      const streamSupported = !!(state.source && state.source.support && state.source.support.stream);
+      const fileButtonText = sourceSwitchLocked ? lockedSwitchText : "Switch to file playback workflow";
+      const micButtonText = sourceSwitchLocked ? lockedSwitchText : "Analyze microphone input";
+      const streamButtonText = !streamSupported ? "Stream capture is unavailable in this browser." : sourceSwitchLocked ? lockedSwitchText : "Analyze a shared display, tab, or system stream";
+      if (ui.btnSourceFile) {
+        ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
+        ui.btnSourceFile.disabled = sourceSwitchLocked;
+        ui.btnSourceFile.title = fileButtonText;
+        ui.btnSourceFile.setAttribute("aria-label", fileButtonText);
+      }
+      if (ui.btnSourceMic) {
+        ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
+        ui.btnSourceMic.disabled = sourceSwitchLocked;
+        ui.btnSourceMic.title = micButtonText;
+        ui.btnSourceMic.setAttribute("aria-label", micButtonText);
+      }
+      if (ui.btnSourceStream) {
+        ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
+        ui.btnSourceStream.disabled = sourceSwitchLocked || !streamSupported;
+        ui.btnSourceStream.title = streamButtonText;
+        ui.btnSourceStream.setAttribute("aria-label", streamButtonText);
+      }
+    }
     function buildRecordingUiSyncKey() {
       const recording = state.recording;
       return [
@@ -4784,12 +4832,15 @@ ${liveTitle}` : liveTitle;
         recording.lastExportUrl || "",
         recording.lastExportFileName || "",
         state.audio.isLoaded ? "1" : "0",
+        state.source && state.source.kind ? state.source.kind : "none",
+        state.source && state.source.sessionActive ? "1" : "0",
         ui.recordingPanelVisible ? "1" : "0"
       ].join("|");
     }
     function refreshRecordingUi() {
       const model = getRecordingUiModel();
       const recording = model.recording;
+      syncSourceSelectorUi();
       if (ui.recordPanel && ui.recordPanel.dataset.recordingPhase !== recording.phase) {
         ui.recordPanel.dataset.recordingPhase = recording.phase;
       }
@@ -4882,6 +4933,9 @@ ${liveTitle}` : liveTitle;
       refreshRecordingUi();
       return result;
     }
+    async function dispatchSourceSwitchAction(kind) {
+      return sourceSwitchDispatcher(kind);
+    }
     function refreshAllUiText(bandSnapshot) {
       const p = preferences;
       maybeRefreshRecordingUi();
@@ -4901,16 +4955,7 @@ ${liveTitle}` : liveTitle;
       const fileControlsDisabled = sourceUi.disableFileControls;
       ui.audioStatus.textContent = sourceUi.audioStatusText;
       if (ui.audioPanel) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
-      if (ui.btnSourceFile) ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
-      if (ui.btnSourceMic) ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
-      if (ui.btnSourceStream) {
-        const streamSupported = !!(state.source && state.source.support && state.source.support.stream);
-        const streamButtonText = streamSupported ? "Analyze a shared display, tab, or system stream" : "Stream capture is unavailable in this browser.";
-        ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
-        ui.btnSourceStream.disabled = !streamSupported;
-        ui.btnSourceStream.title = streamButtonText;
-        ui.btnSourceStream.setAttribute("aria-label", streamButtonText);
-      }
+      syncSourceSelectorUi(sourceUi);
       ui.btnLoad.disabled = fileControlsDisabled;
       ui.btnPlay.disabled = fileControlsDisabled || !state.audio.isLoaded;
       ui.btnStop.disabled = fileControlsDisabled || !state.audio.isLoaded;
@@ -5028,6 +5073,7 @@ ${liveTitle}` : liveTitle;
         activeLoadRequestId += 1;
       }
       async function switchToMicMode() {
+        if (isSourceSwitchLocked()) return false;
         if (state.source.kind === "mic" && (state.source.status === "requesting" || state.source.status === "active")) {
           return false;
         }
@@ -5039,10 +5085,12 @@ ${liveTitle}` : liveTitle;
           reason: "switch-to-mic"
         });
         const activation = await InputSourceManager.activateMic();
+        RecorderEngine.getSupportStatus();
         refreshQueuePanel();
         return !!(activation && activation.ok);
       }
       async function switchToStreamMode() {
+        if (isSourceSwitchLocked()) return false;
         if (state.source.kind === "stream" && (state.source.status === "requesting" || state.source.status === "active")) {
           return false;
         }
@@ -5054,10 +5102,12 @@ ${liveTitle}` : liveTitle;
           reason: "switch-to-stream"
         });
         const activation = await InputSourceManager.activateStream();
+        RecorderEngine.getSupportStatus();
         refreshQueuePanel();
         return !!(activation && activation.ok);
       }
       async function switchToFileMode() {
+        if (isSourceSwitchLocked()) return false;
         if (isFileWorkflowMode(state.source)) return false;
         invalidatePendingTrackLoads();
         clearAudioStatusToast();
@@ -5067,9 +5117,22 @@ ${liveTitle}` : liveTitle;
         RecorderEngine.onTransportMutation("audio-unloaded", {
           reason: "switch-to-file-mode"
         });
+        RecorderEngine.getSupportStatus();
         refreshQueuePanel();
         return true;
       }
+      sourceSwitchDispatcher = async (kind) => {
+        switch (kind) {
+          case "file":
+            return switchToFileMode();
+          case "mic":
+            return switchToMicMode();
+          case "stream":
+            return switchToStreamMode();
+          default:
+            return false;
+        }
+      };
       async function loadAndPlay(file, opts = {}) {
         if (!file) return false;
         const requestId = ++activeLoadRequestId;
@@ -5238,13 +5301,13 @@ ${liveTitle}` : liveTitle;
         audioStatusToast("Switch to File mode to use file playback controls.", 2500);
       }
       if (ui.btnSourceFile) ui.btnSourceFile.addEventListener("click", () => {
-        switchToFileMode();
+        dispatchSourceSwitchAction("file");
       });
       if (ui.btnSourceMic) ui.btnSourceMic.addEventListener("click", () => {
-        switchToMicMode();
+        dispatchSourceSwitchAction("mic");
       });
       if (ui.btnSourceStream) ui.btnSourceStream.addEventListener("click", () => {
-        switchToStreamMode();
+        dispatchSourceSwitchAction("stream");
       });
       ui.btnLoad.addEventListener("click", () => {
         if (!isFileWorkflowMode(state.source)) {
@@ -5566,6 +5629,7 @@ ${liveTitle}` : liveTitle;
       refreshAllUiText,
       refreshRecordingUi,
       getRecordingUiModel,
+      dispatchSourceSwitchAction,
       showRecordPanel,
       hideRecordPanel,
       dispatchRecordingAction,
@@ -5626,10 +5690,10 @@ ${liveTitle}` : liveTitle;
       // Renderer owns the canonical display canvas. Recording reads it through
       // a tap descriptor only; it does not create an alternate render path.
       getRenderTap: Renderer.getRecorderTap,
-      // Delegate to AudioEngine's canonical tap interface.
+      // Delegate to AudioEngine's canonical recorder-audio interface.
       // This returns { isLoaded, isPlaying, filename, ensureStream(), releaseStream() }.
-      // ensureStream() creates a passive MediaStreamDestination branched from outputGain,
-      // which captures playback audio without altering the outputGain → destination path.
+      // ensureStream() yields the current recordable source audio without turning on
+      // local monitoring for live inputs.
       getAudioTap: () => AudioEngine.getRecorderTap()
     });
     UI.wireControls();

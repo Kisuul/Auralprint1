@@ -77,6 +77,13 @@ const AudioEngine = (() => {
     return !!(proto && typeof proto.createMediaStreamDestination === "function");
   }
 
+  function readRecorderUpstreamStream() {
+    if (!activeUpstream || activeUpstream.sourceType !== "media-stream") return null;
+    if (!mediaStream || typeof mediaStream.getAudioTracks !== "function") return null;
+    const audioTracks = mediaStream.getAudioTracks();
+    return audioTracks && audioTracks.length ? mediaStream : null;
+  }
+
   function disconnectRecorderTapConnection(node = recorderTapConnectedOutputGain) {
     if (!node || !recorderTapDestination) {
       if (node === recorderTapConnectedOutputGain) recorderTapConnectedOutputGain = null;
@@ -499,13 +506,19 @@ const AudioEngine = (() => {
     // Future recorder methods consume this descriptor only. They must not reach
     // into AudioEngine internals or mutate the playback/analyser graph directly.
     getRecorderTap() {
+      const upstreamRecorderStream = readRecorderUpstreamStream();
       return {
         isLoaded: state.audio.isLoaded,
         isPlaying: state.audio.isPlaying,
         filename: state.audio.filename,
-        supportsStreamDestination: canCreateRecorderTapStream(),
-        ensureStream() { return ensureRecorderTapStream(); },
-        releaseStream() { releaseRecorderTapStream(); },
+        supportsStreamDestination: !!upstreamRecorderStream || canCreateRecorderTapStream(),
+        ensureStream() {
+          return upstreamRecorderStream || ensureRecorderTapStream();
+        },
+        releaseStream() {
+          if (upstreamRecorderStream) return;
+          releaseRecorderTapStream();
+        },
       };
     },
     // Exposed for Scrubber use only — reading/seeking currentTime/duration.
