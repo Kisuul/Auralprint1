@@ -1,403 +1,303 @@
-# Build 114 Specification — Live Input Sources
+# Build 114 Spec — Live Input Sources
 
-## Status
+Status: Phase 0 planning baseline  
+Target build: `v0.1.14` / Build `114`
 
-Planned target: **Build 114 / v0.1.14**
+## 1. Purpose
 
-This document is the implementation contract for Build 114. It turns the roadmap theme "Live Input Sources" into concrete engineering rules, UX rules, and acceptance criteria.
+Build 114 extends Auralprint from a file-playback analyzer into a multi-source analyzer that can operate on:
 
-## Roadmap anchor
-
-Build 114 adds analysis sources other than file playback:
-
+- file playback
 - microphone input
-- tab/system/display stream input when available
-- source switch UI: `File / Mic / Stream`
+- display/tab/system stream input when supported by the browser
 
-Definition of done from the roadmap:
+This build must preserve the canonical Build 113 user experience for file playback while adding live-input capability as a first-class runtime mode.
 
-- permission failures handled politely
-- source switching resets analysis state safely
+## 2. Canon anchor
 
-## Build objective
+Build 113 established these stable truths which 114 must preserve:
 
-Add a unified runtime source layer so Auralprint's existing analysis, render, and recording paths can operate against:
+- file playback remains the strongest and most polished path
+- queue, scrubber, repeat, previous, next, and duration semantics are file-mode concerns
+- recording is a read-only tap on the existing render/audio path, not a competing pipeline
+- runtime-only state must not leak into URL presets unless explicitly designed
+- source changes must not leave stale audio graphs, stale listeners, stale visual state, or zombie streams
+
+## 3. Build goal
+
+Introduce a unified input-source layer that allows the existing analyzer / render / recorder path to run against:
 
 - file playback
 - microphone capture
-- display/tab/system stream capture
+- display capture / tab capture / system stream capture
 
-without degrading the Build 113 file workflow or corrupting preset/schema behavior.
+without forcing live sources to pretend to be tracks.
 
-## Product statement
-
-Build 114 does **not** replace the file player. It adds live sources to the analyzer.
-
-The correct mental model is:
-
-> Auralprint is an analyzer with multiple input sources.  
-> File playback remains the richest transport mode.  
-> Live sources are first-class inputs, but they are not fake tracks.
-
-## Non-negotiable invariants
-
-### Preserve Build 113 truths
-
-1. **File mode remains fully functional.**
-   - Loading, queue, next/prev, shuffle, repeat, scrubber, and existing playback behavior must continue to work.
-
-2. **Recording remains a read-only tap.**
-   - Recording must continue to observe the active analysis/render path.
-   - Build 114 must not create a competing playback or export path.
-
-3. **Runtime-only state stays runtime-only.**
-   - Live input permissions, live source session state, stream labels, and transient failure states are not stored in presets.
-
-4. **Preset/schema integrity is preserved.**
-   - No schema bump is required for runtime-only live input state.
-   - Existing preset round-trip behavior must remain intact.
-
-5. **Only one active source exists at a time.**
-   - The app may support multiple source kinds, but it never analyzes more than one active source at once in Build 114.
-
-6. **Source switching must be clean.**
-   - Switching source fully tears down the old source before activating the new one.
-   - No zombie tracks, duplicate listeners, dangling nodes, or stale UI.
-
-### New Build 114 truths
-
-1. **Source kind is explicit runtime state.**
-2. **Transport semantics are mode-dependent.**
-3. **Mic and Stream are not queue entries.**
-4. **Unsupported capabilities are surfaced honestly.**
-5. **Permission failure is a normal user path, not an exceptional crash path.**
-
-## Scope
+## 4. Scope
 
 ### In scope
 
-- Explicit runtime source model
-- Source switch UI with `File`, `Mic`, and `Stream`
-- Microphone activation via browser media permissions
-- Display/tab/system stream activation when browser support exists
-- Safe source teardown and source switching
-- UI status copy for permission, unsupported, active, and stopped states
-- Clean analyzer reset / visual reset behavior on source changes
-- Regression protection for file mode
+- explicit source selector UI: `File / Mic / Stream`
+- microphone input activation
+- display/tab/system stream activation when available
+- browser capability detection and honest unsupported-state messaging
+- permission request flow and denial handling
+- full teardown when changing sources
+- clean analysis-state reset on source switching
+- preservation of Build 113 file workflow
+- runtime-only state for live-source session and permission details
 
 ### Out of scope
 
-- Persistent preferred microphone/device selection
-- Multi-source mixing
-- Simultaneous file + mic + stream analysis
-- Storing live source state in presets
-- Full device picker UI
-- Advanced routing matrix
-- Timeline semantics for live sources
-- Automatic fallback from one denied source type to another
-- New visual features unrelated to source input
+- audio device picker UI
+- persistent preferred microphone/device selection
+- simultaneous multi-source mixing
+- storing active live-source state in URL presets
+- fake queue items for mic/stream
+- advanced stream routing or multi-input mixing
+- source-specific saved presets
 
-## Source model
+## 5. Product rules
 
-Build 114 introduces an explicit source model in runtime state.
+### 5.1 Source is explicit runtime state
 
-### Source kind
-
-Allowed values:
+The app must always know which source kind is active:
 
 - `none`
 - `file`
 - `mic`
 - `stream`
 
-### Source status
+This must be explicit runtime state, not inferred from the presence of a media element or stream object.
 
-Allowed values:
+### 5.2 Only one active source at a time
 
-- `idle`
-- `requesting`
-- `active`
-- `stopping`
-- `error`
-- `unsupported`
+Auralprint may analyze one active source at a time. Source switching must fully tear down the old source before activating the new one.
 
-### Recommended runtime shape
+### 5.3 Live sources are not tracks
 
-```js
-runtime.source = {
-  kind: "none",              // none | file | mic | stream
-  status: "idle",            // idle | requesting | active | stopping | error | unsupported
-  label: "",                 // short UI-facing label
-  permission: {
-    mic: "unknown",          // unknown | granted | denied | prompt | unsupported
-    stream: "unknown"        // unknown | granted | denied | prompt | unsupported
-  },
-  support: {
-    mic: true,
-    stream: true
-  },
-  errorCode: "",
-  errorMessage: "",
-  sessionActive: false,
-  streamMeta: {
-    hasAudio: false,
-    hasVideo: false
-  }
-};
-```
+Mic and stream modes must not pretend to support file transport semantics.
 
-This shape is illustrative, not mandatory. Equivalent structure is acceptable if ownership is clear.
+In non-file modes, the UI must not imply:
 
-## Architecture requirements
+- queue position
+- track duration
+- scrub seek capability
+- repeat / shuffle semantics
+- previous / next track semantics
 
-### New subsystem
+### 5.4 Recording stays a passive observer
 
-Create a source-management layer responsible for activation, teardown, and capability detection.
+The recording system must continue reading from the canonical render/audio taps. Build 114 must not create a second playback path or let recording become a transport owner.
 
-Suggested file:
+### 5.5 Live state remains runtime-only
+
+The following must not be written into URL presets:
+
+- active source kind
+- browser permission results
+- stream handles or track labels
+- live-session error state
+- active stream lifetime details
+
+## 6. Architectural target
+
+Build 114 introduces an input-source abstraction, owned by the audio layer, that presents a stable contract to the rest of the app.
+
+### 6.1 New logical subsystem
+
+Recommended new module:
 
 - `src/js/audio/input-source-manager.js`
 
-### Responsibilities of the source manager
+Recommended responsibilities:
 
-The source manager owns:
+- own source kind transitions
+- activate/deactivate file/mic/stream sources
+- expose source capabilities and source status
+- centralize teardown of media streams / tracks / listeners / nodes
+- provide source descriptors for the existing analyzer path
 
-- source capability detection
-- source activation requests
-- source teardown
-- stream-track stop handling
-- source-kind/status updates
-- normalized status/error reporting
-- handing a valid upstream source into the existing analysis path
+### 6.2 Existing systems that should consume, not own, source selection
 
-### Responsibilities it must not own
+- `audio-engine.js`
+- `ui.js`
+- `recorder-engine.js`
+- `scrubber.js`
 
-The source manager must **not** own:
+## 7. Required runtime model
 
-- queue semantics
-- scrubber rendering
-- preset serialization
-- renderer policy
-- orb behavior
-- recording UI policy
-- long-term persistence
+Recommended runtime state additions under `state`:
 
-### Audio-engine relationship
+```js
+source: {
+  kind: "none",          // none | file | mic | stream
+  status: "idle",        // idle | requesting | active | stopping | error | unsupported
+  label: "",
+  errorCode: "",
+  errorMessage: "",
+  capability: {
+    mic: null,
+    stream: null,
+  },
+  permission: {
+    mic: "unknown",
+    stream: "unknown",
+  }
+}
+```
 
-The audio engine must stop assuming that the active analyzer input is always file-backed media playback.
+Notes:
 
-It should instead consume a normalized "active upstream source" provided by the source manager.
+- This is runtime-only state.
+- Do not mirror this into `preferences`.
+- Do not serialize this in URL presets.
 
-### File mode remains special
+## 8. UX rules
 
-File mode is still the only mode that naturally owns:
+### 8.1 Source selector
 
+Add a visible source selector in the operator-facing audio surface.
+
+Minimum options:
+
+- File
+- Mic
+- Stream
+
+### 8.2 File mode UI
+
+File mode retains:
+
+- load
 - queue
-- scrubber
-- duration
-- next/prev
-- shuffle
-- repeat
-- filename/track identity
-
-Mic and Stream must not pretend to have those semantics.
-
-## UI requirements
-
-## Source switch
-
-Build 114 must expose an explicit source switch in the UI:
-
-- `File`
-- `Mic`
-- `Stream`
-
-The switch must be visible enough to count as the feature, not buried as a hidden advanced toggle.
-
-## Mode-specific UX rules
-
-### File mode
-
-File mode keeps:
-
-- Load
-- queue panel
-- next/prev
+- previous / next
 - repeat
 - shuffle
-- scrubber seeking
-- duration/time readout
-- current track identity
+- scrubber decode / preview / seek
+- track filename and time readout
 
-### Mic mode
+### 8.3 Mic mode UI
 
 Mic mode must:
 
-- disable or hide queue-specific controls
-- disable or hide scrubber seeking
-- not show fake duration
-- surface honest state copy such as:
-  - `Microphone input active`
-  - `Waiting for microphone permission`
-  - `Microphone unavailable`
-  - `Microphone permission denied`
+- show honest status text
+- disable or hide file-only controls
+- avoid fake timeline language
+- avoid queue semantics
 
-### Stream mode
+Suggested status copy examples:
 
-Stream mode must:
+- `Waiting for microphone permission`
+- `Microphone active`
+- `Microphone permission denied`
+- `No microphone available`
 
-- disable or hide queue-specific controls
-- disable or hide scrubber seeking
-- not pretend the shared stream is a track
-- surface honest state copy such as:
-  - `Display/audio stream active`
-  - `Waiting for stream permission`
-  - `Stream capture unsupported`
-  - `Shared stream ended`
+### 8.4 Stream mode UI
 
-## Permission UX requirements
+Stream mode follows the same honesty rule as mic mode.
 
-Permission and support outcomes must map to readable status copy.
+Suggested states:
 
-The app must gracefully handle:
+- `Waiting for stream selection`
+- `Display stream active`
+- `Display stream ended`
+- `Display stream capture unavailable`
 
-- browser does not support microphone capture
-- browser does not support display stream capture
-- user denies permission
-- user cancels selection flow
-- stream is granted without usable audio
-- active stream ends externally
-- microphone/stream teardown occurs during source switch
+## 9. Source-switching contract
 
-No raw exception dump should become the primary user-facing status text.
+Every source transition must run the same conceptual sequence:
 
-## Switching contract
+1. mark source as switching/requesting
+2. stop and detach the previous source
+3. stop old stream tracks where applicable
+4. disconnect old nodes and listeners
+5. clear source-specific UI state
+6. reset transient analysis / visual state safely
+7. attach the new source
+8. update runtime source state
+9. restore the analyzer/render loop through the canonical path
 
-When switching from any source to any other source, the app must follow this sequence:
+## 10. Permission/error policy
 
-1. mark current source as stopping
-2. detach listeners from previous source
-3. disconnect audio nodes associated with the previous source
-4. stop previous stream tracks when the previous source is stream-backed
-5. clear source-specific transient UI state
-6. reset analysis/visual transient state as required
-7. activate new source
-8. set new runtime source state
-9. refresh mode-specific UI affordances
+Build 114 must normalize browser/API failures into a small internal error vocabulary instead of scattering ad hoc error strings.
 
-This behavior must be reused both for user-initiated switches and externally terminated stream events.
+Recommended internal codes:
 
-## State reset requirements
+- `unsupported`
+- `permission-denied`
+- `permission-dismissed`
+- `no-device`
+- `stream-ended`
+- `stream-without-audio`
+- `activation-failed`
+- `switch-aborted`
 
-Build 114 must reset transient analyzer/render state safely on source change.
+The UI may surface human-readable copy, but state and tests should prefer codes.
 
-At minimum, source switching must leave the app in a visually honest state:
+## 11. Build 114 milestones
 
-- no stale trails implying old audio is still active
-- no stale queue track highlighted while live source is active
-- no bogus scrubber interaction when not in file mode
-- no persistent "active recording" implication if no active source remains
+### 114-A — Source model and switching seams
 
-Build 114 does **not** require resetting user preferences. It resets transient analysis/session state, not canonical user settings.
+- add runtime source model
+- add source-manager abstraction
+- preserve file mode
+- no visible feature required yet beyond no-regression scaffolding
 
-## Preset and schema rules
+### 114-B — Microphone activation
 
-### Must remain runtime-only
+- wire microphone mode
+- feed analyzer path cleanly
+- handle permission denial and teardown
 
-The following must **not** be written into URL presets or preset JSON:
+### 114-C — Display/tab/system stream activation
 
-- `source.kind`
-- `source.status`
-- microphone permission state
-- stream permission state
-- active stream labels
-- device/session identity
-- active live session flags
-- transient error state
+- wire display capture where supported
+- handle external stop events
+- handle missing audio gracefully
 
-### Schema
+### 114-D — UX completion
 
-No schema bump is required unless a later change intentionally stores source-related preferences in a durable way. Build 114 should avoid that.
+- source selector polish
+- honest control disabling/hiding
+- polished operator-facing status copy
 
-## Testing requirements
+### 114-E — Hardening
 
-### Unit / targeted tests
+- switching stress pass
+- recorder interaction audit
+- test coverage for source transitions
+- regression check against file mode
 
-Add targeted tests for:
+## 12. Definition of done
 
-- source state transitions
-- source-manager teardown idempotence
-- file → mic switch
-- mic → file switch
-- file → stream switch
-- stream external end handling
-- unsupported capability reporting
-- preset serialization excluding live-source runtime state
+Build 114 is done when all of the following are true:
 
-### Regression expectations
+- File mode still supports the full Build 113 workflow.
+- Mic mode can be activated, analyzed, and torn down cleanly.
+- Stream mode can be activated when supported and fails honestly when unsupported.
+- Switching between sources leaves no stale analyser graph, listener duplication, or zombie stream tracks.
+- Source switching resets analysis state safely.
+- Queue/scrubber controls are not misrepresented in live modes.
+- Recording still functions as a passive tap on the canonical render/audio path.
+- URL presets remain free of live runtime state.
+- No new console errors appear in normal flows.
 
-Build 114 must not regress:
+## 13. Non-negotiable guardrails for agent work
 
-- file load/play/stop
-- queue navigation
-- scrubber interaction in file mode
-- recording against file mode
-- record panel status behavior
-- existing preset round-trip behavior
+Agents implementing Build 114 must not:
 
-## Acceptance criteria
+- rewrite queue semantics unless required by source-mode gating
+- persist live-source state in presets
+- represent live sources as queue entries
+- create a second recorder-owned playback path
+- hardcode browser-specific assumptions about display-capture audio availability
+- spread permission handling across unrelated modules without a central state contract
 
-Build 114 is complete when all of the following are true:
+## 14. Success condition
 
-1. User can select `File`, `Mic`, or `Stream` as the active source mode.
-2. Mic activation works when browser support and permission are available.
-3. Stream activation works when browser support and permission are available.
-4. Unsupported/denied cases return the UI to a recoverable state.
-5. Switching sources does not leak listeners, tracks, or stale analyzer state.
-6. File mode still behaves like Build 113.
-7. Queue/scrubber controls are not misleading in live-source modes.
-8. Live-source runtime state does not enter presets.
-9. Recording still observes the active source path without becoming a second transport system.
-10. No normal user flow produces console errors.
+The success condition for Build 114 is not merely “mic works.”
 
-## Explicit non-goals for Codex
+The real success condition is:
 
-Codex should **not** use Build 114 as an excuse to:
-
-- redesign queue architecture
-- rewrite the renderer
-- rewrite band distribution logic
-- store live-source session data in presets
-- turn Mic/Stream into pseudo-files
-- add device-picker UX unless specifically asked
-- add multiple simultaneous active sources
-- change unrelated defaults
-
-## Suggested file touch set
-
-Primary expected files:
-
-- `src/js/audio/audio-engine.js`
-- `src/js/audio/input-source-manager.js` (new)
-- `src/js/core/state.js`
-- `src/js/ui/ui.js`
-- `src/js/ui/dom-cache.js`
-- `src/js/core/config.js`
-- `src/index.template.html`
-- `src/css/audio-panel.css`
-- `tests/targeted-audit.test.js`
-
-Possible secondary touch:
-
-- `src/js/recording/recorder-engine.js`
-
-Files that should stay mostly untouched unless clearly necessary:
-
-- `src/js/audio/band-bank.js`
-- `src/js/audio/band-bank-controller.js`
-- `src/js/render/*`
-- `src/js/presets/url-preset.js` (except to verify exclusion rules)
-
-## Release note draft
-
-Build 114 expands Auralprint beyond file playback by adding microphone and stream-based live input sources. The analyzer/render path remains unified, file mode remains the richest transport workflow, and live-source session state remains runtime-only.
+> Auralprint can switch cleanly between file playback and live inputs while preserving the project’s existing truth model: honest UI, stable runtime ownership, passive recording, and strict separation between runtime session state and shareable preset state.

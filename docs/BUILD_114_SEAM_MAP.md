@@ -1,301 +1,418 @@
-# Build 114 Seam Map
+# Build 114 Seam Map — Ownership, Boundaries, and Edit Rules
 
-## Purpose
+Status: Phase 0 planning baseline  
+Target build: `v0.1.14` / Build `114`
 
-This document tells coding agents exactly where Build 114 work belongs.
+This document maps the current refactored source tree to Build 114 work. It is written for humans and coding agents.
 
-Rule of thumb:
+## 1. Canon rule
 
-- **Interfaces are canon**
-- **ownership boundaries matter**
-- **Build 114 is an input-source milestone, not a renderer rewrite**
+Interfaces are canon; modules are mutable.
 
-## Canonical intent
+For Build 114, the interface truths are more important than any one implementation choice:
 
-Build 114 adds:
+- file mode remains canonical and regression-intolerant
+- live source state is runtime-only
+- recording remains a passive observer
+- queue/scrubber remain file-mode concerns
 
-- microphone input
-- display/tab/system stream input when available
-- source switch UI
-- safe source switching
-- polite permission handling
+## 2. Current module families
 
-It does **not** re-architect everything.
+## 2.1 Boot/orchestration
 
-## Ownership map
-
-## `src/js/audio/input-source-manager.js` (new)
-
-Primary Build 114 module.
-
+### `src/js/main.js`
 Owns:
 
-- source capability detection
-- source activation for mic/stream
-- source teardown
-- stream track stop handling
-- source status/error normalization
-- active source kind/state transitions
-- handoff of upstream active source into the analysis path
+- application boot order
+- main animation loop
+- subsystem initialization order
+- canonical recorder tap handoff wiring
 
-Must not own:
+May change in 114 to:
 
-- queue logic
-- scrubber drawing
-- preset encoding
-- render policy
-- panel layout policy
+- initialize the new source subsystem
+- sequence support probes if needed
 
-## `src/js/audio/audio-engine.js`
+Must not become:
 
-Owns:
+- a place for browser permission logic
+- a large source-state switchboard
 
-- audio graph assembly
-- analyser attachment
-- file-backed audio path
-- connection of current active upstream source into the analyser/render/recording path
+## 2.2 Core
 
-Build 114 changes allowed here:
-
-- stop assuming the active source is always file-backed
-- accept a normalized active source from the source manager
-- keep file workflow behavior intact
-
-Build 114 changes not allowed here:
-
-- UI text policy
-- preset policy
-- queue UI ownership
-- unrelated analyzer rewrites
-
-## `src/js/core/state.js`
-
-Owns:
-
-- runtime-only session state
-
-Build 114 changes allowed here:
-
-- add explicit source runtime state
-- add source status / error / support fields
-- track active source kind and transient session information
-
-Build 114 warning:
-
-- do not let runtime source state leak into durable preset state
-
-## `src/js/ui/ui.js`
-
-Owns:
-
-- control wiring
-- mode-specific enable/disable/hide behavior
-- user-facing source switch actions
-- human-readable status updates
-- keeping file-mode transport affordances honest
-
-Build 114 changes allowed here:
-
-- add source selector wiring
-- update status copy
-- mode-specific transport gating
-- hook teardown and activation actions to controls
-
-Build 114 changes not allowed here:
-
-- heavy business logic that belongs in source management
-- long-lived audio graph ownership
-- schema/preset logic
-
-## `src/js/ui/dom-cache.js`
-
-Owns:
-
-- DOM lookup and stable element references
-
-Build 114 changes allowed here:
-
-- cache source selector and any related status elements
-
-Keep this file mechanical and boring.
-
-## `src/js/core/config.js`
-
+### `src/js/core/config.js`
 Owns:
 
 - canonical defaults
-- static option lists
+- limits
 - UI constants
-- supported source labels / source option metadata where appropriate
+- recording config
+- band defaults
 
-Build 114 changes allowed here:
+114 additions may include:
 
-- source option labels
-- static UI constants
-- default source mode if needed
+- source selector defaults
+- copy/config for source-mode labels
+- optional capability policy defaults
 
-Do not put runtime permission state here.
+Must not own:
 
-## `src/index.template.html`
+- active live session state
+- granted permissions
+- stream handles
 
+### `src/js/core/state.js`
 Owns:
 
-- baseline UI structure
+- runtime-only transient state
+- canvas/runtime bookkeeping
+- audio loaded/playing summary
+- recording runtime state
+- UI visibility state
 
-Build 114 changes allowed here:
+114 additions should land here for:
 
-- add source selector markup
-- add any honest source status element if needed
+- active source kind
+- source request/active/error status
+- capability and permission summary
 
-Build 114 warning:
+Must not be mirrored into presets.
 
-- do not bloat the panel with speculative controls that are not part of 114
-
-## `src/css/audio-panel.css`
-
+### `src/js/core/preferences.js`
 Owns:
 
-- audio panel layout and mode-specific presentation affordances
+- user-facing configurable preferences
+- resolved settings derived from preferences + config
 
-Build 114 changes allowed here:
+114 must **not** treat source kind or permission state as user preferences unless explicitly designed in a future build.
 
-- source switch layout
-- hidden/disabled live-mode control presentation
-- compact status treatment
+### `src/js/core/constants.js`, `utils.js`, `spaces.js`
+Own:
 
-## `src/js/recording/recorder-engine.js`
+- constants
+- general helpers
+- canvas sizing/space helpers
 
+Safe targets for small shared helpers, not for source lifecycle ownership.
+
+## 2.3 Presets
+
+### `src/js/presets/url-preset.js`
 Owns:
 
-- recording/capture plumbing and state inside the recording subsystem
+- URL preset encode/decode
+- schema migrations
+- sanitization from canonical defaults
 
-Build 114 changes allowed here only if necessary:
+114 rule:
 
-- ensure recording continues to observe the active routed source path
+- do not write live source session state here
+- do not serialize permission results
+- do not serialize stream labels/handles
 
-Build 114 changes not allowed here:
+This file should only change if we need to add a **deliberate** persisted source preference in a future build. Build 114 does not require that.
 
-- source selection ownership
-- transport ownership
-- UI mode logic that belongs in `ui.js`
+## 2.4 Audio domain
 
-## `src/js/presets/url-preset.js`
+### `src/js/audio/audio-engine.js`
+Currently owns:
 
+- AudioContext creation
+- media element lifecycle
+- playback graph
+- splitter/center sum analyser graph
+- recorder tap destination
+- sample loop support
+- file load/play/pause/stop/unload transport ownership
+
+114 direction:
+
+- continue owning canonical audio graph construction
+- stop owning all source activation policy directly
+- consume source descriptors from a dedicated source manager
+
+Must not become:
+
+- a UI policy module
+- a blob of ad hoc permission logic
+- a mixed transport + browser-capture policy layer with no seams
+
+### `src/js/audio/queue.js`
 Owns:
 
-- durable/shared preset serialization and migration
+- file queue semantics only
 
-Build 114 allowed touch:
+114 rule:
 
-- verify runtime-only live source data is excluded
+- no mic/stream concepts here
+- no fake live-source queue entries
 
-Build 114 warning:
-
-- do not store permission/session state
-- do not add a schema bump unless product requirements explicitly change
-
-## `src/js/audio/queue.js`
-
+### `src/js/audio/scrubber.js`
 Owns:
 
-- file queue only
+- file-backed waveform preview
+- file-backed seek interactions
 
-Build 114 warning:
+114 rule:
 
-- mic and stream are not queue items
-- do not retrofit live sources into the queue model
+- only active/interactive in file mode
+- do not force mic/stream into waveform/timeline semantics
 
-## `src/js/audio/scrubber.js`
+### `src/js/audio/band-bank.js` and `band-bank-controller.js`
+Own:
 
+- frequency band definition and metadata
+- band rebuilds
+- analyzer-side band energy derivation
+
+114 rule:
+
+- source-agnostic as much as possible
+- avoid leaking source-switch policy in here
+
+### Recommended new module: `src/js/audio/input-source-manager.js`
+Should own:
+
+- source kind transitions
+- mic activation
+- stream activation
+- source teardown
+- source capability detection
+- source status normalization
+- handoff into canonical audio graph entry points
+
+This should be the primary new seam for Build 114.
+
+## 2.5 Rendering
+
+### `src/js/render/*`
+Own:
+
+- orb state
+- render policy
+- trail policy
+- color policy
+- render-time motion behavior
+
+114 rule:
+
+- rendering should remain mostly source-agnostic
+- source changes may request visual reset hooks, but must not push live-source policy into render modules
+
+## 2.6 Recording
+
+### `src/js/recording/recorder-engine.js`
 Owns:
 
-- file waveform preview and seek interaction
+- recording lifecycle
+- MIME selection
+- capture start/stop/finalize
+- reading canonical render/audio taps
 
-Build 114 warning:
+114 rule:
 
-- scrubber remains file-mode behavior
-- live modes may disable/hide interaction, but do not force fake waveform semantics
+- keep recorder as passive observer
+- do not allow recorder code to take over source routing
+- only adapt to new tap availability if the canonical audio path changes shape
 
-## `src/js/render/*`
+## 2.7 UI
 
+### `src/js/ui/ui.js`
+Currently owns:
+
+- DOM wiring
+- panel visibility
+- operator-facing text/status
+- queue panel rendering
+- transport event handling
+- config control application
+- recording panel orchestration
+
+114 direction:
+
+- add source selector wiring
+- gate transport controls by source mode
+- surface capability/permission/status honestly
+
+Must not become:
+
+- the owner of source lifecycle logic
+- the owner of stream teardown
+- the place where browser APIs are called directly unless trivial and delegated immediately
+
+### `src/js/ui/dom-cache.js`
 Owns:
 
-- visual simulation and draw behavior
+- DOM references only
 
-Build 114 expectation:
+114 changes:
 
-- mostly untouched
-- may consume reset hooks, but should not be rewritten for 114
+- add source selector/status element references only
 
-## `tests/targeted-audit.test.js`
+## 2.8 Template/CSS
 
+### `src/index.template.html`
 Owns:
 
-- targeted regression and contract protection
+- canonical DOM structure
+- panel/control placement
 
-Build 114 should add:
+114 changes likely include:
 
-- source transition tests
-- live-source exclusion from presets
-- teardown/switching invariants
-- file-mode regression coverage where practical
+- source selector control(s)
+- source status lane elements if needed
 
-## Boundaries Codex must respect
+### `src/css/audio-panel.css`
+Likely primary CSS target for 114 source selector changes.
 
-### Queue boundary
+Must not absorb unrelated side-panel or recording ownership.
 
-Queue is file-only.
+## 3. Edit policy for Build 114
 
-### Scrubber boundary
+## 3.1 Expected primary edit set
 
-Scrubber is file-only.
+Agents may edit these files for 114:
 
-### Source boundary
+- `src/js/core/config.js`
+- `src/js/core/state.js`
+- `src/js/audio/audio-engine.js`
+- `src/js/audio/scrubber.js`
+- `src/js/ui/ui.js`
+- `src/js/ui/dom-cache.js`
+- `src/index.template.html`
+- `src/css/audio-panel.css`
+- `tests/targeted-audit.test.js`
+- `src/js/audio/input-source-manager.js` (new)
 
-Only one active source at a time.
+## 3.2 Secondary edit set
 
-### Preset boundary
+These may be touched only if required by a clean seam or explicit test need:
 
-Live session and permission state are runtime-only.
+- `src/js/main.js`
+- `src/js/recording/recorder-engine.js`
+- `src/js/core/constants.js`
+- `src/js/core/utils.js`
 
-### Recording boundary
+## 3.3 Avoid editing unless a concrete need is proven
 
-Recording observes the active path; it does not become a new transport path.
+- `src/js/audio/queue.js`
+- `src/js/audio/band-bank.js`
+- `src/js/audio/band-bank-controller.js`
+- `src/js/render/*`
+- `src/js/presets/url-preset.js`
 
-### UI boundary
+These are high-regression surfaces relative to the value of Build 114.
 
-UI reflects source mode honestly; it must not fake track semantics for live sources.
+## 4. Runtime vs persisted ownership
 
-## Anti-patterns to reject in review
+### Runtime-only
 
-Reject implementations that:
+Build 114 source state belongs in runtime-only ownership:
 
-- stuff mic/stream special cases randomly across unrelated files
-- treat live sources as fake queue tracks
-- store source session state in presets
-- duplicate source teardown logic in multiple places
-- leave UI controls enabled when they do nothing in live modes
-- wire permission handling directly into render modules
-- rewrite file transport behavior without need
-- introduce zombie stream tracks or duplicate event handlers
+- source kind
+- source status
+- permission results
+- live session errors
+- stream active/inactive state
+- stream labels or track names
 
-## Preferred Build 114 shape
+### Persisted
 
-1. add explicit runtime source state
-2. add source manager
-3. route active source through audio engine
-4. wire honest UI
-5. add targeted tests
-6. verify file mode regression safety
+Current persisted settings remain things like:
 
-## Review checklist
+- visuals
+- trace
+- particles
+- motion
+- audio analysis settings
+- band distribution / overlay choices
+- future deliberate persisted source preferences only if explicitly designed later
 
-A Build 114 PR should answer yes to all of these:
+## 5. UI truth table
 
-- Is source kind explicit in runtime state?
-- Is teardown centralized?
-- Are Mic and Stream clearly not queue-backed track modes?
-- Does file mode still preserve Build 113 behavior?
-- Is live-source state excluded from presets?
-- Does the UI handle denied/unsupported cases cleanly?
-- Are unrelated modules left alone?
+### File mode
+
+Allowed:
+
+- queue
+- scrubber
+- duration
+- prev/next
+- repeat
+- shuffle
+- filename
+
+### Mic mode
+
+Allowed:
+
+- source status
+- analysis-driven visuals
+- recording if supported by canonical taps
+
+Not allowed to imply:
+
+- queue membership
+- file duration
+- scrub seek behavior
+
+### Stream mode
+
+Allowed:
+
+- source status
+- analysis-driven visuals
+- recording if canonical taps support it cleanly
+
+Not allowed to imply:
+
+- queue membership
+- file transport semantics
+- fake scrub/timeline truth
+
+## 6. Safe integration strategy
+
+The safest 114 strategy is:
+
+1. add a source manager
+2. move source-kind transitions there
+3. keep `AudioEngine` as the canonical graph owner
+4. make `UI` consume source state instead of inventing it
+5. keep presets untouched except for explicit non-persistence assertions in tests
+
+## 7. Anti-patterns
+
+Agents must avoid these patterns:
+
+- browser permission code duplicated across `ui.js` and `audio-engine.js`
+- mic/stream logic added as special-case branches scattered across unrelated modules
+- transport controls left active in live modes without honest behavior
+- stream objects stored in preferences or preset payloads
+- recorder-engine reaching into private source internals
+- main.js becoming a giant source-mode switchboard
+
+## 8. Minimal clean seam proposal
+
+Recommended new public contract from `input-source-manager.js`:
+
+- `getActiveSourceKind()`
+- `getSourceStatus()`
+- `activateFileSource(...)`
+- `activateMicSource()`
+- `activateStreamSource()`
+- `teardownActiveSource()`
+- `hasFileTransport()`
+- `isSeekable()`
+- `getDisplayLabel()`
+
+The final naming may differ, but the separation should not.
+
+## 9. Success condition for this seam map
+
+This seam map succeeds if Build 114 lands with:
+
+- one clear owner for source activation
+- one clear owner for the canonical audio graph
+- one clear owner for preset persistence
+- one clear owner for operator-facing source UI
+- no ambiguity about where runtime-only live state belongs
