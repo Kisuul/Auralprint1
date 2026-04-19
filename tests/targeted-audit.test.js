@@ -7,6 +7,8 @@ import { normalizeOrbDef } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
+import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
+import { readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
 
@@ -70,12 +72,83 @@ function createScrubberHarness() {
   return {
     canvas,
     canvasListeners,
+    scrubberTime,
     windowListeners,
     restore() {
       globalThis.window = previousWindow;
       globalThis.document = previousDocument;
     },
   };
+}
+
+function snapshotSourceAndAudioState() {
+  return {
+    source: JSON.parse(JSON.stringify(state.source)),
+    audio: { ...state.audio },
+  };
+}
+
+function applySourceAndAudioState(snapshot) {
+  state.source.kind = snapshot.source.kind;
+  state.source.status = snapshot.source.status;
+  state.source.label = snapshot.source.label;
+  state.source.permission.mic = snapshot.source.permission.mic;
+  state.source.permission.stream = snapshot.source.permission.stream;
+  state.source.support.mic = snapshot.source.support.mic;
+  state.source.support.stream = snapshot.source.support.stream;
+  state.source.errorCode = snapshot.source.errorCode;
+  state.source.errorMessage = snapshot.source.errorMessage;
+  state.source.sessionActive = snapshot.source.sessionActive;
+  state.source.streamMeta.hasAudio = snapshot.source.streamMeta.hasAudio;
+  state.source.streamMeta.hasVideo = snapshot.source.streamMeta.hasVideo;
+  state.audio.isLoaded = snapshot.audio.isLoaded;
+  state.audio.isPlaying = snapshot.audio.isPlaying;
+  state.audio.filename = snapshot.audio.filename;
+  state.audio.transportError = snapshot.audio.transportError;
+}
+
+function renderScrubberTimeText({ sourceState = {}, audioState = {}, mediaEl = null } = {}) {
+  const harness = createScrubberHarness();
+  const previousGetMediaEl = AudioEngine.getMediaEl;
+  const snapshot = snapshotSourceAndAudioState();
+
+  try {
+    const nextSource = {
+      ...snapshot.source,
+      ...sourceState,
+      permission: {
+        ...snapshot.source.permission,
+        ...(sourceState.permission || {}),
+      },
+      support: {
+        ...snapshot.source.support,
+        ...(sourceState.support || {}),
+      },
+      streamMeta: {
+        ...snapshot.source.streamMeta,
+        ...(sourceState.streamMeta || {}),
+      },
+    };
+    const nextAudio = {
+      ...snapshot.audio,
+      ...audioState,
+    };
+
+    applySourceAndAudioState({
+      source: nextSource,
+      audio: nextAudio,
+    });
+
+    AudioEngine.getMediaEl = () => mediaEl;
+    Scrubber.init(harness.canvas);
+    Scrubber.reset();
+
+    return harness.scrubberTime.textContent;
+  } finally {
+    AudioEngine.getMediaEl = previousGetMediaEl;
+    applySourceAndAudioState(snapshot);
+    harness.restore();
+  }
 }
 
 function createAudioEngineHarness() {
@@ -212,6 +285,122 @@ function createAudioEngineHarness() {
   };
 }
 
+function createRecorderHarness() {
+  const previousWindow = globalThis.window;
+  const previousMediaStream = globalThis.MediaStream;
+  const previousMediaRecorder = globalThis.MediaRecorder;
+  const previousSource = JSON.parse(JSON.stringify(state.source));
+  const previousAudio = { ...state.audio };
+  const previousRecording = JSON.parse(JSON.stringify(state.recording));
+
+  const videoTrack = { kind: "video", stop() {} };
+  const audioTrack = { kind: "audio", stop() {} };
+
+  class FakeMediaStream {
+    constructor() {
+      this._tracks = [];
+    }
+    addTrack(track) {
+      this._tracks.push(track);
+    }
+    getTracks() {
+      return this._tracks.slice();
+    }
+    getVideoTracks() {
+      return this._tracks.filter((track) => track.kind === "video");
+    }
+    getAudioTracks() {
+      return this._tracks.filter((track) => track.kind === "audio");
+    }
+  }
+
+  class FakeMediaRecorder {
+    static isTypeSupported() {
+      return true;
+    }
+    constructor(stream, options) {
+      this.stream = stream;
+      this.options = options;
+      this.state = "inactive";
+      this.ondataavailable = null;
+      this.onstop = null;
+      this.onerror = null;
+    }
+    start() {
+      this.state = "recording";
+    }
+  }
+
+  globalThis.MediaStream = FakeMediaStream;
+  globalThis.MediaRecorder = FakeMediaRecorder;
+  globalThis.window = {
+    ...(previousWindow || {}),
+    MediaRecorder: FakeMediaRecorder,
+  };
+
+  const renderStream = new FakeMediaStream();
+  renderStream.addTrack(videoTrack);
+  const audioStream = new FakeMediaStream();
+  audioStream.addTrack(audioTrack);
+  const renderCanvas = {
+    captureStream() {
+      return renderStream;
+    },
+  };
+  const audioTap = {
+    supportsStreamDestination: true,
+    ensureStream() {
+      return audioStream;
+    },
+    releaseStream() {},
+  };
+
+  state.audio.isLoaded = false;
+  state.audio.isPlaying = false;
+  state.audio.filename = "";
+  state.audio.transportError = "";
+  state.source.kind = "mic";
+  state.source.status = "active";
+  state.source.label = "Desk Mic";
+  state.source.sessionActive = true;
+  state.source.permission.mic = "granted";
+  state.source.streamMeta.hasAudio = true;
+  state.source.streamMeta.hasVideo = false;
+
+  RecorderEngine.init({
+    stateRef: state.recording,
+    getRenderTap: () => ({ canvas: renderCanvas }),
+    getAudioTap: () => audioTap,
+    nowMs: () => 0,
+  });
+
+  return {
+    restore() {
+      try { RecorderEngine.dispose(); } catch {}
+      state.source.kind = previousSource.kind;
+      state.source.status = previousSource.status;
+      state.source.label = previousSource.label;
+      state.source.permission.mic = previousSource.permission.mic;
+      state.source.permission.stream = previousSource.permission.stream;
+      state.source.support.mic = previousSource.support.mic;
+      state.source.support.stream = previousSource.support.stream;
+      state.source.errorCode = previousSource.errorCode;
+      state.source.errorMessage = previousSource.errorMessage;
+      state.source.sessionActive = previousSource.sessionActive;
+      state.source.streamMeta.hasAudio = previousSource.streamMeta.hasAudio;
+      state.source.streamMeta.hasVideo = previousSource.streamMeta.hasVideo;
+      state.audio.isLoaded = previousAudio.isLoaded;
+      state.audio.isPlaying = previousAudio.isPlaying;
+      state.audio.filename = previousAudio.filename;
+      state.audio.transportError = previousAudio.transportError;
+      Object.assign(state.recording, previousRecording);
+      globalThis.window = previousWindow;
+      globalThis.MediaStream = previousMediaStream;
+      globalThis.MediaRecorder = previousMediaRecorder;
+    },
+  };
+}
+
 test("normalizeOrbDef preserves fallback routing when chanId and bandIds are omitted", () => {
   const fallback = {
     id: "ORB0",
@@ -318,6 +507,102 @@ test("scrubber active touch drag still prevents default and seeks", () => {
   }
 });
 
+test("Scrubber.draw keeps the Build 113 idle file copy when no source is active", () => {
+  const text = renderScrubberTimeText({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      errorCode: "",
+      errorMessage: "",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  });
+
+  assert.equal(text, "--:-- / --:-- • no track loaded");
+});
+
+test("Scrubber.draw uses honest microphone copy instead of fake track text", () => {
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "mic",
+      status: "requesting",
+      label: "Desk Mic",
+      errorCode: "",
+      errorMessage: "",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Waiting for microphone permission.");
+
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "mic",
+      status: "active",
+      label: "Desk Mic",
+      errorCode: "",
+      errorMessage: "",
+      sessionActive: true,
+      streamMeta: { hasAudio: true, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Microphone input active • live input");
+
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "mic",
+      status: "error",
+      label: "Desk Mic",
+      errorCode: "mic-denied",
+      errorMessage: "Microphone permission denied.",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Microphone permission denied.");
+
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "mic",
+      status: "unsupported",
+      label: "",
+      errorCode: "mic-unsupported",
+      errorMessage: "",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Microphone input is unavailable.");
+});
+
 test("AudioEngine.loadFile does not tear down the freshly created media element during attach", async () => {
   const harness = createAudioEngineHarness();
 
@@ -332,6 +617,82 @@ test("AudioEngine.loadFile does not tear down the freshly created media element 
     assert.equal(AudioEngine.getMediaEl(), harness.audioEl);
     assert.equal(state.audio.isLoaded, true);
     assert.equal(state.audio.filename, "demo.wav");
+  } finally {
+    harness.restore();
+  }
+});
+
+test("readSourceUiModel keeps microphone mode honest about file-only affordances", () => {
+  const model = readSourceUiModel({
+    sourceState: {
+      kind: "mic",
+      status: "active",
+      label: "Podcast Mic",
+      errorMessage: "",
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "should-not-show.wav",
+      transportError: "",
+    },
+    queueLength: 3,
+    currentIndex: 1,
+    bandText: "mono-ish (L≈R)",
+    recordingStatusText: "Recording available.",
+  });
+
+  assert.deepEqual(model.pressedSources, {
+    file: false,
+    mic: true,
+    stream: false,
+  });
+  assert.equal(model.disableFileControls, true);
+  assert.equal(model.audioPanelSourceMode, "mic");
+  assert.match(model.audioStatusText, /Microphone input active — Podcast Mic/);
+  assert.doesNotMatch(model.audioStatusText, /should-not-show\.wav/);
+  assert.equal(shouldShowActiveQueueItem({ kind: "mic" }, { isLoaded: false }, { active: true }), false);
+});
+
+test("readSourceUiModel treats File as the idle workflow side without implying an active file source", () => {
+  const model = readSourceUiModel({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      errorMessage: "",
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "queued-track.wav",
+      transportError: "",
+    },
+    queueLength: 2,
+    currentIndex: 0,
+  });
+
+  assert.deepEqual(model.pressedSources, {
+    file: true,
+    mic: false,
+    stream: false,
+  });
+  assert.equal(model.disableFileControls, false);
+  assert.equal(model.audioPanelSourceMode, "file");
+  assert.equal(model.showActiveQueueItem, false);
+  assert.equal(model.audioStatusText, "No audio loaded.");
+  assert.equal(shouldShowActiveQueueItem({ kind: "none" }, { isLoaded: false }, { active: true }), false);
+});
+
+test("RecorderEngine.start allows an active microphone source without file transport state", () => {
+  const harness = createRecorderHarness();
+
+  try {
+    const status = RecorderEngine.start();
+
+    assert.equal(status.ok, true);
+    assert.equal(status.phase, "recording");
+    assert.notEqual(status.code, "no-active-source");
   } finally {
     harness.restore();
   }

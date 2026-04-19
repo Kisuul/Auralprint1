@@ -20,6 +20,10 @@ function primeDomCache() {
     ui.openBands = document.getElementById("openBands");
 
     ui.btnLoad = document.getElementById("btnLoad");
+    ui.sourceSwitch = document.getElementById("sourceSwitch");
+    ui.btnSourceFile = document.getElementById("btnSourceFile");
+    ui.btnSourceMic = document.getElementById("btnSourceMic");
+    ui.btnSourceStream = document.getElementById("btnSourceStream");
     ui.btnPrev = document.getElementById("btnPrev");
     ui.btnNext = document.getElementById("btnNext");
     ui.btnPlay = document.getElementById("btnPlay");

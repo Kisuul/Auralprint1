@@ -21,6 +21,7 @@ function createManagerHarness(overrides = {}) {
   };
   const calls = {
     loadFile: [],
+    attachMediaStreamSource: [],
     unload: 0,
   };
 
@@ -35,6 +36,13 @@ function createManagerHarness(overrides = {}) {
     unload() {
       calls.unload += 1;
       if (typeof overrides.onUnload === "function") overrides.onUnload({ stateRef, calls });
+    },
+    async attachMediaStreamSource(mediaStream, opts) {
+      calls.attachMediaStreamSource.push({ mediaStream, opts });
+      if (typeof overrides.onAttachMediaStreamSource === "function") {
+        return overrides.onAttachMediaStreamSource({ mediaStream, opts, stateRef, calls });
+      }
+      return true;
     },
     getMediaEl() {
       return overrides.mediaEl || null;
@@ -65,6 +73,42 @@ function decodePresetHash(hash) {
   const padLength = (4 - (token.length % 4)) % 4;
   const b64 = token.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat(padLength);
   return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+}
+
+function createFakeTrack(label = "") {
+  const listeners = new Map();
+  return {
+    label,
+    stopCount: 0,
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    removeEventListener(type) {
+      listeners.delete(type);
+    },
+    stop() {
+      this.stopCount += 1;
+    },
+    emit(type) {
+      const handler = listeners.get(type);
+      if (handler) handler();
+    },
+  };
+}
+
+function createFakeMediaStream({ audioLabel = "Built-in Microphone", video = false } = {}) {
+  const audioTrack = createFakeTrack(audioLabel);
+  const videoTrack = video ? createFakeTrack("Camera") : null;
+  const tracks = videoTrack ? [audioTrack, videoTrack] : [audioTrack];
+  return {
+    audioTrack,
+    videoTrack,
+    stream: {
+      getTracks() { return tracks; },
+      getAudioTracks() { return [audioTrack]; },
+      getVideoTracks() { return videoTrack ? [videoTrack] : []; },
+    },
+  };
 }
 
 test("state.source exists and starts in the idle none state", () => {
@@ -167,10 +211,14 @@ test("teardownActiveSource is idempotent and unloads the active session only onc
   assert.equal(stateRef.source.sessionActive, false);
 });
 
-test("activateMic tears down an active file source before reporting the Build 114-A stub state", async () => {
+test("activateMic tears down an active file source, attaches the microphone stream, and marks the source active", async () => {
+  const micSession = createFakeMediaStream({ audioLabel: "USB Microphone" });
   const { manager, stateRef, calls } = createManagerHarness({
     mediaDevices: {
-      getUserMedia() {},
+      async getUserMedia(constraints) {
+        assert.deepEqual(constraints, { audio: true });
+        return micSession.stream;
+      },
       getDisplayMedia() {},
     },
     mediaEl: { tagName: "AUDIO" },
@@ -186,13 +234,46 @@ test("activateMic tears down an active file source before reporting the Build 11
   const result = await manager.activateMic();
 
   assert.equal(calls.unload, 1);
+  assert.equal(calls.attachMediaStreamSource.length, 1);
+  assert.equal(calls.attachMediaStreamSource[0].mediaStream, micSession.stream);
+  assert.deepEqual(calls.attachMediaStreamSource[0].opts, {
+    kind: "mic",
+    label: "USB Microphone",
+    monitorOutput: false,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.kind, "mic");
+  assert.equal(result.status, "active");
+  assert.equal(stateRef.source.kind, "mic");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+  assert.equal(stateRef.source.permission.mic, "granted");
+  assert.equal(stateRef.source.label, "USB Microphone");
+  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: false });
+});
+
+test("activateMic reports denied microphone permission as a recoverable error", async () => {
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getUserMedia() {
+        const err = new Error("Permission denied");
+        err.name = "NotAllowedError";
+        throw err;
+      },
+    },
+  });
+
+  const result = await manager.activateMic();
+
   assert.equal(result.ok, false);
   assert.equal(result.kind, "mic");
   assert.equal(result.status, "error");
+  assert.equal(result.errorCode, "mic-denied");
   assert.equal(stateRef.source.kind, "mic");
   assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.permission.mic, "denied");
   assert.equal(stateRef.source.sessionActive, false);
-  assert.equal(stateRef.source.errorCode, "mic-not-yet-implemented");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
 });
 
 test("activateStream tears down an active file source before reporting the Build 114-A stub state", async () => {
@@ -221,6 +302,93 @@ test("activateStream tears down an active file source before reporting the Build
   assert.equal(stateRef.source.status, "error");
   assert.equal(stateRef.source.sessionActive, false);
   assert.equal(stateRef.source.errorCode, "stream-not-yet-implemented");
+});
+
+test("file -> mic -> file switches cleanly through the source manager contract", async () => {
+  const micSession = createFakeMediaStream({ audioLabel: "Laptop Mic" });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getUserMedia() {
+        return micSession.stream;
+      },
+    },
+    mediaEl: { tagName: "AUDIO" },
+    onLoadFile({ stateRef: loadState }) {
+      loadState.audio.isLoaded = true;
+      loadState.audio.isPlaying = false;
+      loadState.audio.filename = "again.wav";
+      loadState.audio.transportError = "";
+      return true;
+    },
+  });
+
+  await manager.activateFile({ name: "again.wav" }, { requestId: 18 });
+  const micResult = await manager.activateMic();
+  const fileResult = await manager.activateFile({ name: "final.wav" }, { requestId: 19 });
+
+  assert.equal(micResult.ok, true);
+  assert.equal(fileResult.ok, true);
+  assert.equal(micSession.audioTrack.stopCount, 1);
+  assert.equal(calls.unload, 2);
+  assert.equal(calls.attachMediaStreamSource.length, 1);
+  assert.equal(stateRef.source.kind, "file");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+  assert.equal(stateRef.source.label, "final.wav");
+});
+
+test("a late microphone grant is stopped and discarded after teardown", async () => {
+  const micSession = createFakeMediaStream({ audioLabel: "Race Mic" });
+  let resolveGetUserMedia = null;
+  const micPromise = new Promise((resolve) => {
+    resolveGetUserMedia = resolve;
+  });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      getUserMedia() {
+        return micPromise;
+      },
+    },
+  });
+
+  const pendingActivation = manager.activateMic();
+  assert.equal(stateRef.source.kind, "mic");
+  assert.equal(stateRef.source.status, "requesting");
+
+  const tornDown = await manager.teardownActiveSource({ reason: "switch-away-before-grant" });
+  resolveGetUserMedia(micSession.stream);
+  const result = await pendingActivation;
+
+  assert.equal(tornDown, true);
+  assert.equal(result.ok, false);
+  assert.equal(result.errorCode, "mic-activation-cancelled");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
+  assert.equal(micSession.audioTrack.stopCount, 1);
+  assert.equal(stateRef.source.kind, "none");
+  assert.equal(stateRef.source.status, "idle");
+});
+
+test("external microphone end tears down the stream and leaves a recoverable mic error", async () => {
+  const micSession = createFakeMediaStream({ audioLabel: "Podcast Mic" });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getUserMedia() {
+        return micSession.stream;
+      },
+    },
+  });
+
+  await manager.activateMic();
+  micSession.audioTrack.emit("ended");
+  await Promise.resolve();
+
+  assert.equal(calls.unload, 1);
+  assert.equal(micSession.audioTrack.stopCount, 1);
+  assert.equal(stateRef.source.kind, "mic");
+  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.sessionActive, false);
+  assert.equal(stateRef.source.errorCode, "mic-ended");
+  assert.equal(stateRef.source.errorMessage, "Microphone input ended. Select Mic to reconnect.");
 });
 
 test("teardownActiveSource stops stream-backed sessions even when the kind is mic", async () => {
@@ -253,18 +421,18 @@ test("teardownActiveSource stops stream-backed sessions even when the kind is mi
   assert.equal(stateRef.source.status, "idle");
 });
 
-test("unsupported live-source activation reports unsupported state without mutating file transport fields", async () => {
-  const { manager, stateRef } = createManagerHarness({ mediaDevices: null });
+test("unsupported microphone activation reports unsupported state without mutating file transport fields", async () => {
+  const { manager, stateRef, calls } = createManagerHarness({ mediaDevices: null });
   stateRef.audio.isLoaded = true;
   stateRef.audio.isPlaying = true;
   stateRef.audio.filename = "existing.wav";
   stateRef.audio.transportError = "";
 
   const micResult = await manager.activateMic();
-  const streamResult = await manager.activateStream();
 
   assert.equal(micResult.status, "unsupported");
-  assert.equal(streamResult.status, "unsupported");
+  assert.equal(stateRef.source.permission.mic, "unsupported");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
   assert.equal(stateRef.audio.isLoaded, true);
   assert.equal(stateRef.audio.isPlaying, true);
   assert.equal(stateRef.audio.filename, "existing.wav");
@@ -298,12 +466,13 @@ test("URL preset serialization excludes runtime source state", () => {
     },
   };
 
-  state.source.kind = "stream";
-  state.source.status = "error";
-  state.source.label = "Shared tab audio";
+  state.source.kind = "mic";
+  state.source.status = "active";
+  state.source.label = "Studio Mic";
+  state.source.permission.mic = "granted";
   state.source.permission.stream = "denied";
-  state.source.errorCode = "stream-denied";
-  state.source.errorMessage = "User denied stream capture.";
+  state.source.errorCode = "mic-denied";
+  state.source.errorMessage = "Microphone permission denied.";
   state.source.sessionActive = true;
   state.source.streamMeta.hasAudio = true;
   state.source.streamMeta.hasVideo = true;

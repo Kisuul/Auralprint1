@@ -119,6 +119,15 @@ const Scrubber = (() => {
     return `${m}:${String(s).padStart(2, "0")}`;
   }
 
+  function readLiveSourceTimeText(sourceState = state.source) {
+    // Live inputs intentionally avoid fake timeline semantics in the scrubber lane.
+    if (!sourceState || sourceState.kind !== "mic") return "--:-- / --:-- • no track loaded";
+    if (sourceState.status === "requesting") return "Waiting for microphone permission.";
+    if (sourceState.status === "active") return "Microphone input active • live input";
+    if (sourceState.errorMessage) return sourceState.errorMessage;
+    return "Microphone input is unavailable.";
+  }
+
   function draw() {
     if (!_canvas || !_ctx2d) return;
 
@@ -224,7 +233,7 @@ const Scrubber = (() => {
       }
     } else {
       const timeEl = document.getElementById("scrubberTime");
-      if (timeEl) timeEl.textContent = "--:-- / --:-- • no track loaded";
+      if (timeEl) timeEl.textContent = readLiveSourceTimeText();
     }
   }
 

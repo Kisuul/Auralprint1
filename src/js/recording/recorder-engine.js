@@ -1141,8 +1141,9 @@ const RecorderEngine = (() => {
       }), "start");
     }
 
-    if (!state.audio.isLoaded) {
-      return commitStatus(buildStatus(false, "no-audio-loaded", "Load audio to start recording.", {
+    const hasRecordableSource = !!(state.audio.isLoaded || (state.source && state.source.sessionActive));
+    if (!hasRecordableSource) {
+      return commitStatus(buildStatus(false, "no-active-source", "Activate a source to start recording.", {
         support,
         phase: runtime.lifecycle.phase === "complete" ? "complete" : "idle",
       }), "start");

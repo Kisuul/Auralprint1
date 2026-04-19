@@ -8,7 +8,7 @@
   height: auto;
   padding: var(--ui-pad);
   display: grid;
-  grid-template-columns: auto auto auto auto auto auto auto auto 1fr auto auto;
+  grid-template-columns: auto auto auto auto auto auto auto auto auto 1fr auto auto;
   grid-template-rows: 36px var(--ui-icon);
   gap: var(--ui-gap);
   align-items: center;
@@ -37,11 +37,38 @@
       cursor: pointer;
       display: block;
     }
-    #scrubberTime {
-      font-size: 11px;
-      font-variant-numeric: tabular-nums;
-      opacity: 0.7;
-      white-space: nowrap;
-      min-width: 80px;
-      text-align: right;
-    }
+#scrubberTime {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
+}
+
+.source-switch {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.source-switch button {
+  min-width: 56px;
+}
+
+.source-switch button[aria-pressed="true"] {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.35);
+}
+
+.source-switch button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#audioPanel[data-source-mode="mic"] #scrubberRow,
+#audioPanel[data-source-mode="stream"] #scrubberRow {
+  opacity: 0.55;
+  pointer-events: none;
+}

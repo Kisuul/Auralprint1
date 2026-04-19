@@ -18,6 +18,74 @@ import { primeDomCache } from "./dom-cache.js";
 /* =============================================================================
    UI
    ========================================================================== */
+function isFileWorkflowMode(sourceState = state.source) {
+  const kind = sourceState && typeof sourceState.kind === "string" ? sourceState.kind : "none";
+  // The File side of the selector represents the canonical file workflow,
+  // including the idle "no active source" state after leaving a live input.
+  return kind === "none" || kind === "file";
+}
+
+function hasActiveFileSource(sourceState = state.source, audioState = state.audio) {
+  return !!(sourceState && sourceState.kind === "file" && audioState && audioState.isLoaded);
+}
+
+function shouldShowActiveQueueItem(sourceState, audioState, item) {
+  return !!(item && item.active && hasActiveFileSource(sourceState, audioState));
+}
+
+function readSourceUiModel({
+  sourceState = state.source,
+  audioState = state.audio,
+  queueLength = Queue.length,
+  currentIndex = Queue.currentIndex,
+  bandText = "n/a",
+  recordingStatusText = "",
+  hasAudioToast = false,
+  audioToastText = "",
+} = {}) {
+  const sourceKind = sourceState && typeof sourceState.kind === "string" ? sourceState.kind : "none";
+  const fileWorkflowSelected = isFileWorkflowMode(sourceState);
+  // The selector expresses the current workflow side, not guaranteed active media.
+  // Idle state stays on File so users land back in the canonical file workflow.
+  const selectedSourceKind = sourceKind === "mic" || sourceKind === "stream" ? sourceKind : "file";
+  const disableFileControls = !fileWorkflowSelected;
+  const pressedSources = {
+    file: selectedSourceKind === "file",
+    mic: selectedSourceKind === "mic",
+    stream: selectedSourceKind === "stream",
+  };
+
+  let computedAudioStatus = "";
+  if (selectedSourceKind === "mic") {
+    if (sourceState.status === "requesting") computedAudioStatus = "Waiting for microphone permission.";
+    else if (sourceState.status === "active") {
+      const label = sourceState.label ? ` — ${sourceState.label}` : "";
+      computedAudioStatus = `Microphone input active${label} — Bands: ${bandText}`;
+    } else if (sourceState.errorMessage) computedAudioStatus = sourceState.errorMessage;
+    else computedAudioStatus = "Microphone input is unavailable.";
+  } else if (selectedSourceKind === "stream") {
+    computedAudioStatus = sourceState.errorMessage || "Stream input is unavailable.";
+  } else if (audioState.isLoaded) {
+    const qLen = queueLength;
+    const qPos = qLen > 0 ? clamp(currentIndex + 1, 1, qLen) : 0;
+    const playState = audioState.isPlaying ? " (playing)" : " (paused)";
+    const errText = audioState.transportError ? ` — Error: ${audioState.transportError}` : "";
+    computedAudioStatus = `[${qPos}/${qLen}] ${audioState.filename}${playState} — Bands: ${bandText}${errText}`;
+  } else {
+    computedAudioStatus = audioState.transportError ? `No audio loaded. Error: ${audioState.transportError}` : "No audio loaded.";
+  }
+
+  const withRecording = recordingStatusText ? `${computedAudioStatus} | ${recordingStatusText}` : computedAudioStatus;
+  return {
+    selectedSourceKind,
+    pressedSources,
+    disableFileControls,
+    showActiveQueueItem: hasActiveFileSource(sourceState, audioState),
+    audioPanelSourceMode: selectedSourceKind,
+    audioStatusText: hasAudioToast ? audioToastText : withRecording,
+  };
+}
+
 const UI = (() => {
   const ui = state.ui;
 
@@ -226,6 +294,11 @@ const UI = (() => {
   function audioStatusToast(msg, holdMs = 2500) {
     _audioStatusToastText = msg;
     _audioStatusToastUntilMs = performance.now() + holdMs;
+  }
+
+  function clearAudioStatusToast() {
+    _audioStatusToastText = "";
+    _audioStatusToastUntilMs = 0;
   }
 
   function applyPrefs(reason, options = {}) {
@@ -871,36 +944,43 @@ const UI = (() => {
       : "n/a";
 
     const recordingStatusText = formatRecordingAudioStatusSummary(state.recording);
-
-    // audioStatus: always show [pos/len] queue position when audio is loaded.
-    // Guarded to avoid invalid display if transport and queue are temporarily out of sync.
     const hasAudioToast = performance.now() < _audioStatusToastUntilMs;
+    const sourceUi = readSourceUiModel({
+      sourceState: state.source,
+      audioState: state.audio,
+      queueLength: Queue.length,
+      currentIndex: Queue.currentIndex,
+      bandText,
+      recordingStatusText,
+      hasAudioToast,
+      audioToastText: _audioStatusToastText,
+    });
+    const fileControlsDisabled = sourceUi.disableFileControls;
 
-    if (state.audio.isLoaded) {
-      const qLen = Queue.length;
-      const qPos = qLen > 0 ? clamp(Queue.currentIndex + 1, 1, qLen) : 0; // 1-based for display
-      const playState = state.audio.isPlaying ? " (playing)" : " (paused)";
-      const errText = state.audio.transportError ? ` — Error: ${state.audio.transportError}` : "";
-      const computedAudioStatus = `[${qPos}/${qLen}] ${state.audio.filename}${playState} — Bands: ${bandText}${errText}`;
-      const audioStatusText = `${computedAudioStatus} | ${recordingStatusText}`;
-      ui.audioStatus.textContent = hasAudioToast ? _audioStatusToastText : (recordingStatusText ? audioStatusText : computedAudioStatus);
-    } else {
-      const computedAudioStatus = state.audio.transportError ? `No audio loaded. Error: ${state.audio.transportError}` : "No audio loaded.";
-      const audioStatusText = `${computedAudioStatus} | ${recordingStatusText}`;
-      ui.audioStatus.textContent = hasAudioToast ? _audioStatusToastText : (recordingStatusText ? audioStatusText : computedAudioStatus);
+    ui.audioStatus.textContent = sourceUi.audioStatusText;
+    if (ui.audioPanel) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
+    if (ui.btnSourceFile) ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
+    if (ui.btnSourceMic) ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
+    if (ui.btnSourceStream) {
+      ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
+      ui.btnSourceStream.disabled = true;
     }
 
-    ui.btnPlay.disabled = !state.audio.isLoaded;
-    ui.btnStop.disabled = !state.audio.isLoaded;
+    ui.btnLoad.disabled = fileControlsDisabled;
+    ui.btnPlay.disabled = fileControlsDisabled || !state.audio.isLoaded;
+    ui.btnStop.disabled = fileControlsDisabled || !state.audio.isLoaded;
     ui.btnPlay.textContent = state.audio.isPlaying ? "Pause" : "Play";
 
     // Manual transport buttons: boundary-aware by default; wrap at boundaries when Repeat=All.
     const repeatAllWrap = preferences.audio.repeatMode === "all" && Queue.length > 1;
-    ui.btnPrev.disabled = !(Queue.canPrev() || repeatAllWrap);
-    ui.btnNext.disabled = !(Queue.canNext() || repeatAllWrap);
+    ui.btnPrev.disabled = fileControlsDisabled || !(Queue.canPrev() || repeatAllWrap);
+    ui.btnNext.disabled = fileControlsDisabled || !(Queue.canNext() || repeatAllWrap);
 
     ui.btnRepeat.textContent = `Repeat: ${p.audio.repeatMode === "one" ? "One" : (p.audio.repeatMode === "all" ? "All" : "Off")}`;
-    ui.btnShuffle.disabled = Queue.length < 3;
+    ui.btnRepeat.disabled = fileControlsDisabled;
+    ui.btnShuffle.disabled = fileControlsDisabled || Queue.length < 3;
+    ui.btnToggleQueue.disabled = fileControlsDisabled;
+    ui.btnClearQueue.disabled = fileControlsDisabled || Queue.length === 0;
     ui.chkMute.checked = !!p.audio.muted;
     ui.rngVol.value = String(p.audio.volume);
     ui.valVol.textContent = fmt(p.audio.volume, 2);
@@ -1082,6 +1162,42 @@ const UI = (() => {
        ------------------------------------------------------------------------- */
     let activeLoadRequestId = 0;
 
+    function invalidatePendingTrackLoads() {
+      activeLoadRequestId += 1;
+    }
+
+    async function switchToMicMode() {
+      if (state.source.kind === "mic" && (state.source.status === "requesting" || state.source.status === "active")) {
+        return false;
+      }
+
+      invalidatePendingTrackLoads();
+      clearAudioStatusToast();
+      clearAudioState();
+      if (ui.queuePanel) ui.queuePanel.style.display = "none";
+      RecorderEngine.onTransportMutation("audio-unloaded", {
+        reason: "switch-to-mic",
+      });
+      const activation = await InputSourceManager.activateMic();
+      refreshQueuePanel();
+      return !!(activation && activation.ok);
+    }
+
+    async function switchToFileMode() {
+      if (isFileWorkflowMode(state.source)) return false;
+
+      invalidatePendingTrackLoads();
+      clearAudioStatusToast();
+      await InputSourceManager.teardownActiveSource({ reason: "switch-to-file-mode" });
+      clearAudioState();
+      if (ui.queuePanel) ui.queuePanel.style.display = "none";
+      RecorderEngine.onTransportMutation("audio-unloaded", {
+        reason: "switch-to-file-mode",
+      });
+      refreshQueuePanel();
+      return true;
+    }
+
     async function loadAndPlay(file, opts = {}) {
       if (!file) return false;
       const requestId = ++activeLoadRequestId;
@@ -1167,15 +1283,18 @@ const UI = (() => {
     function refreshQueuePanel() {
       if (!ui.queueList) return;
       const snap = Queue.snapshot();
+      const allowQueueInteraction = isFileWorkflowMode(state.source);
       ui.queueList.innerHTML = "";
       for (const item of snap.items) {
+        const itemIsActive = shouldShowActiveQueueItem(state.source, state.audio, item);
         const row = document.createElement("div");
-        row.className = "queue-item" + (item.active ? " active" : "");
+        row.className = "queue-item" + (itemIsActive ? " active" : "");
         row.title = item.name;
-        row.tabIndex = 0;
+        row.tabIndex = allowQueueInteraction ? 0 : -1;
         row.setAttribute("role", "button");
         row.setAttribute("aria-label", `Play queue item ${item.index + 1}: ${item.name}`);
-        row.setAttribute("aria-current", item.active ? "true" : "false");
+        row.setAttribute("aria-current", itemIsActive ? "true" : "false");
+        row.setAttribute("aria-disabled", allowQueueInteraction ? "false" : "true");
 
         const idx = document.createElement("span");
         idx.className = "q-idx";
@@ -1189,7 +1308,9 @@ const UI = (() => {
         removeBtn.className = "q-remove";
         removeBtn.textContent = "×";
         removeBtn.title = "Remove from queue";
+        removeBtn.disabled = !allowQueueInteraction;
         removeBtn.addEventListener("keydown", (e) => {
+          if (!allowQueueInteraction) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             e.stopPropagation();
@@ -1197,8 +1318,9 @@ const UI = (() => {
           }
         });
         removeBtn.addEventListener("click", (e) => {
+          if (!allowQueueInteraction) return;
           e.stopPropagation(); // prevent row click-to-jump
-          const wasActive = item.active;
+          const wasActive = itemIsActive;
           const wasPlaying = state.audio.isPlaying;
           const nextFile = Queue.remove(item.index);
           if (wasActive && nextFile) {
@@ -1224,9 +1346,11 @@ const UI = (() => {
 
         // Row activation: click or keyboard (Enter/Space) jumps to that track.
         row.addEventListener("click", () => {
+          if (!allowQueueInteraction) return;
           activateQueueRow(item.index);
         });
         row.addEventListener("keydown", (e) => {
+          if (!allowQueueInteraction) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             activateQueueRow(item.index);
@@ -1266,14 +1390,36 @@ const UI = (() => {
       downloadLastRecording();
     });
 
+    function toastFileModeOnlyAction() {
+      audioStatusToast("Switch to File mode to use file playback controls.", 2500);
+    }
+
     /* Events */
+    if (ui.btnSourceFile) ui.btnSourceFile.addEventListener("click", () => {
+      switchToFileMode();
+    });
+    if (ui.btnSourceMic) ui.btnSourceMic.addEventListener("click", () => {
+      switchToMicMode();
+    });
+
     // fileInput.value reset (checklist 3.7): cleared before every picker open so
     // the same file can be loaded a second time. The drag-drop path uses
     // dataTransfer.files directly — it never touches fileInput — so no reset
     // is needed there. This is the only fileInput add path; invariant maintained.
-    ui.btnLoad.addEventListener("click", () => { ui.fileInput.value = ""; ui.fileInput.click(); });
+    ui.btnLoad.addEventListener("click", () => {
+      if (!isFileWorkflowMode(state.source)) {
+        toastFileModeOnlyAction();
+        return;
+      }
+      ui.fileInput.value = "";
+      ui.fileInput.click();
+    });
 
 	ui.fileInput.addEventListener("change", async () => {
+		if (!isFileWorkflowMode(state.source)) {
+			toastFileModeOnlyAction();
+			return;
+		}
 		const files = Array.from(ui.fileInput.files || []).filter(f => f.type.startsWith("audio/"));
 		if (!files.length) return;
 
@@ -1289,10 +1435,15 @@ const UI = (() => {
 	});
 
     ui.btnPlay.addEventListener("click", async () => {
+      if (!isFileWorkflowMode(state.source)) return;
       await AudioEngine.playPause();
       if (state.audio.transportError) audioStatusToast(state.audio.transportError, 6000);
     });
-    ui.btnStop.addEventListener("click", () => { AudioEngine.stop(); state.audio.transportError = ""; });
+    ui.btnStop.addEventListener("click", () => {
+      if (!isFileWorkflowMode(state.source)) return;
+      AudioEngine.stop();
+      state.audio.transportError = "";
+    });
 
     function pickManualPrevFile() {
       if (Queue.canPrev()) return Queue.prev();
@@ -1307,21 +1458,25 @@ const UI = (() => {
     }
 
     ui.btnPrev.addEventListener("click", async () => {
+      if (!isFileWorkflowMode(state.source)) return;
       const file = pickManualPrevFile();
       if (file) await loadAndPlay(file);
     });
     ui.btnNext.addEventListener("click", async () => {
+      if (!isFileWorkflowMode(state.source)) return;
       const file = pickManualNextFile();
       if (file) await loadAndPlay(file);
     });
 
     ui.btnToggleQueue.addEventListener("click", () => {
+      if (!isFileWorkflowMode(state.source)) return;
       const visible = ui.queuePanel.style.display !== "none";
       ui.queuePanel.style.display = visible ? "none" : "block";
       if (!visible) refreshQueuePanel(); // refresh on open
     });
 
     ui.btnClearQueue.addEventListener("click", () => {
+      if (!isFileWorkflowMode(state.source)) return;
       // 3.4 — Clear queue clean-slate path. Order matters:
       // Queue.clear() first so Prev/Next disable correctly in next refreshAllUiText.
       // Source teardown before clearAudioState() so no media remains attached.
@@ -1335,12 +1490,14 @@ const UI = (() => {
     });
 
     ui.btnRepeat.addEventListener("click", () => {
+      if (!isFileWorkflowMode(state.source)) return;
       const mode = preferences.audio.repeatMode;
       preferences.audio.repeatMode = mode === "none" ? "one" : (mode === "one" ? "all" : "none");
       applyPrefs("repeat");
     });
     if (ui.btnShuffle) {
       ui.btnShuffle.addEventListener("click", () => {
+        if (!isFileWorkflowMode(state.source)) return;
         if (Queue.shuffle()) refreshQueuePanel();
       });
     }
@@ -1435,6 +1592,10 @@ const UI = (() => {
     });
     state.canvas.addEventListener("drop", async (e) => {
       e.preventDefault();
+      if (!isFileWorkflowMode(state.source)) {
+        toastFileModeOnlyAction();
+        return;
+      }
       const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("audio/"));
       if (!files.length) return;
       for (const file of files) {
@@ -1486,11 +1647,13 @@ const UI = (() => {
 
       // Track navigation — N: next, P: prev (Repeat=All wraps at boundaries).
       if (e.code === "KeyN") {
+        if (!isFileWorkflowMode(state.source)) return;
         const file = pickManualNextFile();
         if (file) loadAndPlay(file);
         return;
       }
       if (e.code === "KeyP") {
+        if (!isFileWorkflowMode(state.source)) return;
         const file = pickManualPrevFile();
         if (file) loadAndPlay(file);
         return;
@@ -1499,6 +1662,7 @@ const UI = (() => {
       // Seek — arrow keys ±5 seconds, Shift+arrows ±30 seconds.
       // preventDefault stops page scroll.
       if (e.code === "ArrowRight" || e.code === "ArrowLeft") {
+        if (!isFileWorkflowMode(state.source)) return;
         e.preventDefault();
         const el = AudioEngine.getMediaEl();
         if (el && Number.isFinite(el.duration)) {
@@ -1533,4 +1697,4 @@ const UI = (() => {
   };
 })();
 
-export { UI };
+export { UI, isFileWorkflowMode, shouldShowActiveQueueItem, readSourceUiModel };

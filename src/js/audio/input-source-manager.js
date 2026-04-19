@@ -16,6 +16,7 @@ function createInputSourceManager(deps = {}) {
       : (typeof navigator !== "undefined" ? navigator.mediaDevices : null));
 
   let activeSession = null;
+  let activationSeq = 0;
 
   function ensureSourceState() {
     if (!stateRef.source || typeof stateRef.source !== "object") stateRef.source = createSourceState();
@@ -54,6 +55,25 @@ function createInputSourceManager(deps = {}) {
     return support;
   }
 
+  function hasManagedSourceState() {
+    const sourceState = ensureSourceState();
+    return !!(activeSession || sourceState.sessionActive || sourceState.kind !== "none" || sourceState.status !== "idle");
+  }
+
+  function invalidatePendingActivations() {
+    activationSeq += 1;
+    return activationSeq;
+  }
+
+  function createActivationToken() {
+    activationSeq += 1;
+    return activationSeq;
+  }
+
+  function isActivationTokenCurrent(token) {
+    return token === activationSeq;
+  }
+
   function readAttemptMessage(kind, support) {
     if (!support[kind]) {
       return {
@@ -70,6 +90,70 @@ function createInputSourceManager(deps = {}) {
       message: kind === "mic"
         ? "Microphone activation is not available in Build 114-A."
         : "Stream activation is not available in Build 114-A.",
+    };
+  }
+
+  function readCancelledActivation(kind) {
+    return {
+      ok: false,
+      kind,
+      status: "idle",
+      errorCode: `${kind}-activation-cancelled`,
+      errorMessage: "",
+    };
+  }
+
+  function readRecoverableMicPermission(permission) {
+    if (permission === "granted" || permission === "denied" || permission === "unsupported") return permission;
+    return "unknown";
+  }
+
+  function normalizeMicFailure(err, permission) {
+    const name = err && err.name ? err.name : "";
+    if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
+      return {
+        status: "error",
+        code: "mic-denied",
+        message: "Microphone permission denied.",
+        permission: "denied",
+        label: "Microphone",
+      };
+    }
+    if (name === "AbortError" || name === "InvalidStateError") {
+      return {
+        status: "error",
+        code: "mic-interrupted",
+        message: "Microphone request was interrupted. Try again.",
+        permission: readRecoverableMicPermission(permission),
+        label: "Microphone",
+      };
+    }
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+      return {
+        status: "error",
+        code: "mic-unavailable",
+        message: "No microphone was found.",
+        permission: readRecoverableMicPermission(permission),
+        label: "Microphone",
+      };
+    }
+    if (name === "NotReadableError" || name === "TrackStartError") {
+      return {
+        status: "error",
+        code: "mic-busy",
+        message: "Microphone is unavailable or already in use.",
+        permission: readRecoverableMicPermission(permission),
+        label: "Microphone",
+      };
+    }
+    return {
+      status: "error",
+      code: "mic-activation-failed",
+      message: err && err.message
+        ? `Microphone activation failed: ${err.message}`
+        : "Microphone activation failed.",
+      permission: readRecoverableMicPermission(permission),
+      label: "Microphone",
     };
   }
 
@@ -163,11 +247,13 @@ function createInputSourceManager(deps = {}) {
 
   async function teardownActiveSource({ reason = "" } = {}) {
     const sourceState = ensureSourceState();
-    if (!activeSession && !sourceState.sessionActive && sourceState.kind === "none" && sourceState.status === "idle") {
+    if (!hasManagedSourceState()) {
       return false;
     }
 
-    if (sourceState.sessionActive) sourceState.status = "stopping";
+    invalidatePendingActivations();
+
+    if (sourceState.sessionActive || sourceState.status === "requesting") sourceState.status = "stopping";
 
     const session = activeSession;
     activeSession = null;
@@ -192,7 +278,7 @@ function createInputSourceManager(deps = {}) {
       });
     }
 
-    if (activeSession || ensureSourceState().sessionActive) {
+    if (hasManagedSourceState()) {
       await teardownActiveSource({ reason: "switch-to-file" });
     }
 
@@ -233,16 +319,93 @@ function createInputSourceManager(deps = {}) {
   }
 
   async function activateMic() {
-    if (activeSession || ensureSourceState().sessionActive) {
+    if (hasManagedSourceState()) {
       await teardownActiveSource({ reason: "switch-to-mic" });
     }
+
     const support = syncSupportState();
-    const result = readAttemptMessage("mic", support);
-    return commitFailure("mic", result);
+    if (!support.mic) {
+      return commitFailure("mic", readAttemptMessage("mic", support));
+    }
+
+    const sourceState = ensureSourceState();
+    sourceState.kind = "mic";
+    sourceState.status = "requesting";
+    sourceState.label = "Microphone";
+    sourceState.sessionActive = false;
+    clearError(sourceState);
+    resetStreamMeta(sourceState);
+    if (sourceState.permission.mic !== "granted" && sourceState.permission.mic !== "denied" && sourceState.permission.mic !== "unsupported") {
+      sourceState.permission.mic = "prompt";
+    }
+
+    const activationToken = createActivationToken();
+    const mediaDevices = getMediaDevices();
+    let mediaStream = null;
+
+    try {
+      mediaStream = await mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      if (!isActivationTokenCurrent(activationToken)) return readCancelledActivation("mic");
+      const failure = normalizeMicFailure(err, sourceState.permission.mic);
+      sourceState.permission.mic = failure.permission;
+      return commitFailure("mic", failure);
+    }
+
+    if (!isActivationTokenCurrent(activationToken)) {
+      stopSessionStreamTracks({ mediaStream });
+      return readCancelledActivation("mic");
+    }
+
+    const audioTracks = mediaStream && typeof mediaStream.getAudioTracks === "function"
+      ? mediaStream.getAudioTracks()
+      : [];
+    const firstAudioTrack = audioTracks[0] || null;
+    const label = firstAudioTrack && typeof firstAudioTrack.label === "string" && firstAudioTrack.label.trim()
+      ? firstAudioTrack.label.trim()
+      : "Microphone";
+
+    if (!audioTracks.length) {
+      stopSessionStreamTracks({ mediaStream });
+      sourceState.permission.mic = "granted";
+      return commitFailure("mic", {
+        status: "error",
+        code: "mic-no-audio-track",
+        message: "Microphone did not provide usable audio.",
+        label,
+      });
+    }
+
+    try {
+      await audioEngine.attachMediaStreamSource(mediaStream, {
+        kind: "mic",
+        label,
+        monitorOutput: false,
+      });
+    } catch (err) {
+      stopSessionStreamTracks({ mediaStream });
+      return commitFailure("mic", {
+        status: "error",
+        code: "mic-attach-failed",
+        message: err && err.message
+          ? `Microphone activation failed: ${err.message}`
+          : "Microphone activation failed.",
+        label,
+      });
+    }
+
+    if (!isActivationTokenCurrent(activationToken)) {
+      stopSessionStreamTracks({ mediaStream });
+      if (audioEngine && typeof audioEngine.unload === "function") audioEngine.unload();
+      return readCancelledActivation("mic");
+    }
+
+    sourceState.permission.mic = "granted";
+    return registerFutureStreamSession("mic", mediaStream, { label });
   }
 
   async function activateStream() {
-    if (activeSession || ensureSourceState().sessionActive) {
+    if (hasManagedSourceState()) {
       await teardownActiveSource({ reason: "switch-to-stream" });
     }
     const support = syncSupportState();
@@ -251,8 +414,18 @@ function createInputSourceManager(deps = {}) {
   }
 
   async function handleExternalStreamEnded() {
-    if (!activeSession || activeSession.kind !== "stream") return false;
-    await teardownActiveSource({ reason: "external-stream-ended" });
+    if (!activeSession || !activeSession.mediaStream) return false;
+    const endedKind = activeSession.kind || "stream";
+    const endedLabel = activeSession.label || "";
+    await teardownActiveSource({ reason: `external-${endedKind}-ended` });
+    commitFailure(endedKind, {
+      status: "error",
+      code: `${endedKind}-ended`,
+      message: endedKind === "mic"
+        ? "Microphone input ended. Select Mic to reconnect."
+        : "Shared stream ended.",
+      label: endedLabel,
+    });
     return true;
   }
 

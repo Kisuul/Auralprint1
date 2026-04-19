@@ -33,12 +33,25 @@
 
 <!-- Bottom Audio Panel
      Row 1 (36px): [scrubber canvas 1fr] [time]
-     Row 2 (40px): Load | Prev | Next | Play | Stop | Repeat | Shuffle | Mute | Vol | [status 1fr] | Queue | HideAudio -->
+     Row 2 (40px): Source | Load | Prev | Next | Play | Stop | Repeat | Shuffle | Mute | Vol | [status 1fr] | Queue | HideAudio -->
  <div id="audioPanel" class="panel">
   <!-- Scrubber row: row 1 (top of panel), scrubber only -->
   <div id="scrubberRow">
     <canvas id="scrubberCanvas" width="1" height="36"></canvas>
     <span id="scrubberTime" class="muted">--:-- / --:--</span>
+  </div>
+
+  <div id="sourceSwitch" class="source-switch" role="group" aria-label="Input source">
+    <button id="btnSourceFile" type="button" aria-pressed="true">File</button>
+    <button id="btnSourceMic" type="button" aria-pressed="false">Mic</button>
+    <button
+      id="btnSourceStream"
+      type="button"
+      aria-pressed="false"
+      disabled
+      title="Stream input arrives in Build 114-C."
+      aria-label="Stream input arrives in Build 114-C"
+    >Stream</button>
   </div>
 
   <button id="btnLoad">Load</button>
