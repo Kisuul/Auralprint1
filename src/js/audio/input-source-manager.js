@@ -17,6 +17,7 @@ function createInputSourceManager(deps = {}) {
 
   let activeSession = null;
   let activationSeq = 0;
+  let onExternalLiveInputReset = null;
 
   function ensureSourceState() {
     if (!stateRef.source || typeof stateRef.source !== "object") stateRef.source = createSourceState();
@@ -108,6 +109,31 @@ function createInputSourceManager(deps = {}) {
     return "unknown";
   }
 
+  function readRecoverableStreamPermission(permission) {
+    if (permission === "granted" || permission === "unsupported") return permission;
+    return "unknown";
+  }
+
+  function readFirstTrackLabel(tracks) {
+    if (!Array.isArray(tracks)) return "";
+    for (const track of tracks) {
+      if (!track || typeof track.label !== "string") continue;
+      const trimmed = track.label.trim();
+      if (trimmed) return trimmed;
+    }
+    return "";
+  }
+
+  function readStreamSessionLabel(mediaStream) {
+    const videoTracks = mediaStream && typeof mediaStream.getVideoTracks === "function"
+      ? mediaStream.getVideoTracks()
+      : [];
+    const audioTracks = mediaStream && typeof mediaStream.getAudioTracks === "function"
+      ? mediaStream.getAudioTracks()
+      : [];
+    return readFirstTrackLabel(videoTracks) || readFirstTrackLabel(audioTracks) || "Shared stream";
+  }
+
   function normalizeMicFailure(err, permission) {
     const name = err && err.name ? err.name : "";
     if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
@@ -154,6 +180,64 @@ function createInputSourceManager(deps = {}) {
         : "Microphone activation failed.",
       permission: readRecoverableMicPermission(permission),
       label: "Microphone",
+    };
+  }
+
+  function normalizeStreamFailure(err, permission) {
+    const name = err && err.name ? err.name : "";
+    if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+      return {
+        status: "error",
+        code: "stream-denied-or-cancelled",
+        message: "Stream share was cancelled or denied.",
+        permission: "unknown",
+        label: "Shared stream",
+      };
+    }
+    if (name === "SecurityError") {
+      return {
+        status: "error",
+        code: "stream-blocked",
+        message: "Stream capture is blocked in this browser or context.",
+        permission: readRecoverableStreamPermission(permission),
+        label: "Shared stream",
+      };
+    }
+    if (name === "AbortError" || name === "InvalidStateError") {
+      return {
+        status: "error",
+        code: "stream-interrupted",
+        message: "Stream share request was interrupted. Try again.",
+        permission: readRecoverableStreamPermission(permission),
+        label: "Shared stream",
+      };
+    }
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+      return {
+        status: "error",
+        code: "stream-unavailable",
+        message: "No display, tab, or system stream was available to share.",
+        permission: readRecoverableStreamPermission(permission),
+        label: "Shared stream",
+      };
+    }
+    if (name === "NotReadableError" || name === "TrackStartError") {
+      return {
+        status: "error",
+        code: "stream-busy",
+        message: "Shared stream is unavailable or could not start.",
+        permission: readRecoverableStreamPermission(permission),
+        label: "Shared stream",
+      };
+    }
+    return {
+      status: "error",
+      code: "stream-activation-failed",
+      message: err && err.message
+        ? `Stream activation failed: ${err.message}`
+        : "Stream activation failed.",
+      permission: readRecoverableStreamPermission(permission),
+      label: "Shared stream",
     };
   }
 
@@ -210,18 +294,55 @@ function createInputSourceManager(deps = {}) {
     };
   }
 
-  function createStreamEndedCleanup(mediaStream) {
+  function areAllAudioTracksEnded(mediaStream) {
+    if (!mediaStream || typeof mediaStream.getAudioTracks !== "function") return false;
+    const audioTracks = mediaStream.getAudioTracks();
+    if (!Array.isArray(audioTracks) || !audioTracks.length) return false;
+    return audioTracks.every((track) => track && track.readyState === "ended");
+  }
+
+  function createLiveInputEndedCleanup(kind, mediaStream) {
     if (!mediaStream || typeof mediaStream.getTracks !== "function") return [];
     const cleanupFns = [];
-    const tracks = mediaStream.getTracks();
-    for (const track of tracks) {
-      if (!track || typeof track.addEventListener !== "function") continue;
-      const onEnded = () => {
-        handleExternalStreamEnded();
+    const endSession = () => {
+      handleExternalStreamEnded();
+    };
+
+    if (kind === "stream") {
+      const audioTracks = typeof mediaStream.getAudioTracks === "function"
+        ? mediaStream.getAudioTracks()
+        : [];
+      for (const track of audioTracks) {
+        if (!track || typeof track.addEventListener !== "function") continue;
+        const onEnded = () => {
+          if (areAllAudioTracksEnded(mediaStream)) endSession();
+        };
+        track.addEventListener("ended", onEnded);
+        cleanupFns.push(() => {
+          try { track.removeEventListener("ended", onEnded); } catch {}
+        });
+      }
+    } else {
+      const tracks = mediaStream.getTracks();
+      for (const track of tracks) {
+        if (!track || typeof track.addEventListener !== "function") continue;
+        const onEnded = () => {
+          endSession();
+        };
+        track.addEventListener("ended", onEnded);
+        cleanupFns.push(() => {
+          try { track.removeEventListener("ended", onEnded); } catch {}
+        });
+      }
+    }
+
+    if (typeof mediaStream.addEventListener === "function") {
+      const onInactive = () => {
+        endSession();
       };
-      track.addEventListener("ended", onEnded);
+      mediaStream.addEventListener("inactive", onInactive);
       cleanupFns.push(() => {
-        try { track.removeEventListener("ended", onEnded); } catch {}
+        try { mediaStream.removeEventListener("inactive", onInactive); } catch {}
       });
     }
     return cleanupFns;
@@ -408,9 +529,84 @@ function createInputSourceManager(deps = {}) {
     if (hasManagedSourceState()) {
       await teardownActiveSource({ reason: "switch-to-stream" });
     }
+
     const support = syncSupportState();
-    const result = readAttemptMessage("stream", support);
-    return commitFailure("stream", result);
+    if (!support.stream) {
+      return commitFailure("stream", readAttemptMessage("stream", support));
+    }
+
+    const sourceState = ensureSourceState();
+    sourceState.kind = "stream";
+    sourceState.status = "requesting";
+    sourceState.label = "Shared stream";
+    sourceState.sessionActive = false;
+    clearError(sourceState);
+    resetStreamMeta(sourceState);
+    if (sourceState.permission.stream !== "granted" && sourceState.permission.stream !== "unsupported") {
+      sourceState.permission.stream = "prompt";
+    }
+
+    const activationToken = createActivationToken();
+    const mediaDevices = getMediaDevices();
+    let mediaStream = null;
+
+    try {
+      mediaStream = await mediaDevices.getDisplayMedia({ video: true, audio: true });
+    } catch (err) {
+      if (!isActivationTokenCurrent(activationToken)) return readCancelledActivation("stream");
+      const failure = normalizeStreamFailure(err, sourceState.permission.stream);
+      sourceState.permission.stream = failure.permission;
+      return commitFailure("stream", failure);
+    }
+
+    if (!isActivationTokenCurrent(activationToken)) {
+      stopSessionStreamTracks({ mediaStream });
+      return readCancelledActivation("stream");
+    }
+
+    const audioTracks = mediaStream && typeof mediaStream.getAudioTracks === "function"
+      ? mediaStream.getAudioTracks()
+      : [];
+    const label = readStreamSessionLabel(mediaStream);
+
+    if (!audioTracks.length) {
+      stopSessionStreamTracks({ mediaStream });
+      sourceState.permission.stream = "granted";
+      return commitFailure("stream", {
+        status: "error",
+        code: "stream-no-audio-track",
+        message: "Shared stream did not provide usable audio.",
+        label,
+      });
+    }
+
+    try {
+      await audioEngine.attachMediaStreamSource(mediaStream, {
+        kind: "stream",
+        label,
+        monitorOutput: false,
+      });
+    } catch (err) {
+      stopSessionStreamTracks({ mediaStream });
+      sourceState.permission.stream = "granted";
+      return commitFailure("stream", {
+        status: "error",
+        code: "stream-attach-failed",
+        message: err && err.message
+          ? `Stream activation failed: ${err.message}`
+          : "Stream activation failed.",
+        label,
+      });
+    }
+
+    if (!isActivationTokenCurrent(activationToken)) {
+      stopSessionStreamTracks({ mediaStream });
+      if (audioEngine && typeof audioEngine.unload === "function") audioEngine.unload();
+      return readCancelledActivation("stream");
+    }
+
+    sourceState.permission.stream = "granted";
+    return registerFutureStreamSession("stream", mediaStream, { label });
   }
 
   async function handleExternalStreamEnded() {
@@ -418,18 +614,24 @@ function createInputSourceManager(deps = {}) {
     const endedKind = activeSession.kind || "stream";
     const endedLabel = activeSession.label || "";
     await teardownActiveSource({ reason: `external-${endedKind}-ended` });
+    if (typeof onExternalLiveInputReset === "function") {
+      try { onExternalLiveInputReset(); } catch {}
+    }
     commitFailure(endedKind, {
       status: "error",
       code: `${endedKind}-ended`,
       message: endedKind === "mic"
         ? "Microphone input ended. Select Mic to reconnect."
-        : "Shared stream ended.",
+        : "Shared stream ended. Select Stream to share again.",
       label: endedLabel,
     });
     return true;
   }
 
-  function init() {
+  function init(options = {}) {
+    onExternalLiveInputReset = typeof options.onExternalLiveInputReset === "function"
+      ? options.onExternalLiveInputReset
+      : null;
     const support = syncSupportState();
     return {
       kind: ensureSourceState().kind,
@@ -438,7 +640,7 @@ function createInputSourceManager(deps = {}) {
   }
 
   function registerFutureStreamSession(kind, mediaStream, options = {}) {
-    const cleanupFns = createStreamEndedCleanup(mediaStream);
+    const cleanupFns = createLiveInputEndedCleanup(kind, mediaStream);
     return commitActiveSession({
       kind,
       label: options.label || "",

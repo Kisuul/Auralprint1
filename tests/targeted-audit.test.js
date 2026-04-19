@@ -603,6 +603,80 @@ test("Scrubber.draw uses honest microphone copy instead of fake track text", () 
   }), "Microphone input is unavailable.");
 });
 
+test("Scrubber.draw uses honest stream copy instead of fake track text", () => {
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "stream",
+      status: "requesting",
+      label: "Browser Tab",
+      errorCode: "",
+      errorMessage: "",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: true },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Waiting for stream share permission.");
+
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "stream",
+      status: "active",
+      label: "Browser Tab",
+      errorCode: "",
+      errorMessage: "",
+      sessionActive: true,
+      streamMeta: { hasAudio: true, hasVideo: true },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Stream input active • live input");
+
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "stream",
+      status: "error",
+      label: "Browser Tab",
+      errorCode: "stream-ended",
+      errorMessage: "Shared stream ended. Select Stream to share again.",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Shared stream ended. Select Stream to share again.");
+
+  assert.equal(renderScrubberTimeText({
+    sourceState: {
+      kind: "stream",
+      status: "unsupported",
+      label: "",
+      errorCode: "stream-unsupported",
+      errorMessage: "",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+  }), "Stream input is unavailable.");
+});
+
 test("AudioEngine.loadFile does not tear down the freshly created media element during attach", async () => {
   const harness = createAudioEngineHarness();
 
@@ -649,9 +723,41 @@ test("readSourceUiModel keeps microphone mode honest about file-only affordances
   });
   assert.equal(model.disableFileControls, true);
   assert.equal(model.audioPanelSourceMode, "mic");
-  assert.match(model.audioStatusText, /Microphone input active — Podcast Mic/);
+  assert.match(model.audioStatusText, /Microphone input active - Podcast Mic/);
   assert.doesNotMatch(model.audioStatusText, /should-not-show\.wav/);
   assert.equal(shouldShowActiveQueueItem({ kind: "mic" }, { isLoaded: false }, { active: true }), false);
+});
+
+test("readSourceUiModel keeps stream mode honest about live-source affordances", () => {
+  const model = readSourceUiModel({
+    sourceState: {
+      kind: "stream",
+      status: "active",
+      label: "Browser Tab",
+      errorMessage: "",
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "should-not-show.wav",
+      transportError: "",
+    },
+    queueLength: 4,
+    currentIndex: 2,
+    bandText: "stereo (L!=R)",
+    recordingStatusText: "Recording available.",
+  });
+
+  assert.deepEqual(model.pressedSources, {
+    file: false,
+    mic: false,
+    stream: true,
+  });
+  assert.equal(model.disableFileControls, true);
+  assert.equal(model.audioPanelSourceMode, "stream");
+  assert.match(model.audioStatusText, /Stream input active - Browser Tab - Bands: stereo \(L!=R\)/);
+  assert.doesNotMatch(model.audioStatusText, /should-not-show\.wav/);
+  assert.equal(shouldShowActiveQueueItem({ kind: "stream" }, { isLoaded: false }, { active: true }), false);
 });
 
 test("readSourceUiModel treats File as the idle workflow side without implying an active file source", () => {

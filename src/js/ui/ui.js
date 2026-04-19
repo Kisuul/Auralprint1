@@ -33,6 +33,26 @@ function shouldShowActiveQueueItem(sourceState, audioState, item) {
   return !!(item && item.active && hasActiveFileSource(sourceState, audioState));
 }
 
+function readLiveSourceStatusText(kind, sourceState, bandText) {
+  if (kind === "mic") {
+    if (sourceState.status === "requesting") return "Waiting for microphone permission.";
+    if (sourceState.status === "active") {
+      const label = sourceState.label ? ` - ${sourceState.label}` : "";
+      return `Microphone input active${label} - Bands: ${bandText}`;
+    }
+    if (sourceState.errorMessage) return sourceState.errorMessage;
+    return "Microphone input is unavailable.";
+  }
+
+  if (sourceState.status === "requesting") return "Waiting for stream share permission.";
+  if (sourceState.status === "active") {
+    const label = sourceState.label ? ` - ${sourceState.label}` : "";
+    return `Stream input active${label} - Bands: ${bandText}`;
+  }
+  if (sourceState.errorMessage) return sourceState.errorMessage;
+  return "Stream input is unavailable.";
+}
+
 function readSourceUiModel({
   sourceState = state.source,
   audioState = state.audio,
@@ -57,20 +77,15 @@ function readSourceUiModel({
 
   let computedAudioStatus = "";
   if (selectedSourceKind === "mic") {
-    if (sourceState.status === "requesting") computedAudioStatus = "Waiting for microphone permission.";
-    else if (sourceState.status === "active") {
-      const label = sourceState.label ? ` — ${sourceState.label}` : "";
-      computedAudioStatus = `Microphone input active${label} — Bands: ${bandText}`;
-    } else if (sourceState.errorMessage) computedAudioStatus = sourceState.errorMessage;
-    else computedAudioStatus = "Microphone input is unavailable.";
+    computedAudioStatus = readLiveSourceStatusText("mic", sourceState, bandText);
   } else if (selectedSourceKind === "stream") {
-    computedAudioStatus = sourceState.errorMessage || "Stream input is unavailable.";
+    computedAudioStatus = readLiveSourceStatusText("stream", sourceState, bandText);
   } else if (audioState.isLoaded) {
     const qLen = queueLength;
     const qPos = qLen > 0 ? clamp(currentIndex + 1, 1, qLen) : 0;
     const playState = audioState.isPlaying ? " (playing)" : " (paused)";
-    const errText = audioState.transportError ? ` — Error: ${audioState.transportError}` : "";
-    computedAudioStatus = `[${qPos}/${qLen}] ${audioState.filename}${playState} — Bands: ${bandText}${errText}`;
+    const errText = audioState.transportError ? ` - Error: ${audioState.transportError}` : "";
+    computedAudioStatus = `[${qPos}/${qLen}] ${audioState.filename}${playState} - Bands: ${bandText}${errText}`;
   } else {
     computedAudioStatus = audioState.transportError ? `No audio loaded. Error: ${audioState.transportError}` : "No audio loaded.";
   }
@@ -962,8 +977,14 @@ const UI = (() => {
     if (ui.btnSourceFile) ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
     if (ui.btnSourceMic) ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
     if (ui.btnSourceStream) {
+      const streamSupported = !!(state.source && state.source.support && state.source.support.stream);
+      const streamButtonText = streamSupported
+        ? "Analyze a shared display, tab, or system stream"
+        : "Stream capture is unavailable in this browser.";
       ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
-      ui.btnSourceStream.disabled = true;
+      ui.btnSourceStream.disabled = !streamSupported;
+      ui.btnSourceStream.title = streamButtonText;
+      ui.btnSourceStream.setAttribute("aria-label", streamButtonText);
     }
 
     ui.btnLoad.disabled = fileControlsDisabled;
@@ -1098,6 +1119,15 @@ const UI = (() => {
     }
   }
 
+  function resetTrackVisualState() {
+    Scrubber.reset();
+    for (const orb of state.orbs) orb.resetTrail();
+    state.bands.energies01.fill(0);
+    state.bands.dominantIndex = 0;
+    state.bands.dominantName = "(none)";
+    refreshBandHud();
+  }
+
   function wireControls() {
     primeDomCache();
 
@@ -1135,15 +1165,6 @@ const UI = (() => {
       resetTrackVisualState();
     }
 
-    function resetTrackVisualState() {
-      Scrubber.reset();
-      for (const orb of state.orbs) orb.resetTrail();
-      state.bands.energies01.fill(0);
-      state.bands.dominantIndex = 0;
-      state.bands.dominantName = "(none)";
-      refreshBandHud();
-    }
-
     /* -------------------------------------------------------------------------
        loadAndPlay — single shared helper for all track-change paths.
 
@@ -1179,6 +1200,23 @@ const UI = (() => {
         reason: "switch-to-mic",
       });
       const activation = await InputSourceManager.activateMic();
+      refreshQueuePanel();
+      return !!(activation && activation.ok);
+    }
+
+    async function switchToStreamMode() {
+      if (state.source.kind === "stream" && (state.source.status === "requesting" || state.source.status === "active")) {
+        return false;
+      }
+
+      invalidatePendingTrackLoads();
+      clearAudioStatusToast();
+      clearAudioState();
+      if (ui.queuePanel) ui.queuePanel.style.display = "none";
+      RecorderEngine.onTransportMutation("audio-unloaded", {
+        reason: "switch-to-stream",
+      });
+      const activation = await InputSourceManager.activateStream();
       refreshQueuePanel();
       return !!(activation && activation.ok);
     }
@@ -1400,6 +1438,9 @@ const UI = (() => {
     });
     if (ui.btnSourceMic) ui.btnSourceMic.addEventListener("click", () => {
       switchToMicMode();
+    });
+    if (ui.btnSourceStream) ui.btnSourceStream.addEventListener("click", () => {
+      switchToStreamMode();
     });
 
     // fileInput.value reset (checklist 3.7): cleared before every picker open so
@@ -1694,6 +1735,7 @@ const UI = (() => {
     hideRecordPanel,
     dispatchRecordingAction,
     applyPrefs,
+    resetTrackVisualState,
   };
 })();
 

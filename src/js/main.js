@@ -76,7 +76,9 @@ function main() {
   resolveSettings();
   UrlPreset.applyFromLocationHash();
   resolveSettings();
-  InputSourceManager.init();
+  InputSourceManager.init({
+    onExternalLiveInputReset: UI.resetTrackVisualState,
+  });
 
   BandBankController.syncFromSettings();
   BandBankController.rebuildNow();
@@ -101,6 +103,7 @@ function main() {
   UI.refreshRecordingUi();
 
   Scrubber.init(document.getElementById("scrubberCanvas"));
+  UI.refreshAllUiText(lastBandSnapshot);
 
   resizeCanvasToDisplaySize();
   window.addEventListener("resize", resizeCanvasToDisplaySize);

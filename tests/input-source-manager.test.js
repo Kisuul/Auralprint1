@@ -79,34 +79,61 @@ function createFakeTrack(label = "") {
   const listeners = new Map();
   return {
     label,
+    readyState: "live",
     stopCount: 0,
     addEventListener(type, handler) {
       listeners.set(type, handler);
     },
-    removeEventListener(type) {
-      listeners.delete(type);
+    removeEventListener(type, handler) {
+      if (!listeners.has(type)) return;
+      if (!handler || listeners.get(type) === handler) listeners.delete(type);
     },
     stop() {
       this.stopCount += 1;
+      this.readyState = "ended";
     },
     emit(type) {
+      if (type === "ended") this.readyState = "ended";
       const handler = listeners.get(type);
       if (handler) handler();
     },
   };
 }
 
-function createFakeMediaStream({ audioLabel = "Built-in Microphone", video = false } = {}) {
-  const audioTrack = createFakeTrack(audioLabel);
-  const videoTrack = video ? createFakeTrack("Camera") : null;
-  const tracks = videoTrack ? [audioTrack, videoTrack] : [audioTrack];
+function createFakeMediaStream({
+  audioLabel = "Built-in Microphone",
+  audioLabels = null,
+  video = false,
+  videoLabel = "Camera",
+  hasAudio = true,
+} = {}) {
+  const listeners = new Map();
+  const audioTracks = Array.isArray(audioLabels) && audioLabels.length
+    ? audioLabels.map((label) => createFakeTrack(label))
+    : (hasAudio ? [createFakeTrack(audioLabel)] : []);
+  const audioTrack = audioTracks[0] || null;
+  const videoTrack = video ? createFakeTrack(videoLabel) : null;
+  const tracks = [...audioTracks];
+  if (videoTrack) tracks.push(videoTrack);
   return {
     audioTrack,
+    audioTracks,
     videoTrack,
     stream: {
       getTracks() { return tracks; },
-      getAudioTracks() { return [audioTrack]; },
+      getAudioTracks() { return audioTracks; },
       getVideoTracks() { return videoTrack ? [videoTrack] : []; },
+      addEventListener(type, handler) {
+        listeners.set(type, handler);
+      },
+      removeEventListener(type, handler) {
+        if (!listeners.has(type)) return;
+        if (!handler || listeners.get(type) === handler) listeners.delete(type);
+      },
+      emit(type) {
+        const handler = listeners.get(type);
+        if (handler) handler();
+      },
     },
   };
 }
@@ -276,11 +303,19 @@ test("activateMic reports denied microphone permission as a recoverable error", 
   assert.equal(calls.attachMediaStreamSource.length, 0);
 });
 
-test("activateStream tears down an active file source before reporting the Build 114-A stub state", async () => {
+test("activateStream tears down an active file source, attaches shared stream audio, and marks the source active", async () => {
+  const sharedSession = createFakeMediaStream({
+    audioLabel: "System Audio",
+    video: true,
+    videoLabel: "Browser Tab",
+  });
   const { manager, stateRef, calls } = createManagerHarness({
     mediaDevices: {
       getUserMedia() {},
-      getDisplayMedia() {},
+      async getDisplayMedia(constraints) {
+        assert.deepEqual(constraints, { video: true, audio: true });
+        return sharedSession.stream;
+      },
     },
     mediaEl: { tagName: "AUDIO" },
     onLoadFile({ stateRef: loadState }) {
@@ -295,13 +330,123 @@ test("activateStream tears down an active file source before reporting the Build
   const result = await manager.activateStream();
 
   assert.equal(calls.unload, 1);
+  assert.equal(calls.attachMediaStreamSource.length, 1);
+  assert.equal(calls.attachMediaStreamSource[0].mediaStream, sharedSession.stream);
+  assert.deepEqual(calls.attachMediaStreamSource[0].opts, {
+    kind: "stream",
+    label: "Browser Tab",
+    monitorOutput: false,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.kind, "stream");
+  assert.equal(result.status, "active");
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+  assert.equal(stateRef.source.permission.stream, "granted");
+  assert.equal(stateRef.source.label, "Browser Tab");
+  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: true });
+});
+
+test("activateStream accepts audio-only display capture and uses the audio track label", async () => {
+  const sharedSession = createFakeMediaStream({ audioLabel: "System Mix" });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        return sharedSession.stream;
+      },
+    },
+  });
+
+  const result = await manager.activateStream();
+
+  assert.equal(result.ok, true);
+  assert.equal(calls.attachMediaStreamSource.length, 1);
+  assert.deepEqual(calls.attachMediaStreamSource[0].opts, {
+    kind: "stream",
+    label: "System Mix",
+    monitorOutput: false,
+  });
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.label, "System Mix");
+  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: false });
+});
+
+test("activateStream rejects shared streams that do not provide usable audio", async () => {
+  const sharedSession = createFakeMediaStream({
+    video: true,
+    videoLabel: "Slides Window",
+    hasAudio: false,
+  });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        return sharedSession.stream;
+      },
+    },
+  });
+
+  const result = await manager.activateStream();
+
   assert.equal(result.ok, false);
   assert.equal(result.kind, "stream");
   assert.equal(result.status, "error");
+  assert.equal(result.errorCode, "stream-no-audio-track");
   assert.equal(stateRef.source.kind, "stream");
   assert.equal(stateRef.source.status, "error");
-  assert.equal(stateRef.source.sessionActive, false);
-  assert.equal(stateRef.source.errorCode, "stream-not-yet-implemented");
+  assert.equal(stateRef.source.permission.stream, "granted");
+  assert.equal(stateRef.source.errorMessage, "Shared stream did not provide usable audio.");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
+  assert.equal(sharedSession.videoTrack.stopCount, 1);
+});
+
+test("activateStream treats cancelled or denied picker results conservatively", async () => {
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        const err = new Error("Permission denied");
+        err.name = "NotAllowedError";
+        throw err;
+      },
+    },
+  });
+
+  const result = await manager.activateStream();
+
+  assert.equal(result.ok, false);
+  assert.equal(result.kind, "stream");
+  assert.equal(result.status, "error");
+  assert.equal(result.errorCode, "stream-denied-or-cancelled");
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.permission.stream, "unknown");
+  assert.equal(stateRef.source.errorMessage, "Stream share was cancelled or denied.");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
+});
+
+test("activateStream reports blocked stream capture honestly when the browser context forbids it", async () => {
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        const err = new Error("Blocked by policy");
+        err.name = "SecurityError";
+        throw err;
+      },
+    },
+  });
+
+  const result = await manager.activateStream();
+
+  assert.equal(result.ok, false);
+  assert.equal(result.kind, "stream");
+  assert.equal(result.status, "error");
+  assert.equal(result.errorCode, "stream-blocked");
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.permission.stream, "unknown");
+  assert.equal(stateRef.source.errorMessage, "Stream capture is blocked in this browser or context.");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
 });
 
 test("file -> mic -> file switches cleanly through the source manager contract", async () => {
@@ -368,6 +513,42 @@ test("a late microphone grant is stopped and discarded after teardown", async ()
   assert.equal(stateRef.source.status, "idle");
 });
 
+test("a late stream grant is stopped and discarded after teardown", async () => {
+  const sharedSession = createFakeMediaStream({
+    audioLabel: "System Mix",
+    video: true,
+    videoLabel: "Shared Screen",
+  });
+  let resolveGetDisplayMedia = null;
+  const streamPromise = new Promise((resolve) => {
+    resolveGetDisplayMedia = resolve;
+  });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      getDisplayMedia() {
+        return streamPromise;
+      },
+    },
+  });
+
+  const pendingActivation = manager.activateStream();
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "requesting");
+
+  const tornDown = await manager.teardownActiveSource({ reason: "switch-away-before-share" });
+  resolveGetDisplayMedia(sharedSession.stream);
+  const result = await pendingActivation;
+
+  assert.equal(tornDown, true);
+  assert.equal(result.ok, false);
+  assert.equal(result.errorCode, "stream-activation-cancelled");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
+  assert.equal(sharedSession.audioTrack.stopCount, 1);
+  assert.equal(sharedSession.videoTrack.stopCount, 1);
+  assert.equal(stateRef.source.kind, "none");
+  assert.equal(stateRef.source.status, "idle");
+});
+
 test("external microphone end tears down the stream and leaves a recoverable mic error", async () => {
   const micSession = createFakeMediaStream({ audioLabel: "Podcast Mic" });
   const { manager, stateRef, calls } = createManagerHarness({
@@ -389,6 +570,101 @@ test("external microphone end tears down the stream and leaves a recoverable mic
   assert.equal(stateRef.source.sessionActive, false);
   assert.equal(stateRef.source.errorCode, "mic-ended");
   assert.equal(stateRef.source.errorMessage, "Microphone input ended. Select Mic to reconnect.");
+});
+
+test("stream ignores video-track end while audio remains live", async () => {
+  const sharedSession = createFakeMediaStream({
+    audioLabel: "System Audio",
+    video: true,
+    videoLabel: "Browser Tab",
+  });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        return sharedSession.stream;
+      },
+    },
+  });
+
+  await manager.activateStream();
+  sharedSession.videoTrack.emit("ended");
+  await Promise.resolve();
+
+  assert.equal(calls.unload, 0);
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+  assert.equal(stateRef.source.errorCode, "");
+});
+
+test("stream ends only after all audio tracks have ended", async () => {
+  const sharedSession = createFakeMediaStream({
+    audioLabels: ["System Audio A", "System Audio B"],
+    video: true,
+    videoLabel: "Browser Tab",
+  });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        return sharedSession.stream;
+      },
+    },
+  });
+
+  await manager.activateStream();
+  sharedSession.audioTracks[0].emit("ended");
+  await Promise.resolve();
+
+  assert.equal(calls.unload, 0);
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+
+  sharedSession.audioTracks[1].emit("ended");
+  await Promise.resolve();
+
+  assert.equal(calls.unload, 1);
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.sessionActive, false);
+  assert.equal(stateRef.source.errorCode, "stream-ended");
+  assert.equal(stateRef.source.errorMessage, "Shared stream ended. Select Stream to share again.");
+});
+
+test("external shared stream end tears down the stream, resets live visuals, and leaves a recoverable stream error", async () => {
+  const sharedSession = createFakeMediaStream({
+    audioLabel: "System Audio",
+    video: true,
+    videoLabel: "Browser Tab",
+  });
+  let resetCalls = 0;
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getDisplayMedia() {
+        return sharedSession.stream;
+      },
+    },
+  });
+
+  manager.init({
+    onExternalLiveInputReset() {
+      resetCalls += 1;
+    },
+  });
+
+  await manager.activateStream();
+  sharedSession.stream.emit("inactive");
+  await Promise.resolve();
+
+  assert.equal(calls.unload, 1);
+  assert.equal(sharedSession.audioTrack.stopCount, 1);
+  assert.equal(sharedSession.videoTrack.stopCount, 1);
+  assert.equal(resetCalls, 1);
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.sessionActive, false);
+  assert.equal(stateRef.source.errorCode, "stream-ended");
+  assert.equal(stateRef.source.errorMessage, "Shared stream ended. Select Stream to share again.");
 });
 
 test("teardownActiveSource stops stream-backed sessions even when the kind is mic", async () => {
@@ -432,6 +708,24 @@ test("unsupported microphone activation reports unsupported state without mutati
 
   assert.equal(micResult.status, "unsupported");
   assert.equal(stateRef.source.permission.mic, "unsupported");
+  assert.equal(calls.attachMediaStreamSource.length, 0);
+  assert.equal(stateRef.audio.isLoaded, true);
+  assert.equal(stateRef.audio.isPlaying, true);
+  assert.equal(stateRef.audio.filename, "existing.wav");
+  assert.equal(stateRef.audio.transportError, "");
+});
+
+test("unsupported stream activation reports unsupported state without mutating file transport fields", async () => {
+  const { manager, stateRef, calls } = createManagerHarness({ mediaDevices: null });
+  stateRef.audio.isLoaded = true;
+  stateRef.audio.isPlaying = true;
+  stateRef.audio.filename = "existing.wav";
+  stateRef.audio.transportError = "";
+
+  const streamResult = await manager.activateStream();
+
+  assert.equal(streamResult.status, "unsupported");
+  assert.equal(stateRef.source.permission.stream, "unsupported");
   assert.equal(calls.attachMediaStreamSource.length, 0);
   assert.equal(stateRef.audio.isLoaded, true);
   assert.equal(stateRef.audio.isPlaying, true);

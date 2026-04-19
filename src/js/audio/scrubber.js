@@ -121,11 +121,19 @@ const Scrubber = (() => {
 
   function readLiveSourceTimeText(sourceState = state.source) {
     // Live inputs intentionally avoid fake timeline semantics in the scrubber lane.
-    if (!sourceState || sourceState.kind !== "mic") return "--:-- / --:-- • no track loaded";
-    if (sourceState.status === "requesting") return "Waiting for microphone permission.";
-    if (sourceState.status === "active") return "Microphone input active • live input";
+    if (!sourceState || (sourceState.kind !== "mic" && sourceState.kind !== "stream")) {
+      return "--:-- / --:-- • no track loaded";
+    }
+    if (sourceState.kind === "mic") {
+      if (sourceState.status === "requesting") return "Waiting for microphone permission.";
+      if (sourceState.status === "active") return "Microphone input active • live input";
+      if (sourceState.errorMessage) return sourceState.errorMessage;
+      return "Microphone input is unavailable.";
+    }
+    if (sourceState.status === "requesting") return "Waiting for stream share permission.";
+    if (sourceState.status === "active") return "Stream input active • live input";
     if (sourceState.errorMessage) return sourceState.errorMessage;
-    return "Microphone input is unavailable.";
+    return "Stream input is unavailable.";
   }
 
   function draw() {
