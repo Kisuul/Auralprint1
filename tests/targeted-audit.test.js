@@ -152,6 +152,57 @@ function renderScrubberTimeText({ sourceState = {}, audioState = {}, mediaEl = n
   }
 }
 
+function renderLoadHintState({ sourceState = {}, audioState = {}, recordingState = null } = {}) {
+  const harness = createUiWireHarness();
+  const previous = {
+    source: JSON.parse(JSON.stringify(state.source)),
+    audio: { ...state.audio },
+    recording: JSON.parse(JSON.stringify(state.recording)),
+  };
+
+  try {
+    const nextSource = {
+      ...previous.source,
+      ...sourceState,
+      permission: {
+        ...previous.source.permission,
+        ...(sourceState.permission || {}),
+      },
+      support: {
+        ...previous.source.support,
+        ...(sourceState.support || {}),
+      },
+      streamMeta: {
+        ...previous.source.streamMeta,
+        ...(sourceState.streamMeta || {}),
+      },
+    };
+    const nextAudio = {
+      ...previous.audio,
+      ...audioState,
+    };
+
+    applySourceAndAudioState({
+      source: nextSource,
+      audio: nextAudio,
+    });
+    if (recordingState) Object.assign(state.recording, previous.recording, recordingState);
+
+    UI.wireControls();
+    UI.refreshAllUiText();
+
+    const loadHint = state.ui.loadHint;
+    return {
+      hidden: !!(loadHint && loadHint.classList.contains("hidden")),
+      ariaHidden: loadHint ? loadHint.getAttribute("aria-hidden") : null,
+    };
+  } finally {
+    applySourceAndAudioState(previous);
+    Object.assign(state.recording, previous.recording);
+    harness.restore();
+  }
+}
+
 function createAudioEngineHarness() {
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
@@ -991,6 +1042,166 @@ test("readSourceUiModel treats File as the idle workflow side without implying a
   assert.equal(model.showActiveQueueItem, false);
   assert.equal(model.audioStatusText, "No audio loaded.");
   assert.equal(shouldShowActiveQueueItem({ kind: "none" }, { isLoaded: false }, { active: true }), false);
+});
+
+test("first-run load hint hides when a file source becomes active", () => {
+  const hintState = renderLoadHintState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "demo.wav",
+      transportError: "",
+    },
+  });
+
+  assert.equal(hintState.hidden, true);
+  assert.equal(hintState.ariaHidden, "true");
+});
+
+test("first-run load hint hides when microphone input becomes active", () => {
+  const hintState = renderLoadHintState({
+    sourceState: {
+      kind: "mic",
+      status: "active",
+      label: "Podcast Mic",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: false,
+      },
+      permission: {
+        mic: "granted",
+        stream: "unknown",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: false,
+      },
+    },
+  });
+
+  assert.equal(hintState.hidden, true);
+  assert.equal(hintState.ariaHidden, "true");
+});
+
+test("first-run load hint hides when stream input becomes active", () => {
+  const hintState = renderLoadHintState({
+    sourceState: {
+      kind: "stream",
+      status: "active",
+      label: "Browser Tab",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "unknown",
+        stream: "granted",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: true,
+      },
+    },
+  });
+
+  assert.equal(hintState.hidden, true);
+  assert.equal(hintState.ariaHidden, "true");
+});
+
+test("first-run load hint stays visible while microphone permission is still being requested", () => {
+  const hintState = renderLoadHintState({
+    sourceState: {
+      kind: "mic",
+      status: "requesting",
+      label: "Microphone",
+      sessionActive: false,
+      support: {
+        mic: true,
+        stream: false,
+      },
+      permission: {
+        mic: "prompt",
+        stream: "unknown",
+      },
+    },
+  });
+
+  assert.equal(hintState.hidden, false);
+  assert.equal(hintState.ariaHidden, null);
+});
+
+test("first-run load hint stays visible while stream permission is still being requested", () => {
+  const hintState = renderLoadHintState({
+    sourceState: {
+      kind: "stream",
+      status: "requesting",
+      label: "Shared stream",
+      sessionActive: false,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "unknown",
+        stream: "prompt",
+      },
+    },
+  });
+
+  assert.equal(hintState.hidden, false);
+  assert.equal(hintState.ariaHidden, null);
+});
+
+test("first-run load hint stays visible after denied live-source activation errors", () => {
+  const micHintState = renderLoadHintState({
+    sourceState: {
+      kind: "mic",
+      status: "error",
+      label: "Microphone",
+      sessionActive: false,
+      errorCode: "mic-denied",
+      errorMessage: "Microphone permission denied.",
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "denied",
+        stream: "unknown",
+      },
+    },
+  });
+  const streamHintState = renderLoadHintState({
+    sourceState: {
+      kind: "stream",
+      status: "error",
+      label: "Shared stream",
+      sessionActive: false,
+      errorCode: "stream-denied-or-cancelled",
+      errorMessage: "Stream share was cancelled or denied.",
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "unknown",
+        stream: "unknown",
+      },
+    },
+  });
+
+  assert.equal(micHintState.hidden, false);
+  assert.equal(micHintState.ariaHidden, null);
+  assert.equal(streamHintState.hidden, false);
+  assert.equal(streamHintState.ariaHidden, null);
 });
 
 test("UI blocks live-source switching during active recording without touching the active source session", async () => {

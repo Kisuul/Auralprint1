@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-19T11:28:20.574Z",
+  "generatedAt": "2026-04-19T12:27:34.917Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -379,7 +379,7 @@
         "format": "esm"
       },
       "src/js/ui/dom-cache.js": {
-        "bytes": 11919,
+        "bytes": 11971,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -395,7 +395,7 @@
         "format": "esm"
       },
       "src/js/ui/ui.js": {
-        "bytes": 77466,
+        "bytes": 77684,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -626,16 +626,16 @@
             "bytesInOutput": 1073
           },
           "src/js/ui/dom-cache.js": {
-            "bytesInOutput": 10922
+            "bytesInOutput": 10977
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 70361
+            "bytesInOutput": 70650
           },
           "src/js/main.js": {
             "bytesInOutput": 2869
           }
         },
-        "bytes": 238345
+        "bytes": 238689
       }
     }
   },

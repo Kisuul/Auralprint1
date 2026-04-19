@@ -15,6 +15,7 @@ function primeDomCache() {
     ui.audioPanel = document.getElementById("audioPanel");
     ui.simPanel = document.getElementById("simPanel");
     ui.bandsPanel = document.getElementById("bandsPanel");
+    ui.loadHint = document.getElementById("loadHint");
     ui.openAudio = document.getElementById("openAudio");
     ui.openSim = document.getElementById("openSim");
     ui.openBands = document.getElementById("openBands");

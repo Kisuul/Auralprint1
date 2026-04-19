@@ -3937,6 +3937,7 @@
     ui.audioPanel = document.getElementById("audioPanel");
     ui.simPanel = document.getElementById("simPanel");
     ui.bandsPanel = document.getElementById("bandsPanel");
+    ui.loadHint = document.getElementById("loadHint");
     ui.openAudio = document.getElementById("openAudio");
     ui.openSim = document.getElementById("openSim");
     ui.openBands = document.getElementById("openBands");
@@ -4137,6 +4138,9 @@
   function hasActiveFileSource(sourceState = state.source, audioState = state.audio) {
     return !!(sourceState && sourceState.kind === "file" && audioState && audioState.isLoaded);
   }
+  function hasMeaningfullyActiveSource(sourceState = state.source) {
+    return !!(sourceState && sourceState.status === "active" && sourceState.sessionActive === true);
+  }
   function shouldShowActiveQueueItem(sourceState, audioState, item) {
     return !!(item && item.active && hasActiveFileSource(sourceState, audioState));
   }
@@ -4281,6 +4285,11 @@
       r.setProperty("--ui-record-launcher-pulse-scale-max", String(CONFIG.recording.launcherPulse.scaleMax));
       r.setProperty("--ui-record-launcher-pulse-opacity-min", String(CONFIG.recording.launcherPulse.opacityMin));
       r.setProperty("--ui-record-launcher-pulse-opacity-max", String(CONFIG.recording.launcherPulse.opacityMax));
+    }
+    function syncLoadHintVisibility(sourceState = state.source) {
+      if (!ui.loadHint || !hasMeaningfullyActiveSource(sourceState)) return;
+      ui.loadHint.classList.add("hidden");
+      ui.loadHint.setAttribute("aria-hidden", "true");
     }
     function hideAudioPanel() {
       ui.audioPanel.style.display = "none";
@@ -4956,6 +4965,7 @@ ${liveTitle}` : liveTitle;
       ui.audioStatus.textContent = sourceUi.audioStatusText;
       if (ui.audioPanel) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
       syncSourceSelectorUi(sourceUi);
+      syncLoadHintVisibility(state.source);
       ui.btnLoad.disabled = fileControlsDisabled;
       ui.btnPlay.disabled = fileControlsDisabled || !state.audio.isLoaded;
       ui.btnStop.disabled = fileControlsDisabled || !state.audio.isLoaded;
@@ -5166,11 +5176,6 @@ ${liveTitle}` : liveTitle;
         });
         if (state.audio.transportError) audioStatusToast(state.audio.transportError, 6e3);
         else audioStatusToast(`Loaded: ${file.name}`, 2500);
-        const hint = document.getElementById("loadHint");
-        if (hint) {
-          hint.classList.add("hidden");
-          setTimeout(() => hint.remove(), 700);
-        }
         refreshQueuePanel();
         return true;
       }

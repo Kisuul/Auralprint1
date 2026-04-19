@@ -29,6 +29,10 @@ function hasActiveFileSource(sourceState = state.source, audioState = state.audi
   return !!(sourceState && sourceState.kind === "file" && audioState && audioState.isLoaded);
 }
 
+function hasMeaningfullyActiveSource(sourceState = state.source) {
+  return !!(sourceState && sourceState.status === "active" && sourceState.sessionActive === true);
+}
+
 function shouldShowActiveQueueItem(sourceState, audioState, item) {
   return !!(item && item.active && hasActiveFileSource(sourceState, audioState));
 }
@@ -205,6 +209,12 @@ const UI = (() => {
     r.setProperty("--ui-record-launcher-pulse-scale-max", String(CONFIG.recording.launcherPulse.scaleMax));
     r.setProperty("--ui-record-launcher-pulse-opacity-min", String(CONFIG.recording.launcherPulse.opacityMin));
     r.setProperty("--ui-record-launcher-pulse-opacity-max", String(CONFIG.recording.launcherPulse.opacityMax));
+  }
+
+  function syncLoadHintVisibility(sourceState = state.source) {
+    if (!ui.loadHint || !hasMeaningfullyActiveSource(sourceState)) return;
+    ui.loadHint.classList.add("hidden");
+    ui.loadHint.setAttribute("aria-hidden", "true");
   }
 
   function hideAudioPanel() {
@@ -1039,6 +1049,7 @@ const UI = (() => {
     ui.audioStatus.textContent = sourceUi.audioStatusText;
     if (ui.audioPanel) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
     syncSourceSelectorUi(sourceUi);
+    syncLoadHintVisibility(state.source);
 
     ui.btnLoad.disabled = fileControlsDisabled;
     ui.btnPlay.disabled = fileControlsDisabled || !state.audio.isLoaded;
@@ -1343,9 +1354,6 @@ const UI = (() => {
       });
       if (state.audio.transportError) audioStatusToast(state.audio.transportError, 6000);
       else audioStatusToast(`Loaded: ${file.name}`, 2500);
-      // Dismiss first-run hint permanently on first successful load
-      const hint = document.getElementById("loadHint");
-      if (hint) { hint.classList.add("hidden"); setTimeout(() => hint.remove(), 700); }
       refreshQueuePanel();
       return true;
     }
