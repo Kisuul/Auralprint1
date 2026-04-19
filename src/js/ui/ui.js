@@ -9,6 +9,7 @@ import { BandBank } from "../audio/band-bank.js";
 import { Queue } from "../audio/queue.js";
 import { AudioEngine } from "../audio/audio-engine.js";
 import { Scrubber } from "../audio/scrubber.js";
+import { InputSourceManager } from "../audio/input-source-manager.js";
 import { ColorPolicy } from "../render/color-policy.js";
 import { RecorderEngine } from "../recording/recorder-engine.js";
 import { initOrbs, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
@@ -1030,21 +1031,21 @@ const UI = (() => {
          ✓ state.audio.isLoaded = false    — set explicitly below
          ✓ state.audio.filename = ""       — set explicitly below
          ✓ state.audio.isPlaying = false   — set explicitly below
-         ✓ AudioEngine.unload()            — caller must call before this function
+         ✓ InputSourceManager teardown     — caller must invoke teardown before this function
          ✓ All orb trails reset            — loop below
          ✓ Scrubber blank                  — Scrubber.reset()
          ✓ Play/Stop buttons disabled      — driven by state.audio.isLoaded in refreshAllUiText
          ✓ Prev/Next buttons disabled      — driven by Queue.canPrev/canNext;
                                              caller must call Queue.clear() first
          ✓ No blob URLs left alive         — revoked by loadeddata/error during track
-                                             lifetime; AudioEngine.unload() performs
+                                             lifetime; source teardown performs
                                              teardown() and final release safety.
       Build 113 policy: queue clear/unload stays transport-owned here. If recording is
       active, RecorderEngine is notified after transport reset so capture can
       continue without loaded audio, without mutating this reset path.
        Called by: remove-button handler (active track removed, queue now empty)
                   btnClearQueue handler
-       Callers must call AudioEngine.unload() and Queue.clear() before this.
+       Callers must call InputSourceManager.teardownActiveSource() and Queue.clear() before this.
        ------------------------------------------------------------------------- */
     function clearAudioState() {
       state.audio.isLoaded = false;
@@ -1092,8 +1093,12 @@ const UI = (() => {
       // Hard reset visual state immediately on every track switch so no stale
       // waveform/playhead, trail particles, or dominant band state can persist.
       resetTrackVisualState();
-      const ok = await AudioEngine.loadFile(file, requestId, opts);
+      const activation = await InputSourceManager.activateFile(file, {
+        requestId,
+        autoPlay: opts && opts.autoPlay === false ? false : true,
+      });
       if (requestId !== activeLoadRequestId) return false;
+      const ok = !!(activation && activation.ok);
       if (!ok) {
         RecorderEngine.onTransportMutation("track-change-failed", {
           requestId,
@@ -1201,7 +1206,7 @@ const UI = (() => {
             loadAndPlay(nextFile, { autoPlay: wasPlaying });
           } else if (wasActive && Queue.length === 0) {
             // Removed the active track and queue is now empty — full clean slate.
-            AudioEngine.unload();
+            InputSourceManager.teardownActiveSource({ reason: "active-remove-empty-queue" });
             clearAudioState(); // 3.4 — via shared helper; see clearAudioState() for audit
           }
           if (wasActive && Queue.length === 0) {
@@ -1319,9 +1324,9 @@ const UI = (() => {
     ui.btnClearQueue.addEventListener("click", () => {
       // 3.4 — Clear queue clean-slate path. Order matters:
       // Queue.clear() first so Prev/Next disable correctly in next refreshAllUiText.
-      // AudioEngine.unload() before clearAudioState() so no media remains attached.
+      // Source teardown before clearAudioState() so no media remains attached.
       Queue.clear();
-      AudioEngine.unload();
+      InputSourceManager.teardownActiveSource({ reason: "queue-cleared" });
       clearAudioState(); // sets isLoaded/isPlaying/filename, resets scrubber + trails
       RecorderEngine.onTransportMutation("audio-unloaded", {
         reason: "queue-cleared",

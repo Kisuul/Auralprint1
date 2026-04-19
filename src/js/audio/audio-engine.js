@@ -11,9 +11,11 @@ import { BandBank } from "./band-bank.js";
 const AudioEngine = (() => {
   let audioContext = null;
 
+  let activeUpstream = null;
   let mediaEl = null;
   let mediaElAbort = null; // AbortController — cancels all mediaEl listeners on teardown
   let mediaObjectUrl = null;
+  let mediaStream = null;
   let sourceNode = null;
   let outputGain = null;
   let recorderTapDestination = null;
@@ -53,6 +55,12 @@ const AudioEngine = (() => {
     if (err.name === "NotSupportedError") return "Playback failed: unsupported or unreadable audio file.";
     if (err.name === "AbortError") return "Playback was interrupted before start.";
     return `Playback failed: ${err.message || err.name || "unknown error"}`;
+  }
+
+  function describeUpstreamError(descriptor, err) {
+    if (descriptor && descriptor.kind === "file") return describePlaybackError(err);
+    if (!err) return "Source activation failed.";
+    return `Source activation failed: ${err.message || err.name || "unknown error"}`;
   }
 
   function ensureContext() {
@@ -136,9 +144,11 @@ const AudioEngine = (() => {
     const oldAbort = mediaElAbort;
     const oldMediaEl = mediaEl;
     const oldObjectUrl = mediaObjectUrl;
+    activeUpstream = null;
     mediaElAbort = null;
     mediaEl = null;
     mediaObjectUrl = null;
+    mediaStream = null;
     if (oldAbort) oldAbort.abort();
     releaseMediaElement(oldMediaEl, oldObjectUrl);
 
@@ -162,9 +172,9 @@ const AudioEngine = (() => {
   }
 
   function applyPlaybackSettingsLive() {
-    if (!outputGain || !mediaEl) return;
+    if (!outputGain) return;
     const s = runtime.settings;
-    outputGain.gain.value = s.audio.muted ? 0 : s.audio.volume;
+    outputGain.gain.value = mediaEl ? (s.audio.muted ? 0 : s.audio.volume) : 1;
   }
 
   function applyAnalyserSettingsLive() {
@@ -178,7 +188,7 @@ const AudioEngine = (() => {
     }
   }
 
-  function buildGraph() {
+  function buildGraph(descriptor) {
     const ctx = ensureContext();
 
     outputGain = ctx.createGain();
@@ -210,7 +220,7 @@ const AudioEngine = (() => {
     sumNode.connect(bandC.analyser);
 
     sourceNode.connect(outputGain);
-    outputGain.connect(ctx.destination);
+    if (!descriptor || descriptor.monitorOutput !== false) outputGain.connect(ctx.destination);
     // Reattach any existing recorder tap destination to the rebuilt output path.
     // This keeps recording as a passive observer across track loads without
     // creating a second source or changing speaker output ownership.
@@ -220,6 +230,53 @@ const AudioEngine = (() => {
     applyAnalyserSettingsLive();
 
     status.ready = true;
+  }
+
+  function createSourceNode(ctx, descriptor) {
+    if (!descriptor || typeof descriptor !== "object") {
+      throw new Error("Active source descriptor is required.");
+    }
+    if (descriptor.sourceType === "media-element") {
+      if (!descriptor.mediaEl) throw new Error("media-element source requires mediaEl.");
+      return ctx.createMediaElementSource(descriptor.mediaEl);
+    }
+    if (descriptor.sourceType === "media-stream") {
+      if (!descriptor.mediaStream) throw new Error("media-stream source requires mediaStream.");
+      return ctx.createMediaStreamSource(descriptor.mediaStream);
+    }
+    throw new Error(`Unsupported sourceType: ${descriptor.sourceType || "unknown"}`);
+  }
+
+  async function attachSource(descriptor) {
+    const ctx = ensureContext();
+    if (ctx.state === "suspended") await ctx.resume();
+
+    teardown();
+
+    sourceNode = createSourceNode(ctx, descriptor);
+    activeUpstream = {
+      kind: descriptor.kind || "file",
+      sourceType: descriptor.sourceType,
+      label: descriptor.label || "",
+      monitorOutput: descriptor.monitorOutput !== false,
+    };
+    mediaEl = descriptor.sourceType === "media-element" ? (descriptor.mediaEl || null) : null;
+    mediaElAbort = descriptor.sourceType === "media-element" ? (descriptor.abortController || null) : null;
+    mediaObjectUrl = descriptor.sourceType === "media-element" ? (descriptor.objectUrl || null) : null;
+    mediaStream = descriptor.sourceType === "media-stream" ? (descriptor.mediaStream || null) : null;
+
+    buildGraph(activeUpstream);
+    return true;
+  }
+
+  async function attachMediaStreamSource(nextMediaStream, opts = {}) {
+    return attachSource({
+      kind: opts.kind || "stream",
+      sourceType: "media-stream",
+      label: opts.label || "",
+      monitorOutput: !!opts.monitorOutput,
+      mediaStream: nextMediaStream,
+    });
   }
 
   async function loadFile(file, requestId = null, opts = {}) {
@@ -235,8 +292,6 @@ const AudioEngine = (() => {
 
     if (!isCurrentRequest()) return false;
 
-    teardown();
-
     const nextMediaEl = document.createElement("audio");
     nextMediaEl.preload = "auto";
 
@@ -245,10 +300,6 @@ const AudioEngine = (() => {
 
     const url = URL.createObjectURL(file);
     nextMediaEl.src = url;
-
-    mediaEl = nextMediaEl;
-    mediaElAbort = nextAbort;
-    mediaObjectUrl = url;
 
     nextMediaEl.addEventListener("loadeddata", () => {
       if (mediaObjectUrl === url) mediaObjectUrl = null;
@@ -275,8 +326,24 @@ const AudioEngine = (() => {
       }
     }, sig);
 
-    sourceNode = ctx.createMediaElementSource(nextMediaEl);
-    buildGraph();
+    try {
+      await attachSource({
+        kind: "file",
+        sourceType: "media-element",
+        label: file && file.name ? file.name : "",
+        monitorOutput: true,
+        mediaEl: nextMediaEl,
+        abortController: nextAbort,
+        objectUrl: url,
+      });
+    } catch (err) {
+      releaseMediaElement(nextMediaEl, url);
+      state.audio.isLoaded = false;
+      state.audio.filename = "";
+      state.audio.isPlaying = false;
+      state.audio.transportError = describeUpstreamError({ kind: "file" }, err);
+      return false;
+    }
 
     let playErr = null;
     if (autoPlay) {
@@ -427,6 +494,8 @@ const AudioEngine = (() => {
   let _isLoadRequestCurrent = null;
 
   return { loadFile, playPause, stop, unload, sample, applyPlaybackSettingsLive, applyAnalyserSettingsLive,
+    attachSource,
+    attachMediaStreamSource,
     // Future recorder methods consume this descriptor only. They must not reach
     // into AudioEngine internals or mutate the playback/analyser graph directly.
     getRecorderTap() {

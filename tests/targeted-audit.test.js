@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 
 import { normalizeOrbDef } from "../src/js/core/preferences.js";
+import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { paths } from "../scripts/build.mjs";
@@ -73,6 +74,140 @@ function createScrubberHarness() {
     restore() {
       globalThis.window = previousWindow;
       globalThis.document = previousDocument;
+    },
+  };
+}
+
+function createAudioEngineHarness() {
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  const previousURL = globalThis.URL;
+  const previousAudioState = { ...state.audio };
+  const revokedUrls = [];
+
+  function createNode(extra = {}) {
+    return {
+      connect() {},
+      disconnect() {},
+      ...extra,
+    };
+  }
+
+  const audioEl = {
+    preload: "",
+    src: "",
+    paused: true,
+    currentTime: 0,
+    error: null,
+    releaseCalls: {
+      pause: 0,
+      removeSrc: 0,
+      load: 0,
+    },
+    listeners: new Map(),
+    addEventListener(type, handler, options = {}) {
+      const entries = this.listeners.get(type) || [];
+      entries.push({ handler, once: !!options.once });
+      this.listeners.set(type, entries);
+    },
+    dispatch(type) {
+      const entries = [...(this.listeners.get(type) || [])];
+      const kept = [];
+      for (const entry of entries) {
+        entry.handler();
+        if (!entry.once) kept.push(entry);
+      }
+      this.listeners.set(type, kept);
+    },
+    pause() {
+      this.releaseCalls.pause += 1;
+      this.paused = true;
+      this.dispatch("pause");
+    },
+    play() {
+      this.paused = false;
+      this.dispatch("play");
+      return Promise.resolve();
+    },
+    removeAttribute(name) {
+      if (name === "src") {
+        this.releaseCalls.removeSrc += 1;
+        this.src = "";
+      }
+    },
+    load() {
+      this.releaseCalls.load += 1;
+    },
+  };
+
+  class FakeAudioContext {
+    constructor() {
+      this.sampleRate = 48000;
+      this.state = "running";
+      this.destination = createNode();
+    }
+    resume() {
+      this.state = "running";
+      return Promise.resolve();
+    }
+    createMediaElementSource(mediaElement) {
+      return createNode({ mediaElement });
+    }
+    createMediaStreamSource(mediaStream) {
+      return createNode({ mediaStream });
+    }
+    createGain() {
+      return createNode({ gain: { value: 1 } });
+    }
+    createChannelSplitter() {
+      return createNode();
+    }
+    createAnalyser() {
+      return createNode({
+        fftSize: 2048,
+        smoothingTimeConstant: 0,
+        frequencyBinCount: 1024,
+        getFloatTimeDomainData(buffer) { buffer.fill(0); },
+        getFloatFrequencyData(buffer) { buffer.fill(-100); },
+      });
+    }
+    createMediaStreamDestination() {
+      return createNode({
+        stream: {
+          getTracks() { return []; },
+        },
+      });
+    }
+  }
+
+  globalThis.window = { AudioContext: FakeAudioContext };
+  globalThis.document = {
+    createElement(tag) {
+      if (tag !== "audio") throw new Error(`Unexpected element request: ${tag}`);
+      return audioEl;
+    },
+  };
+  globalThis.URL = {
+    createObjectURL() {
+      return "blob:test-audio";
+    },
+    revokeObjectURL(url) {
+      revokedUrls.push(url);
+    },
+  };
+
+  return {
+    audioEl,
+    revokedUrls,
+    restore() {
+      try { AudioEngine.unload(); } catch {}
+      state.audio.isLoaded = previousAudioState.isLoaded;
+      state.audio.isPlaying = previousAudioState.isPlaying;
+      state.audio.filename = previousAudioState.filename;
+      state.audio.transportError = previousAudioState.transportError;
+      globalThis.window = previousWindow;
+      globalThis.document = previousDocument;
+      globalThis.URL = previousURL;
     },
   };
 }
@@ -179,6 +314,25 @@ test("scrubber active touch drag still prevents default and seeks", () => {
     assert.equal(mediaEl.currentTime, 80);
   } finally {
     AudioEngine.getMediaEl = originalGetMediaEl;
+    harness.restore();
+  }
+});
+
+test("AudioEngine.loadFile does not tear down the freshly created media element during attach", async () => {
+  const harness = createAudioEngineHarness();
+
+  try {
+    const ok = await AudioEngine.loadFile({ name: "demo.wav" }, null, { autoPlay: false });
+
+    assert.equal(ok, true);
+    assert.equal(harness.audioEl.releaseCalls.pause, 0);
+    assert.equal(harness.audioEl.releaseCalls.removeSrc, 0);
+    assert.equal(harness.audioEl.releaseCalls.load, 0);
+    assert.deepEqual(harness.revokedUrls, []);
+    assert.equal(AudioEngine.getMediaEl(), harness.audioEl);
+    assert.equal(state.audio.isLoaded, true);
+    assert.equal(state.audio.filename, "demo.wav");
+  } finally {
     harness.restore();
   }
 });

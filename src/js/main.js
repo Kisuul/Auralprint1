@@ -7,6 +7,7 @@ import { resizeCanvasToDisplaySize } from "./core/spaces.js";
 import { UrlPreset } from "./presets/url-preset.js";
 import { BandBankController } from "./audio/band-bank-controller.js";
 import { AudioEngine } from "./audio/audio-engine.js";
+import { InputSourceManager } from "./audio/input-source-manager.js";
 import { Scrubber } from "./audio/scrubber.js";
 import { Renderer } from "./render/renderer.js";
 import { RecorderEngine } from "./recording/recorder-engine.js";
@@ -75,6 +76,7 @@ function main() {
   resolveSettings();
   UrlPreset.applyFromLocationHash();
   resolveSettings();
+  InputSourceManager.init();
 
   BandBankController.syncFromSettings();
   BandBankController.rebuildNow();

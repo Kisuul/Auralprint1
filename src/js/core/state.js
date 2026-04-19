@@ -3,6 +3,29 @@ import { CONFIG } from "./config.js";
 /* =============================================================================
    App State
    ========================================================================== */
+function createSourceState() {
+  return {
+    kind: "none",
+    status: "idle",
+    label: "",
+    permission: {
+      mic: "unknown",
+      stream: "unknown",
+    },
+    support: {
+      mic: false,
+      stream: false,
+    },
+    errorCode: "",
+    errorMessage: "",
+    sessionActive: false,
+    streamMeta: {
+      hasAudio: false,
+      hasVideo: false,
+    },
+  };
+}
+
 function createRecordingState() {
   const hooksEnabled = !!(CONFIG.recording && CONFIG.recording.hooksEnabled);
   const defaultTargetFps = Number.isFinite(CONFIG.recording && CONFIG.recording.targetFps)
@@ -47,6 +70,8 @@ const state = {
 
   orbs: [],
 
+  source: createSourceState(),
+
   recording: createRecordingState(),
 
   bands: {
@@ -71,4 +96,4 @@ const state = {
   }
 };
 
-export { createRecordingState, state };
+export { createSourceState, createRecordingState, state };
