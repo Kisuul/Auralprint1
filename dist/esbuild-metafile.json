@@ -1,0 +1,735 @@
+{
+  "generatedAt": "2026-04-20T07:24:59.985Z",
+  "js": {
+    "inputs": {
+      "src/js/core/utils.js": {
+        "bytes": 2101,
+        "imports": [],
+        "format": "esm"
+      },
+      "src/js/core/constants.js": {
+        "bytes": 1136,
+        "imports": [],
+        "format": "esm"
+      },
+      "src/js/core/config.js": {
+        "bytes": 14092,
+        "imports": [
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "./constants.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "./utils.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/core/preferences.js": {
+        "bytes": 3576,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "./config.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "./utils.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/core/state.js": {
+        "bytes": 2547,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "./config.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/core/spaces.js": {
+        "bytes": 1223,
+        "imports": [
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "./state.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/presets/url-preset.js": {
+        "bytes": 11921,
+        "imports": [
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../core/constants.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/band-bank.js": {
+        "bytes": 6335,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../core/constants.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/band-bank-controller.js": {
+        "bytes": 2230,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/audio/band-bank.js",
+            "kind": "import-statement",
+            "original": "./band-bank.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/audio-engine.js": {
+        "bytes": 19432,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/audio/band-bank-controller.js",
+            "kind": "import-statement",
+            "original": "./band-bank-controller.js"
+          },
+          {
+            "path": "src/js/audio/band-bank.js",
+            "kind": "import-statement",
+            "original": "./band-bank.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/input-source-manager.js": {
+        "bytes": 21882,
+        "imports": [
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/audio/audio-engine.js",
+            "kind": "import-statement",
+            "original": "./audio-engine.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/scrubber.js": {
+        "bytes": 11484,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/audio/audio-engine.js",
+            "kind": "import-statement",
+            "original": "./audio-engine.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/color-policy.js": {
+        "bytes": 1654,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/audio/band-bank.js",
+            "kind": "import-statement",
+            "original": "../audio/band-bank.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/renderer.js": {
+        "bytes": 6166,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../core/constants.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/core/spaces.js",
+            "kind": "import-statement",
+            "original": "../core/spaces.js"
+          },
+          {
+            "path": "src/js/render/color-policy.js",
+            "kind": "import-statement",
+            "original": "./color-policy.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/recording/recorder-engine.js": {
+        "bytes": 53104,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/queue.js": {
+        "bytes": 4006,
+        "imports": [],
+        "format": "esm"
+      },
+      "src/js/render/trail-system.js": {
+        "bytes": 1789,
+        "imports": [
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/orb.js": {
+        "bytes": 2430,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../core/constants.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/render/trail-system.js",
+            "kind": "import-statement",
+            "original": "./trail-system.js"
+          },
+          {
+            "path": "src/js/render/color-policy.js",
+            "kind": "import-statement",
+            "original": "./color-policy.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/orb-runtime.js": {
+        "bytes": 1515,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/render/orb.js",
+            "kind": "import-statement",
+            "original": "./orb.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/ui/dom-cache.js": {
+        "bytes": 11971,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/ui/ui.js": {
+        "bytes": 83784,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../core/constants.js"
+          },
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/presets/url-preset.js",
+            "kind": "import-statement",
+            "original": "../presets/url-preset.js"
+          },
+          {
+            "path": "src/js/audio/band-bank-controller.js",
+            "kind": "import-statement",
+            "original": "../audio/band-bank-controller.js"
+          },
+          {
+            "path": "src/js/audio/band-bank.js",
+            "kind": "import-statement",
+            "original": "../audio/band-bank.js"
+          },
+          {
+            "path": "src/js/audio/queue.js",
+            "kind": "import-statement",
+            "original": "../audio/queue.js"
+          },
+          {
+            "path": "src/js/audio/audio-engine.js",
+            "kind": "import-statement",
+            "original": "../audio/audio-engine.js"
+          },
+          {
+            "path": "src/js/audio/scrubber.js",
+            "kind": "import-statement",
+            "original": "../audio/scrubber.js"
+          },
+          {
+            "path": "src/js/audio/input-source-manager.js",
+            "kind": "import-statement",
+            "original": "../audio/input-source-manager.js"
+          },
+          {
+            "path": "src/js/render/color-policy.js",
+            "kind": "import-statement",
+            "original": "../render/color-policy.js"
+          },
+          {
+            "path": "src/js/recording/recorder-engine.js",
+            "kind": "import-statement",
+            "original": "../recording/recorder-engine.js"
+          },
+          {
+            "path": "src/js/render/orb-runtime.js",
+            "kind": "import-statement",
+            "original": "../render/orb-runtime.js"
+          },
+          {
+            "path": "src/js/ui/dom-cache.js",
+            "kind": "import-statement",
+            "original": "./dom-cache.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/main.js": {
+        "bytes": 4441,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "./core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "./core/constants.js"
+          },
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "./core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "./core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "./core/state.js"
+          },
+          {
+            "path": "src/js/core/spaces.js",
+            "kind": "import-statement",
+            "original": "./core/spaces.js"
+          },
+          {
+            "path": "src/js/presets/url-preset.js",
+            "kind": "import-statement",
+            "original": "./presets/url-preset.js"
+          },
+          {
+            "path": "src/js/audio/band-bank-controller.js",
+            "kind": "import-statement",
+            "original": "./audio/band-bank-controller.js"
+          },
+          {
+            "path": "src/js/audio/audio-engine.js",
+            "kind": "import-statement",
+            "original": "./audio/audio-engine.js"
+          },
+          {
+            "path": "src/js/audio/input-source-manager.js",
+            "kind": "import-statement",
+            "original": "./audio/input-source-manager.js"
+          },
+          {
+            "path": "src/js/audio/scrubber.js",
+            "kind": "import-statement",
+            "original": "./audio/scrubber.js"
+          },
+          {
+            "path": "src/js/render/renderer.js",
+            "kind": "import-statement",
+            "original": "./render/renderer.js"
+          },
+          {
+            "path": "src/js/recording/recorder-engine.js",
+            "kind": "import-statement",
+            "original": "./recording/recorder-engine.js"
+          },
+          {
+            "path": "src/js/ui/ui.js",
+            "kind": "import-statement",
+            "original": "./ui/ui.js"
+          },
+          {
+            "path": "src/js/render/orb-runtime.js",
+            "kind": "import-statement",
+            "original": "./render/orb-runtime.js"
+          }
+        ],
+        "format": "esm"
+      }
+    },
+    "outputs": {
+      ".build/auralprint.js": {
+        "imports": [],
+        "exports": [],
+        "entryPoint": "src/js/main.js",
+        "inputs": {
+          "src/js/core/utils.js": {
+            "bytesInOutput": 2072
+          },
+          "src/js/core/constants.js": {
+            "bytesInOutput": 260
+          },
+          "src/js/core/config.js": {
+            "bytesInOutput": 14705
+          },
+          "src/js/core/preferences.js": {
+            "bytesInOutput": 2872
+          },
+          "src/js/core/state.js": {
+            "bytesInOutput": 2338
+          },
+          "src/js/core/spaces.js": {
+            "bytesInOutput": 791
+          },
+          "src/js/presets/url-preset.js": {
+            "bytesInOutput": 10420
+          },
+          "src/js/audio/band-bank.js": {
+            "bytesInOutput": 5821
+          },
+          "src/js/audio/band-bank-controller.js": {
+            "bytesInOutput": 1825
+          },
+          "src/js/audio/audio-engine.js": {
+            "bytesInOutput": 18271
+          },
+          "src/js/audio/input-source-manager.js": {
+            "bytesInOutput": 22305
+          },
+          "src/js/audio/scrubber.js": {
+            "bytesInOutput": 9241
+          },
+          "src/js/render/color-policy.js": {
+            "bytesInOutput": 1245
+          },
+          "src/js/render/renderer.js": {
+            "bytesInOutput": 5424
+          },
+          "src/js/recording/recorder-engine.js": {
+            "bytesInOutput": 48942
+          },
+          "src/js/audio/queue.js": {
+            "bytesInOutput": 2453
+          },
+          "src/js/render/trail-system.js": {
+            "bytesInOutput": 1478
+          },
+          "src/js/render/orb.js": {
+            "bytesInOutput": 1942
+          },
+          "src/js/render/orb-runtime.js": {
+            "bytesInOutput": 1073
+          },
+          "src/js/ui/dom-cache.js": {
+            "bytesInOutput": 10977
+          },
+          "src/js/ui/ui.js": {
+            "bytesInOutput": 76788
+          },
+          "src/js/main.js": {
+            "bytesInOutput": 2869
+          }
+        },
+        "bytes": 244827
+      }
+    }
+  },
+  "css": {
+    "inputs": {
+      "src/css/panels.css": {
+        "bytes": 7210,
+        "imports": []
+      },
+      "src/css/audio-panel.css": {
+        "bytes": 1773,
+        "imports": []
+      },
+      "src/css/queue-panel.css": {
+        "bytes": 2146,
+        "imports": []
+      },
+      "src/css/sim-panel.css": {
+        "bytes": 412,
+        "imports": []
+      },
+      "src/css/bands-panel.css": {
+        "bytes": 1829,
+        "imports": []
+      },
+      "src/css/record-panel.css": {
+        "bytes": 3562,
+        "imports": []
+      },
+      "src/css/base.css": {
+        "bytes": 3421,
+        "imports": [
+          {
+            "path": "src/css/panels.css",
+            "kind": "import-rule",
+            "original": "./panels.css"
+          },
+          {
+            "path": "src/css/audio-panel.css",
+            "kind": "import-rule",
+            "original": "./audio-panel.css"
+          },
+          {
+            "path": "src/css/queue-panel.css",
+            "kind": "import-rule",
+            "original": "./queue-panel.css"
+          },
+          {
+            "path": "src/css/sim-panel.css",
+            "kind": "import-rule",
+            "original": "./sim-panel.css"
+          },
+          {
+            "path": "src/css/bands-panel.css",
+            "kind": "import-rule",
+            "original": "./bands-panel.css"
+          },
+          {
+            "path": "src/css/record-panel.css",
+            "kind": "import-rule",
+            "original": "./record-panel.css"
+          }
+        ]
+      }
+    },
+    "outputs": {
+      ".build/auralprint.css": {
+        "imports": [],
+        "entryPoint": "src/css/base.css",
+        "inputs": {
+          "src/css/panels.css": {
+            "bytesInOutput": 4919
+          },
+          "src/css/audio-panel.css": {
+            "bytesInOutput": 1422
+          },
+          "src/css/queue-panel.css": {
+            "bytesInOutput": 1526
+          },
+          "src/css/sim-panel.css": {
+            "bytesInOutput": 327
+          },
+          "src/css/bands-panel.css": {
+            "bytesInOutput": 1471
+          },
+          "src/css/record-panel.css": {
+            "bytesInOutput": 2733
+          },
+          "src/css/base.css": {
+            "bytesInOutput": 2307
+          }
+        },
+        "bytes": 14908
+      }
+    }
+  }
+}

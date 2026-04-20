@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 
-import { normalizeOrbDef } from "../src/js/core/preferences.js";
+import { normalizeOrbDef, preferences } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
 import { InputSourceManager } from "../src/js/audio/input-source-manager.js";
+import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
 import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
@@ -199,6 +200,80 @@ function renderLoadHintState({ sourceState = {}, audioState = {}, recordingState
   } finally {
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
+    harness.restore();
+  }
+}
+
+function createNamedAudioFile(name) {
+  return { name, type: "audio/wav" };
+}
+
+async function withUiWireHarnessState({
+  sourceState = {},
+  audioState = {},
+  recordingState = null,
+  queueNames = [],
+  currentIndex = -1,
+  queueVisible = false,
+  bandSnapshot = null,
+  repeatMode = null,
+} = {}, run) {
+  const harness = createUiWireHarness();
+  const previous = {
+    source: JSON.parse(JSON.stringify(state.source)),
+    audio: { ...state.audio },
+    recording: JSON.parse(JSON.stringify(state.recording)),
+    repeatMode: preferences.audio.repeatMode,
+  };
+
+  try {
+    Queue.clear();
+    const nextSource = {
+      ...previous.source,
+      ...sourceState,
+      permission: {
+        ...previous.source.permission,
+        ...(sourceState.permission || {}),
+      },
+      support: {
+        ...previous.source.support,
+        ...(sourceState.support || {}),
+      },
+      streamMeta: {
+        ...previous.source.streamMeta,
+        ...(sourceState.streamMeta || {}),
+      },
+    };
+    const nextAudio = {
+      ...previous.audio,
+      ...audioState,
+    };
+
+    applySourceAndAudioState({
+      source: nextSource,
+      audio: nextAudio,
+    });
+    Object.assign(state.recording, previous.recording);
+    if (recordingState) Object.assign(state.recording, recordingState);
+    if (repeatMode !== null) preferences.audio.repeatMode = repeatMode;
+
+    for (const name of queueNames) Queue.add(createNamedAudioFile(name));
+    if (currentIndex >= 0) Queue.setCursor(currentIndex);
+
+    UI.wireControls();
+    if (state.ui.queuePanel) state.ui.queuePanel.style.display = queueVisible ? "block" : "none";
+    UI.refreshRecordingUi();
+    UI.refreshAllUiText(bandSnapshot);
+
+    return await run({
+      harness,
+      getElement: harness.getElement,
+    });
+  } finally {
+    Queue.clear();
+    applySourceAndAudioState(previous);
+    Object.assign(state.recording, previous.recording);
+    preferences.audio.repeatMode = previous.repeatMode;
     harness.restore();
   }
 }
@@ -580,10 +655,15 @@ function createUiWireHarness() {
   const elements = new Map();
 
   function getElement(id) {
-    if (!elements.has(id)) elements.set(id, createStubUiElement(id === "fileInput" ? "input" : "div"));
+    if (!elements.has(id)) {
+      const el = createStubUiElement(id === "fileInput" ? "input" : "div");
+      if (id === "queuePanel") el.style.display = "none";
+      elements.set(id, el);
+    }
     return elements.get(id);
   }
 
+  const body = createStubUiElement("body");
   globalThis.window = {
     ...(previousWindow || {}),
     addEventListener() {},
@@ -596,6 +676,7 @@ function createUiWireHarness() {
     createElement(tag) {
       return createStubUiElement(tag);
     },
+    body,
     querySelectorAll() {
       return [];
     },
@@ -977,7 +1058,7 @@ test("readSourceUiModel keeps microphone mode honest about file-only affordances
   });
   assert.equal(model.disableFileControls, true);
   assert.equal(model.audioPanelSourceMode, "mic");
-  assert.match(model.audioStatusText, /Microphone input active - Podcast Mic/);
+  assert.match(model.audioStatusText, /Microphone live: Podcast Mic - Bands: mono-ish/);
   assert.doesNotMatch(model.audioStatusText, /should-not-show\.wav/);
   assert.equal(shouldShowActiveQueueItem({ kind: "mic" }, { isLoaded: false }, { active: true }), false);
 });
@@ -1009,7 +1090,7 @@ test("readSourceUiModel keeps stream mode honest about live-source affordances",
   });
   assert.equal(model.disableFileControls, true);
   assert.equal(model.audioPanelSourceMode, "stream");
-  assert.match(model.audioStatusText, /Stream input active - Browser Tab - Bands: stereo \(L!=R\)/);
+  assert.match(model.audioStatusText, /Stream live: Browser Tab - Bands: stereo \(L!=R\)/);
   assert.doesNotMatch(model.audioStatusText, /should-not-show\.wav/);
   assert.equal(shouldShowActiveQueueItem({ kind: "stream" }, { isLoaded: false }, { active: true }), false);
 });
@@ -1040,8 +1121,241 @@ test("readSourceUiModel treats File as the idle workflow side without implying a
   assert.equal(model.disableFileControls, false);
   assert.equal(model.audioPanelSourceMode, "file");
   assert.equal(model.showActiveQueueItem, false);
-  assert.equal(model.audioStatusText, "No audio loaded.");
+  assert.equal(model.audioStatusText, "File mode ready. Select a queued file or load audio files.");
+  assert.equal(model.sourceSelectorCopy.fileText, "File workflow selected. Select a queued file or load audio files.");
   assert.equal(shouldShowActiveQueueItem({ kind: "none" }, { isLoaded: false }, { active: true }), false);
+});
+
+test("UI refreshAllUiText keeps file-mode status and selector copy honest in idle and loaded states", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      support: {
+        mic: true,
+        stream: true,
+      },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "queued-track.wav",
+      transportError: "",
+    },
+  }, () => {
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Load audio files to begin analysis.");
+    assert.equal(state.ui.btnSourceFile.title, "File workflow selected. Load audio files to begin.");
+    assert.equal(state.ui.btnLoad.title, "Load audio files into the queue");
+    assert.equal(state.ui.btnPlay.title, "Play current file");
+    assert.equal(state.ui.btnPrev.title, "Previous track unavailable");
+    assert.equal(state.ui.btnNext.title, "Next track unavailable");
+    assert.equal(state.ui.btnRepeat.title, "Repeat queue: Off");
+    assert.equal(state.ui.btnToggleQueue.title, "Show file queue");
+    assert.equal(state.ui.btnClearQueue.title, "Clear file queue");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "demo.wav",
+      transportError: "",
+    },
+    queueNames: ["demo.wav", "bonus.wav"],
+    currentIndex: 0,
+    bandSnapshot: {
+      ready: true,
+      monoLike: false,
+    },
+    repeatMode: "all",
+  }, () => {
+    assert.equal(state.ui.audioStatus.textContent, "File [1/2]: demo.wav - Paused - Bands: stereo (L\u2260R)");
+    assert.equal(state.ui.btnSourceFile.title, "File workflow selected. Current file: demo.wav.");
+    assert.equal(state.ui.btnPlay.title, "Play current file");
+    assert.equal(state.ui.btnPrev.title, "Previous track (P)");
+    assert.equal(state.ui.btnNext.title, "Next track (N)");
+    assert.equal(state.ui.btnRepeat.title, "Repeat queue: All");
+  });
+});
+
+test("UI source selector copy reflects support, requesting, active, and error truth", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      support: {
+        mic: false,
+        stream: false,
+      },
+    },
+  }, () => {
+    assert.equal(state.ui.btnSourceMic.disabled, true);
+    assert.equal(state.ui.btnSourceMic.title, "Microphone capture is unavailable in this browser.");
+    assert.equal(state.ui.btnSourceMic.getAttribute("aria-label"), "Microphone capture is unavailable in this browser.");
+    assert.equal(state.ui.btnSourceStream.disabled, true);
+    assert.equal(state.ui.btnSourceStream.title, "Stream capture is unavailable in this browser.");
+    assert.equal(state.ui.btnSourceFile.title, "File workflow selected. Load audio files to begin.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "mic",
+      status: "requesting",
+      label: "Microphone",
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "prompt",
+        stream: "unknown",
+      },
+    },
+  }, () => {
+    assert.equal(state.ui.btnSourceMic.disabled, false);
+    assert.equal(state.ui.btnSourceMic.title, "Microphone workflow selected. Waiting for microphone permission.");
+    assert.equal(state.ui.btnSourceMic.getAttribute("aria-label"), "Microphone workflow selected. Waiting for microphone permission.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "stream",
+      status: "active",
+      label: "Browser Tab",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "unknown",
+        stream: "granted",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: true,
+      },
+    },
+  }, () => {
+    assert.equal(state.ui.btnSourceStream.disabled, false);
+    assert.equal(state.ui.btnSourceStream.title, "Shared stream workflow selected. Live input active.");
+    assert.equal(state.ui.btnSourceStream.getAttribute("aria-label"), "Shared stream workflow selected. Live input active.");
+    assert.equal(state.ui.btnSourceFile.title, "Switch to file playback workflow.");
+    assert.equal(state.ui.btnSourceFile.getAttribute("aria-label"), "Switch to file playback workflow.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "mic",
+      status: "error",
+      label: "Microphone",
+      errorMessage: "Microphone permission denied.",
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "denied",
+        stream: "unknown",
+      },
+    },
+  }, () => {
+    assert.equal(state.ui.btnSourceMic.title, "Microphone workflow selected. Microphone permission denied.");
+  });
+});
+
+test("UI disables file-only controls with clear file-mode-only affordances in live workflows", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "mic",
+      status: "active",
+      label: "Podcast Mic",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "granted",
+        stream: "unknown",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: false,
+      },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "stale.wav",
+      transportError: "",
+    },
+    bandSnapshot: {
+      ready: true,
+      monoLike: true,
+    },
+  }, () => {
+    assert.match(state.ui.audioStatus.textContent, /Microphone live: Podcast Mic - Bands: mono-ish/);
+    assert.doesNotMatch(state.ui.audioStatus.textContent, /stale\.wav/);
+    assert.equal(state.ui.btnSourceFile.title, "Switch to file playback workflow.");
+    assert.equal(state.ui.btnSourceFile.getAttribute("aria-label"), "Switch to file playback workflow.");
+    assert.equal(state.ui.btnLoad.disabled, true);
+    assert.equal(state.ui.btnLoad.title, "Load is available in File mode only.");
+    assert.equal(state.ui.btnPlay.disabled, true);
+    assert.equal(state.ui.btnPlay.title, "Play/Pause is available in File mode only.");
+    assert.equal(state.ui.btnStop.title, "Stop is available in File mode only.");
+    assert.equal(state.ui.btnPrev.title, "Previous track is available in File mode only.");
+    assert.equal(state.ui.btnNext.title, "Next track is available in File mode only.");
+    assert.equal(state.ui.btnRepeat.title, "Repeat is available in File mode only.");
+    assert.equal(state.ui.btnShuffle.title, "Shuffle is available in File mode only.");
+    assert.equal(state.ui.btnToggleQueue.title, "Queue is available in File mode only.");
+    assert.equal(state.ui.btnClearQueue.title, "Clear queue is available in File mode only.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "stream",
+      status: "active",
+      label: "Browser Tab",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "unknown",
+        stream: "granted",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: true,
+      },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "stale.wav",
+      transportError: "",
+    },
+    bandSnapshot: {
+      ready: true,
+      monoLike: false,
+    },
+  }, () => {
+    assert.equal(state.ui.audioStatus.textContent, "Stream live: Browser Tab - Bands: stereo (L\u2260R)");
+    assert.doesNotMatch(state.ui.audioStatus.textContent, /stale\.wav/);
+  });
 });
 
 test("first-run load hint hides when a file source becomes active", () => {
@@ -1204,6 +1518,132 @@ test("first-run load hint stays visible after denied live-source activation erro
   assert.equal(streamHintState.ariaHidden, null);
 });
 
+test("first-run load hint stays hidden after a successful live session returns to idle file workflow", () => {
+  const harness = createUiWireHarness();
+  const previous = {
+    source: JSON.parse(JSON.stringify(state.source)),
+    audio: { ...state.audio },
+    recording: JSON.parse(JSON.stringify(state.recording)),
+  };
+
+  try {
+    state.source.kind = "stream";
+    state.source.status = "active";
+    state.source.label = "Browser Tab";
+    state.source.sessionActive = true;
+    state.source.support.mic = true;
+    state.source.support.stream = true;
+    state.source.permission.stream = "granted";
+    state.source.streamMeta.hasAudio = true;
+    state.source.streamMeta.hasVideo = true;
+    state.audio.isLoaded = false;
+    state.audio.isPlaying = false;
+    state.audio.filename = "";
+    state.audio.transportError = "";
+
+    UI.wireControls();
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.loadHint.classList.contains("hidden"), true);
+    assert.equal(state.ui.loadHint.getAttribute("aria-hidden"), "true");
+
+    state.source.kind = "none";
+    state.source.status = "idle";
+    state.source.label = "";
+    state.source.sessionActive = false;
+    state.source.errorCode = "";
+    state.source.errorMessage = "";
+    state.source.streamMeta.hasAudio = false;
+    state.source.streamMeta.hasVideo = false;
+
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.loadHint.classList.contains("hidden"), true);
+    assert.equal(state.ui.loadHint.getAttribute("aria-hidden"), "true");
+  } finally {
+    applySourceAndAudioState(previous);
+    Object.assign(state.recording, previous.recording);
+    harness.restore();
+  }
+});
+
+test("UI keeps queue panel recoverable across live source switches and audio panel hiding", async () => {
+  const originalActivateMic = InputSourceManager.activateMic;
+  const originalTeardownActiveSource = InputSourceManager.teardownActiveSource;
+  const originalOnTransportMutation = RecorderEngine.onTransportMutation;
+  const originalGetSupportStatus = RecorderEngine.getSupportStatus;
+
+  InputSourceManager.activateMic = async () => {
+    state.source.kind = "mic";
+    state.source.status = "active";
+    state.source.label = "Podcast Mic";
+    state.source.sessionActive = true;
+    state.source.support.mic = true;
+    state.source.support.stream = true;
+    state.source.permission.mic = "granted";
+    state.source.streamMeta.hasAudio = true;
+    state.source.streamMeta.hasVideo = false;
+    return { ok: true };
+  };
+  InputSourceManager.teardownActiveSource = async () => {
+    state.source.kind = "none";
+    state.source.status = "idle";
+    state.source.label = "";
+    state.source.sessionActive = false;
+    state.source.errorCode = "";
+    state.source.errorMessage = "";
+    state.source.streamMeta.hasAudio = false;
+    state.source.streamMeta.hasVideo = false;
+    return true;
+  };
+  RecorderEngine.onTransportMutation = () => ({ ok: true });
+  RecorderEngine.getSupportStatus = () => ({ ok: true });
+
+  try {
+    await withUiWireHarnessState({
+      sourceState: {
+        kind: "file",
+        status: "active",
+        label: "demo.wav",
+        sessionActive: true,
+        support: {
+          mic: true,
+          stream: true,
+        },
+      },
+      audioState: {
+        isLoaded: true,
+        isPlaying: false,
+        filename: "demo.wav",
+        transportError: "",
+      },
+      queueNames: ["demo.wav", "bonus.wav"],
+      currentIndex: 0,
+      queueVisible: true,
+    }, async () => {
+      assert.equal(state.ui.queuePanel.style.display, "block");
+
+      await UI.dispatchSourceSwitchAction("mic");
+      assert.equal(state.ui.queuePanel.style.display, "none");
+
+      await UI.dispatchSourceSwitchAction("file");
+      UI.refreshAllUiText();
+      assert.equal(state.ui.queuePanel.style.display, "none");
+      assert.equal(state.ui.audioStatus.textContent, "File mode ready. Select a queued file or load audio files.");
+      assert.equal(state.ui.btnSourceFile.title, "File workflow selected. Select a queued file or load audio files.");
+
+      state.ui.queuePanel.style.display = "block";
+      state.ui.btnHideAudio.click();
+      assert.equal(state.ui.queuePanel.style.display, "none");
+    });
+  } finally {
+    InputSourceManager.activateMic = originalActivateMic;
+    InputSourceManager.teardownActiveSource = originalTeardownActiveSource;
+    RecorderEngine.onTransportMutation = originalOnTransportMutation;
+    RecorderEngine.getSupportStatus = originalGetSupportStatus;
+  }
+});
+
 test("UI blocks live-source switching during active recording without touching the active source session", async () => {
   const harness = createUiWireHarness();
   const previous = {
@@ -1285,6 +1725,122 @@ test("UI blocks live-source switching during active recording without touching t
     Object.assign(state.recording, previous.recording);
     harness.restore();
   }
+});
+
+test("UI refreshRecordingUi renders source-aware recording copy across file and live workflows", async () => {
+  await withUiWireHarnessState({
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 1,
+    },
+  }, () => {
+    assert.equal(state.ui.recordStatus.textContent, "Select File, Mic, or Stream to start recording.");
+    assert.equal(state.ui.recordSupport.textContent, "Activate File, Mic, or Stream to include source audio.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "demo.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 2,
+    },
+  }, () => {
+    assert.equal(state.ui.recordStatus.textContent, "Ready to record file audio + video");
+    assert.equal(state.ui.recordSupport.textContent, "Canvas + source audio capture available.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "mic",
+      status: "active",
+      label: "Podcast Mic",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "granted",
+        stream: "unknown",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: false,
+      },
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 3,
+    },
+  }, () => {
+    assert.equal(state.ui.recordStatus.textContent, "Ready to record microphone input + video");
+    assert.equal(state.ui.recordSupport.textContent, "Canvas + source audio capture available.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "stream",
+      status: "active",
+      label: "Browser Tab",
+      sessionActive: true,
+      support: {
+        mic: true,
+        stream: true,
+      },
+      permission: {
+        mic: "unknown",
+        stream: "granted",
+      },
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: true,
+      },
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 4,
+    },
+  }, () => {
+    assert.equal(state.ui.recordStatus.textContent, "Ready to record shared stream + video");
+    assert.equal(state.ui.recordSupport.textContent, "Canvas + source audio capture available.");
+  });
+
+  await withUiWireHarnessState({
+    recordingState: {
+      hooksEnabled: true,
+      phase: "recording",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastCode: "audio-unloaded",
+      lastUpdatedAtMs: 5,
+    },
+  }, () => {
+    assert.equal(state.ui.recordStatus.textContent, "Recording continues without an active audio source.");
+    assert.equal(state.ui.recordSupport.textContent, "Recording continues while no audio source is active.");
+  });
 });
 
 test("RecorderEngine.start allows an active microphone source without file transport state", () => {
@@ -1387,8 +1943,8 @@ test("UI.getRecordingUiModel allows active stream sessions to start recording wi
     const model = UI.getRecordingUiModel();
 
     assert.equal(model.canStart, true);
-    assert.equal(model.primaryStatusText, "Ready to record");
-    assert.notEqual(model.primaryStatusText, "Load audio to start recording");
+    assert.equal(model.primaryStatusText, "Ready to record shared stream + video");
+    assert.equal(model.supportText, "Canvas + source audio capture available.");
   } finally {
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
