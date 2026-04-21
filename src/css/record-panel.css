@@ -99,15 +99,9 @@
       line-height: 1.35;
     }
 
-    #openRecord {
-      left: var(--ui-record-launcher-left);
-      right: var(--ui-record-launcher-right);
-      top: var(--ui-record-launcher-top);
-      bottom: var(--ui-record-launcher-bottom);
-    }
-
-    /* Canonical recording launcher: same launcher family, dedicated camera identity. */
-    #openRecord button {
+    /* Canonical recording launcher cue now lives inside the Build 115 launcher bar. */
+    .launcherBarButton[data-launcher-id="recording"],
+    .launcherBarToggle.is-recording-cue {
       border: 1px solid var(--ui-record-launcher-border-color);
       box-shadow: var(--ui-record-launcher-shadow);
       opacity: var(--ui-record-launcher-rest-opacity);
@@ -123,12 +117,14 @@
       }
     }
 
-    #openRecord.is-recording button {
+    .launcherBarButton[data-launcher-id="recording"].is-recording,
+    .launcherBarToggle.is-recording-cue {
       animation: recordLauncherPulse var(--ui-record-launcher-pulse-period) ease-in-out infinite;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      #openRecord.is-recording button {
+      .launcherBarButton[data-launcher-id="recording"].is-recording,
+      .launcherBarToggle.is-recording-cue {
         animation: none;
       }
     }

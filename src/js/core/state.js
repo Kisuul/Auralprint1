@@ -1,4 +1,5 @@
 import { CONFIG } from "./config.js";
+import { createPanelShellState } from "../ui/panel-state.js";
 
 /* =============================================================================
    App State
@@ -90,8 +91,11 @@ const state = {
   },
 
   ui: {
-    recordingPanelVisible: !!(CONFIG.recording && CONFIG.recording.defaultPanelVisible),
-    recordingPanelRestoreAfterGlobalHide: false,
+    panelShell: createPanelShellState({
+      openTargets: {
+        record: !!(CONFIG.recording && CONFIG.recording.defaultPanelVisible),
+      },
+    }),
     recordingUiSyncKey: "",
   }
 };

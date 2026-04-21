@@ -14,6 +14,19 @@ import { ColorPolicy } from "../render/color-policy.js";
 import { RecorderEngine } from "../recording/recorder-engine.js";
 import { initOrbs, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
 import { primeDomCache } from "./dom-cache.js";
+import {
+  LAUNCHER_IDS,
+  LAUNCHER_TARGETS,
+  activateLauncher,
+  ensureLauncherForTarget,
+  ensurePanelShellState,
+  getPanelShellStateSnapshot,
+  isTargetOpen,
+  readLauncherTarget,
+  setPanelTargetOpen,
+  toggleGlobalPanelVisibility,
+  toggleLauncherCollapsed,
+} from "./panel-state.js";
 
 /* =============================================================================
    UI
@@ -239,11 +252,11 @@ const UI = (() => {
     if (edgeY === "top") {
       edgeVars.top = "calc(var(--ui-pad) + var(--ui-safe-t))";
     } else if (placement.anchorAboveQueuePanel) {
-      edgeVars.bottom = "calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-queue-clearance))";
+      edgeVars.bottom = "calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-queue-clearance))";
     } else if (placement.anchorAboveAudioPanel) {
-      edgeVars.bottom = "calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-audio-h) + var(--ui-gap))";
+      edgeVars.bottom = "calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-audio-h) + var(--ui-gap))";
     } else {
-      edgeVars.bottom = "calc(var(--ui-pad) + var(--ui-safe-b))";
+      edgeVars.bottom = "calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance))";
     }
 
     return edgeVars;
@@ -312,101 +325,219 @@ const UI = (() => {
   }
 
   function hideAudioPanel() {
-    ui.audioPanel.style.display = "none";
-    ui.openAudio.style.display = "block";
-    // Queue panel is anchored above the audio panel — hide it with audio panel
-    // so it doesn't float orphaned when panels are toggled with H.
-    if (ui.queuePanel) ui.queuePanel.style.display = "none";
-    if (document.activeElement && ui.audioPanel.contains(document.activeElement)) ui.btnOpenAudio.focus();
+    return closePanelTarget("audio", { focusLauncher: true });
   }
+
   function showAudioPanel() {
-    ui.audioPanel.style.display = "grid";
-    ui.openAudio.style.display = "none";
-    // Queue panel is NOT automatically reopened — user controls its visibility via ☰.
-    if (document.activeElement === ui.btnOpenAudio) ui.btnHideAudio.focus();
+    return openPanelTarget("audio", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
   }
 
   function hideSimPanel() {
-    ui.simPanel.style.display = "none";
-    ui.openSim.style.display = "block";
-    if (document.activeElement && ui.simPanel.contains(document.activeElement)) ui.btnOpenSim.focus();
+    return closePanelTarget("sim", { focusLauncher: true });
   }
+
   function showSimPanel() {
-    ui.simPanel.style.display = "block";
-    ui.openSim.style.display = "none";
-    if (document.activeElement === ui.btnOpenSim) ui.btnHideSim.focus();
+    return openPanelTarget("sim", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
   }
 
   function hideBandsPanel() {
-    ui.bandsPanel.style.display = "none";
-    ui.openBands.style.display = "block";
-    if (document.activeElement && ui.bandsPanel.contains(document.activeElement)) ui.btnOpenBands.focus();
+    return closePanelTarget("bands", { focusLauncher: true });
   }
+
   function showBandsPanel() {
-    ui.bandsPanel.style.display = "block";
-    ui.openBands.style.display = "none";
-    if (document.activeElement === ui.btnOpenBands) ui.btnHideBands.focus();
+    return openPanelTarget("bands", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
   }
 
-  // Record panel follows the same launcher convention as the other hideable panels:
-  // panel visible means launcher hidden; panel hidden means launcher available.
-  function setRecordPanelVisibility(visible) {
-    if (!ui.recordPanel || !ui.openRecord) return;
-
-    const nextVisible = !!visible && !!state.recording.hooksEnabled;
-    ui.recordingPanelVisible = nextVisible;
-    ui.recordPanel.hidden = !nextVisible;
-    ui.recordPanel.setAttribute("aria-hidden", nextVisible ? "false" : "true");
-    ui.recordPanel.style.display = nextVisible ? "block" : "none";
-
-    const launcherVisible = !!state.recording.hooksEnabled && !nextVisible;
-    ui.openRecord.hidden = !launcherVisible;
-    ui.openRecord.setAttribute("aria-hidden", launcherVisible ? "false" : "true");
-    ui.openRecord.style.display = launcherVisible ? "grid" : "none";
-  }
-
-  function hideRecordPanel(options = {}) {
-    if (!ui.recordPanel || !ui.openRecord) return;
-    const preserveRestoreFlag = !!options.preserveRestoreFlag;
-    if (!preserveRestoreFlag) ui.recordingPanelRestoreAfterGlobalHide = false;
-    setRecordPanelVisibility(false);
-    if (document.activeElement && ui.recordPanel.contains(document.activeElement) && ui.btnOpenRecord) {
-      ui.btnOpenRecord.focus();
-    }
+  function hideRecordPanel() {
+    return closePanelTarget("record", { focusLauncher: true });
   }
 
   function showRecordPanel() {
-    if (!ui.recordPanel || !ui.openRecord || !state.recording.hooksEnabled) return;
-    ui.recordingPanelRestoreAfterGlobalHide = false;
-    setRecordPanelVisibility(true);
-    if (document.activeElement === ui.btnOpenRecord && ui.btnHideRecord) ui.btnHideRecord.focus();
+    return openPanelTarget("record", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
   }
 
   function primeRecordUi() {
-    if (!ui.recordPanel || !ui.openRecord) return;
-    if (!state.recording.hooksEnabled) ui.recordingPanelRestoreAfterGlobalHide = false;
-    const shouldShowPanel = !!state.recording.hooksEnabled && !!ui.recordingPanelVisible;
-    setRecordPanelVisibility(shouldShowPanel);
+    syncPanelShellUi();
   }
 
   function togglePanels() {
-    const aVisible = ui.audioPanel.style.display !== "none";
-    const sVisible = ui.simPanel.style.display !== "none";
-    const bVisible = ui.bandsPanel.style.display !== "none";
-    const qVisible = ui.queuePanel && ui.queuePanel.style.display !== "none";
-    const rVisible = ui.recordPanel && ui.recordPanel.style.display !== "none";
+    toggleGlobalPanelVisibility(readPanelShell());
+    syncPanelShellUi();
+  }
 
-    if (aVisible || sVisible || bVisible || qVisible || rVisible) {
-      ui.recordingPanelRestoreAfterGlobalHide = !!rVisible;
-      hideAudioPanel(); hideSimPanel(); hideBandsPanel();
-      // hideAudioPanel already closes queuePanel
-      if (rVisible) hideRecordPanel({ preserveRestoreFlag: true });
-    } else {
-      showAudioPanel(); showSimPanel(); showBandsPanel();
-      const shouldRestoreRecordingPanel = !!ui.recordingPanelRestoreAfterGlobalHide;
-      ui.recordingPanelRestoreAfterGlobalHide = false;
-      if (shouldRestoreRecordingPanel) setRecordPanelVisibility(true);
+  const PANEL_DISPLAY_MODES = Object.freeze({
+    audio: "grid",
+    queue: "block",
+    sim: "block",
+    bands: "block",
+    record: "block",
+    status: "block",
+  });
+
+  function readPanelShell() {
+    ui.panelShell = ensurePanelShellState(ui.panelShell);
+    return ui.panelShell;
+  }
+
+  function readPanelElement(targetId) {
+    switch (targetId) {
+      case "audio": return ui.audioPanel;
+      case "queue": return ui.queuePanel;
+      case "sim": return ui.simPanel;
+      case "bands": return ui.bandsPanel;
+      case "record": return ui.recordPanel;
+      case "status": return ui.statusPanel;
+      default: return null;
     }
+  }
+
+  function readLauncherButton(launcherId) {
+    return ui.launcherButtons && Object.prototype.hasOwnProperty.call(ui.launcherButtons, launcherId)
+      ? ui.launcherButtons[launcherId]
+      : null;
+  }
+
+  function applyPanelElementVisibility(targetId, visible) {
+    const el = readPanelElement(targetId);
+    if (!el) return;
+    el.hidden = !visible;
+    el.setAttribute("aria-hidden", visible ? "false" : "true");
+    el.style.display = visible ? PANEL_DISPLAY_MODES[targetId] : "none";
+  }
+
+  function focusPreferredPanelControl(targetId) {
+    switch (targetId) {
+      case "audio":
+        if (ui.btnHideAudio) ui.btnHideAudio.focus();
+        break;
+      case "sim":
+        if (ui.btnHideSim) ui.btnHideSim.focus();
+        break;
+      case "bands":
+        if (ui.btnHideBands) ui.btnHideBands.focus();
+        break;
+      case "record":
+        if (ui.btnHideRecord) ui.btnHideRecord.focus();
+        break;
+      case "status":
+        if (ui.btnHideStatus) ui.btnHideStatus.focus();
+        break;
+      default:
+        break;
+    }
+  }
+
+  function focusLauncherForTarget(targetId) {
+    const shell = readPanelShell();
+    ensureLauncherForTarget(shell, targetId);
+    const launcherButton = readLauncherButton(shell.activeLauncherId);
+    if (launcherButton) launcherButton.focus();
+  }
+
+  function syncLauncherBarUi(recordingPhase = state.recording.phase) {
+    const shell = readPanelShell();
+    if (ui.launcherBar) {
+      ui.launcherBar.dataset.collapsed = shell.launcherCollapsed ? "true" : "false";
+      ui.launcherBar.dataset.recordingPhase = recordingPhase || "";
+    }
+
+    if (ui.btnLauncherToggle) {
+      const expanded = !shell.launcherCollapsed;
+      const toggleCopy = expanded ? "Collapse launcher bar" : "Expand launcher bar";
+      ui.btnLauncherToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+      if (ui.btnLauncherToggle.title !== toggleCopy) ui.btnLauncherToggle.title = toggleCopy;
+      if (ui.btnLauncherToggle.getAttribute("aria-label") !== toggleCopy) {
+        ui.btnLauncherToggle.setAttribute("aria-label", toggleCopy);
+      }
+      ui.btnLauncherToggle.classList.toggle(
+        "is-recording-cue",
+        shell.launcherCollapsed && state.recording.phase === "recording"
+      );
+    }
+
+    for (const launcherId of LAUNCHER_IDS) {
+      const button = readLauncherButton(launcherId);
+      if (!button) continue;
+      const targetId = LAUNCHER_TARGETS[launcherId];
+      const targetOpen = isTargetOpen(shell, targetId);
+      const active = shell.activeLauncherId === launcherId;
+      const presentedOpen = targetOpen && active;
+      button.dataset.targetOpen = targetOpen ? "true" : "false";
+      button.dataset.presentedOpen = presentedOpen ? "true" : "false";
+      button.dataset.active = active ? "true" : "false";
+      button.setAttribute("aria-pressed", presentedOpen ? "true" : "false");
+
+      if (launcherId === "recording") {
+        button.disabled = !state.recording.hooksEnabled;
+        button.classList.toggle("is-recording", state.recording.phase === "recording");
+      }
+    }
+  }
+
+  function syncPanelShellUi() {
+    const shell = readPanelShell();
+    if (!state.recording.hooksEnabled && isTargetOpen(shell, "record")) {
+      setPanelTargetOpen(shell, "record", false);
+    }
+
+    applyPanelElementVisibility("audio", isTargetOpen(shell, "audio"));
+    applyPanelElementVisibility("queue", isTargetOpen(shell, "queue"));
+    applyPanelElementVisibility("sim", isTargetOpen(shell, "sim"));
+    applyPanelElementVisibility("bands", isTargetOpen(shell, "bands"));
+    applyPanelElementVisibility("record", isTargetOpen(shell, "record") && !!state.recording.hooksEnabled);
+    applyPanelElementVisibility("status", isTargetOpen(shell, "status"));
+    syncLauncherBarUi();
+  }
+
+  function openPanelTarget(targetId, options = {}) {
+    const shell = readPanelShell();
+    if (targetId === "record" && !state.recording.hooksEnabled) return false;
+    if (options.launcherId) shell.activeLauncherId = options.launcherId;
+    else ensureLauncherForTarget(shell, targetId);
+    const changed = setPanelTargetOpen(shell, targetId, true);
+    syncPanelShellUi();
+    if (options.focusPanel) focusPreferredPanelControl(targetId);
+    return changed;
+  }
+
+  function closePanelTarget(targetId, options = {}) {
+    const panelEl = readPanelElement(targetId);
+    const shouldFocusLauncher = !!options.focusLauncher
+      && !!panelEl
+      && !!document.activeElement
+      && panelEl.contains(document.activeElement);
+    const changed = setPanelTargetOpen(readPanelShell(), targetId, false);
+    syncPanelShellUi();
+    if (shouldFocusLauncher) focusLauncherForTarget(targetId);
+    return changed;
+  }
+
+  function hideStatusPanel() {
+    return closePanelTarget("status", { focusLauncher: true });
+  }
+
+  function showStatusPanel() {
+    return openPanelTarget("status", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
+  }
+
+  function handleLauncherActivation(launcherId) {
+    if (launcherId === "recording" && !state.recording.hooksEnabled) return false;
+    const action = activateLauncher(readPanelShell(), launcherId);
+    syncPanelShellUi();
+    if (action.ok && action.opened && action.targetId && isTargetOpen(readPanelShell(), action.targetId)) {
+      focusPreferredPanelControl(action.targetId);
+    }
+    return action.ok;
   }
 
   // 112 status-lane routing:
@@ -419,11 +550,37 @@ const UI = (() => {
   let _audioStatusToastUntilMs = 0;
   let queuePanelRefresher = () => {};
 
+  function syncStatusPanelSummaries(recordingModel = null) {
+    const model = recordingModel || getRecordingUiModel();
+    if (ui.statusAudioSummary) {
+      ui.statusAudioSummary.textContent = ui.audioStatus && ui.audioStatus.textContent
+        ? ui.audioStatus.textContent
+        : "No audio loaded.";
+    }
+    if (ui.statusSimSummary) {
+      ui.statusSimSummary.textContent = ui.simStatus && ui.simStatus.textContent
+        ? ui.simStatus.textContent
+        : STATUS_DEFAULT_SIM;
+    }
+    if (ui.statusBandsSummary) {
+      ui.statusBandsSummary.textContent = ui.bandsStatus && ui.bandsStatus.textContent
+        ? ui.bandsStatus.textContent
+        : STATUS_DEFAULT_BANDS;
+    }
+    if (ui.statusRecordSummary) {
+      ui.statusRecordSummary.textContent = model && model.primaryStatusText
+        ? model.primaryStatusText
+        : "Select File, Mic, or Stream to start recording.";
+    }
+  }
+
   function simStatusToast(msg, holdMs = 2500) {
     ui.simStatus.textContent = msg;
+    syncStatusPanelSummaries();
     if (_simStatusToastTimer) clearTimeout(_simStatusToastTimer);
     _simStatusToastTimer = setTimeout(() => {
       ui.simStatus.textContent = STATUS_DEFAULT_SIM;
+      syncStatusPanelSummaries();
       _simStatusToastTimer = null;
     }, holdMs);
   }
@@ -475,7 +632,7 @@ const UI = (() => {
       await navigator.clipboard.writeText(url);
       simStatusToast("Share link copied to clipboard.", 4000);
     } catch {
-      simStatusToast("Share link written to URL — copy from address bar.", 4000);
+      simStatusToast("Share link written to URL â€” copy from address bar.", 4000);
     }
   }
 
@@ -538,7 +695,7 @@ const UI = (() => {
   }
 
   function rebuildBandHud() {
-    // Forced rebuild — call this whenever band definition changes.
+    // Forced rebuild â€” call this whenever band definition changes.
     // Currently band count is fixed at 256; this is the hook for 115+ when it becomes configurable.
     ui.bandRowsBuilt = false;
     ensureBandHudBuilt();
@@ -573,7 +730,7 @@ const UI = (() => {
     ui.bandDebug.textContent = "";
     const span = document.createElement("span");
     span.className = "dominantBadge";
-    span.textContent = `Dominant [${domIdx}] ${domName} — ${domRange}`;
+    span.textContent = `Dominant [${domIdx}] ${domName} â€” ${domRange}`;
     ui.bandDebug.appendChild(span);
   }
 
@@ -589,7 +746,7 @@ const UI = (() => {
     const sampleRateText = Number.isFinite(m.sampleRateHz)
       ? formatBandMetaHz(m.sampleRateHz)
       : "pending audio context";
-    ui.bandMeta.textContent = `${bandCount} bands • Nyquist ${formatBandMetaHz(m.nyquistHz)} • ceiling configured ${formatBandMetaHz(m.configCeilingHz)}`;
+    ui.bandMeta.textContent = `${bandCount} bands â€¢ Nyquist ${formatBandMetaHz(m.nyquistHz)} â€¢ ceiling configured ${formatBandMetaHz(m.configCeilingHz)}`;
   }
 
   function collectOperatorFacingControls() {
@@ -940,7 +1097,7 @@ const UI = (() => {
       config: CONFIG.recording,
       recording,
       includeAudio,
-      panelVisible: !!ui.recordingPanelVisible,
+      panelVisible: isTargetOpen(readPanelShell(), "record"),
       canStart: recording.hooksEnabled
         && recording.isSupported === true
         && hasRecordableSource()
@@ -1003,7 +1160,7 @@ const UI = (() => {
   function syncFileControlAffordances(sourceUi = readSourceUiModel()) {
     const fileControlsDisabled = !!sourceUi.disableFileControls;
     const fileTransportMutationLocked = !!sourceUi.fileTransportMutationLocked;
-    const queueVisible = !!(ui.queuePanel && ui.queuePanel.style.display !== "none");
+    const queueVisible = isTargetOpen(readPanelShell(), "queue");
     const repeatModeText = preferences.audio.repeatMode === "one"
       ? "One"
       : (preferences.audio.repeatMode === "all" ? "All" : "Off");
@@ -1086,7 +1243,7 @@ const UI = (() => {
       state.audio.isLoaded ? "1" : "0",
       state.source && state.source.kind ? state.source.kind : "none",
       state.source && state.source.sessionActive ? "1" : "0",
-      ui.recordingPanelVisible ? "1" : "0",
+      isTargetOpen(readPanelShell(), "record") ? "1" : "0",
     ].join("|");
   }
 
@@ -1108,7 +1265,7 @@ const UI = (() => {
       ui.queuePanelSyncKey = nextSyncKey;
       return;
     }
-    if (ui.queuePanel.style.display === "none") {
+    if (!isTargetOpen(readPanelShell(), "queue")) {
       ui.queuePanelSyncKey = nextSyncKey;
       return;
     }
@@ -1126,14 +1283,10 @@ const UI = (() => {
       ui.recordPanel.dataset.recordingPhase = recording.phase;
     }
     if (ui.recordPanel) ui.recordPanel.setAttribute("aria-busy", recording.phase === "finalizing" ? "true" : "false");
-    if (ui.openRecord && ui.openRecord.dataset.recordingPhase !== recording.phase) {
-      ui.openRecord.dataset.recordingPhase = recording.phase;
-    }
-    if (ui.openRecord) ui.openRecord.classList.toggle("is-recording", recording.phase === "recording");
-    if (ui.btnOpenRecord) {
-      if (ui.btnOpenRecord.title !== model.launcherLabel) ui.btnOpenRecord.title = model.launcherLabel;
-      if (ui.btnOpenRecord.getAttribute("aria-label") !== model.launcherLabel) {
-        ui.btnOpenRecord.setAttribute("aria-label", model.launcherLabel);
+    if (ui.btnLauncherRecording) {
+      if (ui.btnLauncherRecording.title !== model.launcherLabel) ui.btnLauncherRecording.title = model.launcherLabel;
+      if (ui.btnLauncherRecording.getAttribute("aria-label") !== model.launcherLabel) {
+        ui.btnLauncherRecording.setAttribute("aria-label", model.launcherLabel);
       }
     }
 
@@ -1178,6 +1331,8 @@ const UI = (() => {
     if (ui.selRecordMime) ui.selRecordMime.disabled = !model.canSelectMime;
     if (ui.selRecordTargetFps) ui.selRecordTargetFps.disabled = !model.canSelectTargetFps;
     syncVisibleQueuePanel();
+    syncLauncherBarUi(recording.phase);
+    syncStatusPanelSummaries(model);
     ui.recordingUiSyncKey = buildRecordingUiSyncKey();
   }
 
@@ -1235,7 +1390,7 @@ const UI = (() => {
     maybeRefreshRecordingUi();
 
     const bandText = bandSnapshot && bandSnapshot.ready
-      ? (bandSnapshot.monoLike ? "mono-ish (L≈R)" : "stereo (L≠R)")
+      ? (bandSnapshot.monoLike ? "mono-ish (L\u2248R)" : "stereo (L\u2260R)")
       : "n/a";
 
     const recordingStatusText = formatRecordingAudioStatusSummary(state.recording);
@@ -1306,7 +1461,7 @@ const UI = (() => {
     ui.valOverlap.textContent = `${fmt(p.particles.overlapRadiusPx, 1)}px`;
 
     ui.rngOmega.value = String(p.motion.angularSpeedRadPerSec);
-    ui.valOmega.textContent = `${fmt(p.motion.angularSpeedRadPerSec, 3)} rad/s (${fmt(p.motion.angularSpeedRadPerSec * RAD_TO_DEG, 1)}°/s)`;
+    ui.valOmega.textContent = `${fmt(p.motion.angularSpeedRadPerSec, 3)} rad/s (${fmt(p.motion.angularSpeedRadPerSec * RAD_TO_DEG, 1)}Â°/s)`;
 
     ui.rngWfDisp.value = String(p.motion.waveformRadialDisplaceFrac);
     ui.valWfDisp.textContent = fmt(p.motion.waveformRadialDisplaceFrac, 3);
@@ -1366,7 +1521,7 @@ const UI = (() => {
     ui.valRingSpeed.textContent = `${fmt(p.bands.overlay.ringSpeedRadPerSec, 2)} rad/s`;
 
     ui.rngHueOff.value = String(p.bands.rainbow.hueOffsetDeg);
-    ui.valHueOff.textContent = `${p.bands.rainbow.hueOffsetDeg}°`;
+    ui.valHueOff.textContent = `${p.bands.rainbow.hueOffsetDeg}Â°`;
 
     ui.rngSat.value = String(p.bands.rainbow.saturation);
     ui.valSat.textContent = fmt(p.bands.rainbow.saturation, 2);
@@ -1375,14 +1530,16 @@ const UI = (() => {
     ui.valVal.textContent = fmt(p.bands.rainbow.value, 2);
 
     refreshConfigTooltips();
+    syncPanelShellUi();
     refreshRecordingUi();
 
     refreshBandMetaText();
+    syncStatusPanelSummaries();
 
     if (bandSnapshot && bandSnapshot.ready) {
       const nowMs = performance.now();
       const hudIntervalMs = ui.bandHudIntervalMs || 100;
-      const bandsPanelVisible = ui.bandsPanel && ui.bandsPanel.style.display !== "none";
+      const bandsPanelVisible = isTargetOpen(readPanelShell(), "bands");
       const canRefreshHud = bandsPanelVisible && (nowMs - ui.lastBandHudUpdateMs >= hudIntervalMs);
       if (canRefreshHud) {
         refreshBandHud();
@@ -1407,19 +1564,19 @@ const UI = (() => {
 
 
     /* -------------------------------------------------------------------------
-       clearAudioState() — canonical clean-slate reset for all stop/clear paths.
+       clearAudioState() â€” canonical clean-slate reset for all stop/clear paths.
 
-       3.4 — Clear queue clean-slate audit. Every item the checklist requires:
-         ✓ state.audio.isLoaded = false    — set explicitly below
-         ✓ state.audio.filename = ""       — set explicitly below
-         ✓ state.audio.isPlaying = false   — set explicitly below
-         ✓ InputSourceManager teardown     — caller must invoke teardown before this function
-         ✓ All orb trails reset            — loop below
-         ✓ Scrubber blank                  — Scrubber.reset()
-         ✓ Play/Stop buttons disabled      — driven by state.audio.isLoaded in refreshAllUiText
-         ✓ Prev/Next buttons disabled      — driven by Queue.canPrev/canNext;
+       3.4 â€” Clear queue clean-slate audit. Every item the checklist requires:
+         âœ“ state.audio.isLoaded = false    â€” set explicitly below
+         âœ“ state.audio.filename = ""       â€” set explicitly below
+         âœ“ state.audio.isPlaying = false   â€” set explicitly below
+         âœ“ InputSourceManager teardown     â€” caller must invoke teardown before this function
+         âœ“ All orb trails reset            â€” loop below
+         âœ“ Scrubber blank                  â€” Scrubber.reset()
+         âœ“ Play/Stop buttons disabled      â€” driven by state.audio.isLoaded in refreshAllUiText
+         âœ“ Prev/Next buttons disabled      â€” driven by Queue.canPrev/canNext;
                                              caller must call Queue.clear() first
-         ✓ No blob URLs left alive         — revoked by loadeddata/error during track
+         âœ“ No blob URLs left alive         â€” revoked by loadeddata/error during track
                                              lifetime; source teardown performs
                                              teardown() and final release safety.
       Build 113 policy: queue clear/unload stays transport-owned here. If recording is
@@ -1454,17 +1611,17 @@ const UI = (() => {
     }
 
     /* -------------------------------------------------------------------------
-       loadAndPlay — single shared helper for all track-change paths.
+       loadAndPlay â€” single shared helper for all track-change paths.
 
-       3.1 — Entry-point audit. Every path that changes the current track routes
+       3.1 â€” Entry-point audit. Every path that changes the current track routes
        through here so trail reset + scrubber reset happen in exactly one place:
-         (1) _onTrackEnded repeat policy → loadAndPlay/stop     [auto-advance/repeat]
-         (2) fileInput change → loadAndPlay                    [Load button, 1st track]
-         (3) drop handler    → loadAndPlay                     [drag-drop, 1st track]
-         (4) btnNext click   → Queue.next() → loadAndPlay
-         (5) btnPrev click   → Queue.prev() → loadAndPlay
-         (6) queue row click → Queue.goTo() → loadAndPlay      [click-to-jump]
-         (7) remove handler  → loadAndPlay  (wasActive && nextFile case)
+         (1) _onTrackEnded repeat policy â†’ loadAndPlay/stop     [auto-advance/repeat]
+         (2) fileInput change â†’ loadAndPlay                    [Load button, 1st track]
+         (3) drop handler    â†’ loadAndPlay                     [drag-drop, 1st track]
+         (4) btnNext click   â†’ Queue.next() â†’ loadAndPlay
+         (5) btnPrev click   â†’ Queue.prev() â†’ loadAndPlay
+         (6) queue row click â†’ Queue.goTo() â†’ loadAndPlay      [click-to-jump]
+         (7) remove handler  â†’ loadAndPlay  (wasActive && nextFile case)
       Build 113 policy: active recording spans track changes through this path.
       Notify RecorderEngine, but do not add recorder-specific transport branching.
        DoD: no trail bleed between tracks; scrubber never shows stale waveform.
@@ -1484,7 +1641,8 @@ const UI = (() => {
       invalidatePendingTrackLoads();
       clearAudioStatusToast();
       clearAudioState();
-      if (ui.queuePanel) ui.queuePanel.style.display = "none";
+      setPanelTargetOpen(readPanelShell(), "queue", false);
+      syncPanelShellUi();
       RecorderEngine.onTransportMutation("audio-unloaded", {
         reason: "switch-to-mic",
       });
@@ -1503,7 +1661,8 @@ const UI = (() => {
       invalidatePendingTrackLoads();
       clearAudioStatusToast();
       clearAudioState();
-      if (ui.queuePanel) ui.queuePanel.style.display = "none";
+      setPanelTargetOpen(readPanelShell(), "queue", false);
+      syncPanelShellUi();
       RecorderEngine.onTransportMutation("audio-unloaded", {
         reason: "switch-to-stream",
       });
@@ -1529,7 +1688,8 @@ const UI = (() => {
       clearAudioStatusToast();
       await InputSourceManager.teardownActiveSource({ reason: "switch-to-file-mode" });
       clearAudioState();
-      if (ui.queuePanel) ui.queuePanel.style.display = "none";
+      setPanelTargetOpen(readPanelShell(), "queue", false);
+      syncPanelShellUi();
       RecorderEngine.onTransportMutation("audio-unloaded", {
         reason: "switch-to-file-mode",
       });
@@ -1578,7 +1738,7 @@ const UI = (() => {
         refreshQueuePanel();
         return false;
       }
-      Scrubber.loadFile(file); // async — decode in background; playback may be play or paused by opts
+      Scrubber.loadFile(file); // async â€” decode in background; playback may be play or paused by opts
       applyPrefs(null);
       RecorderEngine.onTransportMutation("track-change-complete", {
         requestId,
@@ -1592,7 +1752,7 @@ const UI = (() => {
 
     /* Register _onTrackEnded hook once at boot.
        Single source of truth for queue-aware repeat behavior on natural track end.
-       The hook survives teardown() intentionally — registered once at boot,
+       The hook survives teardown() intentionally â€” registered once at boot,
        must persist across track loads. Documented in 111c/111d. */
     AudioEngine._isLoadRequestCurrent = (requestId) => requestId === activeLoadRequestId;
 
@@ -1633,7 +1793,7 @@ const UI = (() => {
       if (file) loadAndPlay(file);
     }
 
-    /* Queue panel renderer — rebuilds list DOM from Queue.snapshot().
+    /* Queue panel renderer â€” rebuilds list DOM from Queue.snapshot().
        each row is keyboard-reachable and declared as a button-like activator. */
     function refreshQueuePanel() {
       if (!ui.queueList) return;
@@ -1675,7 +1835,7 @@ const UI = (() => {
 
         const removeBtn = document.createElement("button");
         removeBtn.className = "q-remove";
-        removeBtn.textContent = "×";
+        removeBtn.textContent = "Ã—";
         removeBtn.title = fileTransportMutationLocked ? queueLockText : "Remove from queue";
         removeBtn.disabled = !allowQueueInteraction;
         removeBtn.addEventListener("keydown", (e) => {
@@ -1696,8 +1856,8 @@ const UI = (() => {
             // Removed active track. Successor is loaded preserving prior play/pause intent.
             loadAndPlay(nextFile, { autoPlay: wasPlaying });
           } else if (Queue.length === 0) {
-            // Removed the final queued track — return to the canonical empty File workflow.
-            resetEmptyFileWorkflowState(wasActive ? "active-remove-empty-queue" : "remove-empty-queue"); // 3.4 — via shared helper; see clearAudioState() for audit
+            // Removed the final queued track â€” return to the canonical empty File workflow.
+            resetEmptyFileWorkflowState(wasActive ? "active-remove-empty-queue" : "remove-empty-queue"); // 3.4 â€” via shared helper; see clearAudioState() for audit
           }
           if (wasActive && Queue.length === 0) {
             RecorderEngine.onTransportMutation("audio-unloaded", {
@@ -1738,9 +1898,20 @@ const UI = (() => {
     if (ui.btnHideRecord) ui.btnHideRecord.addEventListener("click", () => {
       hideRecordPanel();
     });
-    if (ui.btnOpenRecord) ui.btnOpenRecord.addEventListener("click", () => {
-      showRecordPanel();
+    if (ui.btnHideStatus) ui.btnHideStatus.addEventListener("click", () => {
+      hideStatusPanel();
     });
+    if (ui.btnLauncherToggle) ui.btnLauncherToggle.addEventListener("click", () => {
+      toggleLauncherCollapsed(readPanelShell());
+      syncPanelShellUi();
+    });
+    for (const launcherId of LAUNCHER_IDS) {
+      const launcherButton = readLauncherButton(launcherId);
+      if (!launcherButton) continue;
+      launcherButton.addEventListener("click", () => {
+        handleLauncherActivation(launcherId);
+      });
+    }
     if (ui.btnRecordStart) ui.btnRecordStart.addEventListener("click", () => {
       dispatchRecordingAction("start");
     });
@@ -1777,7 +1948,7 @@ const UI = (() => {
 
     // fileInput.value reset (checklist 3.7): cleared before every picker open so
     // the same file can be loaded a second time. The drag-drop path uses
-    // dataTransfer.files directly — it never touches fileInput — so no reset
+    // dataTransfer.files directly â€” it never touches fileInput â€” so no reset
     // is needed there. This is the only fileInput add path; invariant maintained.
     ui.btnLoad.addEventListener("click", () => {
       if (!isFileWorkflowMode(state.source)) {
@@ -1859,8 +2030,9 @@ const UI = (() => {
 
     ui.btnToggleQueue.addEventListener("click", () => {
       if (!isFileWorkflowMode(state.source)) return;
-      const visible = ui.queuePanel.style.display !== "none";
-      ui.queuePanel.style.display = visible ? "none" : "block";
+      const visible = isTargetOpen(readPanelShell(), "queue");
+      setPanelTargetOpen(readPanelShell(), "queue", !visible);
+      syncPanelShellUi();
       if (!visible) refreshQueuePanel(); // refresh on open
     });
 
@@ -1870,7 +2042,7 @@ const UI = (() => {
         toastFinalizingTransportLock();
         return;
       }
-      // 3.4 — Clear queue clean-slate path. Order matters:
+      // 3.4 â€” Clear queue clean-slate path. Order matters:
       // Queue.clear() first so Prev/Next disable correctly in next refreshAllUiText.
       // Source teardown before clearAudioState() so no media remains attached.
       Queue.clear();
@@ -1901,13 +2073,10 @@ const UI = (() => {
     });
 
     ui.btnHideAudio.addEventListener("click", hideAudioPanel);
-    ui.btnOpenAudio.addEventListener("click", showAudioPanel);
 
     ui.btnHideSim.addEventListener("click", hideSimPanel);
-    ui.btnOpenSim.addEventListener("click", showSimPanel);
 
     ui.btnHideBands.addEventListener("click", hideBandsPanel);
-    ui.btnOpenBands.addEventListener("click", showBandsPanel);
 
     ui.btnShare.addEventListener("click", shareLink);
     ui.btnApplyUrl.addEventListener("click", applyUrlNow);
@@ -1974,7 +2143,7 @@ const UI = (() => {
     ui.rngSat.addEventListener("input", () => { preferences.bands.rainbow.saturation = Number(ui.rngSat.value); applyPrefs("saturation"); });
     ui.rngVal.addEventListener("input", () => { preferences.bands.rainbow.value = Number(ui.rngVal.value); applyPrefs("value"); });
 
-    /* Drag-drop onto canvas — multi-file entry point.
+    /* Drag-drop onto canvas â€” multi-file entry point.
        All dropped audio files are enqueued. If the queue was empty before the
        drop, the first file starts playing immediately. Additional files append
        silently. Non-audio files are silently ignored. */
@@ -2041,7 +2210,7 @@ const UI = (() => {
         return;
       }
 
-      // Track navigation — N: next, P: prev (Repeat=All wraps at boundaries).
+      // Track navigation â€” N: next, P: prev (Repeat=All wraps at boundaries).
       if (e.code === "KeyN") {
         if (!isFileWorkflowMode(state.source)) return;
         if (isFinalizingFileTransportLocked()) {
@@ -2063,7 +2232,7 @@ const UI = (() => {
         return;
       }
 
-      // Seek — arrow keys ±5 seconds, Shift+arrows ±30 seconds.
+      // Seek â€” arrow keys Â±5 seconds, Shift+arrows Â±30 seconds.
       // preventDefault stops page scroll.
       if (e.code === "ArrowRight" || e.code === "ArrowLeft") {
         if (!isFileWorkflowMode(state.source)) return;
@@ -2088,12 +2257,28 @@ const UI = (() => {
 
   } // end wireControls
 
+  function getPanelShellModel() {
+    const shell = getPanelShellStateSnapshot(readPanelShell());
+    return {
+      ...shell,
+      launcherItems: LAUNCHER_IDS.map((launcherId) => ({
+        launcherId,
+        targetId: LAUNCHER_TARGETS[launcherId],
+        active: shell.activeLauncherId === launcherId,
+        targetOpen: !!shell.openTargets[LAUNCHER_TARGETS[launcherId]],
+        presentedOpen: shell.activeLauncherId === launcherId
+          && !!shell.openTargets[LAUNCHER_TARGETS[launcherId]],
+      })),
+    };
+  }
+
   return {
     setCssVarsFromConfig,
     wireControls,
     refreshAllUiText,
     refreshRecordingUi,
     getRecordingUiModel,
+    getPanelShellModel,
     dispatchSourceSwitchAction,
     showRecordPanel,
     hideRecordPanel,

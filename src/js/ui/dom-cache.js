@@ -15,10 +15,8 @@ function primeDomCache() {
     ui.audioPanel = document.getElementById("audioPanel");
     ui.simPanel = document.getElementById("simPanel");
     ui.bandsPanel = document.getElementById("bandsPanel");
+    ui.statusPanel = document.getElementById("statusPanel");
     ui.loadHint = document.getElementById("loadHint");
-    ui.openAudio = document.getElementById("openAudio");
-    ui.openSim = document.getElementById("openSim");
-    ui.openBands = document.getElementById("openBands");
 
     ui.btnLoad = document.getElementById("btnLoad");
     ui.sourceSwitch = document.getElementById("sourceSwitch");
@@ -140,17 +138,31 @@ function primeDomCache() {
     ui.lastBandHudUpdateMs = 0;
     ui.bandHudIntervalMs = 100;
 
-    ui.btnOpenAudio = document.getElementById("btnOpenAudio");
-    ui.btnOpenSim = document.getElementById("btnOpenSim");
-    ui.btnOpenBands = document.getElementById("btnOpenBands");
+    ui.launcherBar = document.getElementById("launcherBar");
+    ui.launcherBarItems = document.getElementById("launcherBarItems");
+    ui.btnLauncherToggle = document.getElementById("btnLauncherToggle");
+    ui.btnLauncherAudioSource = document.getElementById("btnLauncherAudioSource");
+    ui.btnLauncherAnalysis = document.getElementById("btnLauncherAnalysis");
+    ui.btnLauncherBanking = document.getElementById("btnLauncherBanking");
+    ui.btnLauncherScene = document.getElementById("btnLauncherScene");
+    ui.btnLauncherRecording = document.getElementById("btnLauncherRecording");
+    ui.btnLauncherWorkspace = document.getElementById("btnLauncherWorkspace");
+    ui.btnLauncherStatus = document.getElementById("btnLauncherStatus");
+    ui.launcherButtons = {
+      audioSource: ui.btnLauncherAudioSource,
+      analysis: ui.btnLauncherAnalysis,
+      banking: ui.btnLauncherBanking,
+      scene: ui.btnLauncherScene,
+      recording: ui.btnLauncherRecording,
+      workspace: ui.btnLauncherWorkspace,
+      status: ui.btnLauncherStatus,
+    };
 
     // Build 113 recording UI.
     // Keep all record controls routed through this dedicated panel/launcher path;
     // do not fold them into #audioPanel or create parallel recording UI state.
     ui.recordPanel = document.getElementById("recordPanel");
-    ui.openRecord = document.getElementById("openRecord");
     ui.btnHideRecord = document.getElementById("btnHideRecord");
-    ui.btnOpenRecord = document.getElementById("btnOpenRecord");
     ui.btnRecordStart = document.getElementById("btnRecordStart");
     ui.btnRecordStop = document.getElementById("btnRecordStop");
     ui.btnRecordDownloadLast = document.getElementById("btnRecordDownloadLast");
@@ -166,6 +178,12 @@ function primeDomCache() {
     ui.recordStatus = document.getElementById("recordStatus");
     ui.recordSupport = document.getElementById("recordSupport");
     ui.recordSettingsNote = document.getElementById("recordSettingsNote");
+
+    ui.btnHideStatus = document.getElementById("btnHideStatus");
+    ui.statusAudioSummary = document.getElementById("statusAudioSummary");
+    ui.statusSimSummary = document.getElementById("statusSimSummary");
+    ui.statusBandsSummary = document.getElementById("statusBandsSummary");
+    ui.statusRecordSummary = document.getElementById("statusRecordSummary");
 
     ui.fileInput = document.getElementById("fileInput");
 
