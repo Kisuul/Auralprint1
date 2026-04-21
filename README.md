@@ -123,7 +123,7 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 
 ## Build 115 — v0.1.15: Orbs Overhaul (v1)
 
-**Goal:** orbs become first-class configurable analyzers.
+**Goal:** orbs become first-class Visualizers inside the scene/compositor architecture.
 
 **Scope**
 - Per-orb spectral targeting (band IDs / ranges)

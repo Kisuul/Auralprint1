@@ -1,51 +1,72 @@
-# Build 115 Workspace Shell
+# Build 115 Workspace Shell
 
-This document specifies the user‑interface shell for **Build 115**.  The workspace shell is the skeleton that holds together panels, the bottom launcher bar and the central render surface.  Its job is to provide an intuitive, uncluttered environment where users can control the analyser, banking, scene composition, audio sources, recording and presets without ever losing sight of the visuals.
+This document specifies the Build 115 `WorkspaceShell`: the panel and launcher
+system that surrounds the render surface. In Phase 1, `WorkspaceShell` is a
+canonical architecture term, not a forced rename of current Build 114 panel IDs
+or DOM structure.
 
-## Panel taxonomy
+## Panel Taxonomy
 
-Build 115 introduces a new set of panels, each with a clear purpose:
+Build 115 uses the following conceptual panel set:
 
-| Panel           | Responsibilities                                                         |
-|-----------------|----------------------------------------------------------------------------|
-| **Audio Source** | Load files, manage the queue, select Mic/Stream input, control playback, mute and volume.  Live source status and transport controls live here. |
-| **Analysis**     | Controls for the analyser core: FFT size, smoothing, RMS gain and any other knobs that affect how raw audio is analysed. |
-| **Banking**      | Controls for band distribution (linear, log, mel, Bark, ERB), number of bands, floor/ceiling and dominant‑band behaviour.  Colour policy and band lore also live here.  The full live band table is hidden by default; users can reveal it via an “inspect bands” toggle. |
-| **Scene**        | Compose the visual scene.  This panel lists active visualisers, allows enabling/disabling them, ordering them, selecting a visualiser to edit its settings, and (in the future) adjusting placement.  The panel name emphasises that users are building a scene from multiple visualisers. |
-| **Recording**    | Start and stop recording sessions, set FPS and audio inclusion, view elapsed time and download captured sessions.  Recording state is independent of the current source/scene. |
-| **Workspace / Presets** | Import, export and share presets.  Configure system‑wide settings that do not belong elsewhere, such as default canvas size or theme. |
-| **Status / Log** | A console for runtime events: permission results, source switching, recording lifecycle, migration warnings and errors.  Users can clear or hide the log when it is not needed. |
+| Panel | Responsibilities |
+|-------|------------------|
+| **Audio Source** | File loading, queue management, source selection, transport controls, mute, and volume. |
+| **Analysis** | Controls for `AnalyzerCore`, such as FFT size, smoothing, RMS gain, and other analyzer-facing knobs. |
+| **Banking** | Controls for band distribution, band count, floor and ceiling, dominant-band behavior, color policy, and related banking rules. The full live band table may be revealed here as an `Inspector`, not as a scene visualizer. |
+| **Scene** | Compose the visual scene by enabling, ordering, and configuring active `Visualizer`s. |
+| **Recording** | Start and stop capture sessions, choose recording options, and surface export state. |
+| **Workspace / Presets** | Import, export, and share presets plus any workspace-wide settings that do not belong elsewhere. |
+| **Status / Log** | Surface runtime events, warnings, permission results, migration notices, and other user-facing status output. |
 
-## Bottom launcher bar
+## Bottom Launcher Bar
 
-Instead of scattering launcher buttons across the screen, Build 115 introduces a single launcher bar docked to the bottom edge of the viewport.  Key behaviours:
+Build 115 introduces a unified launcher bar docked to the bottom edge of the
+viewport.
 
-- **Collapsed state** – The bar can collapse into a minimal strip showing only a chevron.  This state maximises screen real estate for the render surface.  Clicking the chevron expands the bar.
-- **Icons** – Each panel has a corresponding icon in the bar.  Clicking an icon toggles that panel’s visibility.  An active panel’s icon appears highlighted.
-- **Badges and pulses** – Icons can display state indicators, such as a red dot for new log entries or a pulsing circle when recording is active.  These cues keep users informed without requiring panels to be open.
-- **Ordering** – The default order is: Audio Source, Analysis, Banking, Scene, Recording, Workspace/Presets and Status/Log.  This order reflects the typical workflow from input to output.
+- **Collapsed state** - The bar can collapse into a minimal strip to maximize
+  render space.
+- **Icons** - Each conceptual panel has one icon in the launcher bar. Active
+  panels appear highlighted.
+- **Badges and pulses** - Icons may show state indicators such as unread log
+  activity or active recording.
+- **Ordering** - The default order is Audio Source, Analysis, Banking, Scene,
+  Recording, Workspace / Presets, and Status / Log.
 
-## Panel behaviour
+## Panel Behavior
 
-Panels overlay the render surface rather than shifting it.  Each panel may be resized or moved only if future milestones add that capability; Build 115 focuses on placement and visibility.
+Panels overlay the render surface rather than shifting it.
 
-- **Open/close** – Clicking an icon toggles the panel.  Only one instance of each panel exists.  Panels maintain their internal scroll position and state while hidden.
-- **Multiple panels** – Multiple panels can be open simultaneously.  Users can compare settings across panels.  The panel management state is stored in `panel-state.js` and is runtime‑only.
-- **Default state** – When the application loads without a preset, Audio Source is open by default.  Analysis and Banking are also visible to encourage exploration.  Scene, Recording, Workspace/Presets and Status/Log start collapsed.
-- **Responsive layout** – On narrow screens, panels may dock in a side drawer or stack vertically.  The bottom launcher bar remains accessible.
+- **Open and close** - Clicking an icon toggles one panel instance.
+- **Multiple panels** - More than one panel may be open at the same time.
+- **Default state** - Audio Source, Analysis, and Banking are visible by
+  default. Scene, Recording, Workspace / Presets, and Status / Log begin
+  collapsed.
+- **Responsive layout** - On smaller screens, panels may stack or dock
+  differently, but the launcher system remains accessible.
 
-## Status/Log console
+## Status / Log Console
 
-The Status/Log panel doubles as a debug console and a user‑facing event feed.  It prints:
+The Status / Log panel is a runtime event surface for:
 
-- Permission successes and failures (e.g. microphone allowed or denied)
-- Source switching events and any errors encountered
-- Recording start/stop notifications and export results
-- Migration notices when older presets are loaded and migrated to newer schemas
-- Warnings or errors emitted by visualisers or inspectors
+- Permission grants and failures.
+- Source switching events.
+- Recording lifecycle events and export results.
+- Schema migration notices and warnings.
+- Errors or warnings emitted by visualizers or inspectors.
 
-By centralising runtime messages in one panel, Build 115 eliminates the need to rely on browser developer tools for feedback.  The log persists only for the current session and is not included in presets.
+This log is runtime-only and is never persisted to presets.
 
-## Future expansion
+## Phase 1 Boundary
 
-Build 115 lays the foundation for camera and view transforms but does not expose them.  The **Scene** panel will later gain controls for moving and resizing visualisers, and Build 116 will introduce a **Camera** panel or sub‑panel for pan/zoom/rotate.  Hooks for these features will be added in the code but kept hidden in the UI until their milestone arrives.
+Build 115 Phase 1 ratifies the `WorkspaceShell` vocabulary only. Current
+implementation labels such as `audioPanel`, `simPanel`, `bandsPanel`,
+`queuePanel`, and `recordPanel` remain valid runtime labels until later phases
+move responsibilities into the final shell layout.
+
+## Future Expansion
+
+Later Build 115 phases move current controls into this shell model and Build
+116 adds meaningful camera behavior on top of the scene system. Phase 1 does
+not implement those UI migrations; it only freezes the shell vocabulary and
+responsibility boundaries.

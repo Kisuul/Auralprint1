@@ -1,61 +1,76 @@
-# Build 115 Frame Contracts
+# Build 115 Frame Contracts
 
-This document defines the **data contracts** used between Auralprint’s analysis layer and its presentation layers.  By standardising these structures, visualisers and inspectors can be written against stable, high‑level interfaces instead of pulling data directly from Web Audio or the band bank.  These contracts reduce coupling and make the system more testable.
+This document defines the data contracts used between Auralprint's analysis
+layer and its presentation layers. By standardizing these structures,
+`Visualizer`s and `Inspector`s can be written against stable interfaces instead
+of pulling data directly from Web Audio or banking internals.
 
 ## AnalysisFrame
 
-`AnalysisFrame` represents the raw analyser state for one animation tick.  It is produced by the analyser core and consumed by the band bank and (optionally) by certain visualisers that require channel‑level information.
+`AnalysisFrame` is the immutable per-tick snapshot produced by `AnalyzerCore`.
+It represents the raw analyzer state for one animation tick and is consumed by
+`BandBank` and, when needed, by advanced visualizers.
 
-| Field             | Type                        | Description                                                               |
-|-------------------|-----------------------------|---------------------------------------------------------------------------|
-| `timestamp`       | number                      | High‑resolution time stamp (milliseconds since start of session).         |
-| `sampleRate`      | number                      | Sample rate of the current audio context.                                 |
-| `fftSize`         | number                      | FFT size used for this frame.                                             |
-| `channels`        | array of ChannelData        | Per‑channel analysis results (see below).                                 |
-| `rms`             | array of number             | Root‑mean‑square value per channel.                                       |
-| `peak`            | array of number             | Peak amplitude per channel.                                               |
-| `globalMax`       | number                      | Maximum absolute sample value across all channels (used for normalisation).|
+| Field       | Type                 | Description |
+|-------------|----------------------|-------------|
+| `timestamp` | number               | High-resolution timestamp in milliseconds since session start. |
+| `sampleRate`| number               | Sample rate of the active audio context. |
+| `fftSize`   | number               | FFT size used for this frame. |
+| `channels`  | array of ChannelData | Per-channel analysis results. |
+| `rms`       | array of number      | Root-mean-square value per channel. |
+| `peak`      | array of number      | Peak amplitude per channel. |
+| `globalMax` | number               | Maximum absolute sample value across all channels. |
 
 ### ChannelData
 
-Each entry in the `channels` array is an object with:
+Each entry in `channels` contains:
 
-- `magnitudes` – a `Float32Array` of length `fftSize / 2` containing magnitudes for each bin.
-- `phase` – a `Float32Array` of the same length containing phase angles (optional for most visualisers).
+- `magnitudes` - `Float32Array` of length `fftSize / 2` containing magnitudes
+  for each FFT bin.
+- `phase` - `Float32Array` of the same length containing phase angles. This is
+  optional for most visualizers.
 
-Visualisers should not assume stereo; they should iterate channels instead.  Mono signals will yield a single entry.
+Visualizers should not assume stereo. They should iterate available channels.
+Mono signals yield a single entry.
 
 ## BandFrame
 
-`BandFrame` enriches an `AnalysisFrame` with psychoacoustic band information.  It is produced by the band bank from an `AnalysisFrame` and band settings.  Visualisers and inspectors that care about band energies consume this structure.
+`BandFrame` is the immutable band-oriented snapshot produced by `BandBank` from
+an `AnalysisFrame` plus current banking settings. Visualizers and Inspectors
+that care about band energies consume this structure.
 
-| Field               | Type               | Description                                                             |
-|---------------------|--------------------|-------------------------------------------------------------------------|
-| `analysis`          | AnalysisFrame      | The raw frame that was used to compute the bands.                       |
-| `bands`             | array of BandInfo  | Ordered list of band definitions and current energies (see below).      |
-| `dominantBandIndex` | number             | Index of the band with the highest energy, or `-1` if undefined.        |
-| `dominantBand`      | BandInfo \| null   | Convenience copy of the dominant band object, or `null`.                |
-| `distribution`      | string             | Name of the current distribution mode (`linear`, `log`, `mel`, etc.).    |
-| `rms`               | array of number    | RMS values reused from the underlying `AnalysisFrame`.                  |
-| `maxEnergy`         | number             | The largest band energy value in this frame.                             |
-| `minEnergy`         | number             | The smallest band energy value in this frame.                            |
+| Field               | Type              | Description |
+|---------------------|-------------------|-------------|
+| `analysis`          | AnalysisFrame     | The underlying raw frame used to compute the bands. |
+| `bands`             | array of BandInfo | Ordered list of band definitions and current energies. |
+| `dominantBandIndex` | number            | Index of the band with the highest energy, or `-1` if undefined. |
+| `dominantBand`      | BandInfo \| null  | Convenience copy of the dominant band object, or `null`. |
+| `distribution`      | string            | Current distribution mode such as `linear`, `log`, `mel`, `bark`, or `erb`. |
+| `rms`               | array of number   | RMS values reused from the underlying `AnalysisFrame`. |
+| `maxEnergy`         | number            | Largest band energy value in this frame. |
+| `minEnergy`         | number            | Smallest band energy value in this frame. |
 
 ### BandInfo
 
-Each `BandInfo` object has:
+Each `BandInfo` object contains:
 
-- `index` – integer index in the bands array.
-- `name` – human‑friendly band name (e.g. “Sub‑Bass”, “Midrange”).  Names come from the distribution mode’s band naming policy.
-- `startHz`, `endHz` – frequency bounds for the band.
-- `binStart`, `binEnd` – indexes into the FFT bin array.
-- `energy` – normalised energy in this band (0 to 1 range, based on `maxEnergy`).
-- `peak` – absolute peak energy in this band (optional).  Useful for future features like per‑band thresholding.
+- `index` - Integer index in the `bands` array.
+- `name` - Human-friendly band name such as `Sub-Bass` or `Midrange`.
+- `startHz`, `endHz` - Frequency bounds for the band.
+- `binStart`, `binEnd` - Indexes into the FFT bin array.
+- `energy` - Normalized band energy in the `0..1` range.
+- `peak` - Optional peak energy for the band.
 
-## Usage guidelines
+## Usage Guidelines
 
-1. **Immutability** – `AnalysisFrame` and `BandFrame` are treated as immutable once created.  Visualisers must never mutate them; they should treat them as read‑only snapshots.
-2. **No hidden references** – Do not store references to Web Audio nodes inside these structures.  All consumers should be able to operate on plain data.
-3. **Graceful degradation** – Visualisers must handle the absence of optional fields gracefully (e.g. if `phase` or `peak` is `undefined`).
-4. **Serialization** – These contracts are not intended for long‑term storage; presets will serialise user settings rather than frame data.  Frames exist only at runtime.
+1. **Immutability** - `AnalysisFrame` and `BandFrame` are read-only snapshots.
+   Visualizers and Inspectors must never mutate them.
+2. **No hidden references** - Do not store Web Audio nodes inside these
+   structures. Consumers operate on plain data contracts.
+3. **Graceful degradation** - Consumers must handle optional fields such as
+   `phase` or `peak` being absent.
+4. **Runtime only** - Frame data is never persisted to presets. Presets store
+   configuration, not transient analysis output.
 
-By standardising on these contracts, Build 115 opens the door to pluggable visualisers and inspectors that require no knowledge of how the analyser works internally.
+By standardizing on these contracts, Build 115 keeps presentation modules
+decoupled from analyzer internals and makes the scene/inspector split explicit.
