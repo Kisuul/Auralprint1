@@ -1,6 +1,6 @@
 # Auralprint Roadmap (Builds 110 → 120)
 
-This repo tracks **Auralprint** an offline-capable audio analysis suite.(“analyzer cosplaying as a visualizer”).
+This repo tracks **Auralprint** an offline-capable audio analysis suite. (“analyzer cosplaying as a visualizer”).
 
 ## Versioning and what the numbers mean
 
