@@ -19,6 +19,8 @@
          Side panels and #queuePanel use this for their bottom clearance anchor.
          setCssVarsFromConfig() overrides this at boot from CONFIG.ui.audioPanelHeightPx. */
       --ui-audio-h: 106px;
+      --ui-launcher-shell-h: calc(var(--ui-icon) + (2 * var(--ui-pad)));
+      --ui-launcher-clearance: calc(var(--ui-launcher-shell-h) + var(--ui-gap));
       --ui-queue-clearance: calc(var(--ui-audio-h) + var(--ui-gap));
       --ui-icon: 40px;
 
@@ -27,7 +29,7 @@
       --ui-record-panel-left: auto;
       --ui-record-panel-right: calc(var(--ui-pad) + var(--ui-safe-r));
       --ui-record-panel-top: auto;
-      --ui-record-panel-bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-queue-clearance));
+      --ui-record-panel-bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-queue-clearance));
       --ui-record-launcher-left: auto;
       --ui-record-launcher-right: calc(var(--ui-pad) + var(--ui-safe-r));
       --ui-record-launcher-top: auto;
@@ -82,4 +84,16 @@
       border: none;
       background: transparent;
       cursor: pointer;
+    }
+
+    .srOnly {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }

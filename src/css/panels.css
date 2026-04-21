@@ -36,30 +36,132 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    /* Launchers shown when panels are hidden */
-    .launcher {
+    .launcherBar {
       position: fixed;
-      width: var(--ui-icon);
-      height: var(--ui-icon);
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      z-index: 40;
-      user-select: none;
-    }
-
-    #openAudio { left: calc(var(--ui-pad) + var(--ui-safe-l)); bottom: calc(var(--ui-pad) + var(--ui-safe-b)); }
-    #openSim { left: calc(var(--ui-pad) + var(--ui-safe-l)); top: calc(var(--ui-pad) + var(--ui-safe-t)); }
-    #openBands { right: calc(var(--ui-pad) + var(--ui-safe-r)); top: calc(var(--ui-pad) + var(--ui-safe-t)); }
-    .launcher button {
-      width: 100%;
-      height: 100%;
+      left: calc(var(--ui-pad) + var(--ui-safe-l));
+      right: calc(var(--ui-pad) + var(--ui-safe-r));
+      bottom: calc(var(--ui-pad) + var(--ui-safe-b));
+      min-height: var(--ui-launcher-shell-h);
+      padding: var(--ui-pad);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-sizing: border-box;
       border-radius: 999px;
       background: var(--ui-panel-bg);
       backdrop-filter: blur(var(--ui-panel-blur));
-      border: none;
+      z-index: 40;
+    }
+
+    .launcherBar[data-collapsed="true"] {
+      right: auto;
+      width: calc(var(--ui-icon) + (2 * var(--ui-pad)));
+      justify-content: center;
+    }
+
+    .launcherBarToggle,
+    .launcherBarButton {
+      width: var(--ui-icon);
+      height: var(--ui-icon);
+      min-width: var(--ui-icon);
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
       color: #fff;
-      font-size: 18px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 16px;
+      line-height: 1;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+    }
+
+    .launcherBarToggle:hover,
+    .launcherBarButton:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    .launcherBarToggle {
+      flex: 0 0 auto;
+    }
+
+    .launcherBar[data-collapsed="true"] .launcherBarToggle {
+      transform: rotate(-90deg);
+    }
+
+    .launcherBarItems {
+      display: flex;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .launcherBarItems::-webkit-scrollbar {
+      display: none;
+    }
+
+    .launcherBar[data-collapsed="true"] .launcherBarItems {
+      display: none;
+    }
+
+    .launcherBarButton[data-presented-open="true"] {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.24);
+    }
+
+    .launcherBarButton[data-presented-open="true"][data-active="true"] {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.4);
+      transform: translateY(-1px);
+    }
+
+    .launcherBarButton:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #statusPanel {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-audio-h) + var(--ui-gap));
+      width: min(420px, calc(100vw - 2 * var(--ui-pad)));
+      padding: var(--ui-pad);
+      transform: translateX(-50%);
+      z-index: 26;
+    }
+
+    .statusHeader {
+      display: flex;
+      align-items: center;
+      gap: var(--ui-gap);
+    }
+
+    .statusHeader .sectionTitle {
+      margin: 0;
+      flex: 1 1 auto;
+    }
+
+    .statusLane {
+      display: grid;
+      gap: 4px;
+      margin-top: var(--ui-gap);
+    }
+
+    .statusLabel {
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      opacity: 0.65;
+      text-transform: uppercase;
+    }
+
+    .statusCopy {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.35;
     }
     /* Responsive panel layout on <=980px: clamp #bandsPanel/#simPanel widths to viewport-safe bounds,
        and anchor #bandsPanel to the left edge (clear right anchor) so both side panels share alignment. */
@@ -130,9 +232,10 @@
          audioPanel: 20 (bottom transport bar)
          queuePanel: 25 (floats above audio panel; below side config panels)
          recordPanel: 26 (dedicated recording panel; above queue, below side panels)
+         statusPanel: 26 (status/log mirror; above queue, below side panels)
          simPanel  : 30 (left config panel)
          bandsPanel: 30 (right config panel)
-         launchers : 40 (always reachable; must clear all panels)
+         launcherBar: 40 (always reachable; must clear all panels)
     */
 
     /* Queue panel — floats above the audio panel, full-width like audio panel.
@@ -141,7 +244,7 @@
       position: fixed;
       left: calc(var(--ui-pad) + var(--ui-safe-l));
       right: calc(var(--ui-pad) + var(--ui-safe-r));
-      bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-queue-clearance));
+      bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-queue-clearance));
       max-height: 240px;
       overflow-y: auto;
       padding: var(--ui-pad);
@@ -226,4 +329,17 @@
     input[type="color"]:focus:not(:focus-visible) {
       outline: none;
       box-shadow: none;
+    }
+
+    @media (max-width: 740px) {
+      .launcherBar {
+        width: auto;
+      }
+
+      #statusPanel {
+        left: calc(var(--ui-pad) + var(--ui-safe-l));
+        right: calc(var(--ui-pad) + var(--ui-safe-r));
+        width: auto;
+        transform: none;
+      }
     }

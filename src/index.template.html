@@ -7,79 +7,66 @@
   <meta name="keywords" content="auralprint, waveform analyzer, audio analyzer, audio visualizer, analysis, audio, generative art, web audio, canvas, single file" />
   <meta name="author" content="Christopher 'Kisuul' Lohman" />
   <title>Auralprint - Waveform Analysis Tool - __AURALPRINT_VERSION__</title>
-  <!-- 1. Legacy fallback (ancient browsers + RSS + pinned tabs) -->
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-  <!-- 2. Modern PNG fallback (96×96 is the most requested size today) -->
   <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
-  <!-- 3. SVG (scalable, dark-mode ready, tiny file size) -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <!-- 4. Apple home screen (180×180 is the current standard) -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <!-- 5. Name for iOS home screen -->
   <meta name="apple-mobile-web-app-title" content="Auralprint">
-  <!-- 6. PWA manifest (Android + installable) -->
   <link rel="manifest" href="/site.webmanifest">
-  
+
   <!-- AURALPRINT_INLINE_CSS -->
 </head>
 <body>
   <canvas id="c"></canvas>
 
-  <!-- First-run hint overlay: hidden once audio is loaded -->
   <div id="loadHint">
     <div class="hint-title">Auralprint</div>
     <div class="hint-sub">Choose File, Mic, or Stream to begin analysis.</div>
   </div>
 
-<!-- Bottom Audio Panel
-     Row 1 (36px): [scrubber canvas 1fr] [time]
-     Row 2 (40px): Source | Load | Prev | Next | Play | Stop | Repeat | Shuffle | Mute | Vol | [status 1fr] | Queue | HideAudio -->
- <div id="audioPanel" class="panel">
-  <!-- Scrubber row: row 1 (top of panel), scrubber only -->
-  <div id="scrubberRow">
-    <canvas id="scrubberCanvas" width="1" height="36"></canvas>
-    <span id="scrubberTime" class="muted">--:-- / --:--</span>
+  <div id="audioPanel" class="panel">
+    <div id="scrubberRow">
+      <canvas id="scrubberCanvas" width="1" height="36"></canvas>
+      <span id="scrubberTime" class="muted">--:-- / --:--</span>
+    </div>
+
+    <div id="sourceSwitch" class="source-switch" role="group" aria-label="Audio source workflow">
+      <button id="btnSourceFile" type="button" aria-pressed="true">File</button>
+      <button id="btnSourceMic" type="button" aria-pressed="false">Mic</button>
+      <button
+        id="btnSourceStream"
+        type="button"
+        aria-pressed="false"
+        title="Analyze a shared display, tab, or system stream"
+        aria-label="Analyze a shared display, tab, or system stream"
+      >Stream</button>
+    </div>
+
+    <button id="btnLoad">Load</button>
+    <button id="btnPrev" disabled title="Previous track (P)">&#9664;&#9664;</button>
+    <button id="btnNext" disabled title="Next track (N)">&#9654;&#9654;</button>
+    <button id="btnPlay" disabled>Play</button>
+    <button id="btnStop" disabled>Stop</button>
+
+    <button id="btnRepeat">Repeat: Off</button>
+    <button id="btnShuffle" title="Shuffle playlist">Shuffle</button>
+
+    <label style="display:flex; gap:6px; align-items:center;">
+      <input id="chkMute" type="checkbox" />
+      <span class="muted">Mute</span>
+    </label>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <span class="muted">Vol</span>
+      <input id="rngVol" type="range" />
+      <span id="valVol" class="val"></span>
+    </div>
+
+    <div id="audioStatus" class="muted track">No audio loaded.</div>
+    <button id="btnToggleQueue" title="Toggle queue panel">&#9776;</button>
+    <button id="btnHideAudio" title="Hide audio panel (launcher remains available)">&#9662;</button>
   </div>
 
-  <div id="sourceSwitch" class="source-switch" role="group" aria-label="Audio source workflow">
-    <button id="btnSourceFile" type="button" aria-pressed="true">File</button>
-    <button id="btnSourceMic" type="button" aria-pressed="false">Mic</button>
-    <button
-      id="btnSourceStream"
-      type="button"
-      aria-pressed="false"
-      title="Analyze a shared display, tab, or system stream"
-      aria-label="Analyze a shared display, tab, or system stream"
-    >Stream</button>
-  </div>
-
-  <button id="btnLoad">Load</button>
-  <button id="btnPrev" disabled title="Previous track (P)">&#9664;&#9664;</button>
-  <button id="btnNext" disabled title="Next track (N)">&#9654;&#9654;</button>
-  <button id="btnPlay" disabled>Play</button>
-  <button id="btnStop" disabled>Stop</button>
-
-  <button id="btnRepeat">Repeat: Off</button>
-  <button id="btnShuffle" title="Shuffle playlist">Shuffle</button>
-
-  <label style="display:flex; gap:6px; align-items:center;">
-    <input id="chkMute" type="checkbox" />
-    <span class="muted">Mute</span>
-  </label>
-
-  <div style="display:flex; gap:10px; align-items:center;">
-    <span class="muted">Vol</span>
-    <input id="rngVol" type="range" />
-    <span id="valVol" class="val"></span>
-  </div>
-
-  <div id="audioStatus" class="muted track">No audio loaded.</div>
-  <button id="btnToggleQueue" title="Toggle queue panel">&#9776;</button>
-  <button id="btnHideAudio" title="Hide audio panel (launcher remains available)">&#9662;</button>
-</div>
-
-  <!-- Queue panel — floats above the audio panel with extra scrubber clearance. Hidden by default.
-       Populated dynamically by refreshQueuePanel() inside UI.wireControls(). -->
   <div id="queuePanel" class="panel" style="display:none">
     <div class="queue-header">
       <span class="queue-title">Queue</span>
@@ -88,14 +75,13 @@
     <div id="queueList"></div>
   </div>
 
-  <!-- Sim config panel (left) -->
   <div id="simPanel" class="panel">
     <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
       <button id="btnShare">Share Link</button>
       <button id="btnApplyUrl">Apply URL</button>
       <button id="btnResetPrefs">Reset Prefs</button>
       <button id="btnResetVisuals" title="Reset orb phases and clear trails (keyboard: R)">Reset Visuals</button>
-      <button id="btnHideSim" title="Hide sim panel (launcher remains available)">◂</button>
+      <button id="btnHideSim" title="Hide sim panel (launcher remains available)">&#9666;</button>
     </div>
 
     <div class="muted" id="simStatus">Sim panel: trace, particles, motion, analysis.</div>
@@ -205,11 +191,10 @@
     </div>
   </div>
 
-  <!-- Bands + Colors panel (right) -->
   <div id="bandsPanel" class="panel">
     <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
-      <div class="muted">Rainbow Instrumentation 🌈</div>
-      <button id="btnHideBands" title="Hide bands panel (launcher remains available)">▸</button>
+      <div class="muted">Rainbow Instrumentation</div>
+      <button id="btnHideBands" title="Hide bands panel (launcher remains available)">&#9656;</button>
     </div>
 
     <div class="muted" id="bandsStatus">Bands panel: colors + spectral HUD.</div>
@@ -319,12 +304,10 @@
 
     <div class="sectionTitle">Band HUD</div>
     <div class="muted" id="bandDebug"><span class="dominantBadge">Dominant: (none)</span></div>
-    <div class="bandMeta" id="bandMeta">Bands metadata pending…</div>
+    <div class="bandMeta" id="bandMeta">Bands metadata pending...</div>
     <div id="bandTable"></div>
   </div>
 
-  <!-- Build 113 recording panel.
-       This panel owns recording/export controls and stays separate from #audioPanel. -->
   <div
     id="recordPanel"
     class="panel"
@@ -343,7 +326,7 @@
         <div class="muted recordTimerLabel">Elapsed</div>
         <span id="recordTimer" class="val">00:00</span>
       </div>
-      <button id="btnHideRecord" title="Hide recording panel" aria-label="Hide recording panel">▾</button>
+      <button id="btnHideRecord" title="Hide recording panel" aria-label="Hide recording panel">&#9662;</button>
     </div>
     <div class="sectionTitle">Live Session</div>
     <div id="recordSupport" class="muted recordCopy">Checking recording capability.</div>
@@ -378,30 +361,65 @@
     <div id="recordSettingsNote" class="muted recordSettingsNote">Settings apply to new recordings only. Not saved to presets.</div>
   </div>
 
-  <!-- Launchers shown when panels are hidden -->
-  <div id="openAudio" class="launcher" style="display:none">
-    <button id="btnOpenAudio" title="Show audio panel" aria-label="Show audio panel">🔈</button>
-  </div>
-
-  <div id="openSim" class="launcher" style="display:none">
-    <button id="btnOpenSim" title="Show sim panel" aria-label="Show sim panel">🧪</button>
-  </div>
-
-  <div id="openBands" class="launcher" style="display:none">
-    <button id="btnOpenBands" title="Show bands panel" aria-label="Show bands panel">🌈</button>
-  </div>
-
-  <!-- Bottom-right camera launcher for the dedicated recording panel. -->
   <div
-    id="openRecord"
-    class="launcher"
+    id="statusPanel"
+    class="panel"
     style="display:none"
     hidden
     aria-hidden="true"
-    data-recording-ui="launcher"
-    data-recording-phase="boot-pending"
   >
-    <button id="btnOpenRecord" title="Show recording panel" aria-label="Show recording panel">📷</button>
+    <div class="statusHeader">
+      <div class="sectionTitle">Status / Log</div>
+      <button id="btnHideStatus" title="Hide status panel" aria-label="Hide status panel">&#9662;</button>
+    </div>
+
+    <div class="statusLane">
+      <div class="statusLabel">Audio Source</div>
+      <div id="statusAudioSummary" class="muted statusCopy">No audio loaded.</div>
+    </div>
+
+    <div class="statusLane">
+      <div class="statusLabel">Scene</div>
+      <div id="statusSimSummary" class="muted statusCopy">Sim panel: trace, particles, motion, analysis.</div>
+    </div>
+
+    <div class="statusLane">
+      <div class="statusLabel">Analysis / Banking</div>
+      <div id="statusBandsSummary" class="muted statusCopy">Bands panel: colors + spectral HUD.</div>
+    </div>
+
+    <div class="statusLane">
+      <div class="statusLabel">Recording</div>
+      <div id="statusRecordSummary" class="muted statusCopy">Select File, Mic, or Stream to start recording.</div>
+    </div>
+  </div>
+
+  <div
+    id="launcherBar"
+    class="launcherBar"
+    data-collapsed="false"
+    data-recording-phase="boot-pending"
+    role="toolbar"
+    aria-label="Workspace launcher bar"
+  >
+    <button
+      id="btnLauncherToggle"
+      class="launcherBarToggle"
+      type="button"
+      aria-label="Collapse launcher bar"
+      aria-expanded="true"
+      title="Collapse launcher bar"
+    >&#9662;</button>
+
+    <div id="launcherBarItems" class="launcherBarItems">
+      <button id="btnLauncherAudioSource" class="launcherBarButton" type="button" data-launcher-id="audioSource" title="Audio Source" aria-label="Audio Source">&#9835;<span class="srOnly">Audio Source</span></button>
+      <button id="btnLauncherAnalysis" class="launcherBarButton" type="button" data-launcher-id="analysis" title="Analysis" aria-label="Analysis">&#8776;<span class="srOnly">Analysis</span></button>
+      <button id="btnLauncherBanking" class="launcherBarButton" type="button" data-launcher-id="banking" title="Banking" aria-label="Banking">&#9638;<span class="srOnly">Banking</span></button>
+      <button id="btnLauncherScene" class="launcherBarButton" type="button" data-launcher-id="scene" title="Scene" aria-label="Scene">&#9675;<span class="srOnly">Scene</span></button>
+      <button id="btnLauncherRecording" class="launcherBarButton" type="button" data-launcher-id="recording" title="Recording" aria-label="Recording">&#9679;<span class="srOnly">Recording</span></button>
+      <button id="btnLauncherWorkspace" class="launcherBarButton" type="button" data-launcher-id="workspace" title="Workspace / Presets" aria-label="Workspace / Presets">&#9881;<span class="srOnly">Workspace / Presets</span></button>
+      <button id="btnLauncherStatus" class="launcherBarButton" type="button" data-launcher-id="status" title="Status / Log" aria-label="Status / Log">!<span class="srOnly">Status / Log</span></button>
+    </div>
   </div>
 
   <input id="fileInput" type="file" multiple accept="audio/*" style="display:none" />

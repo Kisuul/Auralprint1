@@ -12,6 +12,7 @@ import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { UrlPreset } from "../src/js/presets/url-preset.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
+import { createPanelShellState, getPanelShellStateSnapshot } from "../src/js/ui/panel-state.js";
 import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
@@ -97,6 +98,19 @@ function snapshotSourceAndAudioState() {
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
   };
+}
+
+function snapshotUiState() {
+  return {
+    ...state.ui,
+    panelShell: getPanelShellStateSnapshot(state.ui.panelShell),
+  };
+}
+
+function restoreUiState(snapshot) {
+  if (!snapshot) return;
+  Object.assign(state.ui, snapshot);
+  state.ui.panelShell = createPanelShellState(snapshot.panelShell);
 }
 
 function applySourceAndAudioState(snapshot) {
@@ -232,6 +246,7 @@ async function withUiWireHarnessState({
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
     recording: JSON.parse(JSON.stringify(state.recording)),
+    ui: snapshotUiState(),
     repeatMode: preferences.audio.repeatMode,
   };
 
@@ -269,8 +284,19 @@ async function withUiWireHarnessState({
     for (const name of queueNames) Queue.add(createNamedAudioFile(name));
     if (currentIndex >= 0) Queue.setCursor(currentIndex);
 
+    state.ui.panelShell = createPanelShellState({
+      openTargets: {
+        audio: true,
+        queue: queueVisible,
+        sim: true,
+        bands: true,
+        record: false,
+        status: false,
+      },
+    });
+    state.ui.recordingUiSyncKey = "";
+
     UI.wireControls();
-    if (state.ui.queuePanel) state.ui.queuePanel.style.display = queueVisible ? "block" : "none";
     UI.refreshRecordingUi();
     UI.refreshAllUiText(bandSnapshot);
 
@@ -282,6 +308,7 @@ async function withUiWireHarnessState({
     Queue.clear();
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
+    restoreUiState(previous.ui);
     preferences.audio.repeatMode = previous.repeatMode;
     harness.restore();
   }
@@ -444,7 +471,7 @@ function createRecorderHarness() {
   const previousSource = JSON.parse(JSON.stringify(state.source));
   const previousAudio = { ...state.audio };
   const previousRecording = JSON.parse(JSON.stringify(state.recording));
-  const previousUi = { ...state.ui };
+  const previousUi = snapshotUiState();
   const mediaRecorders = [];
 
   const videoTrack = { kind: "video", stop() {} };
@@ -554,7 +581,7 @@ function createRecorderHarness() {
       state.audio.filename = previousAudio.filename;
       state.audio.transportError = previousAudio.transportError;
       Object.assign(state.recording, previousRecording);
-      Object.assign(state.ui, previousUi);
+      restoreUiState(previousUi);
       globalThis.window = previousWindow;
       globalThis.MediaStream = previousMediaStream;
       globalThis.MediaRecorder = previousMediaRecorder;
@@ -675,7 +702,7 @@ function createUiWireHarness() {
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
   const previousElement = globalThis.Element;
-  const previousUi = { ...state.ui };
+  const previousUi = snapshotUiState();
   const previousCanvas = state.canvas;
   const elements = new Map();
   const windowListeners = new Map();
@@ -732,7 +759,7 @@ function createUiWireHarness() {
       }
     },
     restore() {
-      Object.assign(state.ui, previousUi);
+      restoreUiState(previousUi);
       state.canvas = previousCanvas;
       globalThis.window = previousWindow;
       globalThis.document = previousDocument;
@@ -1434,6 +1461,227 @@ test("URL preset round-trips persisted config fields that were previously droppe
   }
 });
 
+test("launcher shell state remains runtime-only and never alters preset hash", () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const previousUi = snapshotUiState();
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  if (typeof globalThis.btoa !== "function") {
+    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
+  }
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
+  }
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState(_state, _title, url) {
+      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+    },
+  };
+
+  try {
+    UrlPreset.writeHashFromPrefs();
+    const beforeHash = locationStub.hash;
+
+    state.ui.panelShell = createPanelShellState({
+      activeLauncherId: "status",
+      launcherCollapsed: true,
+      openTargets: {
+        audio: false,
+        queue: false,
+        sim: true,
+        bands: false,
+        record: true,
+        status: true,
+      },
+    });
+
+    UrlPreset.writeHashFromPrefs();
+    const afterHash = locationStub.hash;
+
+    assert.equal(afterHash, beforeHash);
+  } finally {
+    restoreUiState(previousUi);
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
+});
+
+test("launcher bar collapses and expands through the shell chevron", async () => {
+  await withUiWireHarnessState({}, () => {
+    assert.equal(UI.getPanelShellModel().launcherCollapsed, false);
+    assert.equal(state.ui.launcherBar.dataset.collapsed, "false");
+    assert.equal(state.ui.btnLauncherToggle.getAttribute("aria-expanded"), "true");
+
+    state.ui.btnLauncherToggle.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().launcherCollapsed, true);
+    assert.equal(state.ui.launcherBar.dataset.collapsed, "true");
+    assert.equal(state.ui.btnLauncherToggle.getAttribute("aria-expanded"), "false");
+
+    state.ui.btnLauncherToggle.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().launcherCollapsed, false);
+    assert.equal(state.ui.launcherBar.dataset.collapsed, "false");
+    assert.equal(state.ui.btnLauncherToggle.getAttribute("aria-expanded"), "true");
+  });
+});
+
+test("launcher aliases switch active ownership without duplicating shared panel targets", async () => {
+  await withUiWireHarnessState({}, () => {
+    state.ui.btnLauncherAnalysis.dispatch("click");
+    const analysisItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "analysis");
+    const bankingItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "banking");
+
+    assert.equal(UI.getPanelShellModel().activeLauncherId, "analysis");
+    assert.equal(UI.getPanelShellModel().openTargets.bands, true);
+    assert.equal(state.ui.btnLauncherAnalysis.dataset.active, "true");
+    assert.equal(state.ui.btnLauncherAnalysis.dataset.presentedOpen, "true");
+    assert.equal(state.ui.btnLauncherBanking.dataset.targetOpen, "true");
+    assert.equal(state.ui.btnLauncherBanking.dataset.presentedOpen, "false");
+    assert.deepEqual(
+      { targetOpen: analysisItem.targetOpen, presentedOpen: analysisItem.presentedOpen },
+      { targetOpen: true, presentedOpen: true }
+    );
+    assert.deepEqual(
+      { targetOpen: bankingItem.targetOpen, presentedOpen: bankingItem.presentedOpen },
+      { targetOpen: true, presentedOpen: false }
+    );
+
+    state.ui.btnLauncherBanking.dispatch("click");
+    const bankingOwnerItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "banking");
+    const analysisSiblingItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "analysis");
+
+    assert.equal(UI.getPanelShellModel().activeLauncherId, "banking");
+    assert.equal(UI.getPanelShellModel().openTargets.bands, true);
+    assert.equal(state.ui.bandsPanel.style.display, "block");
+    assert.equal(state.ui.btnLauncherAnalysis.dataset.presentedOpen, "false");
+    assert.equal(state.ui.btnLauncherBanking.dataset.presentedOpen, "true");
+    assert.deepEqual(
+      { targetOpen: analysisSiblingItem.targetOpen, presentedOpen: analysisSiblingItem.presentedOpen },
+      { targetOpen: true, presentedOpen: false }
+    );
+    assert.deepEqual(
+      { targetOpen: bankingOwnerItem.targetOpen, presentedOpen: bankingOwnerItem.presentedOpen },
+      { targetOpen: true, presentedOpen: true }
+    );
+
+    state.ui.btnLauncherBanking.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().openTargets.bands, false);
+    assert.equal(state.ui.bandsPanel.style.display, "none");
+
+    state.ui.btnLauncherWorkspace.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().activeLauncherId, "workspace");
+    assert.equal(UI.getPanelShellModel().openTargets.sim, true);
+    assert.equal(state.ui.btnLauncherScene.dataset.targetOpen, "true");
+    assert.equal(state.ui.btnLauncherScene.dataset.presentedOpen, "false");
+    assert.equal(state.ui.btnLauncherWorkspace.dataset.presentedOpen, "true");
+
+    state.ui.btnLauncherScene.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().activeLauncherId, "scene");
+    assert.equal(UI.getPanelShellModel().openTargets.sim, true);
+    assert.equal(state.ui.btnLauncherScene.dataset.presentedOpen, "true");
+    assert.equal(state.ui.btnLauncherWorkspace.dataset.presentedOpen, "false");
+
+    state.ui.btnLauncherScene.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().openTargets.sim, false);
+    assert.equal(state.ui.simPanel.style.display, "none");
+  });
+});
+
+test("status launcher opens the transitional status panel with live summaries", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "demo.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 31,
+    },
+    queueNames: ["demo.wav", "bonus.wav"],
+    currentIndex: 0,
+    bandSnapshot: {
+      ready: true,
+      monoLike: false,
+    },
+  }, () => {
+    state.ui.btnLauncherStatus.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().openTargets.status, true);
+    assert.equal(state.ui.statusPanel.style.display, "block");
+    assert.equal(state.ui.statusAudioSummary.textContent, state.ui.audioStatus.textContent);
+    assert.equal(
+      state.ui.statusSimSummary.textContent,
+      state.ui.simStatus.textContent || "Sim panel: trace, particles, motion, analysis."
+    );
+    assert.equal(
+      state.ui.statusBandsSummary.textContent,
+      state.ui.bandsStatus.textContent || "Bands panel: colors + spectral HUD."
+    );
+    assert.equal(state.ui.statusRecordSummary.textContent, state.ui.recordStatus.textContent);
+  });
+});
+
+test("recording cue stays visible on the launcher bar and collapsed chevron while recording", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: true,
+      filename: "demo.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "recording",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 32,
+    },
+  }, () => {
+    UI.refreshRecordingUi();
+
+    assert.equal(state.ui.btnLauncherRecording.classList.contains("is-recording"), true);
+    assert.equal(state.ui.btnLauncherToggle.classList.contains("is-recording-cue"), false);
+
+    state.ui.btnLauncherToggle.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().launcherCollapsed, true);
+    assert.equal(state.ui.btnLauncherToggle.classList.contains("is-recording-cue"), true);
+  });
+});
+
 test("UI clears retained live-input errors on explicit file-workflow reset", async () => {
   await withUiWireHarnessState({
     sourceState: {
@@ -2031,19 +2279,25 @@ test("UI keeps queue panel recoverable across live source switches and audio pan
       currentIndex: 0,
       queueVisible: true,
     }, async () => {
+      assert.equal(UI.getPanelShellModel().openTargets.queue, true);
       assert.equal(state.ui.queuePanel.style.display, "block");
 
       await UI.dispatchSourceSwitchAction("mic");
+      assert.equal(UI.getPanelShellModel().openTargets.queue, false);
       assert.equal(state.ui.queuePanel.style.display, "none");
 
       await UI.dispatchSourceSwitchAction("file");
       UI.refreshAllUiText();
+      assert.equal(UI.getPanelShellModel().openTargets.queue, false);
       assert.equal(state.ui.queuePanel.style.display, "none");
       assert.equal(state.ui.audioStatus.textContent, "File mode ready. Select a queued file or load audio files.");
       assert.equal(state.ui.btnSourceFile.title, "File workflow selected. Select a queued file or load audio files.");
 
-      state.ui.queuePanel.style.display = "block";
+      state.ui.btnToggleQueue.dispatch("click");
+      assert.equal(UI.getPanelShellModel().openTargets.queue, true);
       state.ui.btnHideAudio.click();
+      assert.equal(UI.getPanelShellModel().openTargets.audio, false);
+      assert.equal(UI.getPanelShellModel().openTargets.queue, false);
       assert.equal(state.ui.queuePanel.style.display, "none");
     });
   } finally {
@@ -2273,16 +2527,19 @@ test("UI restores the recording panel after global hide when it was previously v
     },
   }, async ({ harness, getElement }) => {
     UI.showRecordPanel();
+    assert.equal(UI.getPanelShellModel().openTargets.record, true);
     assert.equal(getElement("recordPanel").style.display, "block");
-    assert.equal(getElement("openRecord").style.display, "none");
+    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "true");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
+    assert.equal(UI.getPanelShellModel().openTargets.record, false);
     assert.equal(getElement("recordPanel").style.display, "none");
-    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "false");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
+    assert.equal(UI.getPanelShellModel().openTargets.record, true);
     assert.equal(getElement("recordPanel").style.display, "block");
-    assert.equal(getElement("openRecord").style.display, "none");
+    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "true");
   });
 });
 
@@ -2297,15 +2554,18 @@ test("UI keeps the recording launcher reachable after global hide when the panel
     },
   }, async ({ harness, getElement }) => {
     UI.hideRecordPanel();
+    assert.equal(UI.getPanelShellModel().openTargets.record, false);
     assert.equal(getElement("recordPanel").style.display, "none");
-    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(state.ui.btnLauncherRecording.disabled, false);
+    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "false");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
     harness.dispatchWindow("keydown", { code: "KeyH" });
 
+    assert.equal(UI.getPanelShellModel().openTargets.record, false);
     assert.equal(getElement("recordPanel").style.display, "none");
-    assert.equal(getElement("openRecord").style.display, "grid");
-    assert.equal(getElement("openRecord").getAttribute("aria-hidden"), "false");
+    assert.equal(state.ui.btnLauncherRecording.disabled, false);
+    assert.equal(state.ui.btnLauncherRecording.getAttribute("aria-pressed"), "false");
   });
 });
 
@@ -2315,7 +2575,7 @@ test("UI blocks live-source switching during active recording without touching t
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
     recording: JSON.parse(JSON.stringify(state.recording)),
-    ui: { ...state.ui },
+    ui: snapshotUiState(),
   };
   const originalActivateMic = InputSourceManager.activateMic;
   const originalActivateStream = InputSourceManager.activateStream;
@@ -2388,6 +2648,7 @@ test("UI blocks live-source switching during active recording without touching t
     InputSourceManager.teardownActiveSource = originalTeardownActiveSource;
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
+    restoreUiState(previous.ui);
     harness.restore();
   }
 });
@@ -2611,7 +2872,7 @@ test("UI.getRecordingUiModel allows active stream sessions to start recording wi
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
     recording: JSON.parse(JSON.stringify(state.recording)),
-    ui: { ...state.ui },
+    ui: snapshotUiState(),
   };
 
   try {
@@ -2640,7 +2901,7 @@ test("UI.getRecordingUiModel allows active stream sessions to start recording wi
   } finally {
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
-    Object.assign(state.ui, previous.ui);
+    restoreUiState(previous.ui);
   }
 });
 
