@@ -12,11 +12,13 @@ test("panel shell defaults to runtime-only open targets with an expanded launche
   const shell = createPanelShellState();
 
   assert.deepEqual(shell.openTargets, {
-    audio: true,
+    audioSource: true,
     queue: false,
-    sim: true,
-    bands: true,
-    record: false,
+    analysis: false,
+    banking: true,
+    scene: true,
+    recording: false,
+    workspace: false,
     status: false,
   });
   assert.equal(shell.activeLauncherId, "audioSource");
@@ -24,28 +26,28 @@ test("panel shell defaults to runtime-only open targets with an expanded launche
   assert.equal(shell.globalHideSnapshot, null);
 });
 
-test("launcher aliases share one real panel target without duplicating open state", () => {
+test("launchers map 1:1 onto real panel targets", () => {
   const shell = createPanelShellState();
 
   const analysis = activateLauncher(shell, "analysis");
   assert.deepEqual(analysis, {
     ok: true,
-    targetId: "bands",
-    opened: false,
+    targetId: "analysis",
+    opened: true,
     closed: false,
   });
   assert.equal(shell.activeLauncherId, "analysis");
-  assert.equal(shell.openTargets.bands, true);
+  assert.equal(shell.openTargets.analysis, true);
 
   const banking = activateLauncher(shell, "banking");
   assert.deepEqual(banking, {
     ok: true,
-    targetId: "bands",
+    targetId: "banking",
     opened: false,
     closed: false,
   });
   assert.equal(shell.activeLauncherId, "banking");
-  assert.equal(shell.openTargets.bands, true);
+  assert.equal(shell.openTargets.banking, true);
 });
 
 test("closing the audio target also closes the subordinate queue target", () => {
@@ -54,8 +56,8 @@ test("closing the audio target also closes the subordinate queue target", () => 
   assert.equal(setPanelTargetOpen(shell, "queue", true), true);
   assert.equal(shell.openTargets.queue, true);
 
-  assert.equal(setPanelTargetOpen(shell, "audio", false), true);
-  assert.equal(shell.openTargets.audio, false);
+  assert.equal(setPanelTargetOpen(shell, "audioSource", false), true);
+  assert.equal(shell.openTargets.audioSource, false);
   assert.equal(shell.openTargets.queue, false);
 });
 
@@ -63,11 +65,13 @@ test("global hide snapshots and restores panel visibility without persisting it"
   const shell = createPanelShellState({
     activeLauncherId: "status",
     openTargets: {
-      audio: true,
+      audioSource: true,
       queue: true,
-      sim: false,
-      bands: true,
-      record: false,
+      analysis: true,
+      banking: true,
+      scene: false,
+      recording: false,
+      workspace: true,
       status: true,
     },
   });
@@ -75,30 +79,36 @@ test("global hide snapshots and restores panel visibility without persisting it"
   const hidden = toggleGlobalPanelVisibility(shell);
   assert.deepEqual(hidden, { restored: false, hidden: true });
   assert.deepEqual(shell.openTargets, {
-    audio: false,
+    audioSource: false,
     queue: false,
-    sim: false,
-    bands: false,
-    record: false,
+    analysis: false,
+    banking: false,
+    scene: false,
+    recording: false,
+    workspace: false,
     status: false,
   });
   assert.deepEqual(shell.globalHideSnapshot, {
-    audio: true,
+    audioSource: true,
     queue: true,
-    sim: false,
-    bands: true,
-    record: false,
+    analysis: true,
+    banking: true,
+    scene: false,
+    recording: false,
+    workspace: true,
     status: true,
   });
 
   const restored = toggleGlobalPanelVisibility(shell);
   assert.deepEqual(restored, { restored: true, hidden: false });
   assert.deepEqual(shell.openTargets, {
-    audio: true,
+    audioSource: true,
     queue: true,
-    sim: false,
-    bands: true,
-    record: false,
+    analysis: true,
+    banking: true,
+    scene: false,
+    recording: false,
+    workspace: true,
     status: true,
   });
   assert.equal(shell.globalHideSnapshot, null);

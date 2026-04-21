@@ -286,11 +286,13 @@ async function withUiWireHarnessState({
 
     state.ui.panelShell = createPanelShellState({
       openTargets: {
-        audio: true,
+        audioSource: true,
         queue: queueVisible,
-        sim: true,
-        bands: true,
-        record: false,
+        analysis: false,
+        banking: true,
+        scene: true,
+        recording: false,
+        workspace: false,
         status: false,
       },
     });
@@ -1461,6 +1463,62 @@ test("URL preset round-trips persisted config fields that were previously droppe
   }
 });
 
+test("hash-driven preset apply reports through Workspace ownership lanes", async () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const previousPrefs = structuredClone(preferences);
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  if (typeof globalThis.btoa !== "function") {
+    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
+  }
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
+  }
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState(_state, _title, url) {
+      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+    },
+  };
+
+  try {
+    await withUiWireHarnessState({}, ({ harness }) => {
+      const sceneStatusBefore = state.ui.sceneStatus.textContent;
+      const sceneSummaryBefore = state.ui.statusSceneSummary.textContent;
+
+      preferences.trace.lineAlpha = 0.12;
+      UrlPreset.writeHashFromPrefs();
+      assert.match(locationStub.hash, /^#p=/);
+
+      replacePreferences(structuredClone(CONFIG.defaults));
+      resolveSettings();
+
+      harness.dispatchWindow("hashchange");
+
+      assert.equal(preferences.trace.lineAlpha, 0.12);
+      assert.equal(state.ui.workspaceStatus.textContent, "Updated: hash preset loaded");
+      assert.equal(state.ui.statusWorkspaceSummary.textContent, "Updated: hash preset loaded");
+      assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
+      assert.equal(state.ui.statusSceneSummary.textContent, sceneSummaryBefore);
+    });
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
+});
+
 test("launcher shell state remains runtime-only and never alters preset hash", () => {
   const previousLocation = globalThis.location;
   const previousHistory = globalThis.history;
@@ -1495,11 +1553,13 @@ test("launcher shell state remains runtime-only and never alters preset hash", (
       activeLauncherId: "status",
       launcherCollapsed: true,
       openTargets: {
-        audio: false,
+        audioSource: false,
         queue: false,
-        sim: true,
-        bands: false,
-        record: true,
+        analysis: false,
+        banking: false,
+        scene: true,
+        recording: true,
+        workspace: false,
         status: true,
       },
     });
@@ -1537,54 +1597,26 @@ test("launcher bar collapses and expands through the shell chevron", async () =>
   });
 });
 
-test("launcher aliases switch active ownership without duplicating shared panel targets", async () => {
+test("launchers independently toggle the new Build 115 panel targets", async () => {
   await withUiWireHarnessState({}, () => {
     state.ui.btnLauncherAnalysis.dispatch("click");
     const analysisItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "analysis");
-    const bankingItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "banking");
 
     assert.equal(UI.getPanelShellModel().activeLauncherId, "analysis");
-    assert.equal(UI.getPanelShellModel().openTargets.bands, true);
+    assert.equal(UI.getPanelShellModel().openTargets.analysis, true);
     assert.equal(state.ui.btnLauncherAnalysis.dataset.active, "true");
     assert.equal(state.ui.btnLauncherAnalysis.dataset.presentedOpen, "true");
-    assert.equal(state.ui.btnLauncherBanking.dataset.targetOpen, "true");
-    assert.equal(state.ui.btnLauncherBanking.dataset.presentedOpen, "false");
     assert.deepEqual(
       { targetOpen: analysisItem.targetOpen, presentedOpen: analysisItem.presentedOpen },
       { targetOpen: true, presentedOpen: true }
     );
-    assert.deepEqual(
-      { targetOpen: bankingItem.targetOpen, presentedOpen: bankingItem.presentedOpen },
-      { targetOpen: true, presentedOpen: false }
-    );
-
-    state.ui.btnLauncherBanking.dispatch("click");
-    const bankingOwnerItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "banking");
-    const analysisSiblingItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "analysis");
-
-    assert.equal(UI.getPanelShellModel().activeLauncherId, "banking");
-    assert.equal(UI.getPanelShellModel().openTargets.bands, true);
-    assert.equal(state.ui.bandsPanel.style.display, "block");
-    assert.equal(state.ui.btnLauncherAnalysis.dataset.presentedOpen, "false");
-    assert.equal(state.ui.btnLauncherBanking.dataset.presentedOpen, "true");
-    assert.deepEqual(
-      { targetOpen: analysisSiblingItem.targetOpen, presentedOpen: analysisSiblingItem.presentedOpen },
-      { targetOpen: true, presentedOpen: false }
-    );
-    assert.deepEqual(
-      { targetOpen: bankingOwnerItem.targetOpen, presentedOpen: bankingOwnerItem.presentedOpen },
-      { targetOpen: true, presentedOpen: true }
-    );
-
-    state.ui.btnLauncherBanking.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().openTargets.bands, false);
-    assert.equal(state.ui.bandsPanel.style.display, "none");
+    assert.equal(state.ui.analysisPanel.style.display, "block");
 
     state.ui.btnLauncherWorkspace.dispatch("click");
 
     assert.equal(UI.getPanelShellModel().activeLauncherId, "workspace");
-    assert.equal(UI.getPanelShellModel().openTargets.sim, true);
+    assert.equal(UI.getPanelShellModel().openTargets.workspace, true);
+    assert.equal(state.ui.workspacePanel.style.display, "block");
     assert.equal(state.ui.btnLauncherScene.dataset.targetOpen, "true");
     assert.equal(state.ui.btnLauncherScene.dataset.presentedOpen, "false");
     assert.equal(state.ui.btnLauncherWorkspace.dataset.presentedOpen, "true");
@@ -1592,14 +1624,25 @@ test("launcher aliases switch active ownership without duplicating shared panel 
     state.ui.btnLauncherScene.dispatch("click");
 
     assert.equal(UI.getPanelShellModel().activeLauncherId, "scene");
-    assert.equal(UI.getPanelShellModel().openTargets.sim, true);
+    assert.equal(UI.getPanelShellModel().openTargets.scene, true);
     assert.equal(state.ui.btnLauncherScene.dataset.presentedOpen, "true");
     assert.equal(state.ui.btnLauncherWorkspace.dataset.presentedOpen, "false");
+    assert.equal(state.ui.scenePanel.style.display, "block");
 
     state.ui.btnLauncherScene.dispatch("click");
 
-    assert.equal(UI.getPanelShellModel().openTargets.sim, false);
-    assert.equal(state.ui.simPanel.style.display, "none");
+    assert.equal(UI.getPanelShellModel().openTargets.scene, false);
+    assert.equal(state.ui.scenePanel.style.display, "none");
+
+    state.ui.btnLauncherBanking.dispatch("click");
+    assert.equal(UI.getPanelShellModel().activeLauncherId, "banking");
+    assert.equal(UI.getPanelShellModel().openTargets.banking, true);
+    assert.equal(state.ui.btnLauncherBanking.dataset.presentedOpen, "true");
+    assert.equal(state.ui.bankingPanel.style.display, "block");
+
+    state.ui.btnLauncherBanking.dispatch("click");
+    assert.equal(UI.getPanelShellModel().openTargets.banking, false);
+    assert.equal(state.ui.bankingPanel.style.display, "none");
   });
 });
 
@@ -1635,16 +1678,61 @@ test("status launcher opens the transitional status panel with live summaries", 
 
     assert.equal(UI.getPanelShellModel().openTargets.status, true);
     assert.equal(state.ui.statusPanel.style.display, "block");
-    assert.equal(state.ui.statusAudioSummary.textContent, state.ui.audioStatus.textContent);
+    assert.equal(state.ui.statusAudioSourceSummary.textContent, state.ui.audioStatus.textContent);
     assert.equal(
-      state.ui.statusSimSummary.textContent,
-      state.ui.simStatus.textContent || "Sim panel: trace, particles, motion, analysis."
+      state.ui.statusAnalysisSummary.textContent,
+      state.ui.analysisStatus.textContent || "Analysis panel: FFT, smoothing, RMS gain."
     );
     assert.equal(
-      state.ui.statusBandsSummary.textContent,
-      state.ui.bandsStatus.textContent || "Bands panel: colors + spectral HUD."
+      state.ui.statusBankingSummary.textContent,
+      state.ui.bankingStatus.textContent || "Banking panel: distribution, color policy, overlays, and spectral HUD."
+    );
+    assert.equal(
+      state.ui.statusSceneSummary.textContent,
+      state.ui.sceneStatus.textContent || "Scene panel: trace, particles, motion, and render-facing controls."
+    );
+    assert.equal(
+      state.ui.statusWorkspaceSummary.textContent,
+      state.ui.workspaceStatus.textContent || "Workspace / Presets panel: share, apply URL presets, and reset preferences."
     );
     assert.equal(state.ui.statusRecordSummary.textContent, state.ui.recordStatus.textContent);
+  });
+});
+
+test("repeat control reports through Audio Source ownership after relocation", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "demo.wav",
+      transportError: "",
+    },
+    queueNames: ["demo.wav", "bonus.wav"],
+    currentIndex: 0,
+    bandSnapshot: {
+      ready: true,
+      monoLike: false,
+    },
+    repeatMode: "none",
+  }, async () => {
+    const sceneStatusBefore = state.ui.sceneStatus.textContent;
+    const sceneSummaryBefore = state.ui.statusSceneSummary.textContent;
+
+    state.ui.btnRepeat.dispatch("click");
+
+    assert.equal(preferences.audio.repeatMode, "one");
+    assert.equal(state.ui.audioStatus.textContent, "Updated: repeat");
+    assert.equal(state.ui.statusAudioSourceSummary.textContent, "Updated: repeat");
+    assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
+    assert.equal(state.ui.statusSceneSummary.textContent, sceneSummaryBefore);
+
+    await new Promise((resolve) => setTimeout(resolve, 2600));
   });
 });
 
@@ -2296,7 +2384,7 @@ test("UI keeps queue panel recoverable across live source switches and audio pan
       state.ui.btnToggleQueue.dispatch("click");
       assert.equal(UI.getPanelShellModel().openTargets.queue, true);
       state.ui.btnHideAudio.click();
-      assert.equal(UI.getPanelShellModel().openTargets.audio, false);
+      assert.equal(UI.getPanelShellModel().openTargets.audioSource, false);
       assert.equal(UI.getPanelShellModel().openTargets.queue, false);
       assert.equal(state.ui.queuePanel.style.display, "none");
     });
@@ -2527,17 +2615,17 @@ test("UI restores the recording panel after global hide when it was previously v
     },
   }, async ({ harness, getElement }) => {
     UI.showRecordPanel();
-    assert.equal(UI.getPanelShellModel().openTargets.record, true);
+    assert.equal(UI.getPanelShellModel().openTargets.recording, true);
     assert.equal(getElement("recordPanel").style.display, "block");
     assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "true");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
-    assert.equal(UI.getPanelShellModel().openTargets.record, false);
+    assert.equal(UI.getPanelShellModel().openTargets.recording, false);
     assert.equal(getElement("recordPanel").style.display, "none");
     assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "false");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
-    assert.equal(UI.getPanelShellModel().openTargets.record, true);
+    assert.equal(UI.getPanelShellModel().openTargets.recording, true);
     assert.equal(getElement("recordPanel").style.display, "block");
     assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "true");
   });
@@ -2554,7 +2642,7 @@ test("UI keeps the recording launcher reachable after global hide when the panel
     },
   }, async ({ harness, getElement }) => {
     UI.hideRecordPanel();
-    assert.equal(UI.getPanelShellModel().openTargets.record, false);
+    assert.equal(UI.getPanelShellModel().openTargets.recording, false);
     assert.equal(getElement("recordPanel").style.display, "none");
     assert.equal(state.ui.btnLauncherRecording.disabled, false);
     assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "false");
@@ -2562,7 +2650,7 @@ test("UI keeps the recording launcher reachable after global hide when the panel
     harness.dispatchWindow("keydown", { code: "KeyH" });
     harness.dispatchWindow("keydown", { code: "KeyH" });
 
-    assert.equal(UI.getPanelShellModel().openTargets.record, false);
+    assert.equal(UI.getPanelShellModel().openTargets.recording, false);
     assert.equal(getElement("recordPanel").style.display, "none");
     assert.equal(state.ui.btnLauncherRecording.disabled, false);
     assert.equal(state.ui.btnLauncherRecording.getAttribute("aria-pressed"), "false");

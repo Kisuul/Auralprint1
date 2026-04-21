@@ -325,41 +325,61 @@ const UI = (() => {
   }
 
   function hideAudioPanel() {
-    return closePanelTarget("audio", { focusLauncher: true });
+    return closePanelTarget("audioSource", { focusLauncher: true });
   }
 
   function showAudioPanel() {
-    return openPanelTarget("audio", {
+    return openPanelTarget("audioSource", {
       focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
     });
   }
 
-  function hideSimPanel() {
-    return closePanelTarget("sim", { focusLauncher: true });
+  function hideAnalysisPanel() {
+    return closePanelTarget("analysis", { focusLauncher: true });
   }
 
-  function showSimPanel() {
-    return openPanelTarget("sim", {
+  function showAnalysisPanel() {
+    return openPanelTarget("analysis", {
       focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
     });
   }
 
-  function hideBandsPanel() {
-    return closePanelTarget("bands", { focusLauncher: true });
+  function hideBankingPanel() {
+    return closePanelTarget("banking", { focusLauncher: true });
   }
 
-  function showBandsPanel() {
-    return openPanelTarget("bands", {
+  function showBankingPanel() {
+    return openPanelTarget("banking", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
+  }
+
+  function hideScenePanel() {
+    return closePanelTarget("scene", { focusLauncher: true });
+  }
+
+  function showScenePanel() {
+    return openPanelTarget("scene", {
+      focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
+    });
+  }
+
+  function hideWorkspacePanel() {
+    return closePanelTarget("workspace", { focusLauncher: true });
+  }
+
+  function showWorkspacePanel() {
+    return openPanelTarget("workspace", {
       focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
     });
   }
 
   function hideRecordPanel() {
-    return closePanelTarget("record", { focusLauncher: true });
+    return closePanelTarget("recording", { focusLauncher: true });
   }
 
   function showRecordPanel() {
-    return openPanelTarget("record", {
+    return openPanelTarget("recording", {
       focusPanel: document.activeElement === readLauncherButton(readPanelShell().activeLauncherId),
     });
   }
@@ -374,11 +394,13 @@ const UI = (() => {
   }
 
   const PANEL_DISPLAY_MODES = Object.freeze({
-    audio: "grid",
+    audioSource: "grid",
     queue: "block",
-    sim: "block",
-    bands: "block",
-    record: "block",
+    analysis: "block",
+    banking: "block",
+    scene: "block",
+    recording: "block",
+    workspace: "block",
     status: "block",
   });
 
@@ -389,11 +411,13 @@ const UI = (() => {
 
   function readPanelElement(targetId) {
     switch (targetId) {
-      case "audio": return ui.audioPanel;
+      case "audioSource": return ui.audioPanel;
       case "queue": return ui.queuePanel;
-      case "sim": return ui.simPanel;
-      case "bands": return ui.bandsPanel;
-      case "record": return ui.recordPanel;
+      case "analysis": return ui.analysisPanel;
+      case "banking": return ui.bankingPanel;
+      case "scene": return ui.scenePanel;
+      case "recording": return ui.recordPanel;
+      case "workspace": return ui.workspacePanel;
       case "status": return ui.statusPanel;
       default: return null;
     }
@@ -415,17 +439,23 @@ const UI = (() => {
 
   function focusPreferredPanelControl(targetId) {
     switch (targetId) {
-      case "audio":
+      case "audioSource":
         if (ui.btnHideAudio) ui.btnHideAudio.focus();
         break;
-      case "sim":
-        if (ui.btnHideSim) ui.btnHideSim.focus();
+      case "analysis":
+        if (ui.btnHideAnalysis) ui.btnHideAnalysis.focus();
         break;
-      case "bands":
-        if (ui.btnHideBands) ui.btnHideBands.focus();
+      case "banking":
+        if (ui.btnHideBanking) ui.btnHideBanking.focus();
         break;
-      case "record":
+      case "scene":
+        if (ui.btnHideScene) ui.btnHideScene.focus();
+        break;
+      case "recording":
         if (ui.btnHideRecord) ui.btnHideRecord.focus();
+        break;
+      case "workspace":
+        if (ui.btnHideWorkspace) ui.btnHideWorkspace.focus();
         break;
       case "status":
         if (ui.btnHideStatus) ui.btnHideStatus.focus();
@@ -484,22 +514,24 @@ const UI = (() => {
 
   function syncPanelShellUi() {
     const shell = readPanelShell();
-    if (!state.recording.hooksEnabled && isTargetOpen(shell, "record")) {
-      setPanelTargetOpen(shell, "record", false);
+    if (!state.recording.hooksEnabled && isTargetOpen(shell, "recording")) {
+      setPanelTargetOpen(shell, "recording", false);
     }
 
-    applyPanelElementVisibility("audio", isTargetOpen(shell, "audio"));
+    applyPanelElementVisibility("audioSource", isTargetOpen(shell, "audioSource"));
     applyPanelElementVisibility("queue", isTargetOpen(shell, "queue"));
-    applyPanelElementVisibility("sim", isTargetOpen(shell, "sim"));
-    applyPanelElementVisibility("bands", isTargetOpen(shell, "bands"));
-    applyPanelElementVisibility("record", isTargetOpen(shell, "record") && !!state.recording.hooksEnabled);
+    applyPanelElementVisibility("analysis", isTargetOpen(shell, "analysis"));
+    applyPanelElementVisibility("banking", isTargetOpen(shell, "banking"));
+    applyPanelElementVisibility("scene", isTargetOpen(shell, "scene"));
+    applyPanelElementVisibility("recording", isTargetOpen(shell, "recording") && !!state.recording.hooksEnabled);
+    applyPanelElementVisibility("workspace", isTargetOpen(shell, "workspace"));
     applyPanelElementVisibility("status", isTargetOpen(shell, "status"));
     syncLauncherBarUi();
   }
 
   function openPanelTarget(targetId, options = {}) {
     const shell = readPanelShell();
-    if (targetId === "record" && !state.recording.hooksEnabled) return false;
+    if (targetId === "recording" && !state.recording.hooksEnabled) return false;
     if (options.launcherId) shell.activeLauncherId = options.launcherId;
     else ensureLauncherForTarget(shell, targetId);
     const changed = setPanelTargetOpen(shell, targetId, true);
@@ -540,32 +572,54 @@ const UI = (() => {
     return action.ok;
   }
 
-  // 112 status-lane routing:
-  // - sim lane carries sim/config toasts.
-  // - audio lane carries transport/audio toasts plus a short recording-state summary.
-  const STATUS_DEFAULT_SIM = "Sim panel: trace, particles, motion, analysis.";
-  const STATUS_DEFAULT_BANDS = "Bands panel: colors + spectral HUD.";
-  let _simStatusToastTimer = null;
+  const STATUS_DEFAULTS = Object.freeze({
+    analysis: "Analysis panel: FFT, smoothing, RMS gain.",
+    banking: "Banking panel: distribution, color policy, overlays, and spectral HUD.",
+    scene: "Scene panel: trace, particles, motion, and render-facing controls.",
+    workspace: "Workspace / Presets panel: share, apply URL presets, and reset preferences.",
+  });
+  const panelStatusToastTimers = Object.create(null);
+  let _audioStatusRefreshTimer = null;
   let _audioStatusToastText = "";
   let _audioStatusToastUntilMs = 0;
   let queuePanelRefresher = () => {};
 
+  function readPanelStatusElement(targetId) {
+    switch (targetId) {
+      case "analysis": return ui.analysisStatus;
+      case "banking": return ui.bankingStatus;
+      case "scene": return ui.sceneStatus;
+      case "workspace": return ui.workspaceStatus;
+      default: return null;
+    }
+  }
+
   function syncStatusPanelSummaries(recordingModel = null) {
     const model = recordingModel || getRecordingUiModel();
-    if (ui.statusAudioSummary) {
-      ui.statusAudioSummary.textContent = ui.audioStatus && ui.audioStatus.textContent
+    if (ui.statusAudioSourceSummary) {
+      ui.statusAudioSourceSummary.textContent = ui.audioStatus && ui.audioStatus.textContent
         ? ui.audioStatus.textContent
         : "No audio loaded.";
     }
-    if (ui.statusSimSummary) {
-      ui.statusSimSummary.textContent = ui.simStatus && ui.simStatus.textContent
-        ? ui.simStatus.textContent
-        : STATUS_DEFAULT_SIM;
+    if (ui.statusAnalysisSummary) {
+      ui.statusAnalysisSummary.textContent = ui.analysisStatus && ui.analysisStatus.textContent
+        ? ui.analysisStatus.textContent
+        : STATUS_DEFAULTS.analysis;
     }
-    if (ui.statusBandsSummary) {
-      ui.statusBandsSummary.textContent = ui.bandsStatus && ui.bandsStatus.textContent
-        ? ui.bandsStatus.textContent
-        : STATUS_DEFAULT_BANDS;
+    if (ui.statusBankingSummary) {
+      ui.statusBankingSummary.textContent = ui.bankingStatus && ui.bankingStatus.textContent
+        ? ui.bankingStatus.textContent
+        : STATUS_DEFAULTS.banking;
+    }
+    if (ui.statusSceneSummary) {
+      ui.statusSceneSummary.textContent = ui.sceneStatus && ui.sceneStatus.textContent
+        ? ui.sceneStatus.textContent
+        : STATUS_DEFAULTS.scene;
+    }
+    if (ui.statusWorkspaceSummary) {
+      ui.statusWorkspaceSummary.textContent = ui.workspaceStatus && ui.workspaceStatus.textContent
+        ? ui.workspaceStatus.textContent
+        : STATUS_DEFAULTS.workspace;
     }
     if (ui.statusRecordSummary) {
       ui.statusRecordSummary.textContent = model && model.primaryStatusText
@@ -574,20 +628,38 @@ const UI = (() => {
     }
   }
 
-  function simStatusToast(msg, holdMs = 2500) {
-    ui.simStatus.textContent = msg;
-    syncStatusPanelSummaries();
-    if (_simStatusToastTimer) clearTimeout(_simStatusToastTimer);
-    _simStatusToastTimer = setTimeout(() => {
-      ui.simStatus.textContent = STATUS_DEFAULT_SIM;
-      syncStatusPanelSummaries();
-      _simStatusToastTimer = null;
-    }, holdMs);
-  }
-
   function audioStatusToast(msg, holdMs = 2500) {
     _audioStatusToastText = msg;
     _audioStatusToastUntilMs = performance.now() + holdMs;
+  }
+
+  function panelStatusToast(targetId, msg, holdMs = 2500) {
+    if (targetId === "audioSource") {
+      audioStatusToast(msg, holdMs);
+      if (ui.audioStatus) ui.audioStatus.textContent = msg;
+      syncStatusPanelSummaries();
+      if (_audioStatusRefreshTimer) clearTimeout(_audioStatusRefreshTimer);
+      _audioStatusRefreshTimer = setTimeout(() => {
+        _audioStatusRefreshTimer = null;
+        refreshAllUiText();
+      }, holdMs);
+      return;
+    }
+
+    const statusEl = readPanelStatusElement(targetId);
+    const defaultText = Object.prototype.hasOwnProperty.call(STATUS_DEFAULTS, targetId)
+      ? STATUS_DEFAULTS[targetId]
+      : "";
+    if (!statusEl || !defaultText) return;
+
+    statusEl.textContent = msg;
+    syncStatusPanelSummaries();
+    if (panelStatusToastTimers[targetId]) clearTimeout(panelStatusToastTimers[targetId]);
+    panelStatusToastTimers[targetId] = setTimeout(() => {
+      statusEl.textContent = defaultText;
+      syncStatusPanelSummaries();
+      panelStatusToastTimers[targetId] = null;
+    }, holdMs);
   }
 
   function clearAudioStatusToast() {
@@ -596,7 +668,10 @@ const UI = (() => {
   }
 
   function applyPrefs(reason, options = {}) {
-    const { rebuildBandsOnDefinitionChange = false } = options;
+    const {
+      rebuildBandsOnDefinitionChange = false,
+      statusTarget = "scene",
+    } = options;
     const prevBandDefKey = BandBankController.readBandDefKey(runtime.settings);
 
     preferences.particles.sizeMinPx = Math.min(preferences.particles.sizeMinPx, preferences.particles.sizeMaxPx);
@@ -613,14 +688,16 @@ const UI = (() => {
     AudioEngine.applyAnalyserSettingsLive();
     AudioEngine.applyPlaybackSettingsLive();
 
-    if (reason) simStatusToast(`Updated: ${reason}`);
-    ui.bandsStatus.textContent = STATUS_DEFAULT_BANDS;
+    if (reason) panelStatusToast(statusTarget, `Updated: ${reason}`);
   }
 
 
   function resetPrefs() {
     replacePreferences(deepClone(CONFIG.defaults));
-    applyPrefs("prefs reset", { rebuildBandsOnDefinitionChange: true });
+    applyPrefs("prefs reset", {
+      rebuildBandsOnDefinitionChange: true,
+      statusTarget: "workspace",
+    });
     initOrbs();
     resetOrbsToDesignedPhases();
   }
@@ -630,20 +707,23 @@ const UI = (() => {
     const url = location.href;
     try {
       await navigator.clipboard.writeText(url);
-      simStatusToast("Share link copied to clipboard.", 4000);
+      panelStatusToast("workspace", "Share link copied to clipboard.", 4000);
     } catch {
-      simStatusToast("Share link written to URL â€” copy from address bar.", 4000);
+      panelStatusToast("workspace", "Share link written to URL - copy from address bar.", 4000);
     }
   }
 
   function applyUrlNow() {
     const ok = UrlPreset.applyFromLocationHash();
     if (ok) {
-      applyPrefs("applied URL preset", { rebuildBandsOnDefinitionChange: true });
+      applyPrefs("applied URL preset", {
+        rebuildBandsOnDefinitionChange: true,
+        statusTarget: "workspace",
+      });
       initOrbs();
       resetOrbsToDesignedPhases();
     } else {
-      simStatusToast("No valid preset in URL hash.", 4000);
+      panelStatusToast("workspace", "No valid preset in URL hash.", 4000);
     }
   }
 
@@ -755,10 +835,12 @@ const UI = (() => {
     const selectors = [
       "#audioPanel input",
       "#audioPanel select",
-      "#simPanel input",
-      "#simPanel select",
-      "#bandsPanel input",
-      "#bandsPanel select",
+      "#analysisPanel input",
+      "#analysisPanel select",
+      "#bankingPanel input",
+      "#bankingPanel select",
+      "#scenePanel input",
+      "#scenePanel select",
       "#recordPanel input",
       "#recordPanel select",
     ];
@@ -1097,7 +1179,7 @@ const UI = (() => {
       config: CONFIG.recording,
       recording,
       includeAudio,
-      panelVisible: isTargetOpen(readPanelShell(), "record"),
+      panelVisible: isTargetOpen(readPanelShell(), "recording"),
       canStart: recording.hooksEnabled
         && recording.isSupported === true
         && hasRecordableSource()
@@ -1243,7 +1325,7 @@ const UI = (() => {
       state.audio.isLoaded ? "1" : "0",
       state.source && state.source.kind ? state.source.kind : "none",
       state.source && state.source.sessionActive ? "1" : "0",
-      isTargetOpen(readPanelShell(), "record") ? "1" : "0",
+      isTargetOpen(readPanelShell(), "recording") ? "1" : "0",
     ].join("|");
   }
 
@@ -1539,8 +1621,8 @@ const UI = (() => {
     if (bandSnapshot && bandSnapshot.ready) {
       const nowMs = performance.now();
       const hudIntervalMs = ui.bandHudIntervalMs || 100;
-      const bandsPanelVisible = isTargetOpen(readPanelShell(), "bands");
-      const canRefreshHud = bandsPanelVisible && (nowMs - ui.lastBandHudUpdateMs >= hudIntervalMs);
+      const bankingPanelVisible = isTargetOpen(readPanelShell(), "banking");
+      const canRefreshHud = bankingPanelVisible && (nowMs - ui.lastBandHudUpdateMs >= hudIntervalMs);
       if (canRefreshHud) {
         refreshBandHud();
         ui.lastBandHudUpdateMs = nowMs;
@@ -2057,7 +2139,7 @@ const UI = (() => {
       if (!isFileWorkflowMode(state.source)) return;
       const mode = preferences.audio.repeatMode;
       preferences.audio.repeatMode = mode === "none" ? "one" : (mode === "one" ? "all" : "none");
-      applyPrefs("repeat");
+      applyPrefs("repeat", { statusTarget: "audioSource" });
     });
     if (ui.btnShuffle) {
       ui.btnShuffle.addEventListener("click", () => {
@@ -2065,83 +2147,99 @@ const UI = (() => {
         if (Queue.shuffle()) refreshQueuePanel();
       });
     }
-    ui.chkMute.addEventListener("change", () => { preferences.audio.muted = !!ui.chkMute.checked; applyPrefs("mute"); });
+    ui.chkMute.addEventListener("change", () => {
+      preferences.audio.muted = !!ui.chkMute.checked;
+      applyPrefs("mute", { statusTarget: "audioSource" });
+    });
 
     ui.rngVol.addEventListener("input", () => {
       preferences.audio.volume = Number(ui.rngVol.value);
-      applyPrefs("volume (playback only)");
+      applyPrefs("volume (playback only)", { statusTarget: "audioSource" });
     });
 
     ui.btnHideAudio.addEventListener("click", hideAudioPanel);
 
-    ui.btnHideSim.addEventListener("click", hideSimPanel);
-
-    ui.btnHideBands.addEventListener("click", hideBandsPanel);
+    if (ui.btnHideAnalysis) ui.btnHideAnalysis.addEventListener("click", hideAnalysisPanel);
+    if (ui.btnHideBanking) ui.btnHideBanking.addEventListener("click", hideBankingPanel);
+    if (ui.btnHideScene) ui.btnHideScene.addEventListener("click", hideScenePanel);
+    if (ui.btnHideWorkspace) ui.btnHideWorkspace.addEventListener("click", hideWorkspacePanel);
 
     ui.btnShare.addEventListener("click", shareLink);
     ui.btnApplyUrl.addEventListener("click", applyUrlNow);
     ui.btnResetPrefs.addEventListener("click", resetPrefs);
-    ui.btnResetVisuals.addEventListener("click", () => { resetOrbsToDesignedPhases(); simStatusToast("Visuals reset."); });
+    ui.btnResetVisuals.addEventListener("click", () => {
+      resetOrbsToDesignedPhases();
+      panelStatusToast("scene", "Visuals reset.");
+    });
 
-    ui.chkLines.addEventListener("change", () => { preferences.trace.lines = !!ui.chkLines.checked; applyPrefs("lines"); });
-    ui.rngNumLines.addEventListener("input", () => { preferences.trace.numLines = Number(ui.rngNumLines.value); applyPrefs("num lines"); });
+    ui.chkLines.addEventListener("change", () => {
+      preferences.trace.lines = !!ui.chkLines.checked;
+      applyPrefs("lines", { statusTarget: "scene" });
+    });
+    ui.rngNumLines.addEventListener("input", () => {
+      preferences.trace.numLines = Number(ui.rngNumLines.value);
+      applyPrefs("num lines", { statusTarget: "scene" });
+    });
 
     ui.selLineColorMode.addEventListener("change", () => {
       preferences.trace.lineColorMode = ui.selLineColorMode.value;
-      applyPrefs("line color mode");
+      applyPrefs("line color mode", { statusTarget: "scene" });
     });
 
-    ui.rngEmit.addEventListener("input", () => { preferences.particles.emitPerSecond = Number(ui.rngEmit.value); applyPrefs("emit rate"); });
-    ui.rngSizeMax.addEventListener("input", () => { preferences.particles.sizeMaxPx = Number(ui.rngSizeMax.value); applyPrefs("size max"); });
-    ui.rngSizeMin.addEventListener("input", () => { preferences.particles.sizeMinPx = Number(ui.rngSizeMin.value); applyPrefs("size min"); });
-    ui.rngSizeToMin.addEventListener("input", () => { preferences.particles.sizeToMinSec = Number(ui.rngSizeToMin.value); applyPrefs("time to min"); });
-    ui.rngTTL.addEventListener("input", () => { preferences.particles.ttlSec = Number(ui.rngTTL.value); applyPrefs("ttl"); });
-    ui.rngOverlap.addEventListener("input", () => { preferences.particles.overlapRadiusPx = Number(ui.rngOverlap.value); applyPrefs("overlap radius"); });
+    ui.rngEmit.addEventListener("input", () => { preferences.particles.emitPerSecond = Number(ui.rngEmit.value); applyPrefs("emit rate", { statusTarget: "scene" }); });
+    ui.rngSizeMax.addEventListener("input", () => { preferences.particles.sizeMaxPx = Number(ui.rngSizeMax.value); applyPrefs("size max", { statusTarget: "scene" }); });
+    ui.rngSizeMin.addEventListener("input", () => { preferences.particles.sizeMinPx = Number(ui.rngSizeMin.value); applyPrefs("size min", { statusTarget: "scene" }); });
+    ui.rngSizeToMin.addEventListener("input", () => { preferences.particles.sizeToMinSec = Number(ui.rngSizeToMin.value); applyPrefs("time to min", { statusTarget: "scene" }); });
+    ui.rngTTL.addEventListener("input", () => { preferences.particles.ttlSec = Number(ui.rngTTL.value); applyPrefs("ttl", { statusTarget: "scene" }); });
+    ui.rngOverlap.addEventListener("input", () => { preferences.particles.overlapRadiusPx = Number(ui.rngOverlap.value); applyPrefs("overlap radius", { statusTarget: "scene" }); });
 
-    ui.rngOmega.addEventListener("input", () => { preferences.motion.angularSpeedRadPerSec = Number(ui.rngOmega.value); applyPrefs("angular speed"); });
-    ui.rngWfDisp.addEventListener("input", () => { preferences.motion.waveformRadialDisplaceFrac = Number(ui.rngWfDisp.value); applyPrefs("orb waveform disp"); });
+    ui.rngOmega.addEventListener("input", () => { preferences.motion.angularSpeedRadPerSec = Number(ui.rngOmega.value); applyPrefs("angular speed", { statusTarget: "scene" }); });
+    ui.rngWfDisp.addEventListener("input", () => { preferences.motion.waveformRadialDisplaceFrac = Number(ui.rngWfDisp.value); applyPrefs("orb waveform disp", { statusTarget: "scene" }); });
 
-    ui.rngRmsGain.addEventListener("input", () => { preferences.audio.rmsGain = Number(ui.rngRmsGain.value); applyPrefs("rms gain (analysis)"); });
-    ui.rngMinRad.addEventListener("input", () => { preferences.audio.minRadiusFrac = Number(ui.rngMinRad.value); applyPrefs("min radius"); });
-    ui.rngMaxRad.addEventListener("input", () => { preferences.audio.maxRadiusFrac = Number(ui.rngMaxRad.value); applyPrefs("max radius"); });
-    ui.rngSmooth.addEventListener("input", () => { preferences.audio.smoothingTimeConstant = Number(ui.rngSmooth.value); applyPrefs("smoothing"); });
-    ui.selFFT.addEventListener("change", () => { preferences.audio.fftSize = Number(ui.selFFT.value); applyPrefs("fft size"); });
+    ui.rngRmsGain.addEventListener("input", () => { preferences.audio.rmsGain = Number(ui.rngRmsGain.value); applyPrefs("rms gain (analysis)", { statusTarget: "analysis" }); });
+    ui.rngMinRad.addEventListener("input", () => { preferences.audio.minRadiusFrac = Number(ui.rngMinRad.value); applyPrefs("min radius", { statusTarget: "scene" }); });
+    ui.rngMaxRad.addEventListener("input", () => { preferences.audio.maxRadiusFrac = Number(ui.rngMaxRad.value); applyPrefs("max radius", { statusTarget: "scene" }); });
+    ui.rngSmooth.addEventListener("input", () => { preferences.audio.smoothingTimeConstant = Number(ui.rngSmooth.value); applyPrefs("smoothing", { statusTarget: "analysis" }); });
+    ui.selFFT.addEventListener("change", () => { preferences.audio.fftSize = Number(ui.selFFT.value); applyPrefs("fft size", { statusTarget: "analysis" }); });
 
-    ui.clrBg.addEventListener("input", () => { preferences.visuals.backgroundColor = ui.clrBg.value; applyPrefs("background"); });
-    ui.clrParticle.addEventListener("input", () => { preferences.visuals.particleColor = ui.clrParticle.value; applyPrefs("particle color"); });
+    ui.clrBg.addEventListener("input", () => { preferences.visuals.backgroundColor = ui.clrBg.value; applyPrefs("background", { statusTarget: "scene" }); });
+    ui.clrParticle.addEventListener("input", () => { preferences.visuals.particleColor = ui.clrParticle.value; applyPrefs("particle color", { statusTarget: "scene" }); });
 
     ui.selParticleColorSrc.addEventListener("change", () => {
       preferences.bands.particleColorSource = ui.selParticleColorSrc.value;
-      applyPrefs("particle color source");
+      applyPrefs("particle color source", { statusTarget: "banking" });
     });
 
-    ui.chkBandOverlay.addEventListener("change", () => { preferences.bands.overlay.enabled = !!ui.chkBandOverlay.checked; applyPrefs("band overlay"); });
-    ui.chkBandConnect.addEventListener("change", () => { preferences.bands.overlay.connectAdjacent = !!ui.chkBandConnect.checked; applyPrefs("band connect"); });
+    ui.chkBandOverlay.addEventListener("change", () => { preferences.bands.overlay.enabled = !!ui.chkBandOverlay.checked; applyPrefs("band overlay", { statusTarget: "banking" }); });
+    ui.chkBandConnect.addEventListener("change", () => { preferences.bands.overlay.connectAdjacent = !!ui.chkBandConnect.checked; applyPrefs("band connect", { statusTarget: "banking" }); });
 
-    ui.rngBandAlpha.addEventListener("input", () => { preferences.bands.overlay.alpha = Number(ui.rngBandAlpha.value); applyPrefs("overlay alpha"); });
-    ui.rngBandPoint.addEventListener("input", () => { preferences.bands.overlay.pointSizePx = Number(ui.rngBandPoint.value); applyPrefs("overlay point size"); });
-    ui.rngBandOverlayMinRad.addEventListener("input", () => { preferences.bands.overlay.minRadiusFrac = Number(ui.rngBandOverlayMinRad.value); applyPrefs("overlay min radius"); });
-    ui.rngBandOverlayMaxRad.addEventListener("input", () => { preferences.bands.overlay.maxRadiusFrac = Number(ui.rngBandOverlayMaxRad.value); applyPrefs("overlay max radius"); });
-    ui.rngBandOverlayWfDisp.addEventListener("input", () => { preferences.bands.overlay.waveformRadialDisplaceFrac = Number(ui.rngBandOverlayWfDisp.value); applyPrefs("overlay waveform disp"); });
+    ui.rngBandAlpha.addEventListener("input", () => { preferences.bands.overlay.alpha = Number(ui.rngBandAlpha.value); applyPrefs("overlay alpha", { statusTarget: "banking" }); });
+    ui.rngBandPoint.addEventListener("input", () => { preferences.bands.overlay.pointSizePx = Number(ui.rngBandPoint.value); applyPrefs("overlay point size", { statusTarget: "banking" }); });
+    ui.rngBandOverlayMinRad.addEventListener("input", () => { preferences.bands.overlay.minRadiusFrac = Number(ui.rngBandOverlayMinRad.value); applyPrefs("overlay min radius", { statusTarget: "banking" }); });
+    ui.rngBandOverlayMaxRad.addEventListener("input", () => { preferences.bands.overlay.maxRadiusFrac = Number(ui.rngBandOverlayMaxRad.value); applyPrefs("overlay max radius", { statusTarget: "banking" }); });
+    ui.rngBandOverlayWfDisp.addEventListener("input", () => { preferences.bands.overlay.waveformRadialDisplaceFrac = Number(ui.rngBandOverlayWfDisp.value); applyPrefs("overlay waveform disp", { statusTarget: "banking" }); });
 
     ui.selRingPhaseMode.addEventListener("change", () => {
       preferences.bands.overlay.phaseMode = ui.selRingPhaseMode.value;
-      applyPrefs("ring phase mode");
+      applyPrefs("ring phase mode", { statusTarget: "banking" });
     });
 
     ui.selDistMode.addEventListener("change", () => {
       preferences.bands.distributionMode = ui.selDistMode.value;
-      applyPrefs("band distribution mode", { rebuildBandsOnDefinitionChange: true });
+      applyPrefs("band distribution mode", {
+        rebuildBandsOnDefinitionChange: true,
+        statusTarget: "banking",
+      });
     });
 
     ui.rngRingSpeed.addEventListener("input", () => {
       preferences.bands.overlay.ringSpeedRadPerSec = Number(ui.rngRingSpeed.value);
-      applyPrefs("ring speed");
+      applyPrefs("ring speed", { statusTarget: "banking" });
     });
 
-    ui.rngHueOff.addEventListener("input", () => { preferences.bands.rainbow.hueOffsetDeg = Number(ui.rngHueOff.value); applyPrefs("hue offset"); });
-    ui.rngSat.addEventListener("input", () => { preferences.bands.rainbow.saturation = Number(ui.rngSat.value); applyPrefs("saturation"); });
-    ui.rngVal.addEventListener("input", () => { preferences.bands.rainbow.value = Number(ui.rngVal.value); applyPrefs("value"); });
+    ui.rngHueOff.addEventListener("input", () => { preferences.bands.rainbow.hueOffsetDeg = Number(ui.rngHueOff.value); applyPrefs("hue offset", { statusTarget: "banking" }); });
+    ui.rngSat.addEventListener("input", () => { preferences.bands.rainbow.saturation = Number(ui.rngSat.value); applyPrefs("saturation", { statusTarget: "banking" }); });
+    ui.rngVal.addEventListener("input", () => { preferences.bands.rainbow.value = Number(ui.rngVal.value); applyPrefs("value", { statusTarget: "banking" }); });
 
     /* Drag-drop onto canvas â€” multi-file entry point.
        All dropped audio files are enqueued. If the queue was empty before the
@@ -2249,7 +2347,10 @@ const UI = (() => {
     window.addEventListener("hashchange", () => {
       const ok = UrlPreset.applyFromLocationHash();
       if (ok) {
-        applyPrefs("hash preset loaded", { rebuildBandsOnDefinitionChange: true });
+        applyPrefs("hash preset loaded", {
+          rebuildBandsOnDefinitionChange: true,
+          statusTarget: "workspace",
+        });
         initOrbs();
         resetOrbsToDesignedPhases();
       }

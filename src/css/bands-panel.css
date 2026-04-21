@@ -1,7 +1,7 @@
-    /* Bands + colors panel (right) */
-    #bandsPanel {
+    /* Banking panel (right) */
+    #bankingPanel {
       position: fixed;
-      top: calc(var(--ui-pad) + var(--ui-safe-t));
+      top: var(--ui-column-panel-top);
       right: calc(var(--ui-pad) + var(--ui-safe-r));
       bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-audio-h) + var(--ui-gap));
       width: min(520px, calc(100vw - 2 * var(--ui-pad)));

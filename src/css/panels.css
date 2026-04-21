@@ -18,6 +18,44 @@
 
     .sectionTitle { margin: 10px 0 6px; font-size: 12px; opacity: 0.75; }
 
+    .panelHeader {
+      display: flex;
+      gap: var(--ui-gap);
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .panelHeader .sectionTitle {
+      margin: 0 0 6px;
+    }
+
+    .panelHeaderText {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
+
+    .panelCopy {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.35;
+    }
+
+    .panelActionRow {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .panelActionStack {
+      display: grid;
+      gap: 8px;
+      margin-top: var(--ui-gap);
+      margin-bottom: var(--ui-gap);
+    }
+
     .row {
       display: grid;
       grid-template-columns: 160px 1fr 140px;
@@ -163,11 +201,12 @@
       text-overflow: clip;
       line-height: 1.35;
     }
-    /* Responsive panel layout on <=980px: clamp #bandsPanel/#simPanel widths to viewport-safe bounds,
-       and anchor #bandsPanel to the left edge (clear right anchor) so both side panels share alignment. */
+    /* Responsive panel layout on <=980px: clamp the scene/banking columns and compact panels to viewport-safe bounds. */
     @media (max-width: 980px) {
-      #bandsPanel { width: min(520px, calc(100vw - 2 * var(--ui-pad))); left: calc(var(--ui-pad) + var(--ui-safe-l)); right: auto; }
-      #simPanel { width: min(520px, calc(100vw - 2 * var(--ui-pad))); }
+      #bankingPanel { width: min(520px, calc(100vw - 2 * var(--ui-pad))); left: calc(var(--ui-pad) + var(--ui-safe-l)); right: auto; }
+      #scenePanel { width: min(520px, calc(100vw - 2 * var(--ui-pad))); }
+      #analysisPanel,
+      #workspacePanel { width: min(300px, calc((100vw - 3 * var(--ui-pad)) / 2)); }
     }
 
     @media (max-width: 920px) {
@@ -198,6 +237,10 @@
       #recordPanel .recordInlineValue,
       #recordPanel .recordRow .val {
         justify-self: start;
+      }
+
+      .panelHeader {
+        align-items: stretch;
       }
     }
     /* First-run hint: visible until audio is loaded */

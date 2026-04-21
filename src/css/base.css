@@ -1,6 +1,7 @@
 @import "./panels.css";
 @import "./audio-panel.css";
 @import "./queue-panel.css";
+@import "./compact-panels.css";
 @import "./sim-panel.css";
 @import "./bands-panel.css";
 @import "./record-panel.css";
@@ -23,6 +24,9 @@
       --ui-launcher-clearance: calc(var(--ui-launcher-shell-h) + var(--ui-gap));
       --ui-queue-clearance: calc(var(--ui-audio-h) + var(--ui-gap));
       --ui-icon: 40px;
+      --ui-compact-panel-w: min(330px, calc((100vw - var(--ui-safe-l) - var(--ui-safe-r) - (3 * var(--ui-pad))) / 2));
+      --ui-compact-panel-stack-h: 190px;
+      --ui-column-panel-top: calc(var(--ui-pad) + var(--ui-safe-t) + var(--ui-compact-panel-stack-h) + var(--ui-gap));
 
       /* Build 113 recording UI placement hooks.
          The dedicated record panel/launcher reads these directly. */
