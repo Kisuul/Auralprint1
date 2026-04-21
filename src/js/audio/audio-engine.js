@@ -307,6 +307,7 @@ const AudioEngine = (() => {
 
     const url = URL.createObjectURL(file);
     nextMediaEl.src = url;
+    const playbackErrorMessage = "Playback error: unsupported or unreadable audio file.";
 
     nextMediaEl.addEventListener("loadeddata", () => {
       if (mediaObjectUrl === url) mediaObjectUrl = null;
@@ -315,8 +316,19 @@ const AudioEngine = (() => {
     nextMediaEl.addEventListener("error", () => {
       if (mediaObjectUrl === url) mediaObjectUrl = null;
       revokeObjectUrl(url);
+      state.audio.isLoaded = false;
+      state.audio.filename = "";
       state.audio.isPlaying = false;
-      state.audio.transportError = "Playback error: unsupported or unreadable audio file.";
+      state.audio.transportError = playbackErrorMessage;
+      if (mediaEl === nextMediaEl && typeof AudioEngine._onFilePlaybackError === "function") {
+        try {
+          AudioEngine._onFilePlaybackError({
+            mediaEl: nextMediaEl,
+            fileName: file && file.name ? file.name : "",
+            message: playbackErrorMessage,
+          });
+        } catch {}
+      }
     }, { once: true, ...sig });
 
     nextMediaEl.addEventListener("play", () => {
@@ -498,6 +510,7 @@ const AudioEngine = (() => {
   }
 
   let _onTrackEnded = null;
+  let _onFilePlaybackError = null;
   let _isLoadRequestCurrent = null;
 
   return { loadFile, playPause, stop, unload, sample, applyPlaybackSettingsLive, applyAnalyserSettingsLive,
@@ -526,6 +539,8 @@ const AudioEngine = (() => {
     getMediaEl() { return mediaEl; },
     get _onTrackEnded() { return _onTrackEnded; },
     set _onTrackEnded(fn) { _onTrackEnded = (typeof fn === "function") ? fn : null; },
+    get _onFilePlaybackError() { return _onFilePlaybackError; },
+    set _onFilePlaybackError(fn) { _onFilePlaybackError = (typeof fn === "function") ? fn : null; },
     get _isLoadRequestCurrent() { return _isLoadRequestCurrent; },
     set _isLoadRequestCurrent(fn) { _isLoadRequestCurrent = (typeof fn === "function") ? fn : null; },
   };

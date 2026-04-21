@@ -768,14 +768,14 @@ const UI = (() => {
   }
 
   function hasRecordableSource() {
-    return !!(state.audio.isLoaded || (state.source && state.source.sessionActive));
+    if (state.audio.isLoaded) return true;
+    if (!state.source || state.source.sessionActive !== true) return false;
+    return readSourceKind(state.source) === "mic" || readSourceKind(state.source) === "stream";
   }
 
   function isRecordingAudioCurrentlyUnavailable(recording) {
     if (!recording || recording.phase !== "recording" || recording.includePlaybackAudio === false) return false;
-    return !hasRecordableSource()
-      || recording.lastCode === "audio-unloaded"
-      || recording.lastCode === "track-change-failed";
+    return !hasRecordableSource();
   }
 
   function formatRecordingPrimaryStatus(recording) {

@@ -652,6 +652,41 @@ function createInputSourceManager(deps = {}) {
     return true;
   }
 
+  function handleFilePlaybackError({ mediaEl = null, message = "" } = {}) {
+    const session = activeSession;
+    const sourceState = ensureSourceState();
+    if (!session || session.kind !== "file") return false;
+    if (mediaEl && session.mediaEl && session.mediaEl !== mediaEl) return false;
+
+    const errorMessage = typeof message === "string" && message.trim()
+      ? message.trim()
+      : (stateRef.audio && stateRef.audio.transportError
+        ? stateRef.audio.transportError
+        : "Playback failed.");
+    const label = session.label || sourceState.label || "";
+
+    activeSession = null;
+    clearActiveSessionListeners(session);
+
+    if (audioEngine && typeof audioEngine.unload === "function") {
+      audioEngine.unload();
+    }
+
+    if (stateRef.audio && typeof stateRef.audio === "object") {
+      stateRef.audio.isLoaded = false;
+      stateRef.audio.isPlaying = false;
+      stateRef.audio.filename = "";
+      stateRef.audio.transportError = errorMessage;
+    }
+
+    return commitFailure("file", {
+      status: "error",
+      code: "file-playback-error",
+      message: errorMessage,
+      label,
+    });
+  }
+
   function init(options = {}) {
     onExternalLiveInputReset = typeof options.onExternalLiveInputReset === "function"
       ? options.onExternalLiveInputReset
@@ -673,6 +708,10 @@ function createInputSourceManager(deps = {}) {
       hasAudio: !!(mediaStream && typeof mediaStream.getAudioTracks === "function" && mediaStream.getAudioTracks().length),
       hasVideo: !!(mediaStream && typeof mediaStream.getVideoTracks === "function" && mediaStream.getVideoTracks().length),
     });
+  }
+
+  if (audioEngine && typeof audioEngine === "object") {
+    audioEngine._onFilePlaybackError = handleFilePlaybackError;
   }
 
   return {

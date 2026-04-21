@@ -171,6 +171,12 @@ const RecorderEngine = (() => {
     runtime.lifecycle.lastMessage = message;
   }
 
+  function hasRecordableSource() {
+    if (state.audio && state.audio.isLoaded) return true;
+    if (!state.source || state.source.sessionActive !== true) return false;
+    return state.source.kind === "mic" || state.source.kind === "stream";
+  }
+
   function getCanvasCaptureFn(canvas) {
     if (!canvas) return null;
     if (typeof canvas.captureStream === "function") return canvas.captureStream.bind(canvas);
@@ -1143,8 +1149,7 @@ const RecorderEngine = (() => {
       }), "start");
     }
 
-    const hasRecordableSource = !!(state.audio.isLoaded || (state.source && state.source.sessionActive));
-    if (!hasRecordableSource) {
+    if (!hasRecordableSource()) {
       return commitStatus(buildStatus(false, "no-active-source", "Activate a source to start recording.", {
         support,
         phase: runtime.lifecycle.phase === "complete" ? "complete" : "idle",

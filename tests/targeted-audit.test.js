@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 
-import { normalizeOrbDef, preferences } from "../src/js/core/preferences.js";
+import { CONFIG } from "../src/js/core/config.js";
+import { normalizeOrbDef, preferences, replacePreferences, resolveSettings } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
-import { InputSourceManager } from "../src/js/audio/input-source-manager.js";
+import { InputSourceManager, createInputSourceManager } from "../src/js/audio/input-source-manager.js";
 import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { UrlPreset } from "../src/js/presets/url-preset.js";
@@ -291,6 +292,7 @@ function createAudioEngineHarness() {
   const previousDocument = globalThis.document;
   const previousURL = globalThis.URL;
   const previousAudioState = { ...state.audio };
+  const previousOnFilePlaybackError = AudioEngine._onFilePlaybackError;
   const revokedUrls = [];
   const connectionLog = [];
   let destinationNode = null;
@@ -423,6 +425,7 @@ function createAudioEngineHarness() {
     revokedUrls,
     restore() {
       try { AudioEngine.unload(); } catch {}
+      AudioEngine._onFilePlaybackError = previousOnFilePlaybackError;
       state.audio.isLoaded = previousAudioState.isLoaded;
       state.audio.isPlaying = previousAudioState.isPlaying;
       state.audio.filename = previousAudioState.filename;
@@ -1033,6 +1036,111 @@ test("AudioEngine.loadFile does not tear down the freshly created media element 
   }
 });
 
+test("AudioEngine.loadFile clears loaded state and reports late file errors after a paused load succeeds", async () => {
+  const harness = createAudioEngineHarness();
+  const seenErrors = [];
+
+  try {
+    AudioEngine._onFilePlaybackError = (details) => {
+      seenErrors.push(details);
+    };
+
+    const ok = await AudioEngine.loadFile({ name: "broken.wav" }, null, { autoPlay: false });
+
+    assert.equal(ok, true);
+    assert.equal(state.audio.isLoaded, true);
+    assert.equal(state.audio.filename, "broken.wav");
+
+    harness.audioEl.error = { code: 4 };
+    harness.audioEl.dispatch("error");
+
+    assert.equal(state.audio.isLoaded, false);
+    assert.equal(state.audio.isPlaying, false);
+    assert.equal(state.audio.filename, "");
+    assert.equal(state.audio.transportError, "Playback error: unsupported or unreadable audio file.");
+    assert.equal(seenErrors.length, 1);
+    assert.equal(seenErrors[0].mediaEl, harness.audioEl);
+    assert.equal(seenErrors[0].fileName, "broken.wav");
+    assert.equal(seenErrors[0].message, "Playback error: unsupported or unreadable audio file.");
+  } finally {
+    harness.restore();
+  }
+});
+
+test("deferred file playback errors clear the active file session and block recording restart", async () => {
+  const recorderHarness = createRecorderHarness();
+  const mediaEl = { tagName: "AUDIO" };
+  let unloadCalls = 0;
+  const audioEngine = {
+    async loadFile(file) {
+      state.audio.isLoaded = true;
+      state.audio.isPlaying = false;
+      state.audio.filename = file.name;
+      state.audio.transportError = "";
+      return true;
+    },
+    unload() {
+      unloadCalls += 1;
+      state.audio.isPlaying = false;
+    },
+    getMediaEl() {
+      return mediaEl;
+    },
+  };
+  const manager = createInputSourceManager({
+    stateRef: state,
+    audioEngine,
+    mediaDevices: {},
+  });
+
+  state.audio.isLoaded = false;
+  state.audio.isPlaying = false;
+  state.audio.filename = "";
+  state.audio.transportError = "";
+  state.source.kind = "none";
+  state.source.status = "idle";
+  state.source.label = "";
+  state.source.errorCode = "";
+  state.source.errorMessage = "";
+  state.source.sessionActive = false;
+  state.source.streamMeta.hasAudio = false;
+  state.source.streamMeta.hasVideo = false;
+
+  try {
+    const activation = await manager.activateFile({ name: "broken-late.wav" }, { requestId: 41, autoPlay: false });
+    assert.equal(activation.ok, true);
+    assert.equal(state.source.kind, "file");
+    assert.equal(state.source.status, "active");
+    assert.equal(state.source.sessionActive, true);
+    assert.equal(state.audio.isLoaded, true);
+
+    const failure = audioEngine._onFilePlaybackError({
+      mediaEl,
+      fileName: "broken-late.wav",
+      message: "Playback error: unsupported or unreadable audio file.",
+    });
+
+    assert.equal(unloadCalls, 1);
+    assert.equal(failure.ok, false);
+    assert.equal(failure.errorCode, "file-playback-error");
+    assert.equal(state.source.kind, "file");
+    assert.equal(state.source.status, "error");
+    assert.equal(state.source.sessionActive, false);
+    assert.equal(state.source.errorCode, "file-playback-error");
+    assert.equal(state.source.errorMessage, "Playback error: unsupported or unreadable audio file.");
+    assert.equal(state.audio.isLoaded, false);
+    assert.equal(state.audio.isPlaying, false);
+    assert.equal(state.audio.filename, "");
+    assert.equal(state.audio.transportError, "Playback error: unsupported or unreadable audio file.");
+
+    const status = RecorderEngine.start();
+    assert.equal(status.ok, false);
+    assert.equal(status.code, "no-active-source");
+  } finally {
+    recorderHarness.restore();
+  }
+});
+
 test("AudioEngine.getRecorderTap reuses active live-stream audio without local playback or lifecycle ownership", async () => {
   const harness = createAudioEngineHarness();
   const liveAudioTrack = {
@@ -1257,6 +1365,68 @@ test("URL preset serialization excludes runtime source and recording state", () 
   } finally {
     applySourceAndAudioState({ source: previousSource, audio: previousAudio });
     Object.assign(state.recording, previousRecording);
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
+});
+
+test("URL preset round-trips persisted config fields that were previously dropped on decode", () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const previousPrefs = structuredClone(preferences);
+
+  if (typeof globalThis.btoa !== "function") {
+    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
+  }
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
+  }
+
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState(_state, _title, url) {
+      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+    },
+  };
+
+  try {
+    preferences.trace.lineAlpha = 0.12;
+    preferences.trace.lineWidthPx = 5;
+    preferences.bands.count = 128;
+    preferences.bands.floorHz = 40;
+    preferences.bands.ceilingHz = 18000;
+    preferences.bands.overlay.lineAlpha = 0.18;
+    preferences.bands.overlay.lineWidthPx = 4;
+    preferences.timing.maxDeltaTimeSec = 0.5;
+
+    UrlPreset.writeHashFromPrefs();
+
+    replacePreferences(structuredClone(CONFIG.defaults));
+    resolveSettings();
+
+    const ok = UrlPreset.applyFromLocationHash();
+    assert.equal(ok, true);
+    assert.equal(preferences.trace.lineAlpha, 0.12);
+    assert.equal(preferences.trace.lineWidthPx, 5);
+    assert.equal(preferences.bands.count, 128);
+    assert.equal(preferences.bands.floorHz, 40);
+    assert.equal(preferences.bands.ceilingHz, 18000);
+    assert.equal(preferences.bands.overlay.lineAlpha, 0.18);
+    assert.equal(preferences.bands.overlay.lineWidthPx, 4);
+    assert.equal(preferences.timing.maxDeltaTimeSec, 0.5);
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
     globalThis.location = previousLocation;
     globalThis.history = previousHistory;
     globalThis.btoa = previousBtoa;
@@ -2335,6 +2505,33 @@ test("UI refreshRecordingUi renders source-aware recording copy across file and 
   }, () => {
     assert.equal(state.ui.recordStatus.textContent, "Recording continues without an active audio source.");
     assert.equal(state.ui.recordSupport.textContent, "Recording continues while no audio source is active.");
+  });
+
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "Replay Track",
+      sessionActive: true,
+      streamMeta: { hasAudio: true, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: true,
+      filename: "replay-track.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "recording",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastCode: "audio-unloaded",
+      lastUpdatedAtMs: 6,
+    },
+  }, () => {
+    assert.equal(state.ui.recordStatus.textContent, "Recording file audio + video");
+    assert.equal(state.ui.recordSupport.textContent, "Canvas + source audio capture available.");
   });
 });
 

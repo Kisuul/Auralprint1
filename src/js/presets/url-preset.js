@@ -57,6 +57,14 @@ const UrlPreset = (() => {
         const lim = CONFIG.limits.trace.numLines;
         next.trace.numLines = clamp(incoming.trace.numLines, lim.min, lim.max);
       }
+      if (Number.isFinite(incoming.trace.lineAlpha)) {
+        const lim = CONFIG.limits.trace.lineAlpha;
+        next.trace.lineAlpha = clamp(incoming.trace.lineAlpha, lim.min, lim.max);
+      }
+      if (Number.isFinite(incoming.trace.lineWidthPx)) {
+        const lim = CONFIG.limits.trace.lineWidthPx;
+        next.trace.lineWidthPx = clamp(incoming.trace.lineWidthPx, lim.min, lim.max);
+      }
       if (typeof incoming.trace.lineColorMode === "string") {
         if (["fixed","lastParticle","dominantBand"].includes(incoming.trace.lineColorMode)) {
           next.trace.lineColorMode = incoming.trace.lineColorMode;
@@ -114,6 +122,19 @@ const UrlPreset = (() => {
     }
 
     if (incoming.bands) {
+      const maxBandCount = Array.isArray(CONFIG.bandNames) && CONFIG.bandNames.length
+        ? CONFIG.bandNames.length
+        : CONFIG.defaults.bands.count;
+      if (Number.isInteger(incoming.bands.count) && incoming.bands.count >= 2 && incoming.bands.count <= maxBandCount) {
+        next.bands.count = incoming.bands.count;
+      }
+      if (Number.isFinite(incoming.bands.floorHz) && incoming.bands.floorHz > 0) {
+        next.bands.floorHz = incoming.bands.floorHz;
+      }
+      if (Number.isFinite(incoming.bands.ceilingHz) && incoming.bands.ceilingHz > 0) {
+        next.bands.ceilingHz = incoming.bands.ceilingHz;
+      }
+
       if (incoming.bands.overlay) {
         if (typeof incoming.bands.overlay.enabled === "boolean") next.bands.overlay.enabled = incoming.bands.overlay.enabled;
         if (typeof incoming.bands.overlay.connectAdjacent === "boolean") next.bands.overlay.connectAdjacent = incoming.bands.overlay.connectAdjacent;
@@ -137,6 +158,14 @@ const UrlPreset = (() => {
         if (Number.isFinite(incoming.bands.overlay.waveformRadialDisplaceFrac)) {
           const lim = CONFIG.limits.bands.overlayWaveformRadialDisplaceFrac;
           next.bands.overlay.waveformRadialDisplaceFrac = clamp(incoming.bands.overlay.waveformRadialDisplaceFrac, lim.min, lim.max);
+        }
+        if (Number.isFinite(incoming.bands.overlay.lineAlpha)) {
+          const lim = CONFIG.limits.trace.lineAlpha;
+          next.bands.overlay.lineAlpha = clamp(incoming.bands.overlay.lineAlpha, lim.min, lim.max);
+        }
+        if (Number.isFinite(incoming.bands.overlay.lineWidthPx)) {
+          const lim = CONFIG.limits.trace.lineWidthPx;
+          next.bands.overlay.lineWidthPx = clamp(incoming.bands.overlay.lineWidthPx, lim.min, lim.max);
         }
 
         if (typeof incoming.bands.overlay.phaseMode === "string") {
@@ -182,6 +211,14 @@ const UrlPreset = (() => {
         next.bands.distributionMode = incoming.bands.logSpacing ? "log" : "linear";
       }
     }
+
+    if (incoming.timing) {
+      if (Number.isFinite(incoming.timing.maxDeltaTimeSec) && incoming.timing.maxDeltaTimeSec > 0) {
+        next.timing.maxDeltaTimeSec = incoming.timing.maxDeltaTimeSec;
+      }
+    }
+
+    next.bands.ceilingHz = Math.max(next.bands.floorHz, next.bands.ceilingHz);
 
 
     if (Array.isArray(incoming.orbs)) {
