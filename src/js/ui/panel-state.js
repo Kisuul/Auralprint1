@@ -1,36 +1,42 @@
 const REAL_PANEL_TARGETS = Object.freeze([
-  "audio",
+  "audioSource",
   "queue",
-  "sim",
-  "bands",
-  "record",
+  "analysis",
+  "banking",
+  "scene",
+  "recording",
+  "workspace",
   "status",
 ]);
 
 const LAUNCHER_TARGETS = Object.freeze({
-  audioSource: "audio",
-  analysis: "bands",
-  banking: "bands",
-  scene: "sim",
-  recording: "record",
-  workspace: "sim",
+  audioSource: "audioSource",
+  analysis: "analysis",
+  banking: "banking",
+  scene: "scene",
+  recording: "recording",
+  workspace: "workspace",
   status: "status",
 });
 
 const TARGET_DEFAULT_LAUNCHERS = Object.freeze({
-  audio: "audioSource",
-  sim: "scene",
-  bands: "analysis",
-  record: "recording",
+  audioSource: "audioSource",
+  analysis: "analysis",
+  banking: "banking",
+  scene: "scene",
+  recording: "recording",
+  workspace: "workspace",
   status: "status",
 });
 
 const DEFAULT_PANEL_OPEN_TARGETS = Object.freeze({
-  audio: true,
+  audioSource: true,
   queue: false,
-  sim: true,
-  bands: true,
-  record: false,
+  analysis: false,
+  banking: true,
+  scene: true,
+  recording: false,
+  workspace: false,
   status: false,
 });
 
@@ -42,7 +48,7 @@ function cloneOpenTargets(openTargets) {
   for (const targetId of REAL_PANEL_TARGETS) {
     next[targetId] = !!(openTargets && openTargets[targetId]);
   }
-  if (!next.audio) next.queue = false;
+  if (!next.audioSource) next.queue = false;
   return next;
 }
 
@@ -119,12 +125,12 @@ function setPanelTargetOpen(panelShell, targetId, open) {
   if (!isPanelTarget(targetId)) return false;
 
   const nextOpen = !!open;
-  if (targetId === "queue" && !shell.openTargets.audio && nextOpen) return false;
+  if (targetId === "queue" && !shell.openTargets.audioSource && nextOpen) return false;
 
   if (shell.openTargets[targetId] === nextOpen) return false;
   shell.openTargets[targetId] = nextOpen;
 
-  if (targetId === "audio" && !nextOpen) shell.openTargets.queue = false;
+  if (targetId === "audioSource" && !nextOpen) shell.openTargets.queue = false;
   return true;
 }
 
@@ -182,11 +188,13 @@ function toggleGlobalPanelVisibility(panelShell) {
   if (anyOpen) {
     shell.globalHideSnapshot = cloneOpenTargets(shell.openTargets);
     setPanelTargets(shell, {
-      audio: false,
+      audioSource: false,
       queue: false,
-      sim: false,
-      bands: false,
-      record: false,
+      analysis: false,
+      banking: false,
+      scene: false,
+      recording: false,
+      workspace: false,
       status: false,
     });
     return { restored: false, hidden: true };

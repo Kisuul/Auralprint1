@@ -25,6 +25,38 @@ input[type=range] {
   font-size: 12px;
   opacity: 0.75;
 }
+.panelHeader {
+  display: flex;
+  gap: var(--ui-gap);
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.panelHeader .sectionTitle {
+  margin: 0 0 6px;
+}
+.panelHeaderText {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.panelCopy {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+}
+.panelActionRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.panelActionStack {
+  display: grid;
+  gap: 8px;
+  margin-top: var(--ui-gap);
+  margin-bottom: var(--ui-gap);
+}
 .row {
   display: grid;
   grid-template-columns: 160px 1fr 140px;
@@ -157,13 +189,17 @@ input[type=range] {
   line-height: 1.35;
 }
 @media (max-width: 980px) {
-  #bandsPanel {
+  #bankingPanel {
     width: min(520px, calc(100vw - 2 * var(--ui-pad)));
     left: calc(var(--ui-pad) + var(--ui-safe-l));
     right: auto;
   }
-  #simPanel {
+  #scenePanel {
     width: min(520px, calc(100vw - 2 * var(--ui-pad)));
+  }
+  #analysisPanel,
+  #workspacePanel {
+    width: min(300px, calc((100vw - 3 * var(--ui-pad)) / 2));
   }
 }
 @media (max-width: 920px) {
@@ -189,6 +225,9 @@ input[type=range] {
   #recordPanel .recordInlineValue,
   #recordPanel .recordRow .val {
     justify-self: start;
+  }
+  .panelHeader {
+    align-items: stretch;
   }
 }
 #loadHint {
@@ -459,10 +498,31 @@ input[type=color]:focus:not(:focus-visible) {
   box-shadow: 0 0 0 4px var(--ui-focus-ring-glow);
 }
 
-/* src/css/sim-panel.css */
-#simPanel {
+/* src/css/compact-panels.css */
+#workspacePanel,
+#analysisPanel {
   position: fixed;
   top: calc(var(--ui-pad) + var(--ui-safe-t));
+  width: var(--ui-compact-panel-w);
+  max-height: var(--ui-compact-panel-stack-h);
+  padding: var(--ui-pad);
+  overflow: auto;
+  z-index: 31;
+}
+#workspacePanel {
+  left: calc(var(--ui-pad) + var(--ui-safe-l));
+}
+#analysisPanel {
+  right: calc(var(--ui-pad) + var(--ui-safe-r));
+}
+#workspacePanel .panelActionStack button {
+  width: 100%;
+}
+
+/* src/css/sim-panel.css */
+#scenePanel {
+  position: fixed;
+  top: var(--ui-column-panel-top);
   left: calc(var(--ui-pad) + var(--ui-safe-l));
   bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-audio-h) + var(--ui-gap));
   width: min(460px, calc(100vw - 2 * var(--ui-pad)));
@@ -472,9 +532,9 @@ input[type=color]:focus:not(:focus-visible) {
 }
 
 /* src/css/bands-panel.css */
-#bandsPanel {
+#bankingPanel {
   position: fixed;
-  top: calc(var(--ui-pad) + var(--ui-safe-t));
+  top: var(--ui-column-panel-top);
   right: calc(var(--ui-pad) + var(--ui-safe-r));
   bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-audio-h) + var(--ui-gap));
   width: min(520px, calc(100vw - 2 * var(--ui-pad)));
@@ -669,6 +729,9 @@ input[type=color]:focus:not(:focus-visible) {
   --ui-launcher-clearance: calc(var(--ui-launcher-shell-h) + var(--ui-gap));
   --ui-queue-clearance: calc(var(--ui-audio-h) + var(--ui-gap));
   --ui-icon: 40px;
+  --ui-compact-panel-w: min(330px, calc((100vw - var(--ui-safe-l) - var(--ui-safe-r) - (3 * var(--ui-pad))) / 2));
+  --ui-compact-panel-stack-h: 190px;
+  --ui-column-panel-top: calc(var(--ui-pad) + var(--ui-safe-t) + var(--ui-compact-panel-stack-h) + var(--ui-gap));
   --ui-record-panel-left: auto;
   --ui-record-panel-right: calc(var(--ui-pad) + var(--ui-safe-r));
   --ui-record-panel-top: auto;

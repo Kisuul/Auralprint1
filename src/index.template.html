@@ -75,16 +75,107 @@
     <div id="queueList"></div>
   </div>
 
-  <div id="simPanel" class="panel">
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
+  <div
+    id="workspacePanel"
+    class="panel"
+    style="display:none"
+    hidden
+    aria-hidden="true"
+  >
+    <div class="panelHeader">
+      <div class="panelHeaderText">
+        <div class="sectionTitle">Workspace / Presets</div>
+        <div class="muted panelCopy" id="workspaceStatus">Workspace / Presets panel: share, apply URL presets, and reset preferences.</div>
+      </div>
+      <button id="btnHideWorkspace" title="Hide workspace / presets panel (launcher remains available)">&#9662;</button>
+    </div>
+
+    <div class="panelActionStack">
       <button id="btnShare">Share Link</button>
       <button id="btnApplyUrl">Apply URL</button>
       <button id="btnResetPrefs">Reset Prefs</button>
-      <button id="btnResetVisuals" title="Reset orb phases and clear trails (keyboard: R)">Reset Visuals</button>
-      <button id="btnHideSim" title="Hide sim panel (launcher remains available)">&#9666;</button>
     </div>
 
-    <div class="muted" id="simStatus">Sim panel: trace, particles, motion, analysis.</div>
+    <div class="muted panelCopy">Transitional home for preset sharing and reset workflows until later Build 115 workspace phases land.</div>
+  </div>
+
+  <div
+    id="analysisPanel"
+    class="panel"
+    style="display:none"
+    hidden
+    aria-hidden="true"
+  >
+    <div class="panelHeader">
+      <div class="panelHeaderText">
+        <div class="sectionTitle">Analysis</div>
+        <div class="muted panelCopy" id="analysisStatus">Analysis panel: FFT, smoothing, RMS gain.</div>
+      </div>
+      <button id="btnHideAnalysis" title="Hide analysis panel (launcher remains available)">&#9662;</button>
+    </div>
+
+    <div class="row">
+      <label for="rngRmsGain">RMS gain</label>
+      <input id="rngRmsGain" type="range" />
+      <div id="valRmsGain" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label for="rngSmooth">Analyser smoothing</label>
+      <input id="rngSmooth" type="range" />
+      <div id="valSmooth" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label for="selFFT">FFT size</label>
+      <select id="selFFT"></select>
+      <div id="valFFT" class="val"></div>
+    </div>
+  </div>
+
+  <div id="scenePanel" class="panel">
+    <div class="panelHeader">
+      <div class="panelHeaderText">
+        <div class="sectionTitle">Scene</div>
+        <div class="muted panelCopy" id="sceneStatus">Scene panel: trace, particles, motion, and render-facing controls.</div>
+      </div>
+      <div class="panelActionRow">
+        <button id="btnResetVisuals" title="Reset orb phases and clear trails (keyboard: R)">Reset Visuals</button>
+        <button id="btnHideScene" title="Hide scene panel (launcher remains available)">&#9666;</button>
+      </div>
+    </div>
+
+    <div class="sectionTitle">Color & Geometry</div>
+
+    <div class="row">
+      <label>Background</label>
+      <input id="clrBg" type="color" />
+      <div id="valBg" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label>Particle color</label>
+      <input id="clrParticle" type="color" />
+      <div id="valParticle" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label for="selLineColorMode">Line color mode</label>
+      <select id="selLineColorMode"></select>
+      <div id="valLineColorMode" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label for="rngMinRad">Min radius</label>
+      <input id="rngMinRad" type="range" />
+      <div id="valMinRad" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label for="rngMaxRad">Max radius</label>
+      <input id="rngMaxRad" type="range" />
+      <div id="valMaxRad" class="val"></div>
+    </div>
 
     <div class="sectionTitle">Trace</div>
 
@@ -98,12 +189,6 @@
       <label for="rngNumLines">Num lines</label>
       <input id="rngNumLines" type="range" />
       <div id="valNumLines" class="val"></div>
-    </div>
-
-    <div class="row">
-      <label for="selLineColorMode">Line color mode</label>
-      <select id="selLineColorMode"></select>
-      <div id="valLineColorMode" class="val"></div>
     </div>
 
     <div class="sectionTitle">Particles</div>
@@ -158,60 +243,18 @@
       <div id="valWfDisp" class="val"></div>
     </div>
 
-    <div class="sectionTitle">Audio analysis</div>
-
-    <div class="row">
-      <label for="rngRmsGain">RMS gain</label>
-      <input id="rngRmsGain" type="range" />
-      <div id="valRmsGain" class="val"></div>
-    </div>
-
-    <div class="row">
-      <label for="rngMinRad">Min radius</label>
-      <input id="rngMinRad" type="range" />
-      <div id="valMinRad" class="val"></div>
-    </div>
-
-    <div class="row">
-      <label for="rngMaxRad">Max radius</label>
-      <input id="rngMaxRad" type="range" />
-      <div id="valMaxRad" class="val"></div>
-    </div>
-
-    <div class="row">
-      <label for="rngSmooth">Analyser smoothing</label>
-      <input id="rngSmooth" type="range" />
-      <div id="valSmooth" class="val"></div>
-    </div>
-
-    <div class="row">
-      <label for="selFFT">FFT size</label>
-      <select id="selFFT"></select>
-      <div id="valFFT" class="val"></div>
-    </div>
   </div>
 
-  <div id="bandsPanel" class="panel">
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap: wrap;">
-      <div class="muted">Rainbow Instrumentation</div>
-      <button id="btnHideBands" title="Hide bands panel (launcher remains available)">&#9656;</button>
+  <div id="bankingPanel" class="panel">
+    <div class="panelHeader">
+      <div class="panelHeaderText">
+        <div class="sectionTitle">Banking</div>
+        <div class="muted panelCopy" id="bankingStatus">Banking panel: distribution, color policy, overlays, and spectral HUD.</div>
+      </div>
+      <button id="btnHideBanking" title="Hide banking panel (launcher remains available)">&#9656;</button>
     </div>
 
-    <div class="muted" id="bandsStatus">Bands panel: colors + spectral HUD.</div>
-
-    <div class="sectionTitle">Colors</div>
-
-    <div class="row">
-      <label>Background</label>
-      <input id="clrBg" type="color" />
-      <div id="valBg" class="val"></div>
-    </div>
-
-    <div class="row">
-      <label>Particle color</label>
-      <input id="clrParticle" type="color" />
-      <div id="valParticle" class="val"></div>
-    </div>
+    <div class="sectionTitle">Color Policy</div>
 
     <div class="row">
       <label for="selParticleColorSrc">Particle color src</label>
@@ -375,17 +418,27 @@
 
     <div class="statusLane">
       <div class="statusLabel">Audio Source</div>
-      <div id="statusAudioSummary" class="muted statusCopy">No audio loaded.</div>
+      <div id="statusAudioSourceSummary" class="muted statusCopy">No audio loaded.</div>
+    </div>
+
+    <div class="statusLane">
+      <div class="statusLabel">Analysis</div>
+      <div id="statusAnalysisSummary" class="muted statusCopy">Analysis panel: FFT, smoothing, RMS gain.</div>
+    </div>
+
+    <div class="statusLane">
+      <div class="statusLabel">Banking</div>
+      <div id="statusBankingSummary" class="muted statusCopy">Banking panel: distribution, color policy, overlays, and spectral HUD.</div>
     </div>
 
     <div class="statusLane">
       <div class="statusLabel">Scene</div>
-      <div id="statusSimSummary" class="muted statusCopy">Sim panel: trace, particles, motion, analysis.</div>
+      <div id="statusSceneSummary" class="muted statusCopy">Scene panel: trace, particles, motion, and render-facing controls.</div>
     </div>
 
     <div class="statusLane">
-      <div class="statusLabel">Analysis / Banking</div>
-      <div id="statusBandsSummary" class="muted statusCopy">Bands panel: colors + spectral HUD.</div>
+      <div class="statusLabel">Workspace / Presets</div>
+      <div id="statusWorkspaceSummary" class="muted statusCopy">Workspace / Presets panel: share, apply URL presets, and reset preferences.</div>
     </div>
 
     <div class="statusLane">

@@ -93,7 +93,7 @@ const state = {
   ui: {
     panelShell: createPanelShellState({
       openTargets: {
-        record: !!(CONFIG.recording && CONFIG.recording.defaultPanelVisible),
+        recording: !!(CONFIG.recording && CONFIG.recording.defaultPanelVisible),
       },
     }),
     recordingUiSyncKey: "",

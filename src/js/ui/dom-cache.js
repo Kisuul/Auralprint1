@@ -13,8 +13,10 @@ function bindRange(el, lim) {
 function primeDomCache() {
   const ui = state.ui;
     ui.audioPanel = document.getElementById("audioPanel");
-    ui.simPanel = document.getElementById("simPanel");
-    ui.bandsPanel = document.getElementById("bandsPanel");
+    ui.analysisPanel = document.getElementById("analysisPanel");
+    ui.bankingPanel = document.getElementById("bankingPanel");
+    ui.scenePanel = document.getElementById("scenePanel");
+    ui.workspacePanel = document.getElementById("workspacePanel");
     ui.statusPanel = document.getElementById("statusPanel");
     ui.loadHint = document.getElementById("loadHint");
 
@@ -46,10 +48,15 @@ function primeDomCache() {
     ui.btnApplyUrl = document.getElementById("btnApplyUrl");
     ui.btnResetPrefs = document.getElementById("btnResetPrefs");
     ui.btnResetVisuals = document.getElementById("btnResetVisuals");
-    ui.btnHideSim = document.getElementById("btnHideSim");
+    ui.btnHideAnalysis = document.getElementById("btnHideAnalysis");
+    ui.btnHideBanking = document.getElementById("btnHideBanking");
+    ui.btnHideScene = document.getElementById("btnHideScene");
+    ui.btnHideWorkspace = document.getElementById("btnHideWorkspace");
 
-    ui.simStatus = document.getElementById("simStatus");
-    ui.bandsStatus = document.getElementById("bandsStatus");
+    ui.analysisStatus = document.getElementById("analysisStatus");
+    ui.bankingStatus = document.getElementById("bankingStatus");
+    ui.sceneStatus = document.getElementById("sceneStatus");
+    ui.workspaceStatus = document.getElementById("workspaceStatus");
 
     ui.chkLines = document.getElementById("chkLines");
     ui.valLines = document.getElementById("valLines");
@@ -87,8 +94,6 @@ function primeDomCache() {
     ui.valSmooth = document.getElementById("valSmooth");
     ui.selFFT = document.getElementById("selFFT");
     ui.valFFT = document.getElementById("valFFT");
-
-    ui.btnHideBands = document.getElementById("btnHideBands");
 
     ui.clrBg = document.getElementById("clrBg");
     ui.valBg = document.getElementById("valBg");
@@ -180,9 +185,11 @@ function primeDomCache() {
     ui.recordSettingsNote = document.getElementById("recordSettingsNote");
 
     ui.btnHideStatus = document.getElementById("btnHideStatus");
-    ui.statusAudioSummary = document.getElementById("statusAudioSummary");
-    ui.statusSimSummary = document.getElementById("statusSimSummary");
-    ui.statusBandsSummary = document.getElementById("statusBandsSummary");
+    ui.statusAudioSourceSummary = document.getElementById("statusAudioSourceSummary");
+    ui.statusAnalysisSummary = document.getElementById("statusAnalysisSummary");
+    ui.statusBankingSummary = document.getElementById("statusBankingSummary");
+    ui.statusSceneSummary = document.getElementById("statusSceneSummary");
+    ui.statusWorkspaceSummary = document.getElementById("statusWorkspaceSummary");
     ui.statusRecordSummary = document.getElementById("statusRecordSummary");
 
     ui.fileInput = document.getElementById("fileInput");
