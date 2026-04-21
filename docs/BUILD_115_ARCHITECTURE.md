@@ -9,10 +9,10 @@ together.
 
 Auralprint remains analysis-first. `AnalyzerCore` produces a normalized
 `AnalysisFrame` for each tick. `BandBank` enriches that into a `BandFrame`.
-`Visualizer` and `Inspector` modules consume those frames through stable
-contracts. A `Scene` organizes visualizer configuration, a `Compositor`
-instantiates and renders the active `SceneNode`s, and the `WorkspaceShell`
-hosts the control surfaces around that render path.
+`Visualizer` and `Inspector` modules consume those contracts through stable
+interfaces. A `Scene` organizes visualizer configuration, a `Compositor`
+instantiates and renders active `SceneNode`s, and the `WorkspaceShell` hosts
+the control surfaces around that render path.
 
 ```
 Source Input -> AnalyzerCore -> AnalysisFrame -> BandBank -> BandFrame
@@ -24,6 +24,10 @@ Source Input -> AnalyzerCore -> AnalysisFrame -> BandBank -> BandFrame
                                                                   |
                                                             Render Surface
 ```
+
+Build 115 is still in the docs-first stage. This document defines the target
+contract surface for later phases; it does not imply that the current runtime
+already exposes dedicated `frame.js`, `scene.js`, or `compositor.js` modules.
 
 ## Key Components
 
@@ -38,28 +42,30 @@ Source Input -> AnalyzerCore -> AnalysisFrame -> BandBank -> BandFrame
   metadata, and related banking rules.
 - **BandFrame** - The immutable band-oriented snapshot consumed by
   `Visualizer`s and `Inspector`s. It carries band energies, dominant-band
-  information, and a reference to the underlying `AnalysisFrame`.
+  information, and a reference to the underlying `AnalysisFrame` at
+  `BandFrame.analysis`.
 - **Visualizer** - A scene-facing module that consumes `BandFrame` and, when
-  needed, `AnalysisFrame`, then renders visual output inside the render
-  surface. The band overlay and orbs belong to this category.
+  needed, `BandFrame.analysis`, then renders visual output inside the render
+  surface. The band overlay and orbs belong to this category in the Build 115
+  architecture.
 - **Inspector** - A UI-facing module that consumes the same frame contracts but
   renders instrumentation in the UI layer instead of the scene. The band table
   and live band HUD belong here.
 - **Scene** - The top-level scene configuration model. Presets persist scene
-  data such as node order, enabled state, bounds, and settings. The runtime
-  constructs live visualizer instances from this configuration.
+  data such as node order, enabled state, bounds, anchor, and settings. The
+  runtime constructs live visualizer instances from this configuration.
 - **SceneNode** - A data record inside a `Scene` that places and configures one
   `Visualizer`. A `SceneNode` is not a live visualizer instance.
 - **Compositor** - The render orchestration layer that reads a `Scene`,
-  instantiates the active visualizers, applies ordering, and draws them into
-  the final render surface.
+  instantiates active visualizers, applies ordering, passes through the current
+  `ViewTransform`, and draws into the final render surface.
 - **ViewTransform** - The runtime-only camera/view abstraction passed through
   the compositor render path. It is the identity transform in Build 115 and
   becomes meaningful in Build 116.
 - **WorkspaceShell** - The panel and launcher system around the render surface.
   It hosts Analysis, Banking, Scene, Audio Source, Recording,
-  Workspace/Presets, and Status/Log surfaces. In Phase 1 this is conceptual
-  canon, not a required rename of current Build 114 panel IDs.
+  Workspace/Presets, and Status/Log surfaces. In Build 115 this remains
+  conceptual canon, not a required rename of current Build 114 panel IDs.
 
 ## Layered Architecture
 
@@ -86,24 +92,45 @@ Source Input -> AnalyzerCore -> AnalysisFrame -> BandBank -> BandFrame
    `WorkspaceShell` hosts panels and launchers without owning low-level audio
    analysis or scene rendering logic.
 
+## Current Runtime Reality
+
+The current runtime still reflects the pre-Build 115 ownership model:
+
+- `src/js/render/renderer.js` still directly owns band-overlay drawing and orb
+  trail/particle drawing.
+- `src/js/render/orb.js` and `src/js/render/orb-runtime.js` still implement the
+  orb path as special-case render and simulation logic rather than as a
+  first-class `Visualizer`.
+- `src/js/ui/ui.js` and the current DOM/panel IDs still own the legacy shell.
+- `src/js/presets/url-preset.js`, together with
+  `src/js/core/constants.js`, `src/js/core/preferences.js`, and
+  `src/js/core/config.js`, still owns the current preset/runtime schema path.
+  The current runtime schema remains 8 until later Build 115 implementation
+  phases.
+
+These legacy owners are expected and should remain in place until later phases
+intentionally narrow them.
+
 ## Terms And Invariants
 
+- **AnalyzerCore -> AnalysisFrame -> BandBank -> BandFrame** is the canonical
+  frame flow for Build 115.
 - **Visualizer vs Inspector** - A `Visualizer` is scene content drawn within
   the render surface. An `Inspector` is UI instrumentation drawn within the
   workspace shell. The band overlay is a `Visualizer`; the band table and band
   HUD are `Inspector`s.
-- **Frame contracts** - `Visualizer`s and `Inspector`s consume
-  `AnalysisFrame` and `BandFrame`. They do not read directly from Web Audio
-  nodes.
+- **Frame contracts** - `Visualizer`s and `Inspector`s consume `BandFrame` as
+  their direct input and read `AnalysisFrame` through `BandFrame.analysis` when
+  needed. They do not read directly from Web Audio nodes.
 - **Scene persistence** - Presets persist scene configuration, including node
   order, enabled state, bounds, anchor, and settings. Runtime-only state
   includes instantiated visualizer objects, selected node/UI state, the live
-  `ViewTransform`, panel visibility, permissions, queue state, and recording
-  sessions.
+  `ViewTransform`, panel visibility, permissions, queue state, playback
+  session state, and recording state.
 - **WorkspaceShell boundary** - `WorkspaceShell` names the Build 115 shell
   concept. Current implementation labels such as `audioPanel`, `simPanel`,
-  `bandsPanel`, and `recordPanel` remain legacy runtime labels until later
-  phases intentionally change them.
+  `bandsPanel`, `queuePanel`, and `recordPanel` remain legacy runtime labels
+  until later phases intentionally change them.
 
 Build 115 establishes this architecture vocabulary and contract surface.
 Build 116 extends it with camera behavior built on the `ViewTransform`

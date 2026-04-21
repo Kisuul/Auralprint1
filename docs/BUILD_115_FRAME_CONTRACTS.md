@@ -5,6 +5,22 @@ layer and its presentation layers. By standardizing these structures,
 `Visualizer`s and `Inspector`s can be written against stable interfaces instead
 of pulling data directly from Web Audio or banking internals.
 
+## Contract Flow
+
+Build 115 uses this frame flow:
+
+1. `AnalyzerCore` produces `AnalysisFrame`.
+2. `BandBank` derives `BandFrame` from `AnalysisFrame`.
+3. `Visualizer.update(frame, dt)` receives `BandFrame` and may read the
+   underlying `AnalysisFrame` through `frame.analysis`.
+4. `Inspector.update(frame)` receives `BandFrame`.
+
+Neither contract reads directly from Web Audio nodes.
+
+Build 115 defines these contracts before a dedicated `frame.js` module exists.
+The current runtime still exposes equivalent analysis and band data through
+legacy runtime structures.
+
 ## AnalysisFrame
 
 `AnalysisFrame` is the immutable per-tick snapshot produced by `AnalyzerCore`.
@@ -37,7 +53,7 @@ Mono signals yield a single entry.
 
 `BandFrame` is the immutable band-oriented snapshot produced by `BandBank` from
 an `AnalysisFrame` plus current banking settings. Visualizers and Inspectors
-that care about band energies consume this structure.
+consume this structure.
 
 | Field               | Type              | Description |
 |---------------------|-------------------|-------------|
@@ -67,9 +83,12 @@ Each `BandInfo` object contains:
    Visualizers and Inspectors must never mutate them.
 2. **No hidden references** - Do not store Web Audio nodes inside these
    structures. Consumers operate on plain data contracts.
-3. **Graceful degradation** - Consumers must handle optional fields such as
+3. **Shared flow** - `Inspector.update(frame)` and `Visualizer.update(frame, dt)`
+   both consume `BandFrame`; any analysis-level detail needed by those
+   consumers is read through `frame.analysis`.
+4. **Graceful degradation** - Consumers must handle optional fields such as
    `phase` or `peak` being absent.
-4. **Runtime only** - Frame data is never persisted to presets. Presets store
+5. **Runtime only** - Frame data is never persisted to presets. Presets store
    configuration, not transient analysis output.
 
 By standardizing on these contracts, Build 115 keeps presentation modules

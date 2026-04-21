@@ -64,6 +64,13 @@ implementation labels such as `audioPanel`, `simPanel`, `bandsPanel`,
 `queuePanel`, and `recordPanel` remain valid runtime labels until later phases
 move responsibilities into the final shell layout.
 
+## Current Runtime Reality
+
+The current runtime still uses the legacy shell owned by `src/js/ui/ui.js` and
+the current DOM/panel bindings in `src/js/ui/dom-cache.js`. Later Build 115
+shell phases narrow those owners; this document only ratifies the target shell
+taxonomy and launcher responsibilities.
+
 ## Future Expansion
 
 Later Build 115 phases move current controls into this shell model and Build

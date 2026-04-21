@@ -19,22 +19,31 @@ The scene model creates a foundation for:
 - Preparing for Build 116 camera work through a runtime `ViewTransform`
   abstraction.
 
+## Contract Status
+
+This is the Build 115 target model, not a claim that the current runtime
+already persists or renders a `Scene`. Today:
+
+- the runtime still draws orbs and the band overlay through the legacy renderer
+  path;
+- the orb path still lives in `orb.js` and `orb-runtime.js`; and
+- the preset runtime still uses Schema 8 until later Build 115 implementation
+  phases.
+
 ## Scene And Scene Nodes
 
 ### Scene
 
-A `Scene` is the top-level scene configuration model. It describes which
-visualizers should exist, how they are ordered, and how they are placed.
-Presets persist scene configuration. The runtime builds live visualizer
-instances and other runtime-only state from that configuration.
+A `Scene` is the top-level persisted scene configuration model. For Build 115,
+the minimum persisted scene surface is:
 
-Key properties:
+- top-level `scene`
+- `scene.nodes`
 
-| Property | Description |
-|----------|-------------|
-| `nodes` | Ordered list of `SceneNode` configuration objects describing active visualizer placements. Persisted. |
-| `backgroundColor` | Optional scene-level background color. Persisted if exposed by the product. |
-| `viewTransform` | Runtime-only `ViewTransform` applied by the compositor. Identity in Build 115. |
+Optional future scene-level properties may exist later, but the initial Build
+115 migration baseline is the `scene.nodes` collection plus the node fields
+defined below. Runtime-only state, including the active `ViewTransform`, is not
+part of the persisted scene shape.
 
 ### SceneNode
 
@@ -43,7 +52,7 @@ the scene. A `SceneNode` is a data structure, not a live visualizer instance.
 The `Compositor` consumes scene nodes to create and manage actual visualizer
 objects.
 
-Fields in a `SceneNode`:
+Required fields in a Build 115 `SceneNode`:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -74,11 +83,10 @@ When no scene configuration exists in a preset, the application should
 construct a default scene that preserves the current orb-plus-overlay
 experience:
 
-- One `SceneNode` of type `"orbs"` with full-surface bounds, centered anchor,
-  `enabled: true`, and the base orb settings.
-- One `SceneNode` of type `"bandOverlay"` with full-surface bounds, centered
-  anchor, `enabled: true`, and the base overlay settings.
-- Default ordering places `"orbs"` behind `"bandOverlay"`.
+- `id: "orbs-1"`, `type: "orbs"`, `enabled: true`, `zIndex: 0`,
+  full-surface bounds, centered anchor, and the base orb settings.
+- `id: "overlay-1"`, `type: "bandOverlay"`, `enabled: true`, `zIndex: 1`,
+  full-surface bounds, centered anchor, and the base overlay settings.
 
 ## Compositor
 
@@ -120,11 +128,13 @@ top of this seam.
 
 ## Guidelines And Invariants
 
-- **Scene configuration is persisted** - Presets persist scene data such as node
-  order, enabled state, bounds, anchor, settings, and any persisted scene-level
-  properties.
+- **Persisted scene shape** - Build 115 persists top-level `scene`,
+  `scene.nodes`, and per-node `id`, `type`, `enabled`, `zIndex`, `bounds`,
+  `anchor`, and `settings`.
 - **Runtime scene state is not persisted** - Live visualizer instances,
-  selected-node UI state, and the current `ViewTransform` remain runtime-only.
+  selected node/UI state, the current `ViewTransform`, panel visibility,
+  permissions, queue state, playback session state, and recording state remain
+  runtime-only.
 - **Do not treat inspectors as nodes** - Band tables, live readouts, and other
   inspectors belong to the UI layer, not scene composition.
 - **Normalized layout** - Scene layout is expressed in normalized coordinates.

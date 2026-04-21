@@ -2,79 +2,97 @@
 
 This document maps responsibilities to code modules for the Build 115 visual
 architecture. The goal is to keep analyzer logic, banking, scene composition,
-rendering, inspectors, and UI shell behavior on clear seams so future changes
-stay local.
+rendering, inspectors, presets, and UI shell behavior on clear seams so future
+changes stay local.
 
 ## Purpose
 
-The legacy code path still contains mixed responsibilities. Build 115 does not
-rewrite all of that in Phase 1, but it does define where the seams belong so
+The current runtime still contains mixed responsibilities. Build 115 does not
+rewrite all of that in Phase 2, but it does define where the seams belong so
 later phases can migrate behavior without vocabulary drift.
 
-## High-Level Boundaries
+## Canonical Frame And Ownership Flow
 
-- **Audio input and analysis (`src/js/audio/`)**
-  - `audio-engine.js` is the current home of `AnalyzerCore` responsibilities.
-    It owns analyzer-node wiring and frame-level analysis output.
-  - `band-bank.js` and `band-bank-controller.js` are the current home of
-    `BandBank` responsibilities.
+Build 115 uses this ownership flow:
 
-- **Frame definitions (`src/js/core/`)**
-  - A future `frame.js` can hold the canonical `AnalysisFrame` and `BandFrame`
-    data contracts so consumers no longer reach into analyzer internals.
+`AnalyzerCore -> AnalysisFrame -> BandBank -> BandFrame -> Visualizer/Inspector`
 
-- **Rendering engine (`src/js/render/`)**
-  - `renderer.js` is the legacy top-level render path. Under Build 115 it
-    narrows into canvas ownership and render-loop orchestration while delegating
-    scene composition to `Compositor` and per-effect behavior to `Visualizer`s.
-  - `compositor.js` (new) owns scene-driven render ordering, bounds management,
-    and `ViewTransform` handoff.
-  - `visualizer.js` (new) defines the `Visualizer` contract and registry.
-  - `scene.js` (new) defines the persisted `Scene` and `SceneNode` data model.
-  - `orb.js` and the band overlay path remain legacy implementation details
-    until they are migrated into first-class visualizer modules.
+- `Visualizer`s consume `BandFrame` and may read the underlying
+  `AnalysisFrame` through `BandFrame.analysis`.
+- `Inspector`s consume `BandFrame` in the UI layer.
+- `Scene`, `SceneNode`, `Compositor`, and `ViewTransform` sit on top of those
+  contracts to organize and render scene content.
 
-- **Inspector/HUD layer (`src/js/ui/inspectors/`)**
-  - Inspector modules live in the UI layer and consume frame contracts without
-    participating in scene composition.
+## Current Legacy Owners
 
-- **Workspace shell (`src/js/ui/`)**
-  - `ui.js` remains the top-level UI orchestrator.
-  - `panel-state.js` (new) is the runtime-only home for `WorkspaceShell`
-    visibility and launcher state.
-  - Current Build 114 panel IDs remain implementation labels until later phases
-    intentionally replace them.
+These modules remain the current runtime owners until later phases intentionally
+narrow them:
 
-- **Configuration and presets (`src/js/core/` and `src/js/presets/`)**
-  - `config.js` remains the canonical home for defaults and limits.
-  - `url-preset.js` owns preset serialization, schema versioning, and migration
-    behavior for scene data.
+- **Audio and banking**
+  - `src/js/audio/audio-engine.js` is the current home of `AnalyzerCore`
+    responsibilities.
+  - `src/js/audio/band-bank.js` and
+    `src/js/audio/band-bank-controller.js` are the current home of `BandBank`
+    responsibilities.
 
-## Module Responsibilities
+- **Rendering**
+  - `src/js/render/renderer.js` is the legacy top-level render path and still
+    directly draws the band overlay plus orb trails/particles today.
+  - `src/js/render/orb.js` and `src/js/render/orb-runtime.js` still own the orb
+    simulation/render path as special-case code, not as first-class visualizer
+    modules.
+  - `src/js/render/color-policy.js`, `src/js/render/trail-system.js`, and
+    related helpers remain supporting legacy render modules.
 
-- **AnalyzerCore** - Start or attach sources, manage analyzer graph state, and
-  produce `AnalysisFrame` output.
-- **BandBank** - Convert analyzer output into `BandFrame` data and dominant-band
-  metadata.
-- **Visualizer** - Encapsulate one scene-facing visual effect. It consumes frame
-  contracts and renders within compositor-assigned bounds.
-- **Inspector** - Encapsulate UI-facing instrumentation such as the band table
-  or live band HUD.
-- **Scene** - Persist scene configuration, primarily through an ordered list of
-  `SceneNode`s and other scene-level settings.
-- **SceneNode** - Hold one visualizer placement and settings payload.
-- **Compositor** - Instantiate active visualizers from the scene, apply ordering
-  and bounds, pass through `ViewTransform`, and render into the main surface.
-- **ViewTransform** - Represent runtime-only camera/view state for the
-  compositor render path.
-- **WorkspaceShell** - Host panel surfaces, launchers, and status/log UI around
-  the render surface.
+- **UI shell**
+  - `src/js/ui/ui.js` remains the top-level UI orchestrator for the current
+    shell.
+  - `src/js/ui/dom-cache.js` still binds the current panel IDs and launcher
+    elements used by the legacy shell.
 
-## Non-Goals For Build 115 Phase 1
+- **Presets and configuration**
+  - `src/js/presets/url-preset.js` owns current preset serialization and the
+    eventual migration pressure for Schema 9 rollout.
+  - `src/js/core/constants.js` still declares `PRESET_SCHEMA_VERSION = 8`.
+  - `src/js/core/preferences.js` and `src/js/core/config.js` still define the
+    current persisted preference shape and defaults.
 
-- Implementing the compositor or visualizer registry.
-- Renaming current source files or runtime panel IDs just to match future terms.
-- Introducing full camera behavior before Build 116.
+## Future Canonical Owners
 
-The seam map exists so later Build 115 phases can move code toward these seams
-without redefining the architecture each time.
+These modules are expected to appear later. They do not belong to this docs-only
+phase:
+
+- `src/js/core/frame.js` - canonical home for `AnalysisFrame` and `BandFrame`
+  data contracts.
+- `src/js/render/visualizer.js` - `Visualizer` contract and registry.
+- `src/js/render/scene.js` - `Scene` and `SceneNode` data model.
+- `src/js/render/compositor.js` - scene-driven render orchestration and
+  `ViewTransform` handoff.
+- `src/js/ui/panel-state.js` - runtime-only `WorkspaceShell` visibility and
+  launcher state.
+- `src/js/ui/inspectors/` - `Inspector` modules for band tables, readouts, and
+  related UI instrumentation.
+
+## Responsibility Rules
+
+- **AnalyzerCore** owns source attachment and analyzer graph state, not scene or
+  UI composition.
+- **BandBank** owns band derivation and dominant-band metadata, not rendering.
+- **Visualizer** owns one scene-facing effect and renders within compositor
+  bounds.
+- **Inspector** owns one UI-facing instrumentation surface and does not
+  participate in scene composition.
+- **Scene** persists scene configuration, primarily through `scene.nodes`.
+- **SceneNode** holds per-visualizer placement and settings data only.
+- **Compositor** instantiates active visualizers from the scene, applies
+  ordering and bounds, passes through `ViewTransform`, and renders into the
+  main surface.
+- **WorkspaceShell** owns panel and launcher runtime state without owning low-
+  level audio or render internals.
+
+## Phase Boundary
+
+Phase 2 ratifies seams and contracts only. It does not create `frame.js`,
+`scene.js`, `visualizer.js`, `compositor.js`, `panel-state.js`, or any
+inspector modules, and it does not narrow `renderer.js`, `orb.js`,
+`orb-runtime.js`, `ui.js`, or `url-preset.js` yet.

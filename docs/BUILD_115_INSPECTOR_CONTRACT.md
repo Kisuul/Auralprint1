@@ -4,6 +4,13 @@
 to the user without drawing on the main render canvas. Examples include the
 band table, dominant-band readouts, warning banners, and runtime status feeds.
 
+## Contract Status
+
+This is the Build 115 target interface, not a claim that the current runtime
+already uses dedicated inspector modules. Today the band table and related HUD
+readouts still live inside the existing UI path. Later Build 115 phases can
+narrow those surfaces onto explicit inspector modules.
+
 ## Interface
 
 Inspector modules must implement the following methods:
@@ -11,7 +18,7 @@ Inspector modules must implement the following methods:
 | Method | Purpose |
 |--------|---------|
 | `init(panel, ui)` | Called once when the inspector is created. Receives the DOM node or component where it should render and any UI helpers needed for wiring events. |
-| `update(frame)` | Called whenever a new `BandFrame` is available. Updates text, charts, or other instrumentation. |
+| `update(frame)` | Called whenever a new `BandFrame` is available. Updates text, charts, or other instrumentation. Inspectors may read analysis-level detail through `frame.analysis` when needed. |
 | `dispose()` | Called when the inspector is removed or hidden permanently. Cleans up listeners, timers, or DOM nodes. |
 
 Inspectors may also implement:
@@ -25,8 +32,9 @@ Inspectors may also implement:
 
 1. **UI only** - Inspectors render into DOM or other UI surfaces, not into the
    scene render surface.
-2. **Shared frame contracts** - Inspectors consume the same `BandFrame` data
-   used by visualizers and must not mutate it.
+2. **Shared frame entrypoint** - `Inspector.update(frame)` receives `BandFrame`.
+   Any analysis-level detail needed by an inspector is read through
+   `frame.analysis`, not from Web Audio nodes.
 3. **Lightweight updates** - Inspectors run on the UI thread and should update
    efficiently.
 4. **Configurable through UI surfaces** - If an inspector exposes adjustable
