@@ -9,6 +9,7 @@ import { AudioEngine } from "../src/js/audio/audio-engine.js";
 import { InputSourceManager } from "../src/js/audio/input-source-manager.js";
 import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
+import { UrlPreset } from "../src/js/presets/url-preset.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
 import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
@@ -81,6 +82,13 @@ function createScrubberHarness() {
       globalThis.document = previousDocument;
     },
   };
+}
+
+function decodePresetHash(hash) {
+  const token = hash.startsWith("#p=") ? hash.slice(3) : hash;
+  const padLength = (4 - (token.length % 4)) % 4;
+  const b64 = token.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat(padLength);
+  return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
 }
 
 function snapshotSourceAndAudioState() {
@@ -551,12 +559,15 @@ function createRecorderHarness() {
   };
 }
 
+class UiElementStub {}
+
 function createStubUiElement(tagName = "div") {
   const listeners = new Map();
   const attributes = new Map();
   const classes = new Set();
+  let innerHtml = "";
 
-  return {
+  const element = {
     tagName: String(tagName).toUpperCase(),
     style: { display: "block" },
     dataset: {},
@@ -568,7 +579,6 @@ function createStubUiElement(tagName = "div") {
     title: "",
     value: "",
     textContent: "",
-    innerHTML: "",
     tabIndex: 0,
     addEventListener(type, handler) {
       const entries = listeners.get(type) || [];
@@ -645,14 +655,27 @@ function createStubUiElement(tagName = "div") {
       },
     },
   };
+  Object.defineProperty(element, "innerHTML", {
+    get() {
+      return innerHtml;
+    },
+    set(value) {
+      innerHtml = String(value);
+      element.children = [];
+      element.options = [];
+    },
+  });
+  return Object.setPrototypeOf(element, UiElementStub.prototype);
 }
 
 function createUiWireHarness() {
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
+  const previousElement = globalThis.Element;
   const previousUi = { ...state.ui };
   const previousCanvas = state.canvas;
   const elements = new Map();
+  const windowListeners = new Map();
 
   function getElement(id) {
     if (!elements.has(id)) {
@@ -664,9 +687,14 @@ function createUiWireHarness() {
   }
 
   const body = createStubUiElement("body");
+  globalThis.Element = UiElementStub;
   globalThis.window = {
     ...(previousWindow || {}),
-    addEventListener() {},
+    addEventListener(type, handler) {
+      const entries = windowListeners.get(type) || [];
+      entries.push(handler);
+      windowListeners.set(type, entries);
+    },
   };
   globalThis.document = {
     activeElement: null,
@@ -685,11 +713,27 @@ function createUiWireHarness() {
 
   return {
     getElement,
+    dispatchWindow(type, event = {}) {
+      const entries = windowListeners.get(type) || [];
+      for (const handler of entries) {
+        handler({
+          altKey: false,
+          ctrlKey: false,
+          metaKey: false,
+          preventDefault() {},
+          stopPropagation() {},
+          target: null,
+          currentTarget: globalThis.window,
+          ...event,
+        });
+      }
+    },
     restore() {
       Object.assign(state.ui, previousUi);
       state.canvas = previousCanvas;
       globalThis.window = previousWindow;
       globalThis.document = previousDocument;
+      globalThis.Element = previousElement;
     },
   };
 }
@@ -1124,6 +1168,202 @@ test("readSourceUiModel treats File as the idle workflow side without implying a
   assert.equal(model.audioStatusText, "File mode ready. Select a queued file or load audio files.");
   assert.equal(model.sourceSelectorCopy.fileText, "File workflow selected. Select a queued file or load audio files.");
   assert.equal(shouldShowActiveQueueItem({ kind: "none" }, { isLoaded: false }, { active: true }), false);
+});
+
+test("readSourceUiModel surfaces retained live-input errors after returning to file-workflow idle", () => {
+  const model = readSourceUiModel({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      errorCode: "stream-ended",
+      errorMessage: "Shared stream ended. Select Stream to share again.",
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+    queueLength: 1,
+    currentIndex: 0,
+  });
+
+  assert.deepEqual(model.pressedSources, {
+    file: true,
+    mic: false,
+    stream: false,
+  });
+  assert.equal(model.audioPanelSourceMode, "file");
+  assert.equal(model.audioStatusText, "File mode ready. Shared stream ended. Select Stream to share again.");
+});
+
+test("URL preset serialization excludes runtime source and recording state", () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const previousSource = JSON.parse(JSON.stringify(state.source));
+  const previousAudio = { ...state.audio };
+  const previousRecording = JSON.parse(JSON.stringify(state.recording));
+
+  if (typeof globalThis.btoa !== "function") {
+    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
+  }
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
+  }
+
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState(_state, _title, url) {
+      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+    },
+  };
+
+  state.source.kind = "none";
+  state.source.status = "idle";
+  state.source.label = "";
+  state.source.errorCode = "stream-ended";
+  state.source.errorMessage = "Shared stream ended. Select Stream to share again.";
+  state.source.sessionActive = false;
+  state.source.streamMeta.hasAudio = false;
+  state.source.streamMeta.hasVideo = false;
+
+  state.recording.phase = "finalizing";
+  state.recording.supportProbeStatus = "supported";
+  state.recording.isSupported = true;
+  state.recording.includePlaybackAudio = true;
+  state.recording.targetFps = 30;
+  state.recording.selectedMimeType = "video/webm";
+  state.recording.resolvedMimeType = "video/webm";
+  state.recording.elapsedMs = 1200;
+  state.recording.chunkCount = 3;
+  state.recording.lastCode = "finalizing";
+  state.recording.lastMessage = "Finalizing recording export...";
+
+  try {
+    UrlPreset.writeHashFromPrefs();
+    const payload = decodePresetHash(locationStub.hash);
+    assert.ok(payload && payload.prefs);
+    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "source"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "recording"), false);
+  } finally {
+    applySourceAndAudioState({ source: previousSource, audio: previousAudio });
+    Object.assign(state.recording, previousRecording);
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
+});
+
+test("UI clears retained live-input errors on explicit file-workflow reset", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      errorCode: "mic-ended",
+      errorMessage: "Microphone input ended. Select Mic to reconnect.",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+    queueNames: ["archive.wav"],
+    currentIndex: -1,
+  }, async () => {
+    UI.refreshAllUiText();
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Microphone input ended. Select Mic to reconnect.");
+
+    assert.equal(await UI.dispatchSourceSwitchAction("file"), true);
+    UI.refreshAllUiText();
+
+    assert.equal(state.source.errorCode, "");
+    assert.equal(state.source.errorMessage, "");
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Select a queued file or load audio files.");
+  });
+});
+
+test("UI clears retained live-input errors when Clear Queue resets file workflow to empty", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      errorCode: "stream-ended",
+      errorMessage: "Shared stream ended. Select Stream to share again.",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+    queueNames: ["archive.wav"],
+    currentIndex: -1,
+  }, async () => {
+    UI.refreshAllUiText();
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Shared stream ended. Select Stream to share again.");
+
+    state.ui.btnClearQueue.dispatch("click");
+    UI.refreshAllUiText();
+
+    assert.equal(Queue.length, 0);
+    assert.equal(state.source.errorCode, "");
+    assert.equal(state.source.errorMessage, "");
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Load audio files to begin analysis.");
+  });
+});
+
+test("UI clears retained live-input errors when removing the last queued file resets file workflow to empty", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "none",
+      status: "idle",
+      label: "",
+      errorCode: "mic-ended",
+      errorMessage: "Microphone input ended. Select Mic to reconnect.",
+      sessionActive: false,
+      streamMeta: { hasAudio: false, hasVideo: false },
+    },
+    audioState: {
+      isLoaded: false,
+      isPlaying: false,
+      filename: "",
+      transportError: "",
+    },
+    queueNames: ["archive.wav"],
+    currentIndex: -1,
+    queueVisible: false,
+  }, async ({ getElement }) => {
+    UI.refreshAllUiText();
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Microphone input ended. Select Mic to reconnect.");
+
+    state.ui.btnToggleQueue.dispatch("click");
+    const lastRow = getElement("queueList").children[0];
+    const removeBtn = lastRow.children[2];
+    removeBtn.dispatch("click");
+    UI.refreshAllUiText();
+
+    assert.equal(Queue.length, 0);
+    assert.equal(state.source.errorCode, "");
+    assert.equal(state.source.errorMessage, "");
+    assert.equal(state.ui.audioStatus.textContent, "File mode ready. Load audio files to begin analysis.");
+  });
 });
 
 test("UI refreshAllUiText keeps file-mode status and selector copy honest in idle and loaded states", async () => {
@@ -1642,6 +1882,261 @@ test("UI keeps queue panel recoverable across live source switches and audio pan
     RecorderEngine.onTransportMutation = originalOnTransportMutation;
     RecorderEngine.getSupportStatus = originalGetSupportStatus;
   }
+});
+
+test("UI finalizing locks destructive file transport actions while leaving non-destructive file controls available", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "demo.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "demo.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "finalizing",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 9,
+    },
+    queueNames: ["alpha.wav", "beta.wav", "gamma.wav"],
+    currentIndex: 1,
+    queueVisible: false,
+  }, async ({ getElement }) => {
+    state.ui.btnToggleQueue.dispatch("click");
+    const queueRows = getElement("queueList").children;
+    const activeRow = queueRows[1];
+    const removeBtn = activeRow.children[2];
+
+    assert.equal(state.ui.btnLoad.disabled, true);
+    assert.equal(state.ui.btnPrev.disabled, true);
+    assert.equal(state.ui.btnNext.disabled, true);
+    assert.equal(state.ui.btnClearQueue.disabled, true);
+    assert.match(state.ui.btnLoad.title, /Load is unavailable while recording finalizes/);
+    assert.match(state.ui.btnPrev.title, /Track changes are unavailable while recording finalizes/);
+    assert.match(state.ui.btnClearQueue.title, /Track changes are unavailable while recording finalizes/);
+
+    assert.equal(state.ui.btnPlay.disabled, false);
+    assert.equal(state.ui.btnStop.disabled, false);
+    assert.equal(state.ui.btnRepeat.disabled, false);
+    assert.equal(state.ui.btnShuffle.disabled, false);
+    assert.equal(state.ui.btnToggleQueue.disabled, false);
+
+    assert.equal(activeRow.getAttribute("aria-disabled"), "true");
+    assert.match(activeRow.title, /Track changes are unavailable while recording finalizes/);
+    assert.equal(removeBtn.disabled, true);
+    assert.match(removeBtn.title, /Track changes are unavailable while recording finalizes/);
+  });
+});
+
+test("UI refreshes an already-open queue when recording enters finalizing", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "beta.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "beta.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 20,
+    },
+    queueNames: ["alpha.wav", "beta.wav", "gamma.wav"],
+    currentIndex: 1,
+    queueVisible: false,
+  }, async ({ getElement }) => {
+    const initialQueueNames = Queue.snapshot().items.map((item) => item.name);
+
+    state.ui.btnToggleQueue.dispatch("click");
+    state.recording.phase = "finalizing";
+    state.recording.lastUpdatedAtMs = 21;
+    UI.refreshAllUiText();
+
+    const firstRow = getElement("queueList").children[0];
+    const firstRemoveBtn = firstRow.children[2];
+
+    assert.equal(firstRow.getAttribute("aria-disabled"), "true");
+    assert.equal(firstRemoveBtn.disabled, true);
+
+    firstRow.dispatch("click");
+    firstRemoveBtn.dispatch("click");
+    await Promise.resolve();
+
+    assert.equal(Queue.currentIndex, 1);
+    assert.deepEqual(Queue.snapshot().items.map((item) => item.name), initialQueueNames);
+    assert.equal(state.audio.filename, "beta.wav");
+  });
+});
+
+test("UI re-enables an already-open queue when recording leaves finalizing", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "beta.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "beta.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "finalizing",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 22,
+    },
+    queueNames: ["alpha.wav", "beta.wav", "gamma.wav"],
+    currentIndex: 1,
+    queueVisible: false,
+  }, async ({ getElement }) => {
+    state.ui.btnToggleQueue.dispatch("click");
+    state.recording.phase = "idle";
+    state.recording.lastUpdatedAtMs = 23;
+    UI.refreshAllUiText();
+
+    const firstRow = getElement("queueList").children[0];
+    const firstRemoveBtn = firstRow.children[2];
+
+    assert.equal(firstRow.getAttribute("aria-disabled"), "false");
+    assert.equal(firstRemoveBtn.disabled, false);
+
+    firstRemoveBtn.dispatch("click");
+    await Promise.resolve();
+
+    assert.deepEqual(Queue.snapshot().items.map((item) => item.name), ["beta.wav", "gamma.wav"]);
+    assert.equal(Queue.length, 2);
+  });
+});
+
+test("UI finalizing blocks destructive file transport interactions and keeps file workflow state stable", async () => {
+  await withUiWireHarnessState({
+    sourceState: {
+      kind: "file",
+      status: "active",
+      label: "beta.wav",
+      sessionActive: true,
+    },
+    audioState: {
+      isLoaded: true,
+      isPlaying: false,
+      filename: "beta.wav",
+      transportError: "",
+    },
+    recordingState: {
+      hooksEnabled: true,
+      phase: "finalizing",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 10,
+    },
+    queueNames: ["alpha.wav", "beta.wav", "gamma.wav"],
+    currentIndex: 1,
+    queueVisible: false,
+  }, async ({ harness, getElement }) => {
+    let fileInputClicks = 0;
+    state.ui.fileInput.click = () => {
+      fileInputClicks += 1;
+    };
+
+    state.ui.btnToggleQueue.dispatch("click");
+    const queueList = getElement("queueList");
+    const queueRows = queueList.children;
+    const firstRow = queueRows[0];
+    const firstRemoveBtn = firstRow.children[2];
+    const initialQueueNames = Queue.snapshot().items.map((item) => item.name);
+
+    state.ui.btnLoad.dispatch("click");
+    state.ui.fileInput.files = [createNamedAudioFile("new-track.wav")];
+    state.ui.fileInput.dispatch("change");
+    state.ui.btnPrev.dispatch("click");
+    state.ui.btnNext.dispatch("click");
+    state.ui.btnClearQueue.dispatch("click");
+    firstRow.dispatch("click");
+    firstRemoveBtn.dispatch("click");
+    state.canvas.dispatch("drop", {
+      dataTransfer: {
+        files: [createNamedAudioFile("drop-track.wav")],
+      },
+    });
+    harness.dispatchWindow("keydown", { code: "KeyN" });
+    harness.dispatchWindow("keydown", { code: "KeyP" });
+
+    await Promise.resolve();
+    UI.refreshAllUiText();
+
+    assert.equal(fileInputClicks, 0);
+    assert.equal(Queue.currentIndex, 1);
+    assert.deepEqual(Queue.snapshot().items.map((item) => item.name), initialQueueNames);
+    assert.equal(state.audio.filename, "beta.wav");
+    assert.equal(state.ui.queuePanel.style.display, "block");
+    assert.match(state.ui.audioStatus.textContent, /Track changes are unavailable while recording finalizes the current export/);
+  });
+});
+
+test("UI restores the recording panel after global hide when it was previously visible", async () => {
+  await withUiWireHarnessState({
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 11,
+    },
+  }, async ({ harness, getElement }) => {
+    UI.showRecordPanel();
+    assert.equal(getElement("recordPanel").style.display, "block");
+    assert.equal(getElement("openRecord").style.display, "none");
+
+    harness.dispatchWindow("keydown", { code: "KeyH" });
+    assert.equal(getElement("recordPanel").style.display, "none");
+    assert.equal(getElement("openRecord").style.display, "grid");
+
+    harness.dispatchWindow("keydown", { code: "KeyH" });
+    assert.equal(getElement("recordPanel").style.display, "block");
+    assert.equal(getElement("openRecord").style.display, "none");
+  });
+});
+
+test("UI keeps the recording launcher reachable after global hide when the panel was already hidden", async () => {
+  await withUiWireHarnessState({
+    recordingState: {
+      hooksEnabled: true,
+      phase: "idle",
+      isSupported: true,
+      includePlaybackAudio: true,
+      lastUpdatedAtMs: 12,
+    },
+  }, async ({ harness, getElement }) => {
+    UI.hideRecordPanel();
+    assert.equal(getElement("recordPanel").style.display, "none");
+    assert.equal(getElement("openRecord").style.display, "grid");
+
+    harness.dispatchWindow("keydown", { code: "KeyH" });
+    harness.dispatchWindow("keydown", { code: "KeyH" });
+
+    assert.equal(getElement("recordPanel").style.display, "none");
+    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(getElement("openRecord").getAttribute("aria-hidden"), "false");
+  });
 });
 
 test("UI blocks live-source switching during active recording without touching the active source session", async () => {

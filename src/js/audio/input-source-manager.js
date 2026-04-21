@@ -294,6 +294,25 @@ function createInputSourceManager(deps = {}) {
     };
   }
 
+  function commitRecoverableIdle(previousKind, { code, message }) {
+    const sourceState = ensureSourceState();
+    sourceState.kind = "none";
+    sourceState.status = "idle";
+    sourceState.label = "";
+    sourceState.sessionActive = false;
+    sourceState.errorCode = code;
+    sourceState.errorMessage = message;
+    resetStreamMeta(sourceState);
+    return {
+      ok: false,
+      kind: "none",
+      previousKind,
+      status: "idle",
+      errorCode: code,
+      errorMessage: message,
+    };
+  }
+
   function areAllAudioTracksEnded(mediaStream) {
     if (!mediaStream || typeof mediaStream.getAudioTracks !== "function") return false;
     const audioTracks = mediaStream.getAudioTracks();
@@ -612,19 +631,24 @@ function createInputSourceManager(deps = {}) {
   async function handleExternalStreamEnded() {
     if (!activeSession || !activeSession.mediaStream) return false;
     const endedKind = activeSession.kind || "stream";
-    const endedLabel = activeSession.label || "";
     await teardownActiveSource({ reason: `external-${endedKind}-ended` });
     if (typeof onExternalLiveInputReset === "function") {
       try { onExternalLiveInputReset(); } catch {}
     }
-    commitFailure(endedKind, {
-      status: "error",
+    return commitRecoverableIdle(endedKind, {
       code: `${endedKind}-ended`,
       message: endedKind === "mic"
         ? "Microphone input ended. Select Mic to reconnect."
         : "Shared stream ended. Select Stream to share again.",
-      label: endedLabel,
     });
+  }
+
+  function clearRecoverableIdleError() {
+    const sourceState = ensureSourceState();
+    if (sourceState.kind !== "none" || sourceState.status !== "idle") return false;
+    if (!sourceState.errorCode && !sourceState.errorMessage) return false;
+    sourceState.label = "";
+    clearError(sourceState);
     return true;
   }
 
@@ -659,6 +683,7 @@ function createInputSourceManager(deps = {}) {
     teardownActiveSource,
     handleExternalStreamEnded,
     registerFutureStreamSession,
+    clearRecoverableIdleError,
   };
 }
 

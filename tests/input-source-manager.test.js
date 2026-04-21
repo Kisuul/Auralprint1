@@ -482,6 +482,76 @@ test("file -> mic -> file switches cleanly through the source manager contract",
   assert.equal(stateRef.source.label, "final.wav");
 });
 
+test("mic -> stream switches cleanly and stops the previous live session once", async () => {
+  const micSession = createFakeMediaStream({ audioLabel: "Desk Mic" });
+  const streamSession = createFakeMediaStream({
+    audioLabel: "System Mix",
+    video: true,
+    videoLabel: "Browser Tab",
+  });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getUserMedia() {
+        return micSession.stream;
+      },
+      async getDisplayMedia() {
+        return streamSession.stream;
+      },
+    },
+  });
+
+  const micResult = await manager.activateMic();
+  const streamResult = await manager.activateStream();
+
+  assert.equal(micResult.ok, true);
+  assert.equal(streamResult.ok, true);
+  assert.equal(micSession.audioTrack.stopCount, 1);
+  assert.equal(streamSession.audioTrack.stopCount, 0);
+  assert.equal(streamSession.videoTrack.stopCount, 0);
+  assert.equal(calls.unload, 1);
+  assert.equal(calls.attachMediaStreamSource.length, 2);
+  assert.deepEqual(calls.attachMediaStreamSource.map((entry) => entry.opts.kind), ["mic", "stream"]);
+  assert.equal(stateRef.source.kind, "stream");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+  assert.equal(stateRef.source.label, "Browser Tab");
+});
+
+test("stream -> mic switches cleanly and stops the previous shared stream once", async () => {
+  const streamSession = createFakeMediaStream({
+    audioLabel: "System Mix",
+    video: true,
+    videoLabel: "Slides Window",
+  });
+  const micSession = createFakeMediaStream({ audioLabel: "USB Mic" });
+  const { manager, stateRef, calls } = createManagerHarness({
+    mediaDevices: {
+      async getUserMedia() {
+        return micSession.stream;
+      },
+      async getDisplayMedia() {
+        return streamSession.stream;
+      },
+    },
+  });
+
+  const streamResult = await manager.activateStream();
+  const micResult = await manager.activateMic();
+
+  assert.equal(streamResult.ok, true);
+  assert.equal(micResult.ok, true);
+  assert.equal(streamSession.audioTrack.stopCount, 1);
+  assert.equal(streamSession.videoTrack.stopCount, 1);
+  assert.equal(micSession.audioTrack.stopCount, 0);
+  assert.equal(calls.unload, 1);
+  assert.equal(calls.attachMediaStreamSource.length, 2);
+  assert.deepEqual(calls.attachMediaStreamSource.map((entry) => entry.opts.kind), ["stream", "mic"]);
+  assert.equal(stateRef.source.kind, "mic");
+  assert.equal(stateRef.source.status, "active");
+  assert.equal(stateRef.source.sessionActive, true);
+  assert.equal(stateRef.source.label, "USB Mic");
+});
+
 test("a late microphone grant is stopped and discarded after teardown", async () => {
   const micSession = createFakeMediaStream({ audioLabel: "Race Mic" });
   let resolveGetUserMedia = null;
@@ -565,8 +635,9 @@ test("external microphone end tears down the stream and leaves a recoverable mic
 
   assert.equal(calls.unload, 1);
   assert.equal(micSession.audioTrack.stopCount, 1);
-  assert.equal(stateRef.source.kind, "mic");
-  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.kind, "none");
+  assert.equal(stateRef.source.status, "idle");
+  assert.equal(stateRef.source.label, "");
   assert.equal(stateRef.source.sessionActive, false);
   assert.equal(stateRef.source.errorCode, "mic-ended");
   assert.equal(stateRef.source.errorMessage, "Microphone input ended. Select Mic to reconnect.");
@@ -624,8 +695,9 @@ test("stream ends only after all audio tracks have ended", async () => {
   await Promise.resolve();
 
   assert.equal(calls.unload, 1);
-  assert.equal(stateRef.source.kind, "stream");
-  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.kind, "none");
+  assert.equal(stateRef.source.status, "idle");
+  assert.equal(stateRef.source.label, "");
   assert.equal(stateRef.source.sessionActive, false);
   assert.equal(stateRef.source.errorCode, "stream-ended");
   assert.equal(stateRef.source.errorMessage, "Shared stream ended. Select Stream to share again.");
@@ -660,8 +732,9 @@ test("external shared stream end tears down the stream, resets live visuals, and
   assert.equal(sharedSession.audioTrack.stopCount, 1);
   assert.equal(sharedSession.videoTrack.stopCount, 1);
   assert.equal(resetCalls, 1);
-  assert.equal(stateRef.source.kind, "stream");
-  assert.equal(stateRef.source.status, "error");
+  assert.equal(stateRef.source.kind, "none");
+  assert.equal(stateRef.source.status, "idle");
+  assert.equal(stateRef.source.label, "");
   assert.equal(stateRef.source.sessionActive, false);
   assert.equal(stateRef.source.errorCode, "stream-ended");
   assert.equal(stateRef.source.errorMessage, "Shared stream ended. Select Stream to share again.");
