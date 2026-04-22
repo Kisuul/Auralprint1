@@ -96,16 +96,41 @@ test("template assigns Banking ownership to spectral banking and HUD controls", 
 
   assertIncludesAll(bankingBlock, [
     "selParticleColorSrc",
+    "selLineColorMode",
     "selDistMode",
     "chkBandOverlay",
     "selRingPhaseMode",
     "rngHueOff",
     "bandDebug",
+    "bandDominantRange",
+    "bandDominantEnergy",
     "bandMeta",
+    "bandMetaCount",
+    "bandMetaDistribution",
+    "bandMetaFloor",
+    "bandMetaCeiling",
+    "bandMetaContext",
+    "btnToggleBandInspector",
+    "bandInspectorPanel",
     "bandTable",
     "btnHideBanking",
   ]);
   assertExcludesAll(bankingBlock, ["btnSourceFile", "btnRecordStart", "btnShare"]);
+});
+
+test("template keeps the Banking inspector reachable above secondary overlay and palette controls", () => {
+  const inspectorIndex = templateHtml.indexOf('id="btnToggleBandInspector"');
+  const colorPolicyIndex = templateHtml.indexOf('id="selParticleColorSrc"');
+  const overlayIndex = templateHtml.indexOf('id="chkBandOverlay"');
+  const rainbowIndex = templateHtml.indexOf('id="rngHueOff"');
+
+  assert.notEqual(inspectorIndex, -1, "Expected Banking inspector toggle to exist.");
+  assert.notEqual(colorPolicyIndex, -1, "Expected Banking color policy controls to exist.");
+  assert.notEqual(overlayIndex, -1, "Expected Banking overlay controls to exist.");
+  assert.notEqual(rainbowIndex, -1, "Expected Banking rainbow controls to exist.");
+  assert.ok(inspectorIndex < colorPolicyIndex, "Expected inspector toggle before Banking color-policy controls.");
+  assert.ok(inspectorIndex < overlayIndex, "Expected inspector toggle before overlay controls.");
+  assert.ok(inspectorIndex < rainbowIndex, "Expected inspector toggle before rainbow controls.");
 });
 
 test("template assigns Scene ownership to current render-facing controls", () => {
@@ -115,7 +140,6 @@ test("template assigns Scene ownership to current render-facing controls", () =>
     "btnResetVisuals",
     "clrBg",
     "clrParticle",
-    "selLineColorMode",
     "chkLines",
     "rngEmit",
     "rngOmega",
@@ -123,7 +147,7 @@ test("template assigns Scene ownership to current render-facing controls", () =>
     "rngMaxRad",
     "btnHideScene",
   ]);
-  assertExcludesAll(sceneBlock, ["btnShare", "btnRecordStart", "selDistMode"]);
+  assertExcludesAll(sceneBlock, ["btnShare", "btnRecordStart", "selDistMode", "selLineColorMode"]);
 });
 
 test("template assigns Status / Log ownership to runtime event controls only", () => {

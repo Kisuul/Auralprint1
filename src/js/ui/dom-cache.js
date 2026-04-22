@@ -138,8 +138,20 @@ function primeDomCache() {
     ui.valVal = document.getElementById("valVal");
 
     ui.bandDebug = document.getElementById("bandDebug");
+    ui.bandDominantRange = document.getElementById("bandDominantRange");
+    ui.bandDominantEnergy = document.getElementById("bandDominantEnergy");
     ui.bandMeta = document.getElementById("bandMeta");
+    ui.bandMetaCount = document.getElementById("bandMetaCount");
+    ui.bandMetaDistribution = document.getElementById("bandMetaDistribution");
+    ui.bandMetaFloor = document.getElementById("bandMetaFloor");
+    ui.bandMetaCeiling = document.getElementById("bandMetaCeiling");
+    ui.bandMetaEffectiveCeiling = document.getElementById("bandMetaEffectiveCeiling");
+    ui.bandMetaNyquist = document.getElementById("bandMetaNyquist");
+    ui.bandMetaContext = document.getElementById("bandMetaContext");
+    ui.btnToggleBandInspector = document.getElementById("btnToggleBandInspector");
+    ui.bandInspectorPanel = document.getElementById("bandInspectorPanel");
     ui.bandTable = document.getElementById("bandTable");
+    ui.bandInspectorOpen = false;
     ui.lastBandHudUpdateMs = 0;
     ui.bandHudIntervalMs = 100;
 

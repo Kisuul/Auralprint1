@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-22T06:38:31.782Z",
+  "generatedAt": "2026-04-22T09:17:35.410Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -389,7 +389,7 @@
         "format": "esm"
       },
       "src/js/ui/dom-cache.js": {
-        "bytes": 13272,
+        "bytes": 14110,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -410,7 +410,7 @@
         "format": "esm"
       },
       "src/js/ui/ui.js": {
-        "bytes": 112042,
+        "bytes": 115140,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -654,19 +654,19 @@
             "bytesInOutput": 1073
           },
           "src/js/ui/dom-cache.js": {
-            "bytesInOutput": 12317
+            "bytesInOutput": 13160
           },
           "src/js/ui/runtime-log.js": {
             "bytesInOutput": 2243
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 104693
+            "bytesInOutput": 107910
           },
           "src/js/main.js": {
             "bytesInOutput": 2964
           }
         },
-        "bytes": 289763
+        "bytes": 293823
       }
     }
   },
@@ -693,7 +693,7 @@
         "imports": []
       },
       "src/css/bands-panel.css": {
-        "bytes": 1836,
+        "bytes": 3564,
         "imports": []
       },
       "src/css/record-panel.css": {
@@ -762,7 +762,7 @@
             "bytesInOutput": 348
           },
           "src/css/bands-panel.css": {
-            "bytesInOutput": 1492
+            "bytesInOutput": 2958
           },
           "src/css/record-panel.css": {
             "bytesInOutput": 2750
@@ -771,7 +771,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 20338
+        "bytes": 21804
       }
     }
   }

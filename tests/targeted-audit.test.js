@@ -8,6 +8,7 @@ import { PRESET_SCHEMA_VERSION } from "../src/js/core/constants.js";
 import { normalizeOrbDef, preferences, replacePreferences, resolveSettings } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
+import { BandBank } from "../src/js/audio/band-bank.js";
 import { InputSourceManager, createInputSourceManager } from "../src/js/audio/input-source-manager.js";
 import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
@@ -108,6 +109,67 @@ function snapshotSourceAndAudioState() {
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
   };
+}
+
+function snapshotBandState() {
+  return structuredClone(state.bands);
+}
+
+function restoreBandState(snapshot) {
+  state.bands.lowHz = snapshot.lowHz.slice();
+  state.bands.highHz = snapshot.highHz.slice();
+  state.bands.energies01 = snapshot.energies01.slice();
+  state.bands.meta.sampleRateHz = snapshot.meta.sampleRateHz;
+  state.bands.meta.nyquistHz = snapshot.meta.nyquistHz;
+  state.bands.meta.configCeilingHz = snapshot.meta.configCeilingHz;
+  state.bands.meta.effectiveCeilingHz = snapshot.meta.effectiveCeilingHz;
+  state.bands.dominantIndex = snapshot.dominantIndex;
+  state.bands.dominantName = snapshot.dominantName;
+  state.bands.ringPhaseRad = snapshot.ringPhaseRad;
+}
+
+function primeDominantBandState({ dominantIndex = 42, dominantName = "Test Band", energy = 0.67 } = {}) {
+  const bandCount = preferences.bands.count;
+  state.bands.lowHz = Array.from({ length: bandCount }, (_value, index) => index * 100);
+  state.bands.highHz = Array.from(
+    { length: bandCount },
+    (_value, index) => (index === bandCount - 1 ? Infinity : (index + 1) * 100)
+  );
+  state.bands.energies01 = new Array(bandCount).fill(0);
+  state.bands.energies01[dominantIndex] = energy;
+  state.bands.meta.sampleRateHz = 48000;
+  state.bands.meta.nyquistHz = 24000;
+  state.bands.meta.configCeilingHz = preferences.bands.ceilingHz;
+  state.bands.meta.effectiveCeilingHz = preferences.bands.ceilingHz;
+  state.bands.dominantIndex = dominantIndex;
+  state.bands.dominantName = dominantName;
+}
+
+function primeRealBandAnalysis({ dominantIndex = null, sampleRateHz = 48000, bins = 8192 } = {}) {
+  BandBank.rebuild(preferences.bands.ceilingHz, sampleRateHz);
+
+  const nyquistHz = sampleRateHz * 0.5;
+  const minDb = -100;
+  const maxDb = 0;
+  const freqDb = new Float32Array(bins).fill(minDb);
+
+  if (Number.isInteger(dominantIndex)) {
+    const lowHz = state.bands.lowHz[dominantIndex];
+    const highHzRaw = state.bands.highHz[dominantIndex];
+    const highHz = Math.min(nyquistHz, highHzRaw === Infinity ? nyquistHz : highHzRaw);
+    const lowBin = Math.max(0, Math.floor((lowHz / nyquistHz) * (bins - 1)));
+    const highBin = Math.max(lowBin, Math.ceil((highHz / nyquistHz) * (bins - 1)));
+
+    for (let i = lowBin; i <= highBin; i++) freqDb[i] = maxDb;
+  }
+
+  BandBank.computeEnergiesFromCAnalyser({
+    freqDb,
+    analyser: {
+      minDecibels: minDb,
+      maxDecibels: maxDb,
+    },
+  }, sampleRateHz);
 }
 
 function snapshotUiState() {
@@ -259,6 +321,7 @@ async function withUiWireHarnessState({
   const previous = {
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
+    bands: snapshotBandState(),
     recording: JSON.parse(JSON.stringify(state.recording)),
     ui: snapshotUiState(),
     repeatMode: preferences.audio.repeatMode,
@@ -334,6 +397,7 @@ async function withUiWireHarnessState({
   } finally {
     Queue.clear();
     applySourceAndAudioState(previous);
+    restoreBandState(previous.bands);
     Object.assign(state.recording, previous.recording);
     restoreUiState(previous.ui);
     preferences.audio.repeatMode = previous.repeatMode;
@@ -1956,6 +2020,124 @@ test("repeat control reports through Audio Source ownership after relocation", a
     assert.equal(state.ui.runtimeLog.entries.length, runtimeLogCountBefore);
     assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
   });
+});
+
+test("Banking defaults to a dominant-band-first summary with inspector details collapsed", async () => {
+  await withUiWireHarnessState({}, () => {
+    primeRealBandAnalysis({ dominantIndex: 42 });
+    state.ui.lastBandHudUpdateMs = -Infinity;
+
+    UI.refreshAllUiText({
+      ready: true,
+      monoLike: false,
+    });
+
+    assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "false");
+    assert.equal(state.ui.bandInspectorPanel.hidden, true);
+    assert.equal(state.ui.bandTable.children.length, 0);
+    assert.equal(state.bands.dominantIndex, 42);
+    assert.equal(state.ui.bandDebug.textContent, `Dominant band [42] ${state.bands.dominantName}`);
+    assert.equal(state.ui.bandDominantRange.textContent, BandBank.formatBandRangeText(42));
+    assert.notEqual(state.ui.bandDominantEnergy.textContent, "0% energy");
+    assert.equal(state.ui.bandMetaCount.textContent, `${preferences.bands.count}`);
+    assert.equal(state.ui.bandMetaDistribution.textContent, preferences.bands.distributionMode);
+  });
+});
+
+test("Banking summary keeps silent frames honest instead of inventing a dominant band", async () => {
+  await withUiWireHarnessState({}, () => {
+    primeRealBandAnalysis();
+    state.ui.lastBandHudUpdateMs = -Infinity;
+
+    UI.refreshAllUiText({
+      ready: true,
+      monoLike: false,
+    });
+
+    assert.equal(state.ui.bandDebug.textContent, "No dominant band yet");
+    assert.equal(state.ui.bandDominantRange.textContent, "Awaiting analysis");
+    assert.equal(state.ui.bandDominantEnergy.textContent, "0% energy");
+  });
+});
+
+test("Banking inspector toggle reveals the full live band table on demand", async () => {
+  await withUiWireHarnessState({}, () => {
+    primeDominantBandState({ dominantIndex: 9, dominantName: "Inspector Test", energy: 0.33 });
+    assert.equal(state.ui.bandInspectorPanel.hidden, true);
+    assert.equal(state.ui.bandTable.children.length, 0);
+
+    state.ui.btnToggleBandInspector.dispatch("click");
+
+    assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "true");
+    assert.equal(state.ui.bandInspectorPanel.hidden, false);
+    assert.equal(state.ui.bandTable.children.length, preferences.bands.count * 4);
+
+    state.ui.btnToggleBandInspector.dispatch("click");
+
+    assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "false");
+    assert.equal(state.ui.bandInspectorPanel.hidden, true);
+  });
+});
+
+test("line color mode reports through Banking ownership after relocation", async () => {
+  await withUiWireHarnessState({}, () => {
+    const sceneStatusBefore = state.ui.sceneStatus.textContent;
+    const runtimeLogCountBefore = state.ui.runtimeLog.entries.length;
+
+    state.ui.selLineColorMode.value = "fixed";
+    state.ui.selLineColorMode.dispatch("change");
+
+    assert.equal(preferences.trace.lineColorMode, "fixed");
+    assert.equal(state.ui.bankingStatus.textContent, "Updated: line color mode");
+    assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
+    assert.equal(state.ui.runtimeLog.entries.length, runtimeLogCountBefore);
+  });
+});
+
+test("band inspector disclosure remains runtime-only and never alters preset hash", async () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  if (typeof globalThis.btoa !== "function") {
+    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
+  }
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
+  }
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState(_state, _title, url) {
+      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+    },
+  };
+
+  try {
+    await withUiWireHarnessState({}, () => {
+      UrlPreset.writeHashFromPrefs();
+      const beforeHash = locationStub.hash;
+
+      state.ui.btnToggleBandInspector.dispatch("click");
+
+      UrlPreset.writeHashFromPrefs();
+      const afterHash = locationStub.hash;
+
+      assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "true");
+      assert.equal(afterHash, beforeHash);
+    });
+  } finally {
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
 });
 
 test("recording cue stays visible on the launcher bar and collapsed chevron while recording", async () => {

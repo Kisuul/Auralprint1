@@ -586,7 +586,7 @@ const UI = (() => {
 
   const STATUS_DEFAULTS = Object.freeze({
     analysis: "Analysis panel: FFT, smoothing, RMS gain.",
-    banking: "Banking panel: distribution, color policy, overlays, and spectral HUD.",
+    banking: "Banking panel: dominant band, distribution, color policy, and optional detailed inspection.",
     scene: "Scene panel: trace, particles, motion, and render-facing controls.",
     workspace: "Workspace / Presets panel: share, apply URL presets, and reset preferences.",
   });
@@ -1133,10 +1133,74 @@ const UI = (() => {
     // Forced rebuild â€” call this whenever band definition changes.
     // Currently band count is fixed at 256; this is the hook for 115+ when it becomes configurable.
     ui.bandRowsBuilt = false;
-    ensureBandHudBuilt();
+    if (isBandInspectorOpen()) ensureBandHudBuilt();
+  }
+
+  function setTextIfChanged(el, text) {
+    if (!el) return;
+    if (el.textContent !== text) el.textContent = text;
+  }
+
+  function isBandInspectorOpen() {
+    return !!ui.bandInspectorOpen;
+  }
+
+  function setBandInspectorOpen(nextOpen) {
+    ui.bandInspectorOpen = !!nextOpen;
+
+    if (ui.bankingPanel) ui.bankingPanel.dataset.inspectorOpen = ui.bandInspectorOpen ? "true" : "false";
+
+    if (ui.btnToggleBandInspector) {
+      ui.btnToggleBandInspector.setAttribute("aria-expanded", ui.bandInspectorOpen ? "true" : "false");
+      setTextIfChanged(
+        ui.btnToggleBandInspector,
+        ui.bandInspectorOpen ? "Hide live band inspector" : "Show live band inspector"
+      );
+    }
+
+    if (ui.bandInspectorPanel) {
+      ui.bandInspectorPanel.hidden = !ui.bandInspectorOpen;
+      ui.bandInspectorPanel.setAttribute("aria-hidden", ui.bandInspectorOpen ? "false" : "true");
+    }
+  }
+
+  function refreshDominantBandSummary() {
+    const n = runtime.settings.bands.count;
+    const hasBandGeometry = n > 0 && state.bands.lowHz.length === n && state.bands.highHz.length === n;
+
+    if (!hasBandGeometry) {
+      setTextIfChanged(ui.bandDebug, "No dominant band yet");
+      setTextIfChanged(ui.bandDominantRange, "Awaiting analysis");
+      setTextIfChanged(ui.bandDominantEnergy, "0% energy");
+      return;
+    }
+
+    const domIdx = clamp(state.bands.dominantIndex, 0, n - 1);
+    const domEnergy = clamp(state.bands.energies01[domIdx] || 0, 0, 1);
+    const domPct = Math.round(domEnergy * 100);
+    const hasNamedDominant = typeof state.bands.dominantName === "string"
+      && state.bands.dominantName.trim()
+      && state.bands.dominantName !== "(none)";
+    const domName = hasNamedDominant
+      ? state.bands.dominantName
+      : (BAND_NAMES[domIdx] || `Band ${domIdx}`);
+
+    if (domEnergy <= 0) {
+      setTextIfChanged(ui.bandDebug, "No dominant band yet");
+      setTextIfChanged(ui.bandDominantRange, "Awaiting analysis");
+      setTextIfChanged(ui.bandDominantEnergy, "0% energy");
+      return;
+    }
+
+    setTextIfChanged(ui.bandDebug, `Dominant band [${domIdx}] ${domName}`);
+    setTextIfChanged(ui.bandDominantRange, BandBank.formatBandRangeText(domIdx));
+    setTextIfChanged(ui.bandDominantEnergy, domPct === 0 ? "<1% energy" : `${domPct}% energy`);
   }
 
   function refreshBandHud() {
+    refreshDominantBandSummary();
+    if (!isBandInspectorOpen()) return;
+
     ensureBandHudBuilt();
 
     const s = runtime.settings;
@@ -1158,15 +1222,6 @@ const UI = (() => {
       ui.bandRowEls[i].range.style.opacity = isDom ? "0.96" : "0.72";
       ui.bandRowEls[i].range.textContent = BandBank.formatBandRangeText(i);
     }
-
-    const domIdx = clamp(state.bands.dominantIndex, 0, n - 1);
-    const domName = state.bands.dominantName || BAND_NAMES[domIdx] || `Band ${domIdx}`;
-    const domRange = BandBank.formatBandRangeText(domIdx);
-    ui.bandDebug.textContent = "";
-    const span = document.createElement("span");
-    span.className = "dominantBadge";
-    span.textContent = `Dominant [${domIdx}] ${domName} â€” ${domRange}`;
-    ui.bandDebug.appendChild(span);
   }
 
   function formatBandMetaHz(hz) {
@@ -1177,11 +1232,27 @@ const UI = (() => {
 
   function refreshBandMetaText() {
     const m = state.bands.meta;
-    const bandCount = runtime.settings.bands.count;
-    const sampleRateText = Number.isFinite(m.sampleRateHz)
-      ? formatBandMetaHz(m.sampleRateHz)
-      : "pending audio context";
-    ui.bandMeta.textContent = `${bandCount} bands â€¢ Nyquist ${formatBandMetaHz(m.nyquistHz)} â€¢ ceiling configured ${formatBandMetaHz(m.configCeilingHz)}`;
+    const bandSettings = runtime.settings.bands;
+    const nyquistKnown = Number.isFinite(m.nyquistHz);
+    const effectiveClamped = Number.isFinite(m.effectiveCeilingHz)
+      && m.effectiveCeilingHz < bandSettings.ceilingHz;
+    let contextText = "Band count, floor, and ceiling stay read-only in this phase.";
+    if (!nyquistKnown) {
+      contextText += " Effective ceiling resolves once the audio context is available.";
+    } else if (effectiveClamped) {
+      contextText += " Effective ceiling is currently clamped to Nyquist.";
+    }
+
+    setTextIfChanged(ui.bandMetaCount, `${bandSettings.count}`);
+    setTextIfChanged(ui.bandMetaDistribution, bandSettings.distributionMode);
+    setTextIfChanged(ui.bandMetaFloor, formatBandMetaHz(bandSettings.floorHz));
+    setTextIfChanged(ui.bandMetaCeiling, formatBandMetaHz(bandSettings.ceilingHz));
+    setTextIfChanged(
+      ui.bandMetaEffectiveCeiling,
+      formatBandMetaHz(Number.isFinite(m.effectiveCeilingHz) ? m.effectiveCeilingHz : bandSettings.ceilingHz)
+    );
+    setTextIfChanged(ui.bandMetaNyquist, nyquistKnown ? formatBandMetaHz(m.nyquistHz) : "pending audio context");
+    setTextIfChanged(ui.bandMetaContext, contextText);
   }
 
   function collectOperatorFacingControls() {
@@ -1996,6 +2067,7 @@ const UI = (() => {
 
   function wireControls() {
     primeDomCache();
+    setBandInspectorOpen(false);
 
     initConfigTooltips();
     clearAudioStatusToast();
@@ -2537,6 +2609,15 @@ const UI = (() => {
     if (ui.btnHideBanking) ui.btnHideBanking.addEventListener("click", hideBankingPanel);
     if (ui.btnHideScene) ui.btnHideScene.addEventListener("click", hideScenePanel);
     if (ui.btnHideWorkspace) ui.btnHideWorkspace.addEventListener("click", hideWorkspacePanel);
+    if (ui.btnToggleBandInspector) {
+      ui.btnToggleBandInspector.addEventListener("click", () => {
+        setBandInspectorOpen(!isBandInspectorOpen());
+        if (isBandInspectorOpen()) {
+          refreshBandHud();
+          ui.lastBandHudUpdateMs = performance.now();
+        }
+      });
+    }
 
     ui.btnShare.addEventListener("click", shareLink);
     ui.btnApplyUrl.addEventListener("click", applyUrlNow);
@@ -2557,7 +2638,7 @@ const UI = (() => {
 
     ui.selLineColorMode.addEventListener("change", () => {
       preferences.trace.lineColorMode = ui.selLineColorMode.value;
-      applyPrefs("line color mode", { statusTarget: "scene" });
+      applyPrefs("line color mode", { statusTarget: "banking" });
     });
 
     ui.rngEmit.addEventListener("input", () => { preferences.particles.emitPerSecond = Number(ui.rngEmit.value); applyPrefs("emit rate", { statusTarget: "scene" }); });
