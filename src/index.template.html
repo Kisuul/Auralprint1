@@ -160,12 +160,6 @@
     </div>
 
     <div class="row">
-      <label for="selLineColorMode">Line color mode</label>
-      <select id="selLineColorMode"></select>
-      <div id="valLineColorMode" class="val"></div>
-    </div>
-
-    <div class="row">
       <label for="rngMinRad">Min radius</label>
       <input id="rngMinRad" type="range" />
       <div id="valMinRad" class="val"></div>
@@ -249,9 +243,77 @@
     <div class="panelHeader">
       <div class="panelHeaderText">
         <div class="sectionTitle">Banking</div>
-        <div class="muted panelCopy" id="bankingStatus">Banking panel: distribution, color policy, overlays, and spectral HUD.</div>
+        <div class="muted panelCopy" id="bankingStatus">Banking panel: dominant band, distribution, color policy, and optional detailed inspection.</div>
       </div>
       <button id="btnHideBanking" title="Hide banking panel (launcher remains available)">&#9656;</button>
+    </div>
+
+    <div class="sectionTitle">Dominant Band</div>
+    <div class="bankingSummaryCard">
+      <div class="bankingSummaryEyebrow">Analyzer-first readout</div>
+      <div id="bandDebug" class="bankingSummaryPrimary">No dominant band yet</div>
+
+      <div class="bankingSummaryStats">
+        <div class="bankingSummaryStat">
+          <div class="bankingSummaryStatLabel">Range</div>
+          <div id="bandDominantRange" class="bankingSummaryStatValue">Awaiting analysis</div>
+        </div>
+
+        <div class="bankingSummaryStat">
+          <div class="bankingSummaryStatLabel">Energy</div>
+          <div id="bandDominantEnergy" class="bankingSummaryStatValue">0% energy</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sectionTitle">Banking Summary</div>
+    <div id="bandMeta" class="bandMeta bankingMetaGrid" aria-label="Banking summary">
+      <div class="bankingMetaItem">
+        <div class="bankingMetaLabel">Bands</div>
+        <div id="bandMetaCount" class="bankingMetaValue">256</div>
+      </div>
+
+      <div class="bankingMetaItem">
+        <div class="bankingMetaLabel">Distribution</div>
+        <div id="bandMetaDistribution" class="bankingMetaValue">erb</div>
+      </div>
+
+      <div class="bankingMetaItem">
+        <div class="bankingMetaLabel">Floor</div>
+        <div id="bandMetaFloor" class="bankingMetaValue">20 Hz</div>
+      </div>
+
+      <div class="bankingMetaItem">
+        <div class="bankingMetaLabel">Ceiling</div>
+        <div id="bandMetaCeiling" class="bankingMetaValue">22.50 kHz</div>
+      </div>
+
+      <div class="bankingMetaItem">
+        <div class="bankingMetaLabel">Effective ceiling</div>
+        <div id="bandMetaEffectiveCeiling" class="bankingMetaValue">22.50 kHz</div>
+      </div>
+
+      <div class="bankingMetaItem">
+        <div class="bankingMetaLabel">Nyquist</div>
+        <div id="bandMetaNyquist" class="bankingMetaValue">pending audio context</div>
+      </div>
+    </div>
+    <div id="bandMetaContext" class="muted bandMetaContext">Band count, floor, and ceiling stay read-only in this phase.</div>
+
+    <div class="sectionTitle">Inspector</div>
+    <div class="muted inspectorCopy">Detailed banking inspection stays available here when you want the full live table.</div>
+    <button
+      id="btnToggleBandInspector"
+      class="inspectorToggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="bandInspectorPanel"
+    >
+      Show live band inspector
+    </button>
+    <div id="bandInspectorPanel" class="bandInspector" hidden aria-hidden="true">
+      <div class="muted bandInspectorLabel">Detailed banking inspection</div>
+      <div id="bandTable"></div>
     </div>
 
     <div class="sectionTitle">Color Policy</div>
@@ -260,6 +322,12 @@
       <label for="selParticleColorSrc">Particle color src</label>
       <select id="selParticleColorSrc"></select>
       <div id="valParticleSrc" class="val"></div>
+    </div>
+
+    <div class="row">
+      <label for="selLineColorMode">Line color mode</label>
+      <select id="selLineColorMode"></select>
+      <div id="valLineColorMode" class="val"></div>
     </div>
 
     <div class="sectionTitle">Band Distribution</div>
@@ -344,11 +412,6 @@
       <input id="rngVal" type="range" />
       <div id="valVal" class="val"></div>
     </div>
-
-    <div class="sectionTitle">Band HUD</div>
-    <div class="muted" id="bandDebug"><span class="dominantBadge">Dominant: (none)</span></div>
-    <div class="bandMeta" id="bandMeta">Bands metadata pending...</div>
-    <div id="bandTable"></div>
   </div>
 
   <div
