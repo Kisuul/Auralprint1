@@ -58,6 +58,22 @@ function createRecordingState() {
   };
 }
 
+function createRuntimeLogState() {
+  return {
+    entries: [],
+    nextId: 1,
+    hasUnread: false,
+    maxEntries: 64,
+  };
+}
+
+function createRuntimeLogObserverState() {
+  return {
+    sourceSnapshot: null,
+    recordingSnapshot: null,
+  };
+}
+
 const state = {
   canvas: null,
   ctx: null,
@@ -97,7 +113,16 @@ const state = {
       },
     }),
     recordingUiSyncKey: "",
+    runtimeLog: createRuntimeLogState(),
+    runtimeLogUiSyncKey: "",
+    runtimeLogObserver: createRuntimeLogObserverState(),
   }
 };
 
-export { createSourceState, createRecordingState, state };
+export {
+  createRecordingState,
+  createRuntimeLogObserverState,
+  createRuntimeLogState,
+  createSourceState,
+  state,
+};

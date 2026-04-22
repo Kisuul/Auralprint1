@@ -15,6 +15,13 @@ import { RecorderEngine } from "../recording/recorder-engine.js";
 import { initOrbs, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
 import { primeDomCache } from "./dom-cache.js";
 import {
+  appendRuntimeLogEntry,
+  buildRuntimeLogUiSyncKey,
+  clearRuntimeLog,
+  ensureRuntimeLogState,
+  markRuntimeLogRead,
+} from "./runtime-log.js";
+import {
   LAUNCHER_IDS,
   LAUNCHER_TARGETS,
   activateLauncher,
@@ -503,6 +510,7 @@ const UI = (() => {
       button.dataset.targetOpen = targetOpen ? "true" : "false";
       button.dataset.presentedOpen = presentedOpen ? "true" : "false";
       button.dataset.active = active ? "true" : "false";
+      button.dataset.hasUnread = launcherId === "status" && readRuntimeLog().hasUnread ? "true" : "false";
       button.setAttribute("aria-pressed", presentedOpen ? "true" : "false");
 
       if (launcherId === "recording") {
@@ -518,6 +526,9 @@ const UI = (() => {
       setPanelTargetOpen(shell, "recording", false);
     }
 
+    const statusPanelOpen = isTargetOpen(shell, "status");
+    if (statusPanelOpen) markRuntimeLogRead(readRuntimeLog());
+
     applyPanelElementVisibility("audioSource", isTargetOpen(shell, "audioSource"));
     applyPanelElementVisibility("queue", isTargetOpen(shell, "queue"));
     applyPanelElementVisibility("analysis", isTargetOpen(shell, "analysis"));
@@ -527,6 +538,7 @@ const UI = (() => {
     applyPanelElementVisibility("workspace", isTargetOpen(shell, "workspace"));
     applyPanelElementVisibility("status", isTargetOpen(shell, "status"));
     syncLauncherBarUi();
+    refreshRuntimeLogUi();
   }
 
   function openPanelTarget(targetId, options = {}) {
@@ -594,38 +606,379 @@ const UI = (() => {
     }
   }
 
-  function syncStatusPanelSummaries(recordingModel = null) {
-    const model = recordingModel || getRecordingUiModel();
-    if (ui.statusAudioSourceSummary) {
-      ui.statusAudioSourceSummary.textContent = ui.audioStatus && ui.audioStatus.textContent
-        ? ui.audioStatus.textContent
-        : "No audio loaded.";
+  function readRuntimeLog() {
+    ui.runtimeLog = ensureRuntimeLogState(ui.runtimeLog);
+    return ui.runtimeLog;
+  }
+
+  function readRuntimeLogObserver() {
+    if (!ui.runtimeLogObserver || typeof ui.runtimeLogObserver !== "object") {
+      ui.runtimeLogObserver = {
+        sourceSnapshot: null,
+        recordingSnapshot: null,
+      };
     }
-    if (ui.statusAnalysisSummary) {
-      ui.statusAnalysisSummary.textContent = ui.analysisStatus && ui.analysisStatus.textContent
-        ? ui.analysisStatus.textContent
-        : STATUS_DEFAULTS.analysis;
+    return ui.runtimeLogObserver;
+  }
+
+  function padTimePart(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function formatRuntimeLogTime(timestampMs) {
+    const date = new Date(Number.isFinite(timestampMs) ? timestampMs : Date.now());
+    return `${padTimePart(date.getHours())}:${padTimePart(date.getMinutes())}:${padTimePart(date.getSeconds())}`;
+  }
+
+  function readRuntimeLogCategoryLabel(category) {
+    switch (category) {
+      case "source": return "Source";
+      case "recording": return "Recording";
+      case "workspace": return "Workspace";
+      default: return "Runtime";
     }
-    if (ui.statusBankingSummary) {
-      ui.statusBankingSummary.textContent = ui.bankingStatus && ui.bankingStatus.textContent
-        ? ui.bankingStatus.textContent
-        : STATUS_DEFAULTS.banking;
+  }
+
+  function refreshRuntimeLogUi(force = false) {
+    const runtimeLog = readRuntimeLog();
+    if (!ui.statusLogList || !ui.statusLogEmpty) return;
+
+    const syncKey = buildRuntimeLogUiSyncKey(runtimeLog);
+    if (!force && ui.runtimeLogUiSyncKey === syncKey) return;
+
+    ui.statusLogList.innerHTML = "";
+    for (const entry of runtimeLog.entries) {
+      const item = document.createElement("li");
+      item.className = "statusLogEntry";
+      item.dataset.level = entry.level;
+      item.dataset.category = entry.category;
+      if (entry.code) item.dataset.code = entry.code;
+
+      const meta = document.createElement("div");
+      meta.className = "statusLogMeta";
+
+      const category = document.createElement("span");
+      category.className = "statusLogCategory";
+      category.textContent = readRuntimeLogCategoryLabel(entry.category);
+
+      const time = document.createElement("span");
+      time.className = "statusLogTime";
+      time.textContent = formatRuntimeLogTime(entry.timestampMs);
+
+      meta.appendChild(category);
+      meta.appendChild(time);
+
+      const message = document.createElement("div");
+      message.className = "statusLogMessage";
+      message.textContent = entry.message;
+
+      item.appendChild(meta);
+      item.appendChild(message);
+      ui.statusLogList.appendChild(item);
     }
-    if (ui.statusSceneSummary) {
-      ui.statusSceneSummary.textContent = ui.sceneStatus && ui.sceneStatus.textContent
-        ? ui.sceneStatus.textContent
-        : STATUS_DEFAULTS.scene;
+
+    const hasEntries = runtimeLog.entries.length > 0;
+    ui.statusLogEmpty.hidden = hasEntries;
+    ui.statusLogEmpty.setAttribute("aria-hidden", hasEntries ? "true" : "false");
+    ui.statusLogList.hidden = !hasEntries;
+    ui.statusLogList.setAttribute("aria-hidden", hasEntries ? "false" : "true");
+    if (ui.btnClearStatusLog) ui.btnClearStatusLog.disabled = !hasEntries;
+
+    ui.runtimeLogUiSyncKey = syncKey;
+  }
+
+  function appendStatusLogEntry(entry) {
+    const appended = appendRuntimeLogEntry(readRuntimeLog(), entry, {
+      markUnread: !isTargetOpen(readPanelShell(), "status"),
+    });
+    if (!appended) return null;
+    refreshRuntimeLogUi();
+    syncLauncherBarUi();
+    return appended;
+  }
+
+  function clearStatusLogEntries() {
+    clearRuntimeLog(readRuntimeLog());
+    ui.runtimeLogUiSyncKey = "";
+    refreshRuntimeLogUi(true);
+    syncLauncherBarUi();
+  }
+
+  function snapshotSourceRuntimeState(sourceState = state.source) {
+    const kind = readSourceKind(sourceState);
+    return {
+      kind,
+      status: readSourceStatus(sourceState),
+      label: readSourceLabel(kind, sourceState),
+      errorCode: sourceState && typeof sourceState.errorCode === "string" ? sourceState.errorCode : "",
+      errorMessage: sourceState && typeof sourceState.errorMessage === "string"
+        ? sourceState.errorMessage.trim()
+        : "",
+      sessionActive: !!(sourceState && sourceState.sessionActive),
+    };
+  }
+
+  function readSourceRuntimeLogLevel(errorCode = "") {
+    switch (errorCode) {
+      case "mic-denied":
+      case "mic-interrupted":
+      case "mic-unavailable":
+      case "mic-busy":
+      case "mic-unsupported":
+      case "stream-denied-or-cancelled":
+      case "stream-blocked":
+      case "stream-interrupted":
+      case "stream-unavailable":
+      case "stream-busy":
+      case "stream-unsupported":
+      case "mic-ended":
+      case "stream-ended":
+        return "warn";
+      default:
+        return "error";
     }
-    if (ui.statusWorkspaceSummary) {
-      ui.statusWorkspaceSummary.textContent = ui.workspaceStatus && ui.workspaceStatus.textContent
-        ? ui.workspaceStatus.textContent
-        : STATUS_DEFAULTS.workspace;
+  }
+
+  function observeSourceRuntimeEvents() {
+    const observer = readRuntimeLogObserver();
+    const nextSnapshot = snapshotSourceRuntimeState();
+    const previousSnapshot = observer.sourceSnapshot;
+    observer.sourceSnapshot = nextSnapshot;
+
+    if (!previousSnapshot) return;
+
+    if (
+      nextSnapshot.kind === "mic"
+      && nextSnapshot.status === "active"
+      && nextSnapshot.sessionActive
+      && (
+        previousSnapshot.kind !== nextSnapshot.kind
+        || previousSnapshot.status !== nextSnapshot.status
+        || previousSnapshot.label !== nextSnapshot.label
+        || previousSnapshot.sessionActive !== nextSnapshot.sessionActive
+      )
+    ) {
+      appendStatusLogEntry({
+        level: "info",
+        category: "source",
+        code: "mic-live",
+        message: `Switched to microphone input. Permission granted for ${nextSnapshot.label || "Microphone"}.`,
+      });
+      return;
     }
-    if (ui.statusRecordSummary) {
-      ui.statusRecordSummary.textContent = model && model.primaryStatusText
-        ? model.primaryStatusText
-        : "Select File, Mic, or Stream to start recording.";
+
+    if (
+      nextSnapshot.kind === "stream"
+      && nextSnapshot.status === "active"
+      && nextSnapshot.sessionActive
+      && (
+        previousSnapshot.kind !== nextSnapshot.kind
+        || previousSnapshot.status !== nextSnapshot.status
+        || previousSnapshot.label !== nextSnapshot.label
+        || previousSnapshot.sessionActive !== nextSnapshot.sessionActive
+      )
+    ) {
+      appendStatusLogEntry({
+        level: "info",
+        category: "source",
+        code: "stream-live",
+        message: `Switched to shared stream input: ${nextSnapshot.label || "Shared stream"}.`,
+      });
+      return;
     }
+
+    const leftLiveWorkflow = nextSnapshot.kind === "none"
+      && nextSnapshot.status === "idle"
+      && !nextSnapshot.errorCode
+      && (previousSnapshot.kind === "mic" || previousSnapshot.kind === "stream")
+      && (
+        previousSnapshot.sessionActive
+        || previousSnapshot.status === "active"
+        || previousSnapshot.status === "requesting"
+        || previousSnapshot.status === "error"
+      );
+    if (leftLiveWorkflow) {
+      appendStatusLogEntry({
+        level: "info",
+        category: "source",
+        code: "file-workflow",
+        message: "Switched to file workflow.",
+      });
+      return;
+    }
+
+    const failureChanged = !!nextSnapshot.errorCode && (
+      nextSnapshot.errorCode !== previousSnapshot.errorCode
+      || nextSnapshot.errorMessage !== previousSnapshot.errorMessage
+      || nextSnapshot.kind !== previousSnapshot.kind
+      || nextSnapshot.status !== previousSnapshot.status
+    );
+    if (!failureChanged) return;
+
+    if (
+      nextSnapshot.status === "error"
+      || nextSnapshot.status === "unsupported"
+      || (nextSnapshot.kind === "none" && nextSnapshot.status === "idle")
+    ) {
+      appendStatusLogEntry({
+        level: readSourceRuntimeLogLevel(nextSnapshot.errorCode),
+        category: "source",
+        code: nextSnapshot.errorCode,
+        message: nextSnapshot.errorMessage || "Source workflow changed.",
+      });
+    }
+  }
+
+  function snapshotRecordingRuntimeState(recording = state.recording) {
+    return {
+      phase: recording && typeof recording.phase === "string" ? recording.phase : "",
+      lastCode: recording && typeof recording.lastCode === "string" ? recording.lastCode : "",
+      lastMessage: recording && typeof recording.lastMessage === "string"
+        ? recording.lastMessage.trim()
+        : "",
+      lastExportFileName: recording && typeof recording.lastExportFileName === "string"
+        ? recording.lastExportFileName
+        : "",
+    };
+  }
+
+  function observeRecordingRuntimeEvents() {
+    const observer = readRuntimeLogObserver();
+    const nextSnapshot = snapshotRecordingRuntimeState();
+    const previousSnapshot = observer.recordingSnapshot;
+    observer.recordingSnapshot = nextSnapshot;
+
+    if (!previousSnapshot) return;
+    if (
+      nextSnapshot.phase === previousSnapshot.phase
+      && nextSnapshot.lastCode === previousSnapshot.lastCode
+      && nextSnapshot.lastMessage === previousSnapshot.lastMessage
+      && nextSnapshot.lastExportFileName === previousSnapshot.lastExportFileName
+    ) {
+      return;
+    }
+
+    if (nextSnapshot.phase === "recording" && previousSnapshot.phase !== "recording") {
+      appendStatusLogEntry({
+        level: "info",
+        category: "recording",
+        code: nextSnapshot.lastCode || "recording-started",
+        message: nextSnapshot.lastMessage || "Recording started.",
+      });
+      return;
+    }
+
+    if (nextSnapshot.phase === "finalizing" && previousSnapshot.phase !== "finalizing") {
+      appendStatusLogEntry({
+        level: "info",
+        category: "recording",
+        code: nextSnapshot.lastCode || "recording-finalizing",
+        message: nextSnapshot.lastMessage || "Finalizing recording export...",
+      });
+      return;
+    }
+
+    if (
+      nextSnapshot.phase === "complete"
+      && (
+        previousSnapshot.phase !== "complete"
+        || nextSnapshot.lastExportFileName !== previousSnapshot.lastExportFileName
+        || nextSnapshot.lastCode !== previousSnapshot.lastCode
+      )
+    ) {
+      const fileNameSuffix = nextSnapshot.lastExportFileName
+        ? ` (${nextSnapshot.lastExportFileName})`
+        : "";
+      appendStatusLogEntry({
+        level: "info",
+        category: "recording",
+        code: nextSnapshot.lastCode || "recording-complete",
+        message: `${nextSnapshot.lastMessage || "Recording export ready."}${fileNameSuffix}`,
+      });
+      return;
+    }
+
+    if (
+      nextSnapshot.phase === "error"
+      && (
+        previousSnapshot.phase !== "error"
+        || nextSnapshot.lastCode !== previousSnapshot.lastCode
+        || nextSnapshot.lastMessage !== previousSnapshot.lastMessage
+      )
+    ) {
+      appendStatusLogEntry({
+        level: "error",
+        category: "recording",
+        code: nextSnapshot.lastCode || "recording-error",
+        message: nextSnapshot.lastMessage || "Recording failed.",
+      });
+      return;
+    }
+
+    const activeWarningCodes = new Set(["audio-unloaded", "track-change-failed"]);
+    if (
+      (nextSnapshot.phase === "recording" || nextSnapshot.phase === "finalizing")
+      && activeWarningCodes.has(nextSnapshot.lastCode)
+      && (
+        nextSnapshot.lastCode !== previousSnapshot.lastCode
+        || nextSnapshot.lastMessage !== previousSnapshot.lastMessage
+        || nextSnapshot.phase !== previousSnapshot.phase
+      )
+    ) {
+      appendStatusLogEntry({
+        level: "warn",
+        category: "recording",
+        code: nextSnapshot.lastCode,
+        message: nextSnapshot.lastMessage || "Recording source changed.",
+      });
+    }
+  }
+
+  function buildPresetApplyLogEntry(result, options = {}) {
+    if (!result || typeof result !== "object") return null;
+    if (result.ok) {
+      if (result.migratedFromSchema != null) {
+        return {
+          level: "info",
+          category: "workspace",
+          code: "preset-migrated",
+          message: `Applied preset from schema v${result.migratedFromSchema} using current compatibility rules.`,
+        };
+      }
+      return {
+        level: "info",
+        category: "workspace",
+        code: "preset-applied",
+        message: options.source === "boot"
+          ? "Applied startup preset from URL hash."
+          : "Applied preset from URL hash.",
+      };
+    }
+
+    if (result.code === "missing-hash" && !options.includeMissingHash) return null;
+    if (result.code === "unsupported-schema") {
+      return {
+        level: "warn",
+        category: "workspace",
+        code: "preset-unsupported-schema",
+        message: result.schema != null
+          ? `Preset in URL hash uses unsupported schema v${result.schema}.`
+          : "Preset in URL hash uses an unsupported schema.",
+      };
+    }
+
+    return {
+      level: "warn",
+      category: "workspace",
+      code: result.code || "preset-invalid-hash",
+      message: "No valid preset in URL hash.",
+    };
+  }
+
+  function ingestPresetApplyResult(result, options = {}) {
+    const entry = buildPresetApplyLogEntry(result, options);
+    if (!entry) return null;
+    return appendStatusLogEntry(entry);
   }
 
   function audioStatusToast(msg, holdMs = 2500) {
@@ -637,7 +990,6 @@ const UI = (() => {
     if (targetId === "audioSource") {
       audioStatusToast(msg, holdMs);
       if (ui.audioStatus) ui.audioStatus.textContent = msg;
-      syncStatusPanelSummaries();
       if (_audioStatusRefreshTimer) clearTimeout(_audioStatusRefreshTimer);
       _audioStatusRefreshTimer = setTimeout(() => {
         _audioStatusRefreshTimer = null;
@@ -653,11 +1005,9 @@ const UI = (() => {
     if (!statusEl || !defaultText) return;
 
     statusEl.textContent = msg;
-    syncStatusPanelSummaries();
     if (panelStatusToastTimers[targetId]) clearTimeout(panelStatusToastTimers[targetId]);
     panelStatusToastTimers[targetId] = setTimeout(() => {
       statusEl.textContent = defaultText;
-      syncStatusPanelSummaries();
       panelStatusToastTimers[targetId] = null;
     }, holdMs);
   }
@@ -714,16 +1064,21 @@ const UI = (() => {
   }
 
   function applyUrlNow() {
-    const ok = UrlPreset.applyFromLocationHash();
-    if (ok) {
+    const result = UrlPreset.applyFromLocationHash();
+    if (result.ok) {
       applyPrefs("applied URL preset", {
         rebuildBandsOnDefinitionChange: true,
         statusTarget: "workspace",
       });
       initOrbs();
       resetOrbsToDesignedPhases();
+      ingestPresetApplyResult(result, { source: "manual" });
     } else {
       panelStatusToast("workspace", "No valid preset in URL hash.", 4000);
+      ingestPresetApplyResult(result, {
+        includeMissingHash: true,
+        source: "manual",
+      });
     }
   }
 
@@ -1412,9 +1767,9 @@ const UI = (() => {
     if (ui.btnRecordDownloadLast) ui.btnRecordDownloadLast.disabled = !model.canDownload;
     if (ui.selRecordMime) ui.selRecordMime.disabled = !model.canSelectMime;
     if (ui.selRecordTargetFps) ui.selRecordTargetFps.disabled = !model.canSelectTargetFps;
+    observeRecordingRuntimeEvents();
     syncVisibleQueuePanel();
     syncLauncherBarUi(recording.phase);
-    syncStatusPanelSummaries(model);
     ui.recordingUiSyncKey = buildRecordingUiSyncKey();
   }
 
@@ -1612,11 +1967,11 @@ const UI = (() => {
     ui.valVal.textContent = fmt(p.bands.rainbow.value, 2);
 
     refreshConfigTooltips();
+    observeSourceRuntimeEvents();
     syncPanelShellUi();
     refreshRecordingUi();
 
     refreshBandMetaText();
-    syncStatusPanelSummaries();
 
     if (bandSnapshot && bandSnapshot.ready) {
       const nowMs = performance.now();
@@ -1643,6 +1998,16 @@ const UI = (() => {
     primeDomCache();
 
     initConfigTooltips();
+    clearAudioStatusToast();
+    if (_audioStatusRefreshTimer) {
+      clearTimeout(_audioStatusRefreshTimer);
+      _audioStatusRefreshTimer = null;
+    }
+    ui.runtimeLogUiSyncKey = "";
+    readRuntimeLogObserver().sourceSnapshot = snapshotSourceRuntimeState();
+    readRuntimeLogObserver().recordingSnapshot = snapshotRecordingRuntimeState();
+    refreshRuntimeLogUi(true);
+    syncLauncherBarUi();
 
 
     /* -------------------------------------------------------------------------
@@ -1762,6 +2127,12 @@ const UI = (() => {
           clearAudioStatusToast();
           RecorderEngine.getSupportStatus();
           refreshQueuePanel();
+          appendStatusLogEntry({
+            level: "info",
+            category: "source",
+            code: "file-workflow",
+            message: "Switched to file workflow.",
+          });
         }
         return clearedRecoverableIdleError;
       }
@@ -1982,6 +2353,9 @@ const UI = (() => {
     });
     if (ui.btnHideStatus) ui.btnHideStatus.addEventListener("click", () => {
       hideStatusPanel();
+    });
+    if (ui.btnClearStatusLog) ui.btnClearStatusLog.addEventListener("click", () => {
+      clearStatusLogEntries();
     });
     if (ui.btnLauncherToggle) ui.btnLauncherToggle.addEventListener("click", () => {
       toggleLauncherCollapsed(readPanelShell());
@@ -2345,14 +2719,17 @@ const UI = (() => {
     }, { passive: false });
 
     window.addEventListener("hashchange", () => {
-      const ok = UrlPreset.applyFromLocationHash();
-      if (ok) {
+      const result = UrlPreset.applyFromLocationHash();
+      if (result.ok) {
         applyPrefs("hash preset loaded", {
           rebuildBandsOnDefinitionChange: true,
           statusTarget: "workspace",
         });
         initOrbs();
         resetOrbsToDesignedPhases();
+        ingestPresetApplyResult(result, { source: "hashchange" });
+      } else {
+        ingestPresetApplyResult(result, { source: "hashchange" });
       }
     });
 
@@ -2366,6 +2743,7 @@ const UI = (() => {
         launcherId,
         targetId: LAUNCHER_TARGETS[launcherId],
         active: shell.activeLauncherId === launcherId,
+        hasUnread: launcherId === "status" && readRuntimeLog().hasUnread,
         targetOpen: !!shell.openTargets[LAUNCHER_TARGETS[launcherId]],
         presentedOpen: shell.activeLauncherId === launcherId
           && !!shell.openTargets[LAUNCHER_TARGETS[launcherId]],
@@ -2384,6 +2762,7 @@ const UI = (() => {
     showRecordPanel,
     hideRecordPanel,
     dispatchRecordingAction,
+    ingestPresetApplyResult,
     applyPrefs,
     resetTrackVisualState,
   };

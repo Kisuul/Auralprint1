@@ -7,6 +7,16 @@ import { preferences, replacePreferences, resolveSettings, sanitizeOrbBandIds, n
    URL Presets (v2/v3/v4/v5 compatible)
    ========================================================================== */
 const UrlPreset = (() => {
+  const SUPPORTED_SCHEMAS = Object.freeze([
+    PRESET_SCHEMA_VERSION,
+    LEGACY_SCHEMA_V7,
+    LEGACY_SCHEMA_V6,
+    LEGACY_SCHEMA_V5,
+    LEGACY_SCHEMA_V4,
+    LEGACY_SCHEMA_V3,
+    LEGACY_SCHEMA_V2,
+  ]);
+
   function base64UrlEncode(bytes) {
     let s = "";
     for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
@@ -30,15 +40,58 @@ const UrlPreset = (() => {
   }
 
   function decodePrefsFromHash(hash) {
-    if (!hash || !hash.startsWith("#p=")) return null;
-    const token = hash.slice(3);
-    const bytes = base64UrlDecodeToBytes(token);
-    const json = new TextDecoder().decode(bytes);
-    const obj = JSON.parse(json);
-    if (!obj || !obj.prefs) return null;
+    if (!hash || !hash.startsWith("#p=")) {
+      return {
+        ok: false,
+        code: "missing-hash",
+        schema: null,
+        migratedFromSchema: null,
+        prefs: null,
+      };
+    }
 
-    if (![PRESET_SCHEMA_VERSION, LEGACY_SCHEMA_V7, LEGACY_SCHEMA_V6, LEGACY_SCHEMA_V5, LEGACY_SCHEMA_V4, LEGACY_SCHEMA_V3, LEGACY_SCHEMA_V2].includes(obj.schema)) return null;
-    return obj.prefs;
+    try {
+      const token = hash.slice(3);
+      const bytes = base64UrlDecodeToBytes(token);
+      const json = new TextDecoder().decode(bytes);
+      const obj = JSON.parse(json);
+      if (!obj || !obj.prefs) {
+        return {
+          ok: false,
+          code: "invalid-hash",
+          schema: null,
+          migratedFromSchema: null,
+          prefs: null,
+        };
+      }
+
+      const schema = Number.isInteger(obj.schema) ? obj.schema : null;
+      if (!SUPPORTED_SCHEMAS.includes(schema)) {
+        return {
+          ok: false,
+          code: "unsupported-schema",
+          schema,
+          migratedFromSchema: null,
+          prefs: null,
+        };
+      }
+
+      return {
+        ok: true,
+        code: schema === PRESET_SCHEMA_VERSION ? "preset-applied" : "preset-migrated",
+        schema,
+        migratedFromSchema: schema === PRESET_SCHEMA_VERSION ? null : schema,
+        prefs: obj.prefs,
+      };
+    } catch {
+      return {
+        ok: false,
+        code: "invalid-hash",
+        schema: null,
+        migratedFromSchema: null,
+        prefs: null,
+      };
+    }
   }
 
   function sanitizeAndApply(incoming) {
@@ -247,13 +300,32 @@ const UrlPreset = (() => {
     return true;
   }
 
-  function applyFromLocationHash() {
+  function applyFromLocationHash(hash = location.hash) {
     try {
-      const decoded = decodePrefsFromHash(location.hash);
-      if (!decoded) return false;
-      return sanitizeAndApply(decoded);
+      const decoded = decodePrefsFromHash(hash);
+      if (!decoded.ok) {
+        return {
+          ok: false,
+          code: decoded.code,
+          schema: decoded.schema,
+          migratedFromSchema: null,
+        };
+      }
+
+      sanitizeAndApply(decoded.prefs);
+      return {
+        ok: true,
+        code: decoded.code,
+        schema: decoded.schema,
+        migratedFromSchema: decoded.migratedFromSchema,
+      };
     } catch {
-      return false;
+      return {
+        ok: false,
+        code: "invalid-hash",
+        schema: null,
+        migratedFromSchema: null,
+      };
     }
   }
 
