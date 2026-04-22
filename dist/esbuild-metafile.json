@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-22T09:17:35.410Z",
+  "generatedAt": "2026-04-22T10:28:37.017Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -253,8 +253,13 @@
         ],
         "format": "esm"
       },
+      "src/js/render/compositor.js": {
+        "bytes": 5208,
+        "imports": [],
+        "format": "esm"
+      },
       "src/js/render/renderer.js": {
-        "bytes": 6166,
+        "bytes": 14391,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -285,6 +290,11 @@
             "path": "src/js/render/color-policy.js",
             "kind": "import-statement",
             "original": "./color-policy.js"
+          },
+          {
+            "path": "src/js/render/compositor.js",
+            "kind": "import-statement",
+            "original": "./compositor.js"
           }
         ],
         "format": "esm"
@@ -506,7 +516,7 @@
         "format": "esm"
       },
       "src/js/main.js": {
-        "bytes": 4530,
+        "bytes": 4475,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -635,8 +645,11 @@
           "src/js/render/color-policy.js": {
             "bytesInOutput": 1245
           },
+          "src/js/render/compositor.js": {
+            "bytesInOutput": 5379
+          },
           "src/js/render/renderer.js": {
-            "bytesInOutput": 5424
+            "bytesInOutput": 13840
           },
           "src/js/recording/recorder-engine.js": {
             "bytesInOutput": 49095
@@ -663,10 +676,10 @@
             "bytesInOutput": 107910
           },
           "src/js/main.js": {
-            "bytesInOutput": 2964
+            "bytesInOutput": 2926
           }
         },
-        "bytes": 293823
+        "bytes": 307614
       }
     }
   },

@@ -39,7 +39,6 @@ function onAnimationFrame(tsMs) {
   const nowSec = performance.now() / 1000;
 
   lastBandSnapshot = AudioEngine.sample();
-  const bandC = (lastBandSnapshot && lastBandSnapshot.ready) ? lastBandSnapshot.bands.C : null;
 
   // Ring phase:
   // - orb: lock to carrier orb angle (coherent)
@@ -62,7 +61,11 @@ function onAnimationFrame(tsMs) {
     }
   }
 
-  Renderer.renderFrame(nowSec, bandC);
+  Renderer.renderFrame({
+    bandSnapshot: lastBandSnapshot,
+    dtSec,
+    nowSec,
+  });
   UI.refreshAllUiText(lastBandSnapshot);
   Scrubber.draw(); // update playhead position every frame
 }
