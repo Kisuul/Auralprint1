@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-21T20:59:52.422Z",
+  "generatedAt": "2026-04-22T06:38:31.782Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -50,7 +50,7 @@
         "format": "esm"
       },
       "src/js/core/state.js": {
-        "bytes": 2626,
+        "bytes": 3059,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -77,7 +77,7 @@
         "format": "esm"
       },
       "src/js/presets/url-preset.js": {
-        "bytes": 13679,
+        "bytes": 15134,
         "imports": [
           {
             "path": "src/js/core/constants.js",
@@ -389,7 +389,7 @@
         "format": "esm"
       },
       "src/js/ui/dom-cache.js": {
-        "bytes": 13549,
+        "bytes": 13272,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -404,8 +404,13 @@
         ],
         "format": "esm"
       },
+      "src/js/ui/runtime-log.js": {
+        "bytes": 2308,
+        "imports": [],
+        "format": "esm"
+      },
       "src/js/ui/ui.js": {
-        "bytes": 99714,
+        "bytes": 112042,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -488,6 +493,11 @@
             "original": "./dom-cache.js"
           },
           {
+            "path": "src/js/ui/runtime-log.js",
+            "kind": "import-statement",
+            "original": "./runtime-log.js"
+          },
+          {
             "path": "src/js/ui/panel-state.js",
             "kind": "import-statement",
             "original": "./panel-state.js"
@@ -496,7 +506,7 @@
         "format": "esm"
       },
       "src/js/main.js": {
-        "bytes": 4441,
+        "bytes": 4530,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -599,13 +609,13 @@
             "bytesInOutput": 6483
           },
           "src/js/core/state.js": {
-            "bytesInOutput": 2363
+            "bytesInOutput": 2765
           },
           "src/js/core/spaces.js": {
             "bytesInOutput": 791
           },
           "src/js/presets/url-preset.js": {
-            "bytesInOutput": 12257
+            "bytesInOutput": 13841
           },
           "src/js/audio/band-bank.js": {
             "bytesInOutput": 5821
@@ -644,23 +654,26 @@
             "bytesInOutput": 1073
           },
           "src/js/ui/dom-cache.js": {
-            "bytesInOutput": 12594
+            "bytesInOutput": 12317
+          },
+          "src/js/ui/runtime-log.js": {
+            "bytesInOutput": 2243
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 92354
+            "bytesInOutput": 104693
           },
           "src/js/main.js": {
-            "bytesInOutput": 2869
+            "bytesInOutput": 2964
           }
         },
-        "bytes": 273346
+        "bytes": 289763
       }
     }
   },
   "css": {
     "inputs": {
       "src/css/panels.css": {
-        "bytes": 10573,
+        "bytes": 12104,
         "imports": []
       },
       "src/css/audio-panel.css": {
@@ -734,7 +747,7 @@
         "entryPoint": "src/css/base.css",
         "inputs": {
           "src/css/panels.css": {
-            "bytesInOutput": 7849
+            "bytesInOutput": 9135
           },
           "src/css/audio-panel.css": {
             "bytesInOutput": 1453
@@ -758,7 +771,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 19052
+        "bytes": 20338
       }
     }
   }

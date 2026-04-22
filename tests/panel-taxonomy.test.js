@@ -125,3 +125,10 @@ test("template assigns Scene ownership to current render-facing controls", () =>
   ]);
   assertExcludesAll(sceneBlock, ["btnShare", "btnRecordStart", "selDistMode"]);
 });
+
+test("template assigns Status / Log ownership to runtime event controls only", () => {
+  const statusBlock = extractDivBlock(templateHtml, "statusPanel");
+
+  assertIncludesAll(statusBlock, ["btnClearStatusLog", "statusLogEmpty", "statusLogList", "btnHideStatus"]);
+  assertExcludesAll(statusBlock, ["btnShare", "btnRecordStart", "btnSourceFile"]);
+});

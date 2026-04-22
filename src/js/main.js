@@ -74,7 +74,7 @@ function main() {
   state.ctx = state.canvas.getContext("2d", { alpha: false });
 
   resolveSettings();
-  UrlPreset.applyFromLocationHash();
+  const bootPresetResult = UrlPreset.applyFromLocationHash();
   resolveSettings();
   InputSourceManager.init({
     onExternalLiveInputReset: UI.resetTrackVisualState,
@@ -100,6 +100,7 @@ function main() {
 
   UI.wireControls();
   UI.applyPrefs(null); // null = silent boot; no "Updated: boot" toast on first load
+  UI.ingestPresetApplyResult(bootPresetResult, { source: "boot" });
   UI.refreshRecordingUi();
 
   Scrubber.init(document.getElementById("scrubberCanvas"));

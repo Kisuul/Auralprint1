@@ -161,11 +161,28 @@
       cursor: not-allowed;
     }
 
+    .launcherBarButton[data-has-unread="true"] {
+      position: relative;
+    }
+
+    .launcherBarButton[data-has-unread="true"]::after {
+      content: "";
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #ffd76c;
+      box-shadow: 0 0 0 1px rgba(12, 14, 18, 0.9);
+      pointer-events: none;
+    }
+
     #statusPanel {
       position: fixed;
       left: 50%;
       bottom: calc(var(--ui-pad) + var(--ui-safe-b) + var(--ui-launcher-clearance) + var(--ui-audio-h) + var(--ui-gap));
-      width: min(420px, calc(100vw - 2 * var(--ui-pad)));
+      width: min(440px, calc(100vw - 2 * var(--ui-pad)));
       padding: var(--ui-pad);
       transform: translateX(-50%);
       z-index: 26;
@@ -173,33 +190,85 @@
 
     .statusHeader {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
+      justify-content: space-between;
       gap: var(--ui-gap);
+      margin-bottom: 10px;
+    }
+
+    .statusHeader .panelHeaderText {
+      min-width: 0;
     }
 
     .statusHeader .sectionTitle {
-      margin: 0;
-      flex: 1 1 auto;
+      margin: 0 0 4px;
     }
 
-    .statusLane {
+    .statusEmpty {
+      padding: 10px 12px;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      line-height: 1.45;
+    }
+
+    .statusLogList {
       display: grid;
-      gap: 4px;
-      margin-top: var(--ui-gap);
+      gap: 8px;
+      max-height: min(320px, 42vh);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
-    .statusLabel {
+    .statusLogList:empty {
+      display: none;
+    }
+
+    .statusLogEntry {
+      display: grid;
+      gap: 6px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .statusLogEntry[data-level="warn"] {
+      border-color: rgba(255, 206, 120, 0.24);
+      background: rgba(255, 206, 120, 0.06);
+    }
+
+    .statusLogEntry[data-level="error"] {
+      border-color: rgba(255, 134, 134, 0.28);
+      background: rgba(255, 134, 134, 0.08);
+    }
+
+    .statusLogMeta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
       font-size: 11px;
-      letter-spacing: 0.06em;
-      opacity: 0.65;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
+      opacity: 0.72;
     }
 
-    .statusCopy {
+    .statusLogCategory {
+      font-weight: 600;
+    }
+
+    .statusLogTime {
+      opacity: 0.8;
+    }
+
+    .statusLogMessage {
+      line-height: 1.45;
       white-space: normal;
-      overflow: visible;
-      text-overflow: clip;
-      line-height: 1.35;
+      word-break: break-word;
     }
     /* Responsive panel layout on <=980px: clamp the scene/banking columns and compact panels to viewport-safe bounds. */
     @media (max-width: 980px) {

@@ -412,39 +412,18 @@
     aria-hidden="true"
   >
     <div class="statusHeader">
-      <div class="sectionTitle">Status / Log</div>
-      <button id="btnHideStatus" title="Hide status panel" aria-label="Hide status panel">&#9662;</button>
+      <div class="panelHeaderText">
+        <div class="sectionTitle">Status / Log</div>
+        <div class="muted panelCopy">Runtime-only events for sources, recording, presets, and recoverable warnings.</div>
+      </div>
+      <div class="panelActionRow">
+        <button id="btnClearStatusLog" type="button" title="Clear status log">Clear</button>
+        <button id="btnHideStatus" title="Hide status panel" aria-label="Hide status panel">&#9662;</button>
+      </div>
     </div>
 
-    <div class="statusLane">
-      <div class="statusLabel">Audio Source</div>
-      <div id="statusAudioSourceSummary" class="muted statusCopy">No audio loaded.</div>
-    </div>
-
-    <div class="statusLane">
-      <div class="statusLabel">Analysis</div>
-      <div id="statusAnalysisSummary" class="muted statusCopy">Analysis panel: FFT, smoothing, RMS gain.</div>
-    </div>
-
-    <div class="statusLane">
-      <div class="statusLabel">Banking</div>
-      <div id="statusBankingSummary" class="muted statusCopy">Banking panel: distribution, color policy, overlays, and spectral HUD.</div>
-    </div>
-
-    <div class="statusLane">
-      <div class="statusLabel">Scene</div>
-      <div id="statusSceneSummary" class="muted statusCopy">Scene panel: trace, particles, motion, and render-facing controls.</div>
-    </div>
-
-    <div class="statusLane">
-      <div class="statusLabel">Workspace / Presets</div>
-      <div id="statusWorkspaceSummary" class="muted statusCopy">Workspace / Presets panel: share, apply URL presets, and reset preferences.</div>
-    </div>
-
-    <div class="statusLane">
-      <div class="statusLabel">Recording</div>
-      <div id="statusRecordSummary" class="muted statusCopy">Select File, Mic, or Stream to start recording.</div>
-    </div>
+    <div id="statusLogEmpty" class="muted statusEmpty" aria-live="polite">Runtime events will appear here.</div>
+    <ol id="statusLogList" class="statusLogList" aria-label="Runtime event log" aria-live="polite"></ol>
   </div>
 
   <div

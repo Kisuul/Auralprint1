@@ -185,12 +185,9 @@ function primeDomCache() {
     ui.recordSettingsNote = document.getElementById("recordSettingsNote");
 
     ui.btnHideStatus = document.getElementById("btnHideStatus");
-    ui.statusAudioSourceSummary = document.getElementById("statusAudioSourceSummary");
-    ui.statusAnalysisSummary = document.getElementById("statusAnalysisSummary");
-    ui.statusBankingSummary = document.getElementById("statusBankingSummary");
-    ui.statusSceneSummary = document.getElementById("statusSceneSummary");
-    ui.statusWorkspaceSummary = document.getElementById("statusWorkspaceSummary");
-    ui.statusRecordSummary = document.getElementById("statusRecordSummary");
+    ui.btnClearStatusLog = document.getElementById("btnClearStatusLog");
+    ui.statusLogEmpty = document.getElementById("statusLogEmpty");
+    ui.statusLogList = document.getElementById("statusLogList");
 
     ui.fileInput = document.getElementById("fileInput");
 

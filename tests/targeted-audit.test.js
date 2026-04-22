@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 
 import { CONFIG } from "../src/js/core/config.js";
+import { PRESET_SCHEMA_VERSION } from "../src/js/core/constants.js";
 import { normalizeOrbDef, preferences, replacePreferences, resolveSettings } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
@@ -93,6 +94,15 @@ function decodePresetHash(hash) {
   return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
 }
 
+function encodePresetHashPayload(payload) {
+  const b64 = Buffer.from(JSON.stringify(payload), "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+  return `#p=${b64}`;
+}
+
 function snapshotSourceAndAudioState() {
   return {
     source: JSON.parse(JSON.stringify(state.source)),
@@ -104,6 +114,8 @@ function snapshotUiState() {
   return {
     ...state.ui,
     panelShell: getPanelShellStateSnapshot(state.ui.panelShell),
+    runtimeLog: JSON.parse(JSON.stringify(state.ui.runtimeLog)),
+    runtimeLogObserver: JSON.parse(JSON.stringify(state.ui.runtimeLogObserver)),
   };
 }
 
@@ -111,6 +123,8 @@ function restoreUiState(snapshot) {
   if (!snapshot) return;
   Object.assign(state.ui, snapshot);
   state.ui.panelShell = createPanelShellState(snapshot.panelShell);
+  state.ui.runtimeLog = JSON.parse(JSON.stringify(snapshot.runtimeLog));
+  state.ui.runtimeLogObserver = JSON.parse(JSON.stringify(snapshot.runtimeLogObserver));
 }
 
 function applySourceAndAudioState(snapshot) {
@@ -297,6 +311,17 @@ async function withUiWireHarnessState({
       },
     });
     state.ui.recordingUiSyncKey = "";
+    state.ui.runtimeLog = {
+      entries: [],
+      nextId: 1,
+      hasUnread: false,
+      maxEntries: 64,
+    };
+    state.ui.runtimeLogUiSyncKey = "";
+    state.ui.runtimeLogObserver = {
+      sourceSnapshot: null,
+      recordingSnapshot: null,
+    };
 
     UI.wireControls();
     UI.refreshRecordingUi();
@@ -1343,6 +1368,7 @@ test("URL preset serialization excludes runtime source and recording state", () 
   const previousSource = JSON.parse(JSON.stringify(state.source));
   const previousAudio = { ...state.audio };
   const previousRecording = JSON.parse(JSON.stringify(state.recording));
+  const previousUi = snapshotUiState();
 
   if (typeof globalThis.btoa !== "function") {
     globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
@@ -1384,6 +1410,18 @@ test("URL preset serialization excludes runtime source and recording state", () 
   state.recording.chunkCount = 3;
   state.recording.lastCode = "finalizing";
   state.recording.lastMessage = "Finalizing recording export...";
+  state.ui.runtimeLog.entries = [
+    {
+      id: 99,
+      level: "warn",
+      category: "workspace",
+      code: "preset-warning",
+      message: "This should never serialize into presets.",
+      timestampMs: 1234,
+    },
+  ];
+  state.ui.runtimeLog.nextId = 100;
+  state.ui.runtimeLog.hasUnread = true;
 
   try {
     UrlPreset.writeHashFromPrefs();
@@ -1391,9 +1429,12 @@ test("URL preset serialization excludes runtime source and recording state", () 
     assert.ok(payload && payload.prefs);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "source"), false);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "recording"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "runtimeLog"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "ui"), false);
   } finally {
     applySourceAndAudioState({ source: previousSource, audio: previousAudio });
     Object.assign(state.recording, previousRecording);
+    restoreUiState(previousUi);
     globalThis.location = previousLocation;
     globalThis.history = previousHistory;
     globalThis.btoa = previousBtoa;
@@ -1443,8 +1484,11 @@ test("URL preset round-trips persisted config fields that were previously droppe
     replacePreferences(structuredClone(CONFIG.defaults));
     resolveSettings();
 
-    const ok = UrlPreset.applyFromLocationHash();
-    assert.equal(ok, true);
+    const result = UrlPreset.applyFromLocationHash();
+    assert.equal(result.ok, true);
+    assert.equal(result.code, "preset-applied");
+    assert.equal(result.schema, PRESET_SCHEMA_VERSION);
+    assert.equal(result.migratedFromSchema, null);
     assert.equal(preferences.trace.lineAlpha, 0.12);
     assert.equal(preferences.trace.lineWidthPx, 5);
     assert.equal(preferences.bands.count, 128);
@@ -1492,7 +1536,6 @@ test("hash-driven preset apply reports through Workspace ownership lanes", async
   try {
     await withUiWireHarnessState({}, ({ harness }) => {
       const sceneStatusBefore = state.ui.sceneStatus.textContent;
-      const sceneSummaryBefore = state.ui.statusSceneSummary.textContent;
 
       preferences.trace.lineAlpha = 0.12;
       UrlPreset.writeHashFromPrefs();
@@ -1505,9 +1548,12 @@ test("hash-driven preset apply reports through Workspace ownership lanes", async
 
       assert.equal(preferences.trace.lineAlpha, 0.12);
       assert.equal(state.ui.workspaceStatus.textContent, "Updated: hash preset loaded");
-      assert.equal(state.ui.statusWorkspaceSummary.textContent, "Updated: hash preset loaded");
       assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
-      assert.equal(state.ui.statusSceneSummary.textContent, sceneSummaryBefore);
+      assert.equal(state.ui.runtimeLog.entries.length, 1);
+      assert.equal(state.ui.runtimeLog.entries[0].category, "workspace");
+      assert.equal(state.ui.runtimeLog.entries[0].code, "preset-applied");
+      assert.match(state.ui.runtimeLog.entries[0].message, /Applied preset from URL hash/);
+      assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
     });
   } finally {
     replacePreferences(previousPrefs);
@@ -1516,6 +1562,84 @@ test("hash-driven preset apply reports through Workspace ownership lanes", async
     globalThis.history = previousHistory;
     globalThis.btoa = previousBtoa;
     globalThis.atob = previousAtob;
+  }
+});
+
+test("hash-driven preset migration appends a workspace migration notice", async () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousPrefs = structuredClone(preferences);
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: encodePresetHashPayload({
+      schema: 7,
+      prefs: {
+        trace: {
+          lineAlpha: 0.21,
+        },
+      },
+    }),
+  };
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState() {},
+  };
+
+  try {
+    await withUiWireHarnessState({}, ({ harness }) => {
+      replacePreferences(structuredClone(CONFIG.defaults));
+      resolveSettings();
+
+      harness.dispatchWindow("hashchange");
+
+      assert.equal(preferences.trace.lineAlpha, 0.21);
+      assert.equal(state.ui.runtimeLog.entries.length, 1);
+      assert.equal(state.ui.runtimeLog.entries[0].code, "preset-migrated");
+      assert.match(state.ui.runtimeLog.entries[0].message, /schema v7/i);
+    });
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+  }
+});
+
+test("invalid hash changes append a workspace warning without mutating prefs", async () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousPrefs = structuredClone(preferences);
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "#p=not-valid",
+  };
+
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState() {},
+  };
+
+  try {
+    await withUiWireHarnessState({}, ({ harness }) => {
+      const lineAlphaBefore = preferences.trace.lineAlpha;
+
+      harness.dispatchWindow("hashchange");
+
+      assert.equal(preferences.trace.lineAlpha, lineAlphaBefore);
+      assert.equal(state.ui.runtimeLog.entries.length, 1);
+      assert.equal(state.ui.runtimeLog.entries[0].category, "workspace");
+      assert.equal(state.ui.runtimeLog.entries[0].code, "invalid-hash");
+      assert.match(state.ui.runtimeLog.entries[0].message, /No valid preset in URL hash/);
+      assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
+    });
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
   }
 });
 
@@ -1646,56 +1770,156 @@ test("launchers independently toggle the new Build 115 panel targets", async () 
   });
 });
 
-test("status launcher opens the transitional status panel with live summaries", async () => {
+test("status launcher opens the runtime log drawer and clears unread state", async () => {
+  await withUiWireHarnessState({}, () => {
+    state.source.kind = "mic";
+    state.source.status = "active";
+    state.source.label = "Desk Mic";
+    state.source.sessionActive = true;
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.runtimeLog.entries.length, 1);
+    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
+
+    state.ui.btnLauncherStatus.dispatch("click");
+
+    assert.equal(UI.getPanelShellModel().openTargets.status, true);
+    assert.equal(state.ui.statusPanel.style.display, "block");
+    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
+    assert.equal(state.ui.statusLogList.children.length, 1);
+    assert.equal(state.ui.statusLogEmpty.hidden, true);
+    assert.match(state.ui.runtimeLog.entries[0].message, /Switched to microphone input/);
+  });
+});
+
+test("status drawer stays read while open and clear resets the runtime log", async () => {
+  await withUiWireHarnessState({}, () => {
+    state.ui.btnLauncherStatus.dispatch("click");
+
+    state.source.kind = "stream";
+    state.source.status = "active";
+    state.source.label = "Browser Tab";
+    state.source.sessionActive = true;
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
+    assert.equal(state.ui.statusLogList.children.length, 1);
+
+    state.ui.btnClearStatusLog.dispatch("click");
+
+    assert.equal(state.ui.runtimeLog.entries.length, 0);
+    assert.equal(state.ui.statusLogList.children.length, 0);
+    assert.equal(state.ui.statusLogEmpty.hidden, false);
+    assert.equal(state.ui.btnClearStatusLog.disabled, true);
+  });
+});
+
+test("UI logs external live-input end events into the runtime log", async () => {
   await withUiWireHarnessState({
     sourceState: {
-      kind: "file",
+      kind: "stream",
       status: "active",
-      label: "demo.wav",
+      label: "Browser Tab",
       sessionActive: true,
+      streamMeta: {
+        hasAudio: true,
+        hasVideo: true,
+      },
     },
-    audioState: {
-      isLoaded: true,
-      isPlaying: false,
-      filename: "demo.wav",
-      transportError: "",
-    },
+  }, () => {
+    state.source.kind = "none";
+    state.source.status = "idle";
+    state.source.label = "";
+    state.source.errorCode = "stream-ended";
+    state.source.errorMessage = "Shared stream ended. Select Stream to share again.";
+    state.source.sessionActive = false;
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.runtimeLog.entries.length, 1);
+    assert.equal(state.ui.runtimeLog.entries[0].level, "warn");
+    assert.equal(state.ui.runtimeLog.entries[0].code, "stream-ended");
+    assert.match(state.ui.runtimeLog.entries[0].message, /Shared stream ended/);
+  });
+});
+
+test("UI logs unsupported microphone outcomes into the runtime log", async () => {
+  await withUiWireHarnessState({}, () => {
+    state.source.kind = "mic";
+    state.source.status = "unsupported";
+    state.source.label = "";
+    state.source.errorCode = "mic-unsupported";
+    state.source.errorMessage = "Microphone capture is unavailable in this browser.";
+    state.source.sessionActive = false;
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.runtimeLog.entries.length, 1);
+    assert.equal(state.ui.runtimeLog.entries[0].level, "warn");
+    assert.equal(state.ui.runtimeLog.entries[0].category, "source");
+    assert.equal(state.ui.runtimeLog.entries[0].code, "mic-unsupported");
+    assert.match(state.ui.runtimeLog.entries[0].message, /Microphone capture is unavailable/i);
+    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
+  });
+});
+
+test("UI logs unsupported stream outcomes into the runtime log", async () => {
+  await withUiWireHarnessState({}, () => {
+    state.source.kind = "stream";
+    state.source.status = "unsupported";
+    state.source.label = "";
+    state.source.errorCode = "stream-unsupported";
+    state.source.errorMessage = "Stream capture is unavailable in this browser.";
+    state.source.sessionActive = false;
+    UI.refreshAllUiText();
+
+    assert.equal(state.ui.runtimeLog.entries.length, 1);
+    assert.equal(state.ui.runtimeLog.entries[0].level, "warn");
+    assert.equal(state.ui.runtimeLog.entries[0].category, "source");
+    assert.equal(state.ui.runtimeLog.entries[0].code, "stream-unsupported");
+    assert.match(state.ui.runtimeLog.entries[0].message, /Stream capture is unavailable/i);
+    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
+  });
+});
+
+test("UI logs recording lifecycle transitions and active recording warnings once", async () => {
+  await withUiWireHarnessState({
     recordingState: {
       hooksEnabled: true,
       phase: "idle",
       isSupported: true,
       includePlaybackAudio: true,
-      lastUpdatedAtMs: 31,
-    },
-    queueNames: ["demo.wav", "bonus.wav"],
-    currentIndex: 0,
-    bandSnapshot: {
-      ready: true,
-      monoLike: false,
+      lastUpdatedAtMs: 40,
     },
   }, () => {
-    state.ui.btnLauncherStatus.dispatch("click");
+    state.recording.phase = "recording";
+    state.recording.lastCode = "recorder-input-audio-video";
+    state.recording.lastMessage = "Recording source audio + video.";
+    state.recording.lastUpdatedAtMs = 41;
+    UI.refreshRecordingUi();
 
-    assert.equal(UI.getPanelShellModel().openTargets.status, true);
-    assert.equal(state.ui.statusPanel.style.display, "block");
-    assert.equal(state.ui.statusAudioSourceSummary.textContent, state.ui.audioStatus.textContent);
-    assert.equal(
-      state.ui.statusAnalysisSummary.textContent,
-      state.ui.analysisStatus.textContent || "Analysis panel: FFT, smoothing, RMS gain."
+    state.recording.lastCode = "audio-unloaded";
+    state.recording.lastMessage = "Recording continues while no audio is currently loaded.";
+    state.recording.lastUpdatedAtMs = 42;
+    UI.refreshRecordingUi();
+    UI.refreshRecordingUi();
+
+    state.recording.phase = "finalizing";
+    state.recording.lastCode = "finalizing";
+    state.recording.lastMessage = "Finalizing recording export...";
+    state.recording.lastUpdatedAtMs = 43;
+    UI.refreshRecordingUi();
+
+    state.recording.phase = "complete";
+    state.recording.lastCode = "complete";
+    state.recording.lastMessage = "Recording export ready.";
+    state.recording.lastExportFileName = "auralprint-test.webm";
+    state.recording.lastUpdatedAtMs = 44;
+    UI.refreshRecordingUi();
+
+    assert.deepEqual(
+      state.ui.runtimeLog.entries.map((entry) => entry.code),
+      ["complete", "finalizing", "audio-unloaded", "recorder-input-audio-video"]
     );
-    assert.equal(
-      state.ui.statusBankingSummary.textContent,
-      state.ui.bankingStatus.textContent || "Banking panel: distribution, color policy, overlays, and spectral HUD."
-    );
-    assert.equal(
-      state.ui.statusSceneSummary.textContent,
-      state.ui.sceneStatus.textContent || "Scene panel: trace, particles, motion, and render-facing controls."
-    );
-    assert.equal(
-      state.ui.statusWorkspaceSummary.textContent,
-      state.ui.workspaceStatus.textContent || "Workspace / Presets panel: share, apply URL presets, and reset preferences."
-    );
-    assert.equal(state.ui.statusRecordSummary.textContent, state.ui.recordStatus.textContent);
+    assert.match(state.ui.runtimeLog.entries[0].message, /auralprint-test\.webm/);
   });
 });
 
@@ -1720,19 +1944,17 @@ test("repeat control reports through Audio Source ownership after relocation", a
       monoLike: false,
     },
     repeatMode: "none",
-  }, async () => {
+  }, () => {
     const sceneStatusBefore = state.ui.sceneStatus.textContent;
-    const sceneSummaryBefore = state.ui.statusSceneSummary.textContent;
+    const runtimeLogCountBefore = state.ui.runtimeLog.entries.length;
 
     state.ui.btnRepeat.dispatch("click");
 
     assert.equal(preferences.audio.repeatMode, "one");
     assert.equal(state.ui.audioStatus.textContent, "Updated: repeat");
-    assert.equal(state.ui.statusAudioSourceSummary.textContent, "Updated: repeat");
     assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
-    assert.equal(state.ui.statusSceneSummary.textContent, sceneSummaryBefore);
-
-    await new Promise((resolve) => setTimeout(resolve, 2600));
+    assert.equal(state.ui.runtimeLog.entries.length, runtimeLogCountBefore);
+    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
   });
 });
 
