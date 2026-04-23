@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T10:05:38.319Z",
+  "generatedAt": "2026-04-23T11:14:45.129Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -284,105 +284,6 @@
         ],
         "format": "esm"
       },
-      "src/js/render/visualizer.js": {
-        "bytes": 8685,
-        "imports": [
-          {
-            "path": "src/js/core/config.js",
-            "kind": "import-statement",
-            "original": "../core/config.js"
-          },
-          {
-            "path": "src/js/core/utils.js",
-            "kind": "import-statement",
-            "original": "../core/utils.js"
-          },
-          {
-            "path": "src/js/render/visualizers/band-overlay.js",
-            "kind": "import-statement",
-            "original": "./visualizers/band-overlay.js"
-          }
-        ],
-        "format": "esm"
-      },
-      "src/js/render/compositor.js": {
-        "bytes": 6108,
-        "imports": [
-          {
-            "path": "src/js/render/visualizer.js",
-            "kind": "import-statement",
-            "original": "./visualizer.js"
-          }
-        ],
-        "format": "esm"
-      },
-      "src/js/render/renderer.js": {
-        "bytes": 12442,
-        "imports": [
-          {
-            "path": "src/js/core/utils.js",
-            "kind": "import-statement",
-            "original": "../core/utils.js"
-          },
-          {
-            "path": "src/js/core/constants.js",
-            "kind": "import-statement",
-            "original": "../core/constants.js"
-          },
-          {
-            "path": "src/js/core/preferences.js",
-            "kind": "import-statement",
-            "original": "../core/preferences.js"
-          },
-          {
-            "path": "src/js/core/state.js",
-            "kind": "import-statement",
-            "original": "../core/state.js"
-          },
-          {
-            "path": "src/js/core/spaces.js",
-            "kind": "import-statement",
-            "original": "../core/spaces.js"
-          },
-          {
-            "path": "src/js/render/color-policy.js",
-            "kind": "import-statement",
-            "original": "./color-policy.js"
-          },
-          {
-            "path": "src/js/render/compositor.js",
-            "kind": "import-statement",
-            "original": "./compositor.js"
-          },
-          {
-            "path": "src/js/render/visualizer.js",
-            "kind": "import-statement",
-            "original": "./visualizer.js"
-          }
-        ],
-        "format": "esm"
-      },
-      "src/js/recording/recorder-engine.js": {
-        "bytes": 53243,
-        "imports": [
-          {
-            "path": "src/js/core/config.js",
-            "kind": "import-statement",
-            "original": "../core/config.js"
-          },
-          {
-            "path": "src/js/core/state.js",
-            "kind": "import-statement",
-            "original": "../core/state.js"
-          }
-        ],
-        "format": "esm"
-      },
-      "src/js/audio/queue.js": {
-        "bytes": 4006,
-        "imports": [],
-        "format": "esm"
-      },
       "src/js/render/trail-system.js": {
         "bytes": 1789,
         "imports": [
@@ -436,7 +337,7 @@
         "format": "esm"
       },
       "src/js/render/orb-runtime.js": {
-        "bytes": 1515,
+        "bytes": 5224,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -461,6 +362,136 @@
         ],
         "format": "esm"
       },
+      "src/js/render/visualizers/orb-visualizer.js": {
+        "bytes": 6057,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../../core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../../core/constants.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../../core/state.js"
+          },
+          {
+            "path": "src/js/core/spaces.js",
+            "kind": "import-statement",
+            "original": "../../core/spaces.js"
+          },
+          {
+            "path": "src/js/render/color-policy.js",
+            "kind": "import-statement",
+            "original": "../color-policy.js"
+          },
+          {
+            "path": "src/js/render/orb-runtime.js",
+            "kind": "import-statement",
+            "original": "../orb-runtime.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/visualizer.js": {
+        "bytes": 8758,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/render/visualizers/band-overlay.js",
+            "kind": "import-statement",
+            "original": "./visualizers/band-overlay.js"
+          },
+          {
+            "path": "src/js/render/visualizers/orb-visualizer.js",
+            "kind": "import-statement",
+            "original": "./visualizers/orb-visualizer.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/compositor.js": {
+        "bytes": 6638,
+        "imports": [
+          {
+            "path": "src/js/render/visualizer.js",
+            "kind": "import-statement",
+            "original": "./visualizer.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/renderer.js": {
+        "bytes": 9203,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/render/compositor.js",
+            "kind": "import-statement",
+            "original": "./compositor.js"
+          },
+          {
+            "path": "src/js/render/visualizer.js",
+            "kind": "import-statement",
+            "original": "./visualizer.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/recording/recorder-engine.js": {
+        "bytes": 53243,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/audio/queue.js": {
+        "bytes": 4006,
+        "imports": [],
+        "format": "esm"
+      },
       "src/js/ui/dom-cache.js": {
         "bytes": 14110,
         "imports": [
@@ -483,7 +514,7 @@
         "format": "esm"
       },
       "src/js/ui/ui.js": {
-        "bytes": 115140,
+        "bytes": 115120,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -579,7 +610,7 @@
         "format": "esm"
       },
       "src/js/main.js": {
-        "bytes": 4475,
+        "bytes": 4141,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -711,21 +742,6 @@
           "src/js/render/visualizers/band-overlay.js": {
             "bytesInOutput": 5363
           },
-          "src/js/render/visualizer.js": {
-            "bytesInOutput": 8820
-          },
-          "src/js/render/compositor.js": {
-            "bytesInOutput": 6165
-          },
-          "src/js/render/renderer.js": {
-            "bytesInOutput": 11921
-          },
-          "src/js/recording/recorder-engine.js": {
-            "bytesInOutput": 49095
-          },
-          "src/js/audio/queue.js": {
-            "bytesInOutput": 2453
-          },
           "src/js/render/trail-system.js": {
             "bytesInOutput": 1478
           },
@@ -733,7 +749,25 @@
             "bytesInOutput": 1942
           },
           "src/js/render/orb-runtime.js": {
-            "bytesInOutput": 1073
+            "bytesInOutput": 4834
+          },
+          "src/js/render/visualizers/orb-visualizer.js": {
+            "bytesInOutput": 5852
+          },
+          "src/js/render/visualizer.js": {
+            "bytesInOutput": 8828
+          },
+          "src/js/render/compositor.js": {
+            "bytesInOutput": 6695
+          },
+          "src/js/render/renderer.js": {
+            "bytesInOutput": 8771
+          },
+          "src/js/recording/recorder-engine.js": {
+            "bytesInOutput": 49095
+          },
+          "src/js/audio/queue.js": {
+            "bytesInOutput": 2453
           },
           "src/js/ui/dom-cache.js": {
             "bytesInOutput": 13160
@@ -742,13 +776,13 @@
             "bytesInOutput": 2243
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 107910
+            "bytesInOutput": 107880
           },
           "src/js/main.js": {
-            "bytesInOutput": 2926
+            "bytesInOutput": 2604
           }
         },
-        "bytes": 320746
+        "bytes": 327445
       }
     }
   },

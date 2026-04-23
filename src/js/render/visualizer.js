@@ -1,6 +1,7 @@
 import { CONFIG } from "../core/config.js";
 import { deepClone, deepFreeze } from "../core/utils.js";
 import { BandOverlayVisualizer } from "./visualizers/band-overlay.js";
+import { OrbVisualizer } from "./visualizers/orb-visualizer.js";
 
 const REQUIRED_VISUALIZER_METHODS = Object.freeze(["init", "update", "render", "resize", "dispose"]);
 
@@ -236,9 +237,9 @@ function registerBuiltInVisualizers(registry, { legacyRenderFactory = null } = {
     },
   });
 
-  registry.register("orbs", null, {
+  registry.register("orbs", OrbVisualizer, {
     capabilities: {
-      runtimeImplemented: false,
+      runtimeImplemented: true,
       transitional: true,
     },
     settingsSchema: ORBS_SETTINGS_SCHEMA,

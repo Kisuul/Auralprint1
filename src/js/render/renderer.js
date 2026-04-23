@@ -1,9 +1,6 @@
-import { clamp, lerp, hexToRgb01, rgb01ToCss, lerpRgb01 } from "../core/utils.js";
-import { TAU } from "../core/constants.js";
+import { clamp } from "../core/utils.js";
 import { BAND_NAMES, runtime } from "../core/preferences.js";
 import { state } from "../core/state.js";
-import { Spaces } from "../core/spaces.js";
-import { ColorPolicy } from "./color-policy.js";
 import { createCompositor } from "./compositor.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualizer.js";
 
@@ -11,26 +8,26 @@ import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualiz
    Renderer
    ========================================================================== */
 const Renderer = (() => {
-  const LEGACY_COMPAT_OVERLAY_NODE = {
-    id: "bandOverlayRoot",
-    type: "bandOverlay",
+  const LEGACY_COMPAT_ORBS_NODE = Object.freeze({
+    id: "orbsRoot",
+    type: "orbs",
     enabled: true,
     zIndex: 0,
     bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
     anchor: Object.freeze({ x: 0.5, y: 0.5 }),
     settings: Object.freeze({}),
-  };
-  const LEGACY_COMPAT_RENDER_NODE = Object.freeze({
-    id: "legacyRenderRoot",
-    type: "legacyRender",
+  });
+  const LEGACY_COMPAT_OVERLAY_NODE = {
+    id: "bandOverlayRoot",
+    type: "bandOverlay",
     enabled: true,
     zIndex: 1,
     bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
     anchor: Object.freeze({ x: 0.5, y: 0.5 }),
     settings: Object.freeze({}),
-  });
+  };
   const LEGACY_COMPAT_SCENE = {
-    nodes: [LEGACY_COMPAT_OVERLAY_NODE, LEGACY_COMPAT_RENDER_NODE],
+    nodes: [LEGACY_COMPAT_ORBS_NODE, LEGACY_COMPAT_OVERLAY_NODE],
   };
 
   function clearFrame() {
@@ -38,80 +35,6 @@ const Renderer = (() => {
     const s = runtime.settings;
     ctx.fillStyle = s.visuals.backgroundColor;
     ctx.fillRect(0, 0, state.widthPx, state.heightPx);
-  }
-
-  function drawTrailLines(particles) {
-    const s = runtime.settings;
-    if (!s.trace.lines) return;
-
-    const segments = s.trace.numLines;
-    const neededPts = segments + 1;
-    if (!particles || particles.length < 2) return;
-
-    const startIdx = Math.max(0, particles.length - neededPts);
-    const slice = particles.slice(startIdx);
-    if (slice.length < 2) return;
-
-    const ctx = state.ctx;
-    const rgb = ColorPolicy.pickLineColorRgb01(particles);
-    const stroke = rgb01ToCss(rgb, s.trace.lineAlpha);
-
-    ctx.save();
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = s.trace.lineWidthPx * state.dpr;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-
-    const p0 = Spaces.simToScreen(slice[0].xSim, slice[0].ySim);
-    ctx.beginPath();
-    ctx.moveTo(p0.x, p0.y);
-
-    for (let i = 1; i < slice.length; i++) {
-      const pi = Spaces.simToScreen(slice[i].xSim, slice[i].ySim);
-      ctx.lineTo(pi.x, pi.y);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawParticles(particles, nowSec) {
-    const s = runtime.settings;
-    const ctx = state.ctx;
-
-    const bg = hexToRgb01(s.visuals.backgroundColor);
-
-    const sizeMax = s.particles.sizeMaxPx * state.dpr;
-    const sizeMin = Math.min(s.particles.sizeMinPx, s.particles.sizeMaxPx) * state.dpr;
-
-    const toMin = Math.max(0.0001, s.particles.sizeToMinSec);
-    const ttl = Math.max(0.0001, s.particles.ttlSec);
-    const fadeSec = Math.max(0.0001, ttl - toMin);
-
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      const age = nowSec - p.bornSec;
-
-      let size = sizeMin;
-      if (age < toMin) {
-        const t = clamp(age / toMin, 0, 1);
-        size = lerp(sizeMax, sizeMin, t);
-      }
-
-      const fg = p.rgbStart || hexToRgb01(s.visuals.particleColor);
-
-      let color = fg;
-      if (age >= toMin) {
-        const t = clamp((age - toMin) / fadeSec, 0, 1);
-        color = lerpRgb01(fg, bg, t);
-      }
-
-      const ps = Spaces.simToScreen(p.xSim, p.ySim);
-      ctx.fillStyle = rgb01ToCss(color, 1);
-      ctx.beginPath();
-      ctx.arc(ps.x, ps.y, size, 0, TAU);
-      ctx.fill();
-    }
   }
 
   function readWaveformPeak(timeDomain) {
@@ -148,9 +71,9 @@ const Renderer = (() => {
     };
 
     const channelEntries = {
-      L: { id: "L", label: "Left", magnitudes: null, phase: null },
-      R: { id: "R", label: "Right", magnitudes: null, phase: null },
-      C: { id: "C", label: "Center", magnitudes: null, phase: null },
+      L: { id: "L", label: "Left", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
+      R: { id: "R", label: "Right", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
+      C: { id: "C", label: "Center", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
     };
 
     function ensureBandEntries(count) {
@@ -184,6 +107,7 @@ const Renderer = (() => {
             id: liveBand.id,
             label: liveBand.label || liveBand.id,
             rms: Number.isFinite(liveBand.rms) ? liveBand.rms : 0,
+            energy: Number.isFinite(liveBand.energy01) ? clamp(liveBand.energy01, 0, 1) : 0,
             timeDomain: liveBand.timeDomain || null,
             freqDb: liveBand.freqDb || null,
           }))
@@ -235,10 +159,18 @@ const Renderer = (() => {
         const channelEntry = channelEntries[liveBand.id] || {
           id: liveBand.id,
           label: liveBand.label || liveBand.id,
+          rms: 0,
+          energy: 0,
+          energy01: 0,
+          timeDomain: null,
           magnitudes: null,
           phase: null,
         };
         channelEntry.label = liveBand.label || channelEntry.label;
+        channelEntry.rms = liveBand.rms;
+        channelEntry.energy = liveBand.energy;
+        channelEntry.energy01 = liveBand.energy;
+        channelEntry.timeDomain = liveBand.timeDomain;
         channelEntry.magnitudes = liveBand.id === "C" && liveBand.freqDb ? liveBand.freqDb : null;
         channelEntry.phase = null;
         bandFrame.analysis.channels.push(channelEntry);
@@ -273,66 +205,9 @@ const Renderer = (() => {
     };
   }
 
-  class LegacyRenderCompatUnit {
-    constructor() {
-      this.context = null;
-      this.boundsPx = null;
-      this.frame = null;
-      this.dtSec = 0;
-    }
-
-    init(context) {
-      this.context = context;
-    }
-
-    resize(boundsPx) {
-      this.boundsPx = boundsPx ? { ...boundsPx } : null;
-    }
-
-    update(frame, dtSec) {
-      this.frame = frame;
-      this.dtSec = dtSec;
-    }
-
-    render(_target, _viewTransform) {
-      if (!state.orbs.length) return;
-
-      const analysis = this.frame && this.frame.analysis ? this.frame.analysis : null;
-      const nowSec = analysis && Number.isFinite(analysis.timestamp) ? (analysis.timestamp / 1000) : 0;
-      const boundsPx = this.boundsPx;
-      const ctx = state.ctx;
-
-      ctx.save();
-      if (boundsPx) {
-        ctx.beginPath();
-        ctx.rect(boundsPx.x, boundsPx.y, boundsPx.width, boundsPx.height);
-        ctx.clip();
-      }
-
-      try {
-        for (const orb of state.orbs) {
-          const particles = orb.trail.particles;
-          drawTrailLines(particles);
-          drawParticles(particles, nowSec);
-        }
-      } finally {
-        ctx.restore();
-      }
-    }
-
-    dispose() {
-      this.context = null;
-      this.boundsPx = null;
-      this.frame = null;
-      this.dtSec = 0;
-    }
-  }
-
   const buildBandFrame = createBandFrameBridge();
   const visualizerRegistry = createVisualizerRegistry();
-  registerBuiltInVisualizers(visualizerRegistry, {
-    legacyRenderFactory: () => new LegacyRenderCompatUnit(),
-  });
+  registerBuiltInVisualizers(visualizerRegistry);
   const compositor = createCompositor({
     registry: visualizerRegistry,
     onWarning({ message }) {
