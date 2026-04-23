@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T08:40:24.176Z",
+  "generatedAt": "2026-04-23T10:05:38.319Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -254,7 +254,7 @@
         "format": "esm"
       },
       "src/js/render/visualizers/band-overlay.js": {
-        "bytes": 3675,
+        "bytes": 5425,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -275,11 +275,6 @@
             "path": "src/js/core/state.js",
             "kind": "import-statement",
             "original": "../../core/state.js"
-          },
-          {
-            "path": "src/js/core/spaces.js",
-            "kind": "import-statement",
-            "original": "../../core/spaces.js"
           },
           {
             "path": "src/js/render/color-policy.js",
@@ -714,7 +709,7 @@
             "bytesInOutput": 1245
           },
           "src/js/render/visualizers/band-overlay.js": {
-            "bytesInOutput": 3522
+            "bytesInOutput": 5363
           },
           "src/js/render/visualizer.js": {
             "bytesInOutput": 8820
@@ -753,7 +748,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 318905
+        "bytes": 320746
       }
     }
   },

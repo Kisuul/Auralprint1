@@ -81,6 +81,13 @@ function createRegistry(typeToImplementation = {}) {
   return registry;
 }
 
+function assertNearlyEqual(actual, expected, message) {
+  assert.ok(
+    Math.abs(actual - expected) < 0.000001,
+    `${message}: expected ${expected}, got ${actual}`
+  );
+}
+
 function captureRenderGlobals() {
   return {
     runtimeSettings: structuredClone(runtime.settings),
@@ -448,7 +455,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     runtime.settings.bands.overlay.pointSizePx = 2;
     runtime.settings.bands.overlay.minRadiusFrac = 0.1;
     runtime.settings.bands.overlay.maxRadiusFrac = 0.4;
-    runtime.settings.bands.overlay.waveformRadialDisplaceFrac = 0.15;
+    runtime.settings.bands.overlay.waveformRadialDisplaceFrac = 0;
 
     state.canvas = { id: "canvas" };
     state.ctx = fakeCtx;
@@ -456,7 +463,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     state.heightPx = 200;
     state.dpr = 1;
     state.orbs.length = 0;
-    state.bands.energies01 = [0.1, 0.3, 0.6, 0.2];
+    state.bands.energies01 = [0, 0, 0, 0];
     state.bands.ringPhaseRad = 0;
 
     const registry = createVisualizerRegistry();
@@ -471,7 +478,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     });
 
     const compositor = createCompositor({ registry });
-    const target = createTarget({ ctx: fakeCtx, dpr: 1 });
+    const target = createTarget({ ctx: fakeCtx, widthPx: 800, heightPx: 600, dpr: 3 });
     const activeScene = {
       nodes: [
         {
@@ -492,7 +499,12 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
           centerWaveform: Float32Array.from([0.1, -0.2, 0.3, -0.1]),
         },
       },
-      bands: [],
+      bands: [
+        { index: 0, energy: 1 },
+        { index: 1, energy: 0 },
+        { index: 2, energy: 0.5 },
+        { index: 3, energy: 0.25 },
+      ],
     };
 
     compositor.syncScene(activeScene, target);
@@ -501,10 +513,20 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
 
     const clipCalls = drawCalls.filter((call) => call.kind === "clip");
     const rectCalls = drawCalls.filter((call) => call.kind === "rect");
+    const arcCalls = drawCalls.filter((call) => call.kind === "arc");
+
     assert.equal(clipCalls.length, 1);
-    assert.deepEqual(rectCalls[0], { kind: "rect", x: 100, y: 50, width: 200, height: 100 });
+    assert.deepEqual(rectCalls[0], { kind: "rect", x: 200, y: 150, width: 400, height: 300 });
     assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
-    assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 4);
+    assert.equal(arcCalls.length, 4);
+    assert.deepEqual(arcCalls[0], { kind: "arc", x: 640, y: 300, radius: 6 });
+    assert.deepEqual(arcCalls[1], { kind: "arc", x: 400, y: 240, radius: 6 });
+    assertNearlyEqual(arcCalls[2].x, 250, "Expected third frame-driven overlay point x");
+    assertNearlyEqual(arcCalls[2].y, 300, "Expected third frame-driven overlay point y");
+    assert.equal(arcCalls[2].radius, 6);
+    assertNearlyEqual(arcCalls[3].x, 400, "Expected fourth frame-driven overlay point x");
+    assertNearlyEqual(arcCalls[3].y, 405, "Expected fourth frame-driven overlay point y");
+    assert.equal(arcCalls[3].radius, 6);
 
     const drawCountBeforeDisable = drawCalls.length;
     compositor.syncScene({

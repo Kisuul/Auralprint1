@@ -28,6 +28,10 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
 
   const legacyInstance = registry.create("legacyRender");
   assert.equal(typeof legacyInstance.render, "function");
+  assert.throws(
+    () => registry.create("orbs"),
+    /registered without a runtime implementation/
+  );
 
   const orbsCapabilities = registry.getCapabilities("orbs");
   const orbsSchema = registry.getSettingsSchema("orbs");
