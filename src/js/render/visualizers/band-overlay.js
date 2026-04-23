@@ -2,7 +2,6 @@ import { clamp, rgb01ToCss } from "../../core/utils.js";
 import { TAU } from "../../core/constants.js";
 import { runtime } from "../../core/preferences.js";
 import { state } from "../../core/state.js";
-import { Spaces } from "../../core/spaces.js";
 import { ColorPolicy } from "../color-policy.js";
 
 function overlayWaveformDisplacementPx(baseRadiusPx, angleRad, waveform, overlay) {
@@ -13,13 +12,38 @@ function overlayWaveformDisplacementPx(baseRadiusPx, angleRad, waveform, overlay
   return baseRadiusPx * overlay.waveformRadialDisplaceFrac * sample;
 }
 
-function drawBandOverlay(ctx, centerWaveform, overlay) {
-  const bands = runtime.settings.bands;
-  const n = bands.count;
+function simToTargetScreen(xSim, ySim, targetMetrics) {
+  return {
+    x: targetMetrics.widthPx * 0.5 + xSim,
+    y: targetMetrics.heightPx * 0.5 - ySim,
+  };
+}
+
+function readFrameEnergy01(band) {
+  return Number.isFinite(band && band.energy) ? clamp(band.energy, 0, 1) : 0;
+}
+
+function readFrameBands(frame) {
+  return Array.isArray(frame && frame.bands) ? frame.bands : [];
+}
+
+function readPositiveNumber(value, fallback) {
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function readFallbackBandCount() {
+  const count = runtime.settings && runtime.settings.bands
+    ? runtime.settings.bands.count
+    : 0;
+  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+}
+
+function drawBandOverlay(ctx, centerWaveform, overlay, energies01, bandCount, targetMetrics) {
+  const n = bandCount;
   if (!n) return;
 
   const phase = state.bands.ringPhaseRad;
-  const minDim = Math.min(state.widthPx, state.heightPx);
+  const minDim = Math.min(targetMetrics.widthPx, targetMetrics.heightPx);
   const minR = minDim * overlay.minRadiusFrac;
   const maxR = minDim * overlay.maxRadiusFrac;
   const safeMin = Math.min(minR, maxR);
@@ -28,7 +52,7 @@ function drawBandOverlay(ctx, centerWaveform, overlay) {
 
   for (let i = 0; i < n; i++) {
     const angle = phase + (i * TAU / n);
-    const e = clamp(state.bands.energies01[i] || 0, 0, 1);
+    const e = energies01[i] || 0;
     const baseR = safeMin + (safeMax - safeMin) * e;
     const disp = overlayWaveformDisplacementPx(baseR, angle, centerWaveform, overlay);
     const r = baseR + disp;
@@ -41,15 +65,15 @@ function drawBandOverlay(ctx, centerWaveform, overlay) {
 
   if (overlay.connectAdjacent) {
     ctx.save();
-    ctx.lineWidth = overlay.lineWidthPx * state.dpr;
+    ctx.lineWidth = overlay.lineWidthPx * targetMetrics.dpr;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
 
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
       const c = ColorPolicy.bandRgb01(i);
-      const a = Spaces.simToScreen(pts[i].xSim, pts[i].ySim);
-      const b = Spaces.simToScreen(pts[j].xSim, pts[j].ySim);
+      const a = simToTargetScreen(pts[i].xSim, pts[i].ySim, targetMetrics);
+      const b = simToTargetScreen(pts[j].xSim, pts[j].ySim, targetMetrics);
 
       ctx.strokeStyle = rgb01ToCss(c, overlay.lineAlpha);
       ctx.beginPath();
@@ -61,10 +85,10 @@ function drawBandOverlay(ctx, centerWaveform, overlay) {
   }
 
   ctx.save();
-  const rPx = overlay.pointSizePx * state.dpr;
+  const rPx = overlay.pointSizePx * targetMetrics.dpr;
   for (let i = 0; i < n; i++) {
     const c = ColorPolicy.bandRgb01(i);
-    const p = Spaces.simToScreen(pts[i].xSim, pts[i].ySim);
+    const p = simToTargetScreen(pts[i].xSim, pts[i].ySim, targetMetrics);
 
     ctx.fillStyle = rgb01ToCss(c, overlay.alpha);
     ctx.beginPath();
@@ -79,6 +103,9 @@ class BandOverlayVisualizer {
     this.context = null;
     this.boundsPx = null;
     this.frame = null;
+    this.centerWaveform = null;
+    this.energies01 = [];
+    this.bandCount = 0;
     this.dtSec = 0;
   }
 
@@ -88,16 +115,31 @@ class BandOverlayVisualizer {
 
   update(frame, dtSec) {
     this.frame = frame || null;
+    const frameBands = readFrameBands(this.frame);
+    const fallbackCount = readFallbackBandCount();
+    const nextBandCount = frameBands.length ? frameBands.length : fallbackCount;
+
+    this.centerWaveform = this.frame && this.frame.analysis && this.frame.analysis.compat
+      ? this.frame.analysis.compat.centerWaveform
+      : null;
+    this.bandCount = nextBandCount;
+    this.energies01.length = nextBandCount;
+    for (let i = 0; i < nextBandCount; i++) {
+      this.energies01[i] = frameBands.length ? readFrameEnergy01(frameBands[i]) : 0;
+    }
     this.dtSec = Number.isFinite(dtSec) ? dtSec : 0;
   }
 
   render(target, _viewTransform) {
     const overlay = runtime.settings.bands.overlay;
-    const analysis = this.frame && this.frame.analysis ? this.frame.analysis : null;
-    const centerWaveform = analysis && analysis.compat ? analysis.compat.centerWaveform : null;
     const ctx = (target && target.ctx) || (this.context && this.context.ctx) || state.ctx;
+    const targetMetrics = {
+      widthPx: readPositiveNumber(target && target.widthPx, readPositiveNumber(this.context && this.context.widthPx, 0)),
+      heightPx: readPositiveNumber(target && target.heightPx, readPositiveNumber(this.context && this.context.heightPx, 0)),
+      dpr: readPositiveNumber(target && target.dpr, readPositiveNumber(this.context && this.context.dpr, 1)),
+    };
 
-    if (!ctx || !overlay.enabled || !centerWaveform) return;
+    if (!ctx || !overlay.enabled || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
 
     ctx.save();
     if (this.boundsPx) {
@@ -107,7 +149,7 @@ class BandOverlayVisualizer {
     }
 
     try {
-      drawBandOverlay(ctx, centerWaveform, overlay);
+      drawBandOverlay(ctx, this.centerWaveform, overlay, this.energies01, this.bandCount, targetMetrics);
     } finally {
       ctx.restore();
     }
@@ -121,6 +163,9 @@ class BandOverlayVisualizer {
     this.context = null;
     this.boundsPx = null;
     this.frame = null;
+    this.centerWaveform = null;
+    this.energies01.length = 0;
+    this.bandCount = 0;
     this.dtSec = 0;
   }
 }
