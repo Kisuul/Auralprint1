@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
+import { BandOverlayVisualizer } from "../src/js/render/visualizers/band-overlay.js";
 
 function createValidVisualizerInstance(extra = {}) {
   return {
@@ -34,6 +35,7 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
   const bandOverlayCapabilities = registry.getCapabilities("bandOverlay");
   const bandOverlaySchema = registry.getSettingsSchema("bandOverlay");
   const bandOverlayDefaultNode = registry.getDefaultNode("bandOverlay");
+  const bandOverlayInstance = registry.create("bandOverlay", { node: { id: "overlay-root" } });
 
   assert.deepEqual(orbsCapabilities, { runtimeImplemented: false, transitional: true });
   assert.equal(orbsSchema.kind, "array");
@@ -41,7 +43,7 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
   assert.equal(orbsSchema.item.fields.bandIds.item.max, 255);
   assert.equal(orbsDefaultNode.id, "orbs-1");
   assert.deepEqual(orbsDefaultNode.bounds, { x: 0.5, y: 0.5, w: 1, h: 1 });
-  assert.deepEqual(bandOverlayCapabilities, { runtimeImplemented: false, transitional: true });
+  assert.deepEqual(bandOverlayCapabilities, { runtimeImplemented: true, transitional: true });
   assert.equal(bandOverlaySchema.kind, "object");
   assert.deepEqual(
     bandOverlaySchema.fields.lineWidthPx,
@@ -50,6 +52,7 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
   assert.equal(typeof bandOverlaySchema.fields.phaseMode, "object");
   assert.equal(bandOverlayDefaultNode.id, "overlay-1");
   assert.equal(registry.get("bandOverlay").type, "bandOverlay");
+  assert.ok(bandOverlayInstance instanceof BandOverlayVisualizer);
 
   orbsCapabilities.transitional = false;
   orbsSchema.item.fields.chanId.default = "L";
@@ -61,7 +64,7 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
   assert.deepEqual(registry.getCapabilities("orbs"), { runtimeImplemented: false, transitional: true });
   assert.equal(registry.getSettingsSchema("orbs").item.fields.chanId.default, "C");
   assert.equal(registry.getDefaultNode("orbs").settings[0].id, "ORB0");
-  assert.deepEqual(registry.getCapabilities("bandOverlay"), { runtimeImplemented: false, transitional: true });
+  assert.deepEqual(registry.getCapabilities("bandOverlay"), { runtimeImplemented: true, transitional: true });
   assert.equal(registry.getSettingsSchema("bandOverlay").fields.lineWidthPx.min, 1);
   assert.equal(registry.getDefaultNode("bandOverlay").settings.lineWidthPx, 1);
 });

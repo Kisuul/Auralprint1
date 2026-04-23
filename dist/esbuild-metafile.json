@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T07:16:57.327Z",
+  "generatedAt": "2026-04-23T08:40:24.176Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -253,8 +253,44 @@
         ],
         "format": "esm"
       },
+      "src/js/render/visualizers/band-overlay.js": {
+        "bytes": 3675,
+        "imports": [
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../../core/utils.js"
+          },
+          {
+            "path": "src/js/core/constants.js",
+            "kind": "import-statement",
+            "original": "../../core/constants.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../../core/state.js"
+          },
+          {
+            "path": "src/js/core/spaces.js",
+            "kind": "import-statement",
+            "original": "../../core/spaces.js"
+          },
+          {
+            "path": "src/js/render/color-policy.js",
+            "kind": "import-statement",
+            "original": "../color-policy.js"
+          }
+        ],
+        "format": "esm"
+      },
       "src/js/render/visualizer.js": {
-        "bytes": 8598,
+        "bytes": 8685,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -265,6 +301,11 @@
             "path": "src/js/core/utils.js",
             "kind": "import-statement",
             "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/render/visualizers/band-overlay.js",
+            "kind": "import-statement",
+            "original": "./visualizers/band-overlay.js"
           }
         ],
         "format": "esm"
@@ -281,7 +322,7 @@
         "format": "esm"
       },
       "src/js/render/renderer.js": {
-        "bytes": 14698,
+        "bytes": 12442,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -672,14 +713,17 @@
           "src/js/render/color-policy.js": {
             "bytesInOutput": 1245
           },
+          "src/js/render/visualizers/band-overlay.js": {
+            "bytesInOutput": 3522
+          },
           "src/js/render/visualizer.js": {
-            "bytesInOutput": 8804
+            "bytesInOutput": 8820
           },
           "src/js/render/compositor.js": {
             "bytesInOutput": 6165
           },
           "src/js/render/renderer.js": {
-            "bytesInOutput": 14067
+            "bytesInOutput": 11921
           },
           "src/js/recording/recorder-engine.js": {
             "bytesInOutput": 49095
@@ -709,7 +753,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 317465
+        "bytes": 318905
       }
     }
   },

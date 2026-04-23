@@ -11,19 +11,27 @@ import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualiz
    Renderer
    ========================================================================== */
 const Renderer = (() => {
-  const LEGACY_COMPAT_SCENE = Object.freeze({
-    nodes: Object.freeze([
-      Object.freeze({
-        id: "legacyRenderRoot",
-        type: "legacyRender",
-        enabled: true,
-        zIndex: 0,
-        bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
-        anchor: Object.freeze({ x: 0.5, y: 0.5 }),
-        settings: Object.freeze({}),
-      }),
-    ]),
+  const LEGACY_COMPAT_OVERLAY_NODE = {
+    id: "bandOverlayRoot",
+    type: "bandOverlay",
+    enabled: true,
+    zIndex: 0,
+    bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
+    anchor: Object.freeze({ x: 0.5, y: 0.5 }),
+    settings: Object.freeze({}),
+  };
+  const LEGACY_COMPAT_RENDER_NODE = Object.freeze({
+    id: "legacyRenderRoot",
+    type: "legacyRender",
+    enabled: true,
+    zIndex: 1,
+    bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
+    anchor: Object.freeze({ x: 0.5, y: 0.5 }),
+    settings: Object.freeze({}),
   });
+  const LEGACY_COMPAT_SCENE = {
+    nodes: [LEGACY_COMPAT_OVERLAY_NODE, LEGACY_COMPAT_RENDER_NODE],
+  };
 
   function clearFrame() {
     const ctx = state.ctx;
@@ -104,81 +112,6 @@ const Renderer = (() => {
       ctx.arc(ps.x, ps.y, size, 0, TAU);
       ctx.fill();
     }
-  }
-
-  function overlayWaveformDisplacementPx(baseRadiusPx, angleRad, waveform, overlay) {
-    if (!waveform || waveform.length === 0) return 0;
-    const phase01 = ((angleRad % TAU) + TAU) % TAU / TAU;
-    const idx = Math.floor(phase01 * (waveform.length - 1));
-    const sample = waveform[idx];
-    // Overlay displacement ownership stays within bands.overlay.
-    return baseRadiusPx * overlay.waveformRadialDisplaceFrac * sample;
-  }
-
-  function drawBandOverlay(centerWaveform) {
-    const bands = runtime.settings.bands;
-    const overlay = bands.overlay;
-    if (!overlay.enabled || !centerWaveform) return;
-
-    const ctx = state.ctx;
-    const n = bands.count;
-    const phase = state.bands.ringPhaseRad;
-
-    const minDim = Math.min(state.widthPx, state.heightPx);
-    // Overlay radius contract is independent from orb/audio radius controls.
-    const minR = minDim * overlay.minRadiusFrac;
-    const maxR = minDim * overlay.maxRadiusFrac;
-    const safeMin = Math.min(minR, maxR);
-    const safeMax = Math.max(minR, maxR);
-
-    const pts = new Array(n);
-
-    for (let i = 0; i < n; i++) {
-      const angle = phase + (i * TAU / n);
-      const e = clamp(state.bands.energies01[i] || 0, 0, 1);
-      const baseR = safeMin + (safeMax - safeMin) * e;
-      const disp = overlayWaveformDisplacementPx(baseR, angle, centerWaveform, overlay);
-
-      const r = baseR + disp;
-      const xSim = r * Math.cos(angle);
-      const ySim = r * Math.sin(angle);
-
-      pts[i] = { xSim, ySim };
-    }
-
-    if (overlay.connectAdjacent) {
-      ctx.save();
-      ctx.lineWidth = overlay.lineWidthPx * state.dpr;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-
-      for (let i = 0; i < n; i++) {
-        const j = (i + 1) % n;
-        const c = ColorPolicy.bandRgb01(i);
-        ctx.strokeStyle = rgb01ToCss(c, overlay.lineAlpha);
-
-        const a = Spaces.simToScreen(pts[i].xSim, pts[i].ySim);
-        const b = Spaces.simToScreen(pts[j].xSim, pts[j].ySim);
-
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    ctx.save();
-    const rPx = overlay.pointSizePx * state.dpr;
-    for (let i = 0; i < n; i++) {
-      const c = ColorPolicy.bandRgb01(i);
-      ctx.fillStyle = rgb01ToCss(c, overlay.alpha);
-      const p = Spaces.simToScreen(pts[i].xSim, pts[i].ySim);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rPx, 0, TAU);
-      ctx.fill();
-    }
-    ctx.restore();
   }
 
   function readWaveformPeak(timeDomain) {
@@ -362,8 +295,9 @@ const Renderer = (() => {
     }
 
     render(_target, _viewTransform) {
+      if (!state.orbs.length) return;
+
       const analysis = this.frame && this.frame.analysis ? this.frame.analysis : null;
-      const centerWaveform = analysis && analysis.compat ? analysis.compat.centerWaveform : null;
       const nowSec = analysis && Number.isFinite(analysis.timestamp) ? (analysis.timestamp / 1000) : 0;
       const boundsPx = this.boundsPx;
       const ctx = state.ctx;
@@ -376,7 +310,6 @@ const Renderer = (() => {
       }
 
       try {
-        drawBandOverlay(centerWaveform);
         for (const orb of state.orbs) {
           const particles = orb.trail.particles;
           drawTrailLines(particles);
@@ -422,6 +355,7 @@ const Renderer = (() => {
     clearFrame();
 
     const target = getRenderTarget();
+    LEGACY_COMPAT_OVERLAY_NODE.enabled = !!runtime.settings.bands.overlay.enabled;
     compositor.syncScene(LEGACY_COMPAT_SCENE, target);
     compositor.update(buildBandFrame(bandSnapshot, nowSec), dtSec);
     compositor.render(target);
