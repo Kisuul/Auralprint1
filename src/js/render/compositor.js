@@ -2,6 +2,14 @@ import { createVisualizerRegistry } from "./visualizer.js";
 
 const IDENTITY_VIEW_TRANSFORM = Object.freeze({ kind: "identity" });
 
+function defaultWarningSink({ message, type = "", nodeId = "" }) {
+  if (typeof console !== "object" || typeof console.warn !== "function" || !message) return;
+
+  const nodePart = nodeId ? ` node "${nodeId}"` : "";
+  const typePart = type ? ` (${type})` : "";
+  console.warn(`[Compositor] Skipping${nodePart}${typePart}: ${message}`);
+}
+
 function readSceneNodes(scene) {
   return Array.isArray(scene && scene.nodes) ? scene.nodes : [];
 }
@@ -57,8 +65,12 @@ function createCompositor({ registry = createVisualizerRegistry(), onWarning = n
   }
 
   function emitWarning({ message, type = "", nodeId = "", cause = null }) {
-    if (typeof onWarning !== "function") return;
-    onWarning({ message, type, nodeId, cause });
+    const warning = { message, type, nodeId, cause };
+    if (typeof onWarning === "function") {
+      onWarning(warning);
+      return;
+    }
+    defaultWarningSink(warning);
   }
 
   function syncScene(scene, target) {

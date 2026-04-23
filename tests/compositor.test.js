@@ -322,6 +322,63 @@ test("compositor warns and skips unknown or metadata-only visualizer types witho
   assert.match(warnings[1].message, /registered without a runtime implementation/);
 });
 
+test("compositor emits a default warning when a bad node is skipped without an explicit warning handler", () => {
+  const recorder = createVisualizerRecorder();
+  const registry = createRegistry({
+    layer: recorder.factory(),
+  });
+  const target = createTarget();
+  const previousWarn = console.warn;
+  const warnCalls = [];
+
+  console.warn = (message) => {
+    warnCalls.push(message);
+  };
+
+  try {
+    const compositor = createCompositor({ registry });
+
+    compositor.syncScene({
+      nodes: [
+        {
+          id: "good",
+          type: "layer",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: {},
+        },
+        {
+          id: "missing",
+          type: "missingLayer",
+          enabled: true,
+          zIndex: 1,
+          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: {},
+        },
+      ],
+    }, target);
+
+    compositor.update({ bands: [] }, 0.016);
+    compositor.render(target);
+
+    assert.deepEqual(
+      recorder.calls.filter((call) => call.kind === "init").map((call) => call.id),
+      ["good"]
+    );
+    assert.deepEqual(
+      recorder.calls.filter((call) => call.kind === "render").map((call) => call.id),
+      ["good"]
+    );
+    assert.equal(warnCalls.length, 1);
+    assert.match(warnCalls[0], /\[Compositor\] Skipping node "missing" \(missingLayer\): Unknown visualizer type "missingLayer"\./);
+  } finally {
+    console.warn = previousWarn;
+  }
+});
+
 test("Renderer.renderFrame keeps the live seam on plain frame data and clips legacy rendering to compositor bounds", () => {
   const previousRuntimeSettings = structuredClone(runtime.settings);
   const previousCanvas = state.canvas;

@@ -2871,7 +2871,13 @@
         max: CONFIG.limits.bands.overlayAlpha.max,
         step: CONFIG.limits.bands.overlayAlpha.step
       },
-      lineWidthPx: { type: "number", default: CONFIG.defaults.bands.overlay.lineWidthPx },
+      lineWidthPx: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.lineWidthPx,
+        min: CONFIG.limits.trace.lineWidthPx.min,
+        max: CONFIG.limits.trace.lineWidthPx.max,
+        step: CONFIG.limits.trace.lineWidthPx.step
+      },
       phaseMode: { type: "string", default: CONFIG.defaults.bands.overlay.phaseMode, enum: ["orb", "free"] },
       ringSpeedRadPerSec: {
         type: "number",
@@ -3021,6 +3027,12 @@
 
   // src/js/render/compositor.js
   var IDENTITY_VIEW_TRANSFORM = Object.freeze({ kind: "identity" });
+  function defaultWarningSink({ message, type = "", nodeId = "" }) {
+    if (typeof console !== "object" || typeof console.warn !== "function" || !message) return;
+    const nodePart = nodeId ? ` node "${nodeId}"` : "";
+    const typePart = type ? ` (${type})` : "";
+    console.warn(`[Compositor] Skipping${nodePart}${typePart}: ${message}`);
+  }
   function readSceneNodes(scene) {
     return Array.isArray(scene && scene.nodes) ? scene.nodes : [];
   }
@@ -3061,8 +3073,12 @@
       entry.instance.dispose();
     }
     function emitWarning({ message, type = "", nodeId = "", cause = null }) {
-      if (typeof onWarning !== "function") return;
-      onWarning({ message, type, nodeId, cause });
+      const warning = { message, type, nodeId, cause };
+      if (typeof onWarning === "function") {
+        onWarning(warning);
+        return;
+      }
+      defaultWarningSink(warning);
     }
     function syncScene(scene, target) {
       const nodes = readSceneNodes(scene);

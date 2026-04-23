@@ -73,7 +73,13 @@ const BAND_OVERLAY_SETTINGS_SCHEMA = deepFreeze({
       max: CONFIG.limits.bands.overlayAlpha.max,
       step: CONFIG.limits.bands.overlayAlpha.step,
     },
-    lineWidthPx: { type: "number", default: CONFIG.defaults.bands.overlay.lineWidthPx },
+    lineWidthPx: {
+      type: "number",
+      default: CONFIG.defaults.bands.overlay.lineWidthPx,
+      min: CONFIG.limits.trace.lineWidthPx.min,
+      max: CONFIG.limits.trace.lineWidthPx.max,
+      step: CONFIG.limits.trace.lineWidthPx.step,
+    },
     phaseMode: { type: "string", default: CONFIG.defaults.bands.overlay.phaseMode, enum: ["orb", "free"] },
     ringSpeedRadPerSec: {
       type: "number",

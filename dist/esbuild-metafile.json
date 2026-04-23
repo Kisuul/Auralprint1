@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T05:59:47.874Z",
+  "generatedAt": "2026-04-23T07:16:57.327Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -254,7 +254,7 @@
         "format": "esm"
       },
       "src/js/render/visualizer.js": {
-        "bytes": 8435,
+        "bytes": 8598,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -270,7 +270,7 @@
         "format": "esm"
       },
       "src/js/render/compositor.js": {
-        "bytes": 5692,
+        "bytes": 6108,
         "imports": [
           {
             "path": "src/js/render/visualizer.js",
@@ -673,10 +673,10 @@
             "bytesInOutput": 1245
           },
           "src/js/render/visualizer.js": {
-            "bytesInOutput": 8630
+            "bytesInOutput": 8804
           },
           "src/js/render/compositor.js": {
-            "bytesInOutput": 5731
+            "bytesInOutput": 6165
           },
           "src/js/render/renderer.js": {
             "bytesInOutput": 14067
@@ -709,7 +709,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 316857
+        "bytes": 317465
       }
     }
   },
