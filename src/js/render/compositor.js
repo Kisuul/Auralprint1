@@ -146,6 +146,24 @@ function createCompositor({ registry = createVisualizerRegistry(), onWarning = n
       entry.sceneIndex = i;
       entry.zIndex = Number.isFinite(node.zIndex) ? node.zIndex : 0;
 
+      if (typeof entry.instance.configure === "function") {
+        try {
+          entry.instance.configure(node);
+        } catch (error) {
+          disposeEntry(entry);
+          liveEntries.delete(node.id);
+          emitWarning({
+            message: error instanceof Error && error.message
+              ? error.message
+              : `Failed to configure visualizer "${node.type}".`,
+            type: node.type,
+            nodeId: node.id,
+            cause: error,
+          });
+          continue;
+        }
+      }
+
       const nextBoundsPx = sceneNodeToPixelBounds(node, target);
       if (!boundsEqual(entry.boundsPx, nextBoundsPx) || entry.targetSizeKey !== targetSizeKey) {
         if (typeof entry.instance.resize === "function") entry.instance.resize(nextBoundsPx);

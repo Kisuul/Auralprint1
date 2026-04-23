@@ -12,7 +12,7 @@ import { Scrubber } from "../audio/scrubber.js";
 import { InputSourceManager } from "../audio/input-source-manager.js";
 import { ColorPolicy } from "../render/color-policy.js";
 import { RecorderEngine } from "../recording/recorder-engine.js";
-import { initOrbs, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
+import { initOrbs, resetOrbTrails, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
 import { primeDomCache } from "./dom-cache.js";
 import {
   appendRuntimeLogEntry,
@@ -2058,7 +2058,7 @@ const UI = (() => {
 
   function resetTrackVisualState() {
     Scrubber.reset();
-    for (const orb of state.orbs) orb.resetTrail();
+    resetOrbTrails();
     state.bands.energies01.fill(0);
     state.bands.dominantIndex = 0;
     state.bands.dominantName = "(none)";

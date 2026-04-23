@@ -5,6 +5,7 @@ import { IDENTITY_VIEW_TRANSFORM, createCompositor } from "../src/js/render/comp
 import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
+import { getActiveOrbPrimaryAngleRad, resetOrbTrails, resetOrbsToDesignedPhases } from "../src/js/render/orb-runtime.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
 
 function createTarget(overrides = {}) {
@@ -98,6 +99,7 @@ function captureRenderGlobals() {
     dpr: state.dpr,
     orbs: state.orbs.slice(),
     bands: structuredClone(state.bands),
+    time: { ...state.time },
   };
 }
 
@@ -120,6 +122,8 @@ function restoreRenderGlobals(snapshot) {
   state.bands.dominantIndex = snapshot.bands.dominantIndex;
   state.bands.dominantName = snapshot.bands.dominantName;
   state.bands.ringPhaseRad = snapshot.bands.ringPhaseRad;
+  state.time.lastTimestampMs = snapshot.time.lastTimestampMs;
+  state.time.simPaused = snapshot.time.simPaused;
 }
 
 test("compositor creates enabled nodes, forwards bounds, and renders with the identity ViewTransform", () => {
@@ -547,7 +551,281 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
   }
 });
 
-test("Renderer.renderFrame keeps the live seam on plain frame data and clips legacy rendering to compositor bounds", () => {
+test("built-in orb visualizer renders through the compositor and supports runtime reset helpers", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.orbs = [
+      { id: "TEST_ORB", chanId: "C", bandIds: [1], chirality: 1, startAngleRad: 0 },
+    ];
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.5;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.time.simPaused = false;
+    state.orbs.length = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: fakeCtx, widthPx: 400, heightPx: 200, dpr: 1 });
+    const scene = {
+      nodes: [
+        {
+          id: "orbs-root",
+          type: "orbs",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: {},
+        },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        channels: [
+          {
+            id: "C",
+            label: "Center",
+            energy: 0.25,
+            timeDomain: Float32Array.from([0, 0, 0, 0]),
+          },
+        ],
+      },
+      bands: [
+        { index: 0, energy: 0.1 },
+        { index: 1, energy: 0.75 },
+      ],
+    };
+
+    compositor.syncScene(scene, target);
+
+    assert.equal(state.orbs.length, 1);
+    assert.equal(getActiveOrbPrimaryAngleRad(), 0);
+
+    compositor.update(frame, 1);
+    assert.equal(state.orbs[0].trail.particles.length, 1);
+
+    resetOrbTrails();
+    assert.equal(state.orbs[0].trail.particles.length, 0);
+
+    state.orbs[0].angleRad = Math.PI * 0.5;
+    resetOrbsToDesignedPhases();
+    assert.equal(state.orbs[0].angleRad, 0);
+    assert.equal(state.bands.ringPhaseRad, 0);
+
+    compositor.update(frame, 1);
+    compositor.render(target);
+
+    const rectCalls = drawCalls.filter((call) => call.kind === "rect");
+    const clipCalls = drawCalls.filter((call) => call.kind === "clip");
+    const arcCalls = drawCalls.filter((call) => call.kind === "arc");
+
+    assert.equal(clipCalls.length, 1);
+    assert.deepEqual(rectCalls[0], { kind: "rect", x: 100, y: 50, width: 200, height: 100 });
+    assert.equal(arcCalls.length, 1);
+    assert.deepEqual(arcCalls[0], { kind: "arc", x: 280, y: 100, radius: 4 });
+
+    const drawCountBeforeDisable = drawCalls.length;
+    compositor.syncScene({
+      nodes: [
+        {
+          ...scene.nodes[0],
+          enabled: false,
+        },
+      ],
+    }, target);
+    compositor.update(frame, 1);
+    compositor.render(target);
+
+    assert.equal(drawCalls.length, drawCountBeforeDisable);
+    assert.equal(state.orbs.length, 0);
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("built-in orb visualizer keeps compatibility state across multiple active orb nodes", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.5;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.time.simPaused = false;
+    state.orbs.length = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: fakeCtx, widthPx: 400, heightPx: 200, dpr: 1 });
+    const firstNode = {
+      id: "orbs-a",
+      type: "orbs",
+      enabled: true,
+      zIndex: 0,
+      bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+      anchor: { x: 0.5, y: 0.5 },
+      settings: [
+        { id: "ORB_A", chanId: "C", bandIds: [], chirality: 1, startAngleRad: 0 },
+      ],
+    };
+    const secondNode = {
+      id: "orbs-b",
+      type: "orbs",
+      enabled: true,
+      zIndex: 1,
+      bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+      anchor: { x: 0.5, y: 0.5 },
+      settings: [
+        { id: "ORB_B", chanId: "C", bandIds: [], chirality: 1, startAngleRad: Math.PI },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        channels: [
+          { id: "C", label: "Center", energy: 0.5, timeDomain: Float32Array.from([0, 0, 0, 0]) },
+        ],
+      },
+      bands: [],
+    };
+
+    compositor.syncScene({ nodes: [firstNode, secondNode] }, target);
+    assert.deepEqual(state.orbs.map((orb) => orb.id), ["ORB_A", "ORB_B"]);
+    assert.equal(getActiveOrbPrimaryAngleRad(), 0);
+
+    compositor.update(frame, 1);
+    assert.deepEqual(state.orbs.map((orb) => orb.trail.particles.length), [1, 1]);
+
+    resetOrbTrails();
+    assert.deepEqual(state.orbs.map((orb) => orb.trail.particles.length), [0, 0]);
+
+    state.orbs[0].angleRad = Math.PI * 0.25;
+    state.orbs[1].angleRad = Math.PI * 0.75;
+    resetOrbsToDesignedPhases();
+    assert.equal(state.orbs[0].angleRad, 0);
+    assert.equal(state.orbs[1].angleRad, Math.PI);
+    assert.equal(state.bands.ringPhaseRad, 0);
+
+    compositor.syncScene({
+      nodes: [
+        {
+          ...firstNode,
+          enabled: false,
+        },
+        secondNode,
+      ],
+    }, target);
+
+    assert.deepEqual(state.orbs.map((orb) => orb.id), ["ORB_B"]);
+    resetOrbsToDesignedPhases();
+    assert.equal(state.orbs[0].angleRad, Math.PI);
+
+    compositor.dispose();
+    assert.equal(state.orbs.length, 0);
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("built-in orb visualizer updates reused node settings through compositor sync", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.trace.lines = false;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.orbs.length = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: fakeCtx, widthPx: 400, heightPx: 200, dpr: 1 });
+    const baseNode = {
+      id: "orbs-dynamic",
+      type: "orbs",
+      enabled: true,
+      zIndex: 0,
+      bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+      anchor: { x: 0.5, y: 0.5 },
+      settings: [
+        { id: "ORB_BEFORE", chanId: "C", bandIds: [], chirality: 1, startAngleRad: 0 },
+      ],
+    };
+
+    compositor.syncScene({ nodes: [baseNode] }, target);
+    assert.deepEqual(state.orbs.map((orb) => orb.id), ["ORB_BEFORE"]);
+    assert.equal(state.orbs[0].startAngleRad, 0);
+
+    compositor.syncScene({
+      nodes: [
+        {
+          ...baseNode,
+          settings: [
+            { id: "ORB_AFTER", chanId: "L", bandIds: [1], chirality: -1, startAngleRad: Math.PI },
+          ],
+        },
+      ],
+    }, target);
+
+    assert.deepEqual(state.orbs.map((orb) => orb.id), ["ORB_AFTER"]);
+    assert.equal(state.orbs[0].chanId, "L");
+    assert.deepEqual(state.orbs[0].bandIds, [1]);
+    assert.equal(state.orbs[0].chirality, -1);
+    assert.equal(state.orbs[0].startAngleRad, Math.PI);
+    assert.equal(getActiveOrbPrimaryAngleRad(), Math.PI);
+
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("Renderer.renderFrame keeps the live seam on plain frame data and clips compositor visualizers to bounds", () => {
   const snapshot = captureRenderGlobals();
   const drawCalls = [];
   const fakeCtx = createDrawRecorderContext(drawCalls);
@@ -564,6 +842,18 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
     runtime.settings.bands.overlay.minRadiusFrac = 0.1;
     runtime.settings.bands.overlay.maxRadiusFrac = 0.4;
     runtime.settings.bands.overlay.waveformRadialDisplaceFrac = 0.15;
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 60;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.1;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
     runtime.settings.visuals.backgroundColor = "#000000";
 
     state.canvas = { id: "canvas" };
@@ -582,6 +872,7 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
     state.bands.dominantIndex = 2;
     state.bands.dominantName = "Band 2";
     state.bands.ringPhaseRad = 0;
+    state.time.simPaused = false;
 
     const centerWaveform = Float32Array.from([0.1, -0.2, 0.3, -0.1]);
     const bandSnapshot = {
@@ -591,6 +882,7 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
           id: "L",
           label: "Left",
           rms: 0.2,
+          energy01: 0.2,
           timeDomain: Float32Array.from([0.1, 0.0, -0.1, 0.05]),
           freqDb: null,
         },
@@ -598,6 +890,7 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
           id: "R",
           label: "Right",
           rms: 0.25,
+          energy01: 0.25,
           timeDomain: Float32Array.from([0.15, -0.05, 0.1, -0.15]),
           freqDb: null,
         },
@@ -605,6 +898,7 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
           id: "C",
           label: "Center",
           rms: 0.3,
+          energy01: 0.3,
           get timeDomain() {
             centerWaveformReads += 1;
             return centerWaveform;
@@ -629,17 +923,12 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
 
     const rectCalls = drawCalls.filter((call) => call.kind === "rect");
     const clipCalls = drawCalls.filter((call) => call.kind === "clip");
-    assert.equal(rectCalls.length, 1);
-    assert.equal(clipCalls.length, 1);
-    assert.deepEqual(rectCalls[0], {
-      kind: "rect",
-      x: 0,
-      y: 0,
-      width: 400,
-      height: 200,
-    });
+    assert.equal(rectCalls.length, 2);
+    assert.equal(clipCalls.length, 2);
+    assert.deepEqual(rectCalls[0], { kind: "rect", x: 0, y: 0, width: 400, height: 200 });
+    assert.deepEqual(rectCalls[1], { kind: "rect", x: 0, y: 0, width: 400, height: 200 });
     assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
-    assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 4);
+    assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 6);
   } finally {
     restoreRenderGlobals(snapshot);
   }
