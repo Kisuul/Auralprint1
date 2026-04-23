@@ -5,6 +5,7 @@ import { state } from "../core/state.js";
 import { Spaces } from "../core/spaces.js";
 import { ColorPolicy } from "./color-policy.js";
 import { createCompositor } from "./compositor.js";
+import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualizer.js";
 
 /* =============================================================================
    Renderer
@@ -395,11 +396,15 @@ const Renderer = (() => {
   }
 
   const buildBandFrame = createBandFrameBridge();
+  const visualizerRegistry = createVisualizerRegistry();
+  registerBuiltInVisualizers(visualizerRegistry, {
+    legacyRenderFactory: () => new LegacyRenderCompatUnit(),
+  });
   const compositor = createCompositor({
-    factories: {
-      legacyRender() {
-        return new LegacyRenderCompatUnit();
-      },
+    registry: visualizerRegistry,
+    onWarning({ message }) {
+      if (!message) return;
+      console.warn(`[Compositor] ${message}`);
     },
   });
 

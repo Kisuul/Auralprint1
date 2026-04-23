@@ -5,6 +5,7 @@ import { IDENTITY_VIEW_TRANSFORM, createCompositor } from "../src/js/render/comp
 import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
+import { createVisualizerRegistry } from "../src/js/render/visualizer.js";
 
 function createTarget(overrides = {}) {
   return {
@@ -22,26 +23,27 @@ function createVisualizerRecorder() {
   const instances = new Map();
 
   function factory() {
-    return (node) => {
+    return ({ node } = {}) => {
+      const nodeId = node && node.id;
       const instance = {
         init(context) {
-          calls.push({ kind: "init", id: node.id, context });
+          calls.push({ kind: "init", id: nodeId, context });
         },
         resize(boundsPx) {
-          calls.push({ kind: "resize", id: node.id, boundsPx });
+          calls.push({ kind: "resize", id: nodeId, boundsPx });
         },
         update(frame, dtSec) {
-          calls.push({ kind: "update", id: node.id, frame, dtSec });
+          calls.push({ kind: "update", id: nodeId, frame, dtSec });
         },
         render(target, viewTransform) {
-          calls.push({ kind: "render", id: node.id, target, viewTransform });
+          calls.push({ kind: "render", id: nodeId, target, viewTransform });
         },
         dispose() {
-          calls.push({ kind: "dispose", id: node.id });
+          calls.push({ kind: "dispose", id: nodeId });
         },
       };
 
-      instances.set(node.id, instance);
+      instances.set(nodeId, instance);
       return instance;
     };
   }
@@ -49,13 +51,21 @@ function createVisualizerRecorder() {
   return { calls, instances, factory };
 }
 
+function createRegistry(typeToImplementation = {}) {
+  const registry = createVisualizerRegistry();
+  for (const [type, implementation] of Object.entries(typeToImplementation)) {
+    registry.register(type, implementation);
+  }
+  return registry;
+}
+
 test("compositor creates enabled nodes, forwards bounds, and renders with the identity ViewTransform", () => {
   const recorder = createVisualizerRecorder();
   const compositor = createCompositor({
-    factories: {
+    registry: createRegistry({
       overlay: recorder.factory(),
       hidden: recorder.factory(),
-    },
+    }),
   });
   const target = createTarget();
   const frame = { bands: [] };
@@ -112,9 +122,9 @@ test("compositor creates enabled nodes, forwards bounds, and renders with the id
 test("compositor renders in zIndex order and preserves scene order for zIndex ties", () => {
   const recorder = createVisualizerRecorder();
   const compositor = createCompositor({
-    factories: {
+    registry: createRegistry({
       layer: recorder.factory(),
-    },
+    }),
   });
   const target = createTarget();
 
@@ -162,9 +172,9 @@ test("compositor renders in zIndex order and preserves scene order for zIndex ti
 test("compositor disposes removed and disabled nodes during scene sync", () => {
   const recorder = createVisualizerRecorder();
   const compositor = createCompositor({
-    factories: {
+    registry: createRegistry({
       layer: recorder.factory(),
-    },
+    }),
   });
   const target = createTarget();
 
@@ -214,9 +224,9 @@ test("compositor disposes removed and disabled nodes during scene sync", () => {
 test("compositor reuses live instances until the target size changes, then re-resizes them", () => {
   const recorder = createVisualizerRecorder();
   const compositor = createCompositor({
-    factories: {
+    registry: createRegistry({
       layer: recorder.factory(),
-    },
+    }),
   });
   const scene = {
     nodes: [
@@ -243,6 +253,73 @@ test("compositor reuses live instances until the target size changes, then re-re
   assert.equal(resizeCalls.length, 2);
   assert.deepEqual(resizeCalls[0].boundsPx, { x: 100, y: 50, width: 200, height: 100 });
   assert.deepEqual(resizeCalls[1].boundsPx, { x: 200, y: 50, width: 400, height: 100 });
+});
+
+test("compositor warns and skips unknown or metadata-only visualizer types without interrupting active nodes", () => {
+  const recorder = createVisualizerRecorder();
+  const registry = createRegistry({
+    layer: recorder.factory(),
+  });
+  const warnings = [];
+  registry.register("futureLayer", null, {
+    capabilities: { runtimeImplemented: false, transitional: true },
+  });
+
+  const compositor = createCompositor({
+    registry,
+    onWarning(warning) {
+      warnings.push(warning);
+    },
+  });
+  const target = createTarget();
+
+  compositor.syncScene({
+    nodes: [
+      {
+        id: "good",
+        type: "layer",
+        enabled: true,
+        zIndex: 0,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: {},
+      },
+      {
+        id: "unknown",
+        type: "missingLayer",
+        enabled: true,
+        zIndex: 1,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: {},
+      },
+      {
+        id: "future",
+        type: "futureLayer",
+        enabled: true,
+        zIndex: 2,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: {},
+      },
+    ],
+  }, target);
+
+  compositor.update({ bands: [] }, 0.016);
+  compositor.render(target);
+
+  assert.deepEqual(
+    recorder.calls.filter((call) => call.kind === "init").map((call) => call.id),
+    ["good"]
+  );
+  assert.deepEqual(
+    recorder.calls.filter((call) => call.kind === "render").map((call) => call.id),
+    ["good"]
+  );
+  assert.equal(warnings.length, 2);
+  assert.deepEqual(warnings.map((warning) => warning.nodeId), ["unknown", "future"]);
+  assert.match(warnings[0].message, /Unknown visualizer type "missingLayer"\./);
+  assert.match(warnings[1].message, /registered without a runtime implementation/);
 });
 
 test("Renderer.renderFrame keeps the live seam on plain frame data and clips legacy rendering to compositor bounds", () => {

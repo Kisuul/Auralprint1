@@ -2802,6 +2802,223 @@
     return { bandRgb01, pickParticleColorRgb01, pickLineColorRgb01 };
   })();
 
+  // src/js/render/visualizer.js
+  var REQUIRED_VISUALIZER_METHODS = Object.freeze(["init", "update", "render", "resize", "dispose"]);
+  var FULL_SURFACE_BOUNDS = deepFreeze({ x: 0.5, y: 0.5, w: 1, h: 1 });
+  var CENTER_ANCHOR = deepFreeze({ x: 0.5, y: 0.5 });
+  var ORB_BAND_INDEX_LIMIT = Math.max(0, CONFIG.bandNames.length - 1);
+  var ORBS_SETTINGS_SCHEMA = deepFreeze({
+    kind: "array",
+    item: {
+      kind: "object",
+      fields: {
+        id: { type: "string", default: "ORB" },
+        chanId: { type: "string", default: "C", enum: ["L", "R", "C"] },
+        bandIds: {
+          type: "array",
+          default: [],
+          item: { type: "number", min: 0, max: ORB_BAND_INDEX_LIMIT, step: 1 }
+        },
+        chirality: { type: "number", default: -1, enum: [-1, 1] },
+        startAngleRad: { type: "number", default: 0 }
+      }
+    }
+  });
+  var BAND_OVERLAY_SETTINGS_SCHEMA = deepFreeze({
+    kind: "object",
+    fields: {
+      enabled: { type: "boolean", default: !!CONFIG.defaults.bands.overlay.enabled },
+      connectAdjacent: { type: "boolean", default: !!CONFIG.defaults.bands.overlay.connectAdjacent },
+      alpha: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.alpha,
+        min: CONFIG.limits.bands.overlayAlpha.min,
+        max: CONFIG.limits.bands.overlayAlpha.max,
+        step: CONFIG.limits.bands.overlayAlpha.step
+      },
+      pointSizePx: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.pointSizePx,
+        min: CONFIG.limits.bands.pointSizePx.min,
+        max: CONFIG.limits.bands.pointSizePx.max,
+        step: CONFIG.limits.bands.pointSizePx.step
+      },
+      minRadiusFrac: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.minRadiusFrac,
+        min: CONFIG.limits.bands.overlayMinRadiusFrac.min,
+        max: CONFIG.limits.bands.overlayMinRadiusFrac.max,
+        step: CONFIG.limits.bands.overlayMinRadiusFrac.step
+      },
+      maxRadiusFrac: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.maxRadiusFrac,
+        min: CONFIG.limits.bands.overlayMaxRadiusFrac.min,
+        max: CONFIG.limits.bands.overlayMaxRadiusFrac.max,
+        step: CONFIG.limits.bands.overlayMaxRadiusFrac.step
+      },
+      waveformRadialDisplaceFrac: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.waveformRadialDisplaceFrac,
+        min: CONFIG.limits.bands.overlayWaveformRadialDisplaceFrac.min,
+        max: CONFIG.limits.bands.overlayWaveformRadialDisplaceFrac.max,
+        step: CONFIG.limits.bands.overlayWaveformRadialDisplaceFrac.step
+      },
+      lineAlpha: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.lineAlpha,
+        min: CONFIG.limits.bands.overlayAlpha.min,
+        max: CONFIG.limits.bands.overlayAlpha.max,
+        step: CONFIG.limits.bands.overlayAlpha.step
+      },
+      lineWidthPx: { type: "number", default: CONFIG.defaults.bands.overlay.lineWidthPx },
+      phaseMode: { type: "string", default: CONFIG.defaults.bands.overlay.phaseMode, enum: ["orb", "free"] },
+      ringSpeedRadPerSec: {
+        type: "number",
+        default: CONFIG.defaults.bands.overlay.ringSpeedRadPerSec,
+        min: CONFIG.limits.bands.ringSpeedRadPerSec.min,
+        max: CONFIG.limits.bands.ringSpeedRadPerSec.max,
+        step: CONFIG.limits.bands.ringSpeedRadPerSec.step
+      }
+    }
+  });
+  var ORBS_DEFAULT_NODE = deepFreeze({
+    id: "orbs-1",
+    type: "orbs",
+    enabled: true,
+    zIndex: 0,
+    bounds: deepClone(FULL_SURFACE_BOUNDS),
+    anchor: deepClone(CENTER_ANCHOR),
+    settings: deepClone(CONFIG.defaults.orbs)
+  });
+  var BAND_OVERLAY_DEFAULT_NODE = deepFreeze({
+    id: "overlay-1",
+    type: "bandOverlay",
+    enabled: true,
+    zIndex: 1,
+    bounds: deepClone(FULL_SURFACE_BOUNDS),
+    anchor: deepClone(CENTER_ANCHOR),
+    settings: deepClone(CONFIG.defaults.bands.overlay)
+  });
+  function cloneMaybe(value) {
+    return value == null ? null : deepClone(value);
+  }
+  function isVisualizableType(type) {
+    return typeof type === "string" && !!type.trim();
+  }
+  function isClassConstructor(fn) {
+    if (typeof fn !== "function") return false;
+    return /^\s*class\b/.test(Function.prototype.toString.call(fn));
+  }
+  function createDescriptor(type, implementation, metadata) {
+    const safeMetadata = metadata && typeof metadata === "object" ? metadata : {};
+    return {
+      type,
+      implementation: typeof implementation === "function" ? implementation : null,
+      capabilities: cloneMaybe(safeMetadata.capabilities),
+      settingsSchema: cloneMaybe(safeMetadata.settingsSchema),
+      defaultNode: cloneMaybe(safeMetadata.defaultNode)
+    };
+  }
+  function readDescriptor(descriptor) {
+    if (!descriptor) return null;
+    return {
+      type: descriptor.type,
+      implementation: descriptor.implementation,
+      capabilities: cloneMaybe(descriptor.capabilities),
+      settingsSchema: cloneMaybe(descriptor.settingsSchema),
+      defaultNode: cloneMaybe(descriptor.defaultNode)
+    };
+  }
+  function createInstance(type, implementation, options) {
+    try {
+      return isClassConstructor(implementation) ? new implementation(options) : implementation(options);
+    } catch (error) {
+      const message = error instanceof Error && error.message ? error.message : String(error);
+      const wrapped = new Error(`Failed to create visualizer "${type}": ${message}`);
+      wrapped.cause = error;
+      throw wrapped;
+    }
+  }
+  function validateInstance(type, instance) {
+    if (!instance || typeof instance !== "object") {
+      throw new Error(`Visualizer "${type}" did not return an object instance.`);
+    }
+    const missingMethods = REQUIRED_VISUALIZER_METHODS.filter((method) => typeof instance[method] !== "function");
+    if (missingMethods.length) {
+      throw new Error(
+        `Visualizer "${type}" is missing required lifecycle methods: ${missingMethods.join(", ")}.`
+      );
+    }
+    return instance;
+  }
+  function createVisualizerRegistry() {
+    const descriptors = /* @__PURE__ */ new Map();
+    function register(type, implementation = null, metadata = {}) {
+      if (!isVisualizableType(type)) throw new Error("Visualizer type must be a non-empty string.");
+      if (descriptors.has(type)) throw new Error(`Visualizer type "${type}" is already registered.`);
+      const descriptor = createDescriptor(type, implementation, metadata);
+      descriptors.set(type, descriptor);
+      return readDescriptor(descriptor);
+    }
+    function has(type) {
+      return descriptors.has(type);
+    }
+    function get(type) {
+      return readDescriptor(descriptors.get(type) || null);
+    }
+    function create(type, options = {}) {
+      const descriptor = descriptors.get(type) || null;
+      if (!descriptor) throw new Error(`Unknown visualizer type "${type}".`);
+      if (typeof descriptor.implementation !== "function") {
+        throw new Error(`Visualizer type "${type}" is registered without a runtime implementation.`);
+      }
+      return validateInstance(type, createInstance(type, descriptor.implementation, options));
+    }
+    function getCapabilities(type) {
+      const descriptor = descriptors.get(type) || null;
+      return descriptor ? cloneMaybe(descriptor.capabilities) : null;
+    }
+    function getSettingsSchema(type) {
+      const descriptor = descriptors.get(type) || null;
+      return descriptor ? cloneMaybe(descriptor.settingsSchema) : null;
+    }
+    function getDefaultNode(type) {
+      const descriptor = descriptors.get(type) || null;
+      return descriptor ? cloneMaybe(descriptor.defaultNode) : null;
+    }
+    return { register, has, get, create, getCapabilities, getSettingsSchema, getDefaultNode };
+  }
+  function registerBuiltInVisualizers(registry, { legacyRenderFactory = null } = {}) {
+    if (!registry || typeof registry.register !== "function") {
+      throw new Error("A visualizer registry with a register() method is required.");
+    }
+    registry.register("legacyRender", legacyRenderFactory, {
+      capabilities: {
+        compatibilityMode: true,
+        runtimeImplemented: typeof legacyRenderFactory === "function",
+        transitional: true
+      }
+    });
+    registry.register("orbs", null, {
+      capabilities: {
+        runtimeImplemented: false,
+        transitional: true
+      },
+      settingsSchema: ORBS_SETTINGS_SCHEMA,
+      defaultNode: ORBS_DEFAULT_NODE
+    });
+    registry.register("bandOverlay", null, {
+      capabilities: {
+        runtimeImplemented: false,
+        transitional: true
+      },
+      settingsSchema: BAND_OVERLAY_SETTINGS_SCHEMA,
+      defaultNode: BAND_OVERLAY_DEFAULT_NODE
+    });
+    return registry;
+  }
+
   // src/js/render/compositor.js
   var IDENTITY_VIEW_TRANSFORM = Object.freeze({ kind: "identity" });
   function readSceneNodes(scene) {
@@ -2836,12 +3053,16 @@
     if (a.zIndex !== b.zIndex) return a.zIndex - b.zIndex;
     return a.sceneIndex - b.sceneIndex;
   }
-  function createCompositor({ factories = {} } = {}) {
+  function createCompositor({ registry = createVisualizerRegistry(), onWarning = null } = {}) {
     const liveEntries = /* @__PURE__ */ new Map();
     let activeEntries = [];
     function disposeEntry(entry) {
       if (!entry || !entry.instance || typeof entry.instance.dispose !== "function") return;
       entry.instance.dispose();
+    }
+    function emitWarning({ message, type = "", nodeId = "", cause = null }) {
+      if (typeof onWarning !== "function") return;
+      onWarning({ message, type, nodeId, cause });
     }
     function syncScene(scene, target) {
       const nodes = readSceneNodes(scene);
@@ -2866,15 +3087,9 @@
           entry = null;
         }
         if (!entry) {
-          const factory = factories[node.type];
-          if (typeof factory !== "function") {
-            throw new Error(`No compositor factory registered for scene node type "${node.type}".`);
-          }
-          const instance = factory(node);
-          if (!instance || typeof instance !== "object") {
-            throw new Error(`Compositor factory for "${node.type}" did not return an instance.`);
-          }
-          if (typeof instance.init === "function") {
+          let instance = null;
+          try {
+            instance = registry.create(node.type, { node });
             instance.init({
               canvas: target ? target.canvas : null,
               ctx: target ? target.ctx : null,
@@ -2883,6 +3098,20 @@
               dpr: Number.isFinite(target && target.dpr) ? target.dpr : 1,
               node
             });
+          } catch (error) {
+            if (instance && typeof instance.dispose === "function") {
+              try {
+                instance.dispose();
+              } catch {
+              }
+            }
+            emitWarning({
+              message: error instanceof Error && error.message ? error.message : `Failed to create visualizer "${node.type}".`,
+              type: node.type,
+              nodeId: node.id,
+              cause: error
+            });
+            continue;
           }
           entry = {
             id: node.id,
@@ -3246,11 +3475,15 @@
       }
     }
     const buildBandFrame = createBandFrameBridge();
+    const visualizerRegistry = createVisualizerRegistry();
+    registerBuiltInVisualizers(visualizerRegistry, {
+      legacyRenderFactory: () => new LegacyRenderCompatUnit()
+    });
     const compositor = createCompositor({
-      factories: {
-        legacyRender() {
-          return new LegacyRenderCompatUnit();
-        }
+      registry: visualizerRegistry,
+      onWarning({ message }) {
+        if (!message) return;
+        console.warn(`[Compositor] ${message}`);
       }
     });
     function getRenderTarget() {
