@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-22T10:28:37.017Z",
+  "generatedAt": "2026-04-23T07:16:57.327Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -253,13 +253,35 @@
         ],
         "format": "esm"
       },
+      "src/js/render/visualizer.js": {
+        "bytes": 8598,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          }
+        ],
+        "format": "esm"
+      },
       "src/js/render/compositor.js": {
-        "bytes": 5208,
-        "imports": [],
+        "bytes": 6108,
+        "imports": [
+          {
+            "path": "src/js/render/visualizer.js",
+            "kind": "import-statement",
+            "original": "./visualizer.js"
+          }
+        ],
         "format": "esm"
       },
       "src/js/render/renderer.js": {
-        "bytes": 14391,
+        "bytes": 14698,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -295,6 +317,11 @@
             "path": "src/js/render/compositor.js",
             "kind": "import-statement",
             "original": "./compositor.js"
+          },
+          {
+            "path": "src/js/render/visualizer.js",
+            "kind": "import-statement",
+            "original": "./visualizer.js"
           }
         ],
         "format": "esm"
@@ -645,11 +672,14 @@
           "src/js/render/color-policy.js": {
             "bytesInOutput": 1245
           },
+          "src/js/render/visualizer.js": {
+            "bytesInOutput": 8804
+          },
           "src/js/render/compositor.js": {
-            "bytesInOutput": 5379
+            "bytesInOutput": 6165
           },
           "src/js/render/renderer.js": {
-            "bytesInOutput": 13840
+            "bytesInOutput": 14067
           },
           "src/js/recording/recorder-engine.js": {
             "bytesInOutput": 49095
@@ -679,7 +709,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 307614
+        "bytes": 317465
       }
     }
   },

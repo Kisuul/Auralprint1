@@ -1,4 +1,14 @@
+import { createVisualizerRegistry } from "./visualizer.js";
+
 const IDENTITY_VIEW_TRANSFORM = Object.freeze({ kind: "identity" });
+
+function defaultWarningSink({ message, type = "", nodeId = "" }) {
+  if (typeof console !== "object" || typeof console.warn !== "function" || !message) return;
+
+  const nodePart = nodeId ? ` node "${nodeId}"` : "";
+  const typePart = type ? ` (${type})` : "";
+  console.warn(`[Compositor] Skipping${nodePart}${typePart}: ${message}`);
+}
 
 function readSceneNodes(scene) {
   return Array.isArray(scene && scene.nodes) ? scene.nodes : [];
@@ -45,13 +55,22 @@ function sortEntries(a, b) {
   return a.sceneIndex - b.sceneIndex;
 }
 
-function createCompositor({ factories = {} } = {}) {
+function createCompositor({ registry = createVisualizerRegistry(), onWarning = null } = {}) {
   const liveEntries = new Map();
   let activeEntries = [];
 
   function disposeEntry(entry) {
     if (!entry || !entry.instance || typeof entry.instance.dispose !== "function") return;
     entry.instance.dispose();
+  }
+
+  function emitWarning({ message, type = "", nodeId = "", cause = null }) {
+    const warning = { message, type, nodeId, cause };
+    if (typeof onWarning === "function") {
+      onWarning(warning);
+      return;
+    }
+    defaultWarningSink(warning);
   }
 
   function syncScene(scene, target) {
@@ -82,17 +101,9 @@ function createCompositor({ factories = {} } = {}) {
       }
 
       if (!entry) {
-        const factory = factories[node.type];
-        if (typeof factory !== "function") {
-          throw new Error(`No compositor factory registered for scene node type "${node.type}".`);
-        }
-
-        const instance = factory(node);
-        if (!instance || typeof instance !== "object") {
-          throw new Error(`Compositor factory for "${node.type}" did not return an instance.`);
-        }
-
-        if (typeof instance.init === "function") {
+        let instance = null;
+        try {
+          instance = registry.create(node.type, { node });
           instance.init({
             canvas: target ? target.canvas : null,
             ctx: target ? target.ctx : null,
@@ -101,6 +112,23 @@ function createCompositor({ factories = {} } = {}) {
             dpr: Number.isFinite(target && target.dpr) ? target.dpr : 1,
             node,
           });
+        } catch (error) {
+          if (instance && typeof instance.dispose === "function") {
+            try {
+              instance.dispose();
+            } catch {
+              // Disposal is best-effort when creation/init fails.
+            }
+          }
+          emitWarning({
+            message: error instanceof Error && error.message
+              ? error.message
+              : `Failed to create visualizer "${node.type}".`,
+            type: node.type,
+            nodeId: node.id,
+            cause: error,
+          });
+          continue;
         }
 
         entry = {
