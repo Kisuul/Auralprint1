@@ -1,5 +1,6 @@
 import { CONFIG } from "../core/config.js";
 import { deepClone, deepFreeze } from "../core/utils.js";
+import { BandOverlayVisualizer } from "./visualizers/band-overlay.js";
 
 const REQUIRED_VISUALIZER_METHODS = Object.freeze(["init", "update", "render", "resize", "dispose"]);
 
@@ -244,9 +245,9 @@ function registerBuiltInVisualizers(registry, { legacyRenderFactory = null } = {
     defaultNode: ORBS_DEFAULT_NODE,
   });
 
-  registry.register("bandOverlay", null, {
+  registry.register("bandOverlay", BandOverlayVisualizer, {
     capabilities: {
-      runtimeImplemented: false,
+      runtimeImplemented: true,
       transitional: true,
     },
     settingsSchema: BAND_OVERLAY_SETTINGS_SCHEMA,

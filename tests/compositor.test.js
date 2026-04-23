@@ -5,7 +5,7 @@ import { IDENTITY_VIEW_TRANSFORM, createCompositor } from "../src/js/render/comp
 import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
-import { createVisualizerRegistry } from "../src/js/render/visualizer.js";
+import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
 
 function createTarget(overrides = {}) {
   return {
@@ -15,6 +15,28 @@ function createTarget(overrides = {}) {
     heightPx: 200,
     dpr: 2,
     ...overrides,
+  };
+}
+
+function createDrawRecorderContext(drawCalls) {
+  return {
+    fillStyle: "",
+    strokeStyle: "",
+    lineWidth: 0,
+    lineJoin: "",
+    lineCap: "",
+    globalAlpha: 1,
+    save() { drawCalls.push({ kind: "save" }); },
+    restore() { drawCalls.push({ kind: "restore" }); },
+    fillRect(x, y, width, height) { drawCalls.push({ kind: "fillRect", x, y, width, height }); },
+    beginPath() { drawCalls.push({ kind: "beginPath" }); },
+    moveTo(x, y) { drawCalls.push({ kind: "moveTo", x, y }); },
+    lineTo(x, y) { drawCalls.push({ kind: "lineTo", x, y }); },
+    stroke() { drawCalls.push({ kind: "stroke" }); },
+    arc(x, y, radius) { drawCalls.push({ kind: "arc", x, y, radius }); },
+    fill() { drawCalls.push({ kind: "fill" }); },
+    rect(x, y, width, height) { drawCalls.push({ kind: "rect", x, y, width, height }); },
+    clip() { drawCalls.push({ kind: "clip" }); },
   };
 }
 
@@ -57,6 +79,40 @@ function createRegistry(typeToImplementation = {}) {
     registry.register(type, implementation);
   }
   return registry;
+}
+
+function captureRenderGlobals() {
+  return {
+    runtimeSettings: structuredClone(runtime.settings),
+    canvas: state.canvas,
+    ctx: state.ctx,
+    widthPx: state.widthPx,
+    heightPx: state.heightPx,
+    dpr: state.dpr,
+    orbs: state.orbs.slice(),
+    bands: structuredClone(state.bands),
+  };
+}
+
+function restoreRenderGlobals(snapshot) {
+  runtime.settings = snapshot.runtimeSettings;
+  state.canvas = snapshot.canvas;
+  state.ctx = snapshot.ctx;
+  state.widthPx = snapshot.widthPx;
+  state.heightPx = snapshot.heightPx;
+  state.dpr = snapshot.dpr;
+  state.orbs.length = 0;
+  state.orbs.push(...snapshot.orbs);
+  state.bands.lowHz = snapshot.bands.lowHz.slice();
+  state.bands.highHz = snapshot.bands.highHz.slice();
+  state.bands.energies01 = snapshot.bands.energies01.slice();
+  state.bands.meta.sampleRateHz = snapshot.bands.meta.sampleRateHz;
+  state.bands.meta.nyquistHz = snapshot.bands.meta.nyquistHz;
+  state.bands.meta.configCeilingHz = snapshot.bands.meta.configCeilingHz;
+  state.bands.meta.effectiveCeilingHz = snapshot.bands.meta.effectiveCeilingHz;
+  state.bands.dominantIndex = snapshot.bands.dominantIndex;
+  state.bands.dominantName = snapshot.bands.dominantName;
+  state.bands.ringPhaseRad = snapshot.bands.ringPhaseRad;
 }
 
 test("compositor creates enabled nodes, forwards bounds, and renders with the identity ViewTransform", () => {
@@ -379,42 +435,106 @@ test("compositor emits a default warning when a bad node is skipped without an e
   }
 });
 
-test("Renderer.renderFrame keeps the live seam on plain frame data and clips legacy rendering to compositor bounds", () => {
-  const previousRuntimeSettings = structuredClone(runtime.settings);
-  const previousCanvas = state.canvas;
-  const previousCtx = state.ctx;
-  const previousWidthPx = state.widthPx;
-  const previousHeightPx = state.heightPx;
-  const previousDpr = state.dpr;
-  const previousOrbs = state.orbs.slice();
-  const previousBands = structuredClone(state.bands);
-
+test("built-in bandOverlay visualizer renders through the compositor and stops drawing once disabled", () => {
+  const snapshot = captureRenderGlobals();
   const drawCalls = [];
-  const fakeCtx = {
-    fillStyle: "",
-    strokeStyle: "",
-    lineWidth: 0,
-    lineJoin: "",
-    lineCap: "",
-    globalAlpha: 1,
-    save() { drawCalls.push({ kind: "save" }); },
-    restore() { drawCalls.push({ kind: "restore" }); },
-    fillRect(x, y, width, height) { drawCalls.push({ kind: "fillRect", x, y, width, height }); },
-    beginPath() { drawCalls.push({ kind: "beginPath" }); },
-    moveTo(x, y) { drawCalls.push({ kind: "moveTo", x, y }); },
-    lineTo(x, y) { drawCalls.push({ kind: "lineTo", x, y }); },
-    stroke() { drawCalls.push({ kind: "stroke" }); },
-    arc(x, y, radius) { drawCalls.push({ kind: "arc", x, y, radius }); },
-    fill() { drawCalls.push({ kind: "fill" }); },
-    rect(x, y, width, height) { drawCalls.push({ kind: "rect", x, y, width, height }); },
-    clip() { drawCalls.push({ kind: "clip" }); },
-  };
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.bands.count = 4;
+    runtime.settings.bands.overlay.enabled = true;
+    runtime.settings.bands.overlay.connectAdjacent = true;
+    runtime.settings.bands.overlay.pointSizePx = 2;
+    runtime.settings.bands.overlay.minRadiusFrac = 0.1;
+    runtime.settings.bands.overlay.maxRadiusFrac = 0.4;
+    runtime.settings.bands.overlay.waveformRadialDisplaceFrac = 0.15;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.orbs.length = 0;
+    state.bands.energies01 = [0.1, 0.3, 0.6, 0.2];
+    state.bands.ringPhaseRad = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry, {
+      legacyRenderFactory: () => ({
+        init() {},
+        update() {},
+        render() {},
+        resize() {},
+        dispose() {},
+      }),
+    });
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: fakeCtx, dpr: 1 });
+    const activeScene = {
+      nodes: [
+        {
+          id: "overlay-root",
+          type: "bandOverlay",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: {},
+        },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        compat: {
+          centerWaveform: Float32Array.from([0.1, -0.2, 0.3, -0.1]),
+        },
+      },
+      bands: [],
+    };
+
+    compositor.syncScene(activeScene, target);
+    compositor.update(frame, 0.016);
+    compositor.render(target);
+
+    const clipCalls = drawCalls.filter((call) => call.kind === "clip");
+    const rectCalls = drawCalls.filter((call) => call.kind === "rect");
+    assert.equal(clipCalls.length, 1);
+    assert.deepEqual(rectCalls[0], { kind: "rect", x: 100, y: 50, width: 200, height: 100 });
+    assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
+    assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 4);
+
+    const drawCountBeforeDisable = drawCalls.length;
+    compositor.syncScene({
+      nodes: [
+        {
+          ...activeScene.nodes[0],
+          enabled: false,
+        },
+      ],
+    }, target);
+    compositor.update(frame, 0.016);
+    compositor.render(target);
+
+    assert.equal(drawCalls.length, drawCountBeforeDisable);
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("Renderer.renderFrame keeps the live seam on plain frame data and clips legacy rendering to compositor bounds", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
 
   let centerWaveformReads = 0;
   let analyserAccessed = false;
 
   try {
-    runtime.settings = structuredClone(previousRuntimeSettings);
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
     runtime.settings.bands.count = 4;
     runtime.settings.bands.overlay.enabled = true;
     runtime.settings.bands.overlay.connectAdjacent = true;
@@ -485,36 +605,20 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips leg
     assert.equal(analyserAccessed, false);
     assert.equal(centerWaveformReads, 1);
 
-    const clipIndex = drawCalls.findIndex((call) => call.kind === "clip");
-    const rectIndex = drawCalls.findIndex((call) => call.kind === "rect");
-    assert.notEqual(rectIndex, -1);
-    assert.notEqual(clipIndex, -1);
-    assert.ok(rectIndex < clipIndex);
-    assert.deepEqual(drawCalls[rectIndex], {
+    const rectCalls = drawCalls.filter((call) => call.kind === "rect");
+    const clipCalls = drawCalls.filter((call) => call.kind === "clip");
+    assert.equal(rectCalls.length, 1);
+    assert.equal(clipCalls.length, 1);
+    assert.deepEqual(rectCalls[0], {
       kind: "rect",
       x: 0,
       y: 0,
       width: 400,
       height: 200,
     });
+    assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
+    assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 4);
   } finally {
-    runtime.settings = previousRuntimeSettings;
-    state.canvas = previousCanvas;
-    state.ctx = previousCtx;
-    state.widthPx = previousWidthPx;
-    state.heightPx = previousHeightPx;
-    state.dpr = previousDpr;
-    state.orbs.length = 0;
-    state.orbs.push(...previousOrbs);
-    state.bands.lowHz = previousBands.lowHz.slice();
-    state.bands.highHz = previousBands.highHz.slice();
-    state.bands.energies01 = previousBands.energies01.slice();
-    state.bands.meta.sampleRateHz = previousBands.meta.sampleRateHz;
-    state.bands.meta.nyquistHz = previousBands.meta.nyquistHz;
-    state.bands.meta.configCeilingHz = previousBands.meta.configCeilingHz;
-    state.bands.meta.effectiveCeilingHz = previousBands.meta.effectiveCeilingHz;
-    state.bands.dominantIndex = previousBands.dominantIndex;
-    state.bands.dominantName = previousBands.dominantName;
-    state.bands.ringPhaseRad = previousBands.ringPhaseRad;
+    restoreRenderGlobals(snapshot);
   }
 });
