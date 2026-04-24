@@ -151,7 +151,7 @@ class BandOverlayVisualizer {
       dpr: readPositiveNumber(target && target.dpr, readPositiveNumber(this.context && this.context.dpr, 1)),
     };
 
-    if (!ctx || !overlay.enabled || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
+    if (!ctx || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
 
     ctx.save();
     if (this.boundsPx) {

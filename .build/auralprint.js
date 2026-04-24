@@ -2929,7 +2929,7 @@
         heightPx: readPositiveNumber(target && target.heightPx, readPositiveNumber(this.context && this.context.heightPx, 0)),
         dpr: readPositiveNumber(target && target.dpr, readPositiveNumber(this.context && this.context.dpr, 1))
       };
-      if (!ctx || !overlay.enabled || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
+      if (!ctx || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
       ctx.save();
       if (this.boundsPx) {
         ctx.beginPath();
@@ -3837,7 +3837,7 @@
       const existingNode = existingById.get(id) || null;
       return {
         ...freshNode,
-        enabled: freshNode.type === "bandOverlay" ? !!(freshNode.settings && freshNode.settings.enabled) : existingNode ? !!existingNode.enabled : !!freshNode.enabled
+        enabled: existingNode ? !!existingNode.enabled : !!freshNode.enabled
       };
     }));
   }
@@ -3887,7 +3887,6 @@
       preferences.orbs = deepClone(node.settings);
     } else if (node.type === "bandOverlay") {
       node.settings = sanitizeOverlaySettings(node.settings);
-      node.enabled = !!node.settings.enabled;
       preferences.bands.overlay = deepClone(node.settings);
     }
     resolveSettings();
@@ -3923,13 +3922,6 @@
     if (!node) return readSceneSnapshot();
     const enabled = typeof nextEnabled === "boolean" ? nextEnabled : !node.enabled;
     node.enabled = enabled;
-    if (node.type === "bandOverlay") {
-      node.settings = sanitizeOverlaySettings({
-        ...node.settings && typeof node.settings === "object" ? node.settings : {},
-        enabled
-      });
-      persistSceneNodeSettings(node);
-    }
     return readSceneSnapshot();
   }
   function buildNextOrbId(orbs) {
@@ -7049,13 +7041,7 @@
         enabledInput.checked = !!node.enabled;
         enabledInput.addEventListener("change", () => {
           toggleSceneNodeEnabled(node.id, enabledInput.checked);
-          if (node.type === "bandOverlay") {
-            applyPrefs(enabledInput.checked ? "scene overlay enabled" : "scene overlay disabled", {
-              statusTarget: "scene"
-            });
-          } else {
-            panelStatusToast("scene", enabledInput.checked ? `${node.displayName} enabled.` : `${node.displayName} disabled.`);
-          }
+          panelStatusToast("scene", enabledInput.checked ? `${node.displayName} enabled.` : `${node.displayName} disabled.`);
           refreshScenePanel(true);
         });
         enabledLabel.appendChild(enabledInput);
@@ -8291,7 +8277,9 @@ ${liveTitle}` : liveTitle;
         applyPrefs("particle color source", { statusTarget: "banking" });
       });
       ui.chkBandOverlay.addEventListener("change", () => {
-        preferences.bands.overlay.enabled = !!ui.chkBandOverlay.checked;
+        const enabled = !!ui.chkBandOverlay.checked;
+        preferences.bands.overlay.enabled = enabled;
+        toggleSceneNodeEnabled("overlay-1", enabled);
         applyPrefs("band overlay", { statusTarget: "banking" });
       });
       ui.chkBandConnect.addEventListener("change", () => {
