@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-24T21:36:58.052Z",
+  "generatedAt": "2026-04-24T22:16:37.839Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -254,7 +254,7 @@
         "format": "esm"
       },
       "src/js/render/visualizers/band-overlay.js": {
-        "bytes": 5785,
+        "bytes": 5765,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -441,7 +441,7 @@
         "format": "esm"
       },
       "src/js/render/scene-runtime.js": {
-        "bytes": 11879,
+        "bytes": 11496,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -550,7 +550,7 @@
         "format": "esm"
       },
       "src/js/ui/ui.js": {
-        "bytes": 135758,
+        "bytes": 135638,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -781,7 +781,7 @@
             "bytesInOutput": 1245
           },
           "src/js/render/visualizers/band-overlay.js": {
-            "bytesInOutput": 5731
+            "bytesInOutput": 5711
           },
           "src/js/render/trail-system.js": {
             "bytesInOutput": 1478
@@ -802,7 +802,7 @@
             "bytesInOutput": 6695
           },
           "src/js/render/scene-runtime.js": {
-            "bytesInOutput": 11588
+            "bytesInOutput": 11211
           },
           "src/js/render/renderer.js": {
             "bytesInOutput": 8007
@@ -820,13 +820,13 @@
             "bytesInOutput": 2243
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 128950
+            "bytesInOutput": 128807
           },
           "src/js/main.js": {
             "bytesInOutput": 2604
           }
         },
-        "bytes": 360858
+        "bytes": 360318
       }
     }
   },

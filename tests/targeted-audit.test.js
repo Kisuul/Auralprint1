@@ -1894,13 +1894,14 @@ test("Scene panel renders the runtime node list and selected visualizer inspecto
 test("Scene panel toggles node enabled state and ordering through explicit controls", async () => {
   await withUiWireHarnessState({}, () => {
     const orbsBefore = structuredClone(preferences.orbs);
+    const overlayEnabledBefore = preferences.bands.overlay.enabled;
     const overlayRow = readSceneRowAt(1);
     const overlayActions = readSceneRowActions(overlayRow);
-    overlayActions.enabledInput.checked = false;
+    overlayActions.enabledInput.checked = true;
     overlayActions.enabledInput.dispatch("change");
 
-    assert.equal(UI.getSceneUiModel().nodes[1].enabled, false);
-    assert.equal(preferences.bands.overlay.enabled, false);
+    assert.equal(UI.getSceneUiModel().nodes[1].enabled, true);
+    assert.equal(preferences.bands.overlay.enabled, overlayEnabledBefore);
 
     const orbsRow = readSceneRowAt(0);
     const orbsActions = readSceneRowActions(orbsRow);
@@ -1917,6 +1918,46 @@ test("Scene panel toggles node enabled state and ordering through explicit contr
     assert.equal(UI.getSceneUiModel().nodes[0].zIndex, 0);
     assert.equal(UI.getSceneUiModel().nodes[1].zIndex, 1);
   });
+});
+
+test("Scene panel bandOverlay node toggle stays runtime-only and never alters preset hash", async () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  globalThis.location = locationStub;
+  globalThis.history = { replaceState(_state, _title, url) { locationStub.hash = new URL(url, "https://example.test").hash; } };
+  globalThis.btoa = (value) => Buffer.from(value, "utf8").toString("base64");
+  globalThis.atob = (value) => Buffer.from(value, "base64").toString("utf8");
+
+  try {
+    await withUiWireHarnessState({}, () => {
+      UrlPreset.writeHashFromPrefs();
+      const beforeHash = locationStub.hash;
+      const overlayEnabledBefore = preferences.bands.overlay.enabled;
+
+      const overlayActions = readSceneRowActions(readSceneRowAt(1));
+      overlayActions.enabledInput.checked = true;
+      overlayActions.enabledInput.dispatch("change");
+
+      UrlPreset.writeHashFromPrefs();
+
+      assert.equal(UI.getSceneUiModel().nodes[1].enabled, true);
+      assert.equal(preferences.bands.overlay.enabled, overlayEnabledBefore);
+      assert.equal(locationStub.hash, beforeHash);
+    });
+  } finally {
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
 });
 
 test("Scene panel band overlay inspector updates live overlay settings", async () => {

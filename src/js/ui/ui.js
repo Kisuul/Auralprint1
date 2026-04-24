@@ -1729,13 +1729,7 @@ const UI = (() => {
       enabledInput.checked = !!node.enabled;
       enabledInput.addEventListener("change", () => {
         toggleSceneNodeEnabled(node.id, enabledInput.checked);
-        if (node.type === "bandOverlay") {
-          applyPrefs(enabledInput.checked ? "scene overlay enabled" : "scene overlay disabled", {
-            statusTarget: "scene",
-          });
-        } else {
-          panelStatusToast("scene", enabledInput.checked ? `${node.displayName} enabled.` : `${node.displayName} disabled.`);
-        }
+        panelStatusToast("scene", enabledInput.checked ? `${node.displayName} enabled.` : `${node.displayName} disabled.`);
         refreshScenePanel(true);
       });
       enabledLabel.appendChild(enabledInput);
@@ -3220,7 +3214,12 @@ const UI = (() => {
       applyPrefs("particle color source", { statusTarget: "banking" });
     });
 
-    ui.chkBandOverlay.addEventListener("change", () => { preferences.bands.overlay.enabled = !!ui.chkBandOverlay.checked; applyPrefs("band overlay", { statusTarget: "banking" }); });
+    ui.chkBandOverlay.addEventListener("change", () => {
+      const enabled = !!ui.chkBandOverlay.checked;
+      preferences.bands.overlay.enabled = enabled;
+      toggleSceneNodeEnabled("overlay-1", enabled);
+      applyPrefs("band overlay", { statusTarget: "banking" });
+    });
     ui.chkBandConnect.addEventListener("change", () => { preferences.bands.overlay.connectAdjacent = !!ui.chkBandConnect.checked; applyPrefs("band connect", { statusTarget: "banking" }); });
 
     ui.rngBandAlpha.addEventListener("input", () => { preferences.bands.overlay.alpha = Number(ui.rngBandAlpha.value); applyPrefs("overlay alpha", { statusTarget: "banking" }); });

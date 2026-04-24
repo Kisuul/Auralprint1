@@ -497,6 +497,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
           anchor: { x: 0.5, y: 0.5 },
           settings: {
             ...structuredClone(runtime.settings.bands.overlay),
+            enabled: false,
             pointSizePx: 2,
           },
         },
@@ -530,6 +531,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
     assert.equal(arcCalls.length, 4);
     assert.equal(runtime.settings.bands.overlay.pointSizePx, 1);
+    assert.equal(activeScene.nodes[0].settings.enabled, false);
     assert.deepEqual(arcCalls[0], { kind: "arc", x: 640, y: 300, radius: 6 });
     assert.deepEqual(arcCalls[1], { kind: "arc", x: 400, y: 240, radius: 6 });
     assertNearlyEqual(arcCalls[2].x, 250, "Expected third frame-driven overlay point x");

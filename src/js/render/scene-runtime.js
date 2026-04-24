@@ -157,9 +157,7 @@ function buildSceneNodesFromPreferences({ preserveRuntimeState = false } = {}) {
     const existingNode = existingById.get(id) || null;
     return {
       ...freshNode,
-      enabled: freshNode.type === "bandOverlay"
-        ? !!(freshNode.settings && freshNode.settings.enabled)
-        : (existingNode ? !!existingNode.enabled : !!freshNode.enabled),
+      enabled: existingNode ? !!existingNode.enabled : !!freshNode.enabled,
     };
   }));
 }
@@ -221,7 +219,6 @@ function persistSceneNodeSettings(node) {
     preferences.orbs = deepClone(node.settings);
   } else if (node.type === "bandOverlay") {
     node.settings = sanitizeOverlaySettings(node.settings);
-    node.enabled = !!node.settings.enabled;
     preferences.bands.overlay = deepClone(node.settings);
   }
 
@@ -267,14 +264,6 @@ function toggleSceneNodeEnabled(nodeId, nextEnabled = null) {
 
   const enabled = typeof nextEnabled === "boolean" ? nextEnabled : !node.enabled;
   node.enabled = enabled;
-
-  if (node.type === "bandOverlay") {
-    node.settings = sanitizeOverlaySettings({
-      ...(node.settings && typeof node.settings === "object" ? node.settings : {}),
-      enabled,
-    });
-    persistSceneNodeSettings(node);
-  }
 
   return readSceneSnapshot();
 }
