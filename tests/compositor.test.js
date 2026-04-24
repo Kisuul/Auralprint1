@@ -98,6 +98,7 @@ function captureRenderGlobals() {
     heightPx: state.heightPx,
     dpr: state.dpr,
     orbs: state.orbs.slice(),
+    scene: structuredClone(state.scene),
     bands: structuredClone(state.bands),
     time: { ...state.time },
   };
@@ -112,6 +113,8 @@ function restoreRenderGlobals(snapshot) {
   state.dpr = snapshot.dpr;
   state.orbs.length = 0;
   state.orbs.push(...snapshot.orbs);
+  state.scene.nodes = structuredClone(snapshot.scene.nodes);
+  state.scene.selectedNodeId = snapshot.scene.selectedNodeId;
   state.bands.lowHz = snapshot.bands.lowHz.slice();
   state.bands.highHz = snapshot.bands.highHz.slice();
   state.bands.energies01 = snapshot.bands.energies01.slice();
@@ -456,7 +459,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     runtime.settings.bands.count = 4;
     runtime.settings.bands.overlay.enabled = true;
     runtime.settings.bands.overlay.connectAdjacent = true;
-    runtime.settings.bands.overlay.pointSizePx = 2;
+    runtime.settings.bands.overlay.pointSizePx = 1;
     runtime.settings.bands.overlay.minRadiusFrac = 0.1;
     runtime.settings.bands.overlay.maxRadiusFrac = 0.4;
     runtime.settings.bands.overlay.waveformRadialDisplaceFrac = 0;
@@ -492,7 +495,10 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
           zIndex: 0,
           bounds: { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
           anchor: { x: 0.5, y: 0.5 },
-          settings: {},
+          settings: {
+            ...structuredClone(runtime.settings.bands.overlay),
+            pointSizePx: 2,
+          },
         },
       ],
     };
@@ -523,6 +529,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     assert.deepEqual(rectCalls[0], { kind: "rect", x: 200, y: 150, width: 400, height: 300 });
     assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
     assert.equal(arcCalls.length, 4);
+    assert.equal(runtime.settings.bands.overlay.pointSizePx, 1);
     assert.deepEqual(arcCalls[0], { kind: "arc", x: 640, y: 300, radius: 6 });
     assert.deepEqual(arcCalls[1], { kind: "arc", x: 400, y: 240, radius: 6 });
     assertNearlyEqual(arcCalls[2].x, 250, "Expected third frame-driven overlay point x");
@@ -862,6 +869,27 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips com
     state.heightPx = 200;
     state.dpr = 1;
     state.orbs.length = 0;
+    state.scene.nodes = [
+      {
+        id: "orbs-1",
+        type: "orbs",
+        enabled: true,
+        zIndex: 0,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: structuredClone(runtime.settings.orbs),
+      },
+      {
+        id: "overlay-1",
+        type: "bandOverlay",
+        enabled: true,
+        zIndex: 1,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: structuredClone(runtime.settings.bands.overlay),
+      },
+    ];
+    state.scene.selectedNodeId = "orbs-1";
     state.bands.lowHz = [0, 100, 200, 300];
     state.bands.highHz = [100, 200, 300, Infinity];
     state.bands.energies01 = [0.1, 0.3, 0.6, 0.2];

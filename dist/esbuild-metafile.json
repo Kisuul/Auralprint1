@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-23T11:14:45.129Z",
+  "generatedAt": "2026-04-24T21:36:58.052Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -50,7 +50,7 @@
         "format": "esm"
       },
       "src/js/core/state.js": {
-        "bytes": 3059,
+        "bytes": 3195,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -254,7 +254,7 @@
         "format": "esm"
       },
       "src/js/render/visualizers/band-overlay.js": {
-        "bytes": 5425,
+        "bytes": 5785,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -440,8 +440,39 @@
         ],
         "format": "esm"
       },
+      "src/js/render/scene-runtime.js": {
+        "bytes": 11879,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/state.js",
+            "kind": "import-statement",
+            "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/render/visualizer.js",
+            "kind": "import-statement",
+            "original": "./visualizer.js"
+          }
+        ],
+        "format": "esm"
+      },
       "src/js/render/renderer.js": {
-        "bytes": 9203,
+        "bytes": 8534,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -462,6 +493,11 @@
             "path": "src/js/render/compositor.js",
             "kind": "import-statement",
             "original": "./compositor.js"
+          },
+          {
+            "path": "src/js/render/scene-runtime.js",
+            "kind": "import-statement",
+            "original": "./scene-runtime.js"
           },
           {
             "path": "src/js/render/visualizer.js",
@@ -493,7 +529,7 @@
         "format": "esm"
       },
       "src/js/ui/dom-cache.js": {
-        "bytes": 14110,
+        "bytes": 15093,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -514,7 +550,7 @@
         "format": "esm"
       },
       "src/js/ui/ui.js": {
-        "bytes": 115120,
+        "bytes": 135758,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -580,6 +616,11 @@
             "path": "src/js/render/color-policy.js",
             "kind": "import-statement",
             "original": "../render/color-policy.js"
+          },
+          {
+            "path": "src/js/render/scene-runtime.js",
+            "kind": "import-statement",
+            "original": "../render/scene-runtime.js"
           },
           {
             "path": "src/js/recording/recorder-engine.js",
@@ -713,7 +754,7 @@
             "bytesInOutput": 6483
           },
           "src/js/core/state.js": {
-            "bytesInOutput": 2765
+            "bytesInOutput": 2894
           },
           "src/js/core/spaces.js": {
             "bytesInOutput": 791
@@ -740,7 +781,7 @@
             "bytesInOutput": 1245
           },
           "src/js/render/visualizers/band-overlay.js": {
-            "bytesInOutput": 5363
+            "bytesInOutput": 5731
           },
           "src/js/render/trail-system.js": {
             "bytesInOutput": 1478
@@ -760,8 +801,11 @@
           "src/js/render/compositor.js": {
             "bytesInOutput": 6695
           },
+          "src/js/render/scene-runtime.js": {
+            "bytesInOutput": 11588
+          },
           "src/js/render/renderer.js": {
-            "bytesInOutput": 8771
+            "bytesInOutput": 8007
           },
           "src/js/recording/recorder-engine.js": {
             "bytesInOutput": 49095
@@ -770,19 +814,19 @@
             "bytesInOutput": 2453
           },
           "src/js/ui/dom-cache.js": {
-            "bytesInOutput": 13160
+            "bytesInOutput": 14145
           },
           "src/js/ui/runtime-log.js": {
             "bytesInOutput": 2243
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 107880
+            "bytesInOutput": 128950
           },
           "src/js/main.js": {
             "bytesInOutput": 2604
           }
         },
-        "bytes": 327445
+        "bytes": 360858
       }
     }
   },
@@ -805,7 +849,7 @@
         "imports": []
       },
       "src/css/sim-panel.css": {
-        "bytes": 421,
+        "bytes": 4991,
         "imports": []
       },
       "src/css/bands-panel.css": {
@@ -875,7 +919,7 @@
             "bytesInOutput": 440
           },
           "src/css/sim-panel.css": {
-            "bytesInOutput": 348
+            "bytesInOutput": 4163
           },
           "src/css/bands-panel.css": {
             "bytesInOutput": 2958
@@ -887,7 +931,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 21804
+        "bytes": 25619
       }
     }
   }

@@ -11,6 +11,21 @@ import { AudioEngine } from "../audio/audio-engine.js";
 import { Scrubber } from "../audio/scrubber.js";
 import { InputSourceManager } from "../audio/input-source-manager.js";
 import { ColorPolicy } from "../render/color-policy.js";
+import {
+  addSceneOrb,
+  moveSceneNode,
+  readSceneNodeDisplayName,
+  readSceneSettingsSchema,
+  readSceneSnapshot,
+  readSelectedSceneNode,
+  removeSceneOrb,
+  resetSceneRuntimeFromPreferences,
+  selectSceneNode,
+  syncSceneRuntimeFromPreferences,
+  toggleSceneNodeEnabled,
+  updateSceneNodeSettings,
+  updateSceneOrb,
+} from "../render/scene-runtime.js";
 import { RecorderEngine } from "../recording/recorder-engine.js";
 import { initOrbs, resetOrbTrails, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
 import { primeDomCache } from "./dom-cache.js";
@@ -587,7 +602,7 @@ const UI = (() => {
   const STATUS_DEFAULTS = Object.freeze({
     analysis: "Analysis panel: FFT, smoothing, RMS gain.",
     banking: "Banking panel: dominant band, distribution, color policy, and optional detailed inspection.",
-    scene: "Scene panel: trace, particles, motion, and render-facing controls.",
+    scene: "Scene panel: enable, order, and configure active visualizers while keeping legacy visual controls available below.",
     workspace: "Workspace / Presets panel: share, apply URL presets, and reset preferences.",
   });
   const panelStatusToastTimers = Object.create(null);
@@ -1021,6 +1036,7 @@ const UI = (() => {
     const {
       rebuildBandsOnDefinitionChange = false,
       statusTarget = "scene",
+      resetSceneFromPreferences = false,
     } = options;
     const prevBandDefKey = BandBankController.readBandDefKey(runtime.settings);
 
@@ -1028,6 +1044,8 @@ const UI = (() => {
     preferences.particles.ttlSec = Math.max(preferences.particles.ttlSec, preferences.particles.sizeToMinSec);
 
     resolveSettings();
+    if (resetSceneFromPreferences) resetSceneRuntimeFromPreferences();
+    else syncSceneRuntimeFromPreferences();
 
     BandBankController.syncFromSettings();
     const bandDefinitionChanged = BandBankController.readBandDefKey(runtime.settings) !== prevBandDefKey;
@@ -1039,6 +1057,7 @@ const UI = (() => {
     AudioEngine.applyPlaybackSettingsLive();
 
     if (reason) panelStatusToast(statusTarget, `Updated: ${reason}`);
+    refreshScenePanel();
   }
 
 
@@ -1047,6 +1066,7 @@ const UI = (() => {
     applyPrefs("prefs reset", {
       rebuildBandsOnDefinitionChange: true,
       statusTarget: "workspace",
+      resetSceneFromPreferences: true,
     });
     initOrbs();
     resetOrbsToDesignedPhases();
@@ -1069,6 +1089,7 @@ const UI = (() => {
       applyPrefs("applied URL preset", {
         rebuildBandsOnDefinitionChange: true,
         statusTarget: "workspace",
+        resetSceneFromPreferences: true,
       });
       initOrbs();
       resetOrbsToDesignedPhases();
@@ -1222,6 +1243,536 @@ const UI = (() => {
       ui.bandRowEls[i].range.style.opacity = isDom ? "0.96" : "0.72";
       ui.bandRowEls[i].range.textContent = BandBank.formatBandRangeText(i);
     }
+  }
+
+  function readSceneUiModel() {
+    const snapshot = readSceneSnapshot();
+    const nodes = snapshot.nodes.map((node, index) => ({
+      ...node,
+      displayName: readSceneNodeDisplayName(node.type),
+      order: index + 1,
+      selected: snapshot.selectedNodeId === node.id,
+    }));
+    const selectedSceneNode = readSelectedSceneNode();
+    const selectedNode = selectedSceneNode
+      ? {
+        ...selectedSceneNode,
+        displayName: readSceneNodeDisplayName(selectedSceneNode.type),
+        order: Math.max(1, nodes.findIndex((node) => node.id === selectedSceneNode.id) + 1),
+        selected: true,
+      }
+      : null;
+
+    return {
+      nodeCount: nodes.length,
+      activeCount: nodes.filter((node) => node.enabled).length,
+      nodes,
+      selectedNode,
+    };
+  }
+
+  function buildSceneUiSyncKey() {
+    return JSON.stringify(readSceneSnapshot());
+  }
+
+  function sceneControlId(...parts) {
+    return parts
+      .map((part) => String(part).replace(/[^a-zA-Z0-9_-]+/g, "-"))
+      .join("-");
+  }
+
+  function formatSceneFieldValue(value, fieldSchema = null) {
+    if (fieldSchema && fieldSchema.type === "boolean") return value ? "on" : "off";
+    if (typeof value === "boolean") return value ? "on" : "off";
+    if (Number.isFinite(value)) return Number.isInteger(value) ? `${value}` : fmt(value, 3);
+    if (value == null || value === "") return "n/a";
+    return String(value);
+  }
+
+  function formatSceneBandIdsText(bandIds) {
+    return Array.isArray(bandIds) && bandIds.length ? bandIds.join(", ") : "";
+  }
+
+  function readSceneBandIdsSummaryText(bandIds) {
+    const text = formatSceneBandIdsText(bandIds);
+    return text || "No explicit band IDs";
+  }
+
+  function parseSceneBandIdsInput(value) {
+    if (typeof value !== "string" || !value.trim()) return [];
+    return value
+      .split(",")
+      .map((token) => Number(token.trim()))
+      .filter((token) => Number.isInteger(token));
+  }
+
+  function createSceneInspectorRow({ labelText, controlId, control, valueText }) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    if (controlId) label.setAttribute("for", controlId);
+
+    const value = document.createElement("div");
+    value.className = "val";
+    value.textContent = valueText;
+
+    row.appendChild(label);
+    row.appendChild(control);
+    row.appendChild(value);
+
+    return { row, value };
+  }
+
+  function commitSceneOverlaySetting(nodeId, fieldName, nextValue, reason) {
+    updateSceneNodeSettings(nodeId, (currentSettings) => ({
+      ...(currentSettings && typeof currentSettings === "object" ? currentSettings : {}),
+      [fieldName]: nextValue,
+    }), { persist: true });
+    applyPrefs(reason, { statusTarget: "scene" });
+    refreshScenePanel(true);
+  }
+
+  function commitSceneOrbPatch(nodeId, orbIndex, patch, reason) {
+    updateSceneOrb(nodeId, orbIndex, patch);
+    applyPrefs(reason, { statusTarget: "scene" });
+    refreshScenePanel(true);
+  }
+
+  function commitSceneOrbAdd(nodeId) {
+    addSceneOrb(nodeId);
+    applyPrefs("scene orb added", { statusTarget: "scene" });
+    refreshScenePanel(true);
+  }
+
+  function commitSceneOrbRemove(nodeId, orbIndex) {
+    removeSceneOrb(nodeId, orbIndex);
+    applyPrefs("scene orb removed", { statusTarget: "scene" });
+    refreshScenePanel(true);
+  }
+
+  function appendSceneSchemaField(container, nodeId, fieldName, fieldSchema, fieldValue) {
+    if (!container || !fieldSchema || fieldName === "enabled") return;
+
+    const controlId = sceneControlId("scene", nodeId, fieldName);
+    const labelText = fieldName
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (letter) => letter.toUpperCase());
+
+    if (fieldSchema.type === "boolean") {
+      const input = document.createElement("input");
+      input.id = controlId;
+      input.type = "checkbox";
+      input.checked = !!fieldValue;
+      const { row, value } = createSceneInspectorRow({
+        labelText,
+        controlId,
+        control: input,
+        valueText: formatSceneFieldValue(input.checked, fieldSchema),
+      });
+      input.addEventListener("change", () => {
+        value.textContent = formatSceneFieldValue(input.checked, fieldSchema);
+        commitSceneOverlaySetting(nodeId, fieldName, input.checked, `scene ${labelText.toLowerCase()}`);
+      });
+      container.appendChild(row);
+      return;
+    }
+
+    if ((fieldSchema.type === "string" || fieldSchema.type === "number") && Array.isArray(fieldSchema.enum)) {
+      const select = document.createElement("select");
+      select.id = controlId;
+      for (const optionValue of fieldSchema.enum) {
+        const option = document.createElement("option");
+        option.value = String(optionValue);
+        option.textContent = String(optionValue);
+        select.appendChild(option);
+      }
+      select.value = String(fieldValue);
+      const { row, value } = createSceneInspectorRow({
+        labelText,
+        controlId,
+        control: select,
+        valueText: formatSceneFieldValue(fieldValue, fieldSchema),
+      });
+      select.addEventListener("change", () => {
+        const nextValue = fieldSchema.type === "number" ? Number(select.value) : select.value;
+        value.textContent = formatSceneFieldValue(nextValue, fieldSchema);
+        commitSceneOverlaySetting(nodeId, fieldName, nextValue, `scene ${labelText.toLowerCase()}`);
+      });
+      container.appendChild(row);
+      return;
+    }
+
+    if (fieldSchema.type === "number") {
+      const input = document.createElement("input");
+      input.id = controlId;
+      input.type = "range";
+      if (Number.isFinite(fieldSchema.min)) input.min = String(fieldSchema.min);
+      if (Number.isFinite(fieldSchema.max)) input.max = String(fieldSchema.max);
+      if (Number.isFinite(fieldSchema.step)) input.step = String(fieldSchema.step);
+      input.value = String(fieldValue);
+      const { row, value } = createSceneInspectorRow({
+        labelText,
+        controlId,
+        control: input,
+        valueText: formatSceneFieldValue(Number(input.value), fieldSchema),
+      });
+      input.addEventListener("input", () => {
+        value.textContent = formatSceneFieldValue(Number(input.value), fieldSchema);
+      });
+      input.addEventListener("change", () => {
+        commitSceneOverlaySetting(nodeId, fieldName, Number(input.value), `scene ${labelText.toLowerCase()}`);
+      });
+      container.appendChild(row);
+      return;
+    }
+
+    const input = document.createElement("input");
+    input.id = controlId;
+    input.type = "text";
+    input.value = fieldValue == null ? "" : String(fieldValue);
+    const { row } = createSceneInspectorRow({
+      labelText,
+      controlId,
+      control: input,
+      valueText: formatSceneFieldValue(fieldValue, fieldSchema),
+    });
+    input.addEventListener("change", () => {
+      commitSceneOverlaySetting(nodeId, fieldName, input.value, `scene ${labelText.toLowerCase()}`);
+    });
+    container.appendChild(row);
+  }
+
+  function appendSceneOrbRow(container, { controlId, labelText, valueText, input }) {
+    const { row } = createSceneInspectorRow({
+      labelText,
+      controlId,
+      control: input,
+      valueText,
+    });
+    container.appendChild(row);
+  }
+
+  function renderBandOverlayInspector(node) {
+    const fieldsContainer = ui.sceneInspectorFields;
+    if (!fieldsContainer) return;
+
+    const hint = document.createElement("div");
+    hint.className = "sceneInspectorHint";
+    hint.textContent = "This inspector edits the current band overlay node through the visualizer schema. Node enable stays in the list above.";
+    fieldsContainer.appendChild(hint);
+
+    const schema = readSceneSettingsSchema(node.type);
+    const fieldEntries = Object.entries((schema && schema.fields) || {});
+    for (const [fieldName, fieldSchema] of fieldEntries) {
+      appendSceneSchemaField(fieldsContainer, node.id, fieldName, fieldSchema, node.settings[fieldName]);
+    }
+  }
+
+  function renderOrbInspector(node) {
+    const fieldsContainer = ui.sceneInspectorFields;
+    if (!fieldsContainer) return;
+
+    const hint = document.createElement("div");
+    hint.className = "sceneInspectorHint";
+    hint.textContent = "Scene panel v1 edits current orb routing only. Per-orb color phase and center offsets stay deferred to later Build 115 work.";
+    fieldsContainer.appendChild(hint);
+
+    const orbActions = document.createElement("div");
+    orbActions.className = "sceneInspectorActionRow";
+
+    const addOrbButton = document.createElement("button");
+    addOrbButton.type = "button";
+    addOrbButton.textContent = "Add Orb";
+    addOrbButton.addEventListener("click", () => {
+      commitSceneOrbAdd(node.id);
+    });
+    orbActions.appendChild(addOrbButton);
+    fieldsContainer.appendChild(orbActions);
+
+    const orbList = document.createElement("div");
+    orbList.className = "sceneOrbList";
+    fieldsContainer.appendChild(orbList);
+
+    const itemFields = (((readSceneSettingsSchema(node.type) || {}).item || {}).fields) || {};
+    const channelOptions = Array.isArray(itemFields.chanId && itemFields.chanId.enum)
+      ? itemFields.chanId.enum
+      : ["L", "R", "C"];
+    const chiralityOptions = Array.isArray(itemFields.chirality && itemFields.chirality.enum)
+      ? itemFields.chirality.enum
+      : [-1, 1];
+
+    node.settings.forEach((orb, orbIndex) => {
+      const card = document.createElement("div");
+      card.className = "sceneOrbCard";
+
+      const cardHeader = document.createElement("div");
+      cardHeader.className = "sceneOrbCardHeader";
+
+      const title = document.createElement("div");
+      title.className = "sceneOrbTitle";
+      title.textContent = orb.id || `Orb ${orbIndex + 1}`;
+      cardHeader.appendChild(title);
+
+      const removeOrbButton = document.createElement("button");
+      removeOrbButton.type = "button";
+      removeOrbButton.textContent = "Remove";
+      removeOrbButton.disabled = node.settings.length <= 1;
+      removeOrbButton.addEventListener("click", () => {
+        commitSceneOrbRemove(node.id, orbIndex);
+      });
+      cardHeader.appendChild(removeOrbButton);
+      card.appendChild(cardHeader);
+
+      const idInput = document.createElement("input");
+      idInput.id = sceneControlId(node.id, "orb", orbIndex, "id");
+      idInput.type = "text";
+      idInput.value = orb.id || "";
+      idInput.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { id: idInput.value }, "scene orb id");
+      });
+      appendSceneOrbRow(card, {
+        controlId: idInput.id,
+        labelText: "ID",
+        valueText: orb.id || "n/a",
+        input: idInput,
+      });
+
+      const channelSelect = document.createElement("select");
+      channelSelect.id = sceneControlId(node.id, "orb", orbIndex, "chanId");
+      for (const channel of channelOptions) {
+        const option = document.createElement("option");
+        option.value = channel;
+        option.textContent = channel;
+        channelSelect.appendChild(option);
+      }
+      channelSelect.value = orb.chanId;
+      channelSelect.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { chanId: channelSelect.value }, "scene orb channel");
+      });
+      appendSceneOrbRow(card, {
+        controlId: channelSelect.id,
+        labelText: "Channel",
+        valueText: orb.chanId,
+        input: channelSelect,
+      });
+
+      const bandsInput = document.createElement("input");
+      bandsInput.id = sceneControlId(node.id, "orb", orbIndex, "bandIds");
+      bandsInput.type = "text";
+      bandsInput.value = formatSceneBandIdsText(orb.bandIds);
+      bandsInput.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { bandIds: parseSceneBandIdsInput(bandsInput.value) }, "scene orb bands");
+      });
+      appendSceneOrbRow(card, {
+        controlId: bandsInput.id,
+        labelText: "Band IDs",
+        valueText: readSceneBandIdsSummaryText(orb.bandIds),
+        input: bandsInput,
+      });
+
+      const chiralitySelect = document.createElement("select");
+      chiralitySelect.id = sceneControlId(node.id, "orb", orbIndex, "chirality");
+      for (const chirality of chiralityOptions) {
+        const option = document.createElement("option");
+        option.value = String(chirality);
+        option.textContent = Number(chirality) < 0 ? "-1 (CCW)" : "1 (CW)";
+        chiralitySelect.appendChild(option);
+      }
+      chiralitySelect.value = String(orb.chirality);
+      chiralitySelect.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { chirality: Number(chiralitySelect.value) }, "scene orb chirality");
+      });
+      appendSceneOrbRow(card, {
+        controlId: chiralitySelect.id,
+        labelText: "Chirality",
+        valueText: Number(orb.chirality) < 0 ? "-1 (CCW)" : "1 (CW)",
+        input: chiralitySelect,
+      });
+
+      const angleInput = document.createElement("input");
+      angleInput.id = sceneControlId(node.id, "orb", orbIndex, "startAngleRad");
+      angleInput.type = "number";
+      angleInput.step = String(itemFields.startAngleRad && itemFields.startAngleRad.step ? itemFields.startAngleRad.step : 0.001);
+      angleInput.value = String(orb.startAngleRad);
+      angleInput.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { startAngleRad: Number(angleInput.value) }, "scene orb start angle");
+      });
+      appendSceneOrbRow(card, {
+        controlId: angleInput.id,
+        labelText: "Start Angle",
+        valueText: `${formatSceneFieldValue(orb.startAngleRad)} rad`,
+        input: angleInput,
+      });
+
+      orbList.appendChild(card);
+    });
+  }
+
+  function renderSelectedSceneInspector(model) {
+    const selectedNode = model.selectedNode;
+
+    if (!selectedNode) {
+      if (ui.sceneInspectorEmpty) {
+        ui.sceneInspectorEmpty.hidden = false;
+        ui.sceneInspectorEmpty.setAttribute("aria-hidden", "false");
+      }
+      if (ui.sceneInspectorPanel) {
+        ui.sceneInspectorPanel.hidden = true;
+        ui.sceneInspectorPanel.setAttribute("aria-hidden", "true");
+      }
+      return;
+    }
+
+    if (ui.sceneInspectorEmpty) {
+      ui.sceneInspectorEmpty.hidden = true;
+      ui.sceneInspectorEmpty.setAttribute("aria-hidden", "true");
+    }
+    if (ui.sceneInspectorPanel) {
+      ui.sceneInspectorPanel.hidden = false;
+      ui.sceneInspectorPanel.setAttribute("aria-hidden", "false");
+    }
+
+    setTextIfChanged(ui.sceneInspectorTitle, selectedNode.displayName);
+    setTextIfChanged(ui.sceneInspectorType, selectedNode.type);
+    setTextIfChanged(ui.sceneInspectorNodeId, selectedNode.id);
+    setTextIfChanged(ui.sceneInspectorOrder, `${selectedNode.order} of ${model.nodeCount} (z ${selectedNode.zIndex})`);
+    setTextIfChanged(ui.sceneInspectorEnabled, selectedNode.enabled ? "Enabled" : "Disabled");
+
+    if (!ui.sceneInspectorFields) return;
+    ui.sceneInspectorFields.innerHTML = "";
+
+    if (selectedNode.type === "bandOverlay") {
+      renderBandOverlayInspector(selectedNode);
+      return;
+    }
+
+    if (selectedNode.type === "orbs") renderOrbInspector(selectedNode);
+  }
+
+  function refreshScenePanel(force = false) {
+    if (!ui.sceneNodeList) return;
+
+    const syncKey = buildSceneUiSyncKey();
+    if (!force && ui.sceneUiSyncKey === syncKey) return;
+
+    const model = readSceneUiModel();
+    const selectedLabel = model.selectedNode ? model.selectedNode.displayName : "None";
+
+    setTextIfChanged(
+      ui.sceneSummaryPrimary,
+      model.nodeCount === 1
+        ? "1 visualizer in the runtime scene"
+        : `${model.nodeCount} visualizers in the runtime scene`
+    );
+    setTextIfChanged(
+      ui.sceneSummaryActive,
+      model.activeCount === 1 ? "1 active" : `${model.activeCount} active`
+    );
+    setTextIfChanged(ui.sceneSummarySelected, selectedLabel);
+
+    if (ui.sceneNodeEmpty) {
+      const hasNodes = model.nodeCount > 0;
+      ui.sceneNodeEmpty.hidden = hasNodes;
+      ui.sceneNodeEmpty.setAttribute("aria-hidden", hasNodes ? "true" : "false");
+    }
+
+    ui.sceneNodeList.innerHTML = "";
+    for (const node of model.nodes) {
+      const row = document.createElement("div");
+      row.className = "sceneNodeRow";
+      row.dataset.selected = node.selected ? "true" : "false";
+      row.dataset.nodeId = node.id;
+
+      const top = document.createElement("div");
+      top.className = "sceneNodeRowTop";
+
+      const text = document.createElement("div");
+      text.className = "sceneNodeText";
+
+      const title = document.createElement("div");
+      title.className = "sceneNodeTitle";
+      title.textContent = node.displayName;
+      text.appendChild(title);
+
+      const meta = document.createElement("div");
+      meta.className = "sceneNodeMeta";
+      meta.textContent = `${node.type} · ${node.id} · order ${node.order}/${model.nodeCount} · z ${node.zIndex}`;
+      text.appendChild(meta);
+      top.appendChild(text);
+
+      const badge = document.createElement("div");
+      badge.className = "sceneNodeBadge";
+      badge.textContent = node.enabled ? "Enabled" : "Disabled";
+      top.appendChild(badge);
+      row.appendChild(top);
+
+      const actions = document.createElement("div");
+      actions.className = "sceneNodeActions";
+
+      const selectButton = document.createElement("button");
+      selectButton.type = "button";
+      selectButton.textContent = node.selected ? "Selected" : "Inspect";
+      selectButton.disabled = node.selected;
+      selectButton.addEventListener("click", () => {
+        selectSceneNode(node.id);
+        refreshScenePanel(true);
+      });
+      actions.appendChild(selectButton);
+
+      const enabledLabel = document.createElement("label");
+      enabledLabel.className = "sceneNodeToggleLabel";
+
+      const enabledInput = document.createElement("input");
+      enabledInput.type = "checkbox";
+      enabledInput.checked = !!node.enabled;
+      enabledInput.addEventListener("change", () => {
+        toggleSceneNodeEnabled(node.id, enabledInput.checked);
+        if (node.type === "bandOverlay") {
+          applyPrefs(enabledInput.checked ? "scene overlay enabled" : "scene overlay disabled", {
+            statusTarget: "scene",
+          });
+        } else {
+          panelStatusToast("scene", enabledInput.checked ? `${node.displayName} enabled.` : `${node.displayName} disabled.`);
+        }
+        refreshScenePanel(true);
+      });
+      enabledLabel.appendChild(enabledInput);
+
+      const enabledText = document.createElement("span");
+      enabledText.textContent = "Enabled";
+      enabledLabel.appendChild(enabledText);
+      actions.appendChild(enabledLabel);
+
+      const moveBackwardButton = document.createElement("button");
+      moveBackwardButton.type = "button";
+      moveBackwardButton.textContent = "Move Backward";
+      moveBackwardButton.disabled = node.order === 1;
+      moveBackwardButton.addEventListener("click", () => {
+        moveSceneNode(node.id, -1);
+        panelStatusToast("scene", `${node.displayName} moved backward.`);
+        refreshScenePanel(true);
+      });
+      actions.appendChild(moveBackwardButton);
+
+      const moveForwardButton = document.createElement("button");
+      moveForwardButton.type = "button";
+      moveForwardButton.textContent = "Move Forward";
+      moveForwardButton.disabled = node.order === model.nodeCount;
+      moveForwardButton.addEventListener("click", () => {
+        moveSceneNode(node.id, 1);
+        panelStatusToast("scene", `${node.displayName} moved forward.`);
+        refreshScenePanel(true);
+      });
+      actions.appendChild(moveForwardButton);
+
+      row.appendChild(actions);
+      ui.sceneNodeList.appendChild(row);
+    }
+
+    renderSelectedSceneInspector(model);
+    ui.sceneUiSyncKey = syncKey;
   }
 
   function formatBandMetaHz(hz) {
@@ -1937,6 +2488,7 @@ const UI = (() => {
     ui.btnToggleQueue.disabled = fileControlsDisabled;
     ui.btnClearQueue.disabled = fileControlsDisabled || fileTransportMutationLocked || Queue.length === 0;
     syncFileControlAffordances(sourceUi);
+    refreshScenePanel();
     ui.chkMute.checked = !!p.audio.muted;
     ui.rngVol.value = String(p.audio.volume);
     ui.valVol.textContent = fmt(p.audio.volume, 2);
@@ -2067,6 +2619,8 @@ const UI = (() => {
 
   function wireControls() {
     primeDomCache();
+    ui.sceneUiSyncKey = "";
+    syncSceneRuntimeFromPreferences();
     setBandInspectorOpen(false);
 
     initConfigTooltips();
@@ -2080,6 +2634,7 @@ const UI = (() => {
     readRuntimeLogObserver().recordingSnapshot = snapshotRecordingRuntimeState();
     refreshRuntimeLogUi(true);
     syncLauncherBarUi();
+    refreshScenePanel(true);
 
 
     /* -------------------------------------------------------------------------
@@ -2805,6 +3360,7 @@ const UI = (() => {
         applyPrefs("hash preset loaded", {
           rebuildBandsOnDefinitionChange: true,
           statusTarget: "workspace",
+          resetSceneFromPreferences: true,
         });
         initOrbs();
         resetOrbsToDesignedPhases();
@@ -2832,6 +3388,10 @@ const UI = (() => {
     };
   }
 
+  function getSceneUiModel() {
+    return readSceneUiModel();
+  }
+
   return {
     setCssVarsFromConfig,
     wireControls,
@@ -2839,6 +3399,7 @@ const UI = (() => {
     refreshRecordingUi,
     getRecordingUiModel,
     getPanelShellModel,
+    getSceneUiModel,
     dispatchSourceSwitchAction,
     showRecordPanel,
     hideRecordPanel,

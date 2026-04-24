@@ -14,6 +14,7 @@ import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { UrlPreset } from "../src/js/presets/url-preset.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
+import { readSceneSettingsSchema } from "../src/js/render/scene-runtime.js";
 import { createPanelShellState, getPanelShellStateSnapshot } from "../src/js/ui/panel-state.js";
 import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
@@ -126,6 +127,16 @@ function restoreBandState(snapshot) {
   state.bands.dominantIndex = snapshot.dominantIndex;
   state.bands.dominantName = snapshot.dominantName;
   state.bands.ringPhaseRad = snapshot.ringPhaseRad;
+}
+
+function snapshotSceneState() {
+  return structuredClone(state.scene);
+}
+
+function restoreSceneState(snapshot) {
+  if (!snapshot) return;
+  state.scene.nodes = structuredClone(Array.isArray(snapshot.nodes) ? snapshot.nodes : []);
+  state.scene.selectedNodeId = typeof snapshot.selectedNodeId === "string" ? snapshot.selectedNodeId : "";
 }
 
 function primeDominantBandState({ dominantIndex = 42, dominantName = "Test Band", energy = 0.67 } = {}) {
@@ -795,6 +806,8 @@ function createUiWireHarness() {
   const previousElement = globalThis.Element;
   const previousUi = snapshotUiState();
   const previousCanvas = state.canvas;
+  const previousPreferences = structuredClone(preferences);
+  const previousScene = snapshotSceneState();
   const elements = new Map();
   const windowListeners = new Map();
 
@@ -831,6 +844,8 @@ function createUiWireHarness() {
     },
   };
   state.canvas = createStubUiElement("canvas");
+  state.scene.nodes = [];
+  state.scene.selectedNodeId = "";
 
   return {
     getElement,
@@ -850,6 +865,9 @@ function createUiWireHarness() {
       }
     },
     restore() {
+      replacePreferences(structuredClone(previousPreferences));
+      resolveSettings();
+      restoreSceneState(previousScene);
       restoreUiState(previousUi);
       state.canvas = previousCanvas;
       globalThis.window = previousWindow;
@@ -857,6 +875,28 @@ function createUiWireHarness() {
       globalThis.Element = previousElement;
     },
   };
+}
+
+function readSceneRowAt(index) {
+  return state.ui.sceneNodeList.children[index] || null;
+}
+
+function readSceneRowActions(row) {
+  if (!row || !row.children[1]) return null;
+  const actions = row.children[1];
+  return {
+    selectButton: actions.children[0] || null,
+    enabledLabel: actions.children[1] || null,
+    enabledInput: actions.children[1] ? actions.children[1].children[0] || null : null,
+    moveBackwardButton: actions.children[2] || null,
+    moveForwardButton: actions.children[3] || null,
+  };
+}
+
+function findSceneInspectorRow(labelText) {
+  const container = state.ui.sceneInspectorFields;
+  const rows = container && Array.isArray(container.children) ? container.children : [];
+  return rows.find((row) => row && row.children && row.children[0] && row.children[0].textContent === labelText) || null;
 }
 
 test("normalizeOrbDef preserves fallback routing when chanId and bandIds are omitted", () => {
@@ -1495,6 +1535,7 @@ test("URL preset serialization excludes runtime source and recording state", () 
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "recording"), false);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "runtimeLog"), false);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "ui"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "scene"), false);
   } finally {
     applySourceAndAudioState({ source: previousSource, audio: previousAudio });
     Object.assign(state.recording, previousRecording);
@@ -1832,6 +1873,161 @@ test("launchers independently toggle the new Build 115 panel targets", async () 
     assert.equal(UI.getPanelShellModel().openTargets.banking, false);
     assert.equal(state.ui.bankingPanel.style.display, "none");
   });
+});
+
+test("Scene panel renders the runtime node list and selected visualizer inspector", async () => {
+  await withUiWireHarnessState({}, () => {
+    const model = UI.getSceneUiModel();
+
+    assert.equal(model.nodeCount, 2);
+    assert.deepEqual(model.nodes.map((node) => node.id), ["orbs-1", "overlay-1"]);
+    assert.equal(model.selectedNode.id, "orbs-1");
+    assert.equal(state.ui.sceneNodeList.children.length, 2);
+    assert.equal(state.ui.sceneInspectorPanel.hidden, false);
+    assert.equal(state.ui.sceneInspectorEmpty.hidden, true);
+    assert.match(state.ui.sceneSummaryPrimary.textContent, /2 visualizers/);
+    assert.equal(state.ui.sceneInspectorTitle.textContent, "Orbs");
+    assert.equal(state.ui.sceneInspectorType.textContent, "orbs");
+  });
+});
+
+test("Scene panel toggles node enabled state and ordering through explicit controls", async () => {
+  await withUiWireHarnessState({}, () => {
+    const orbsBefore = structuredClone(preferences.orbs);
+    const overlayRow = readSceneRowAt(1);
+    const overlayActions = readSceneRowActions(overlayRow);
+    overlayActions.enabledInput.checked = false;
+    overlayActions.enabledInput.dispatch("change");
+
+    assert.equal(UI.getSceneUiModel().nodes[1].enabled, false);
+    assert.equal(preferences.bands.overlay.enabled, false);
+
+    const orbsRow = readSceneRowAt(0);
+    const orbsActions = readSceneRowActions(orbsRow);
+    orbsActions.enabledInput.checked = false;
+    orbsActions.enabledInput.dispatch("change");
+
+    assert.equal(UI.getSceneUiModel().nodes.find((node) => node.id === "orbs-1").enabled, false);
+    assert.deepEqual(preferences.orbs, orbsBefore);
+
+    const refreshedOverlayRow = readSceneRowAt(1);
+    readSceneRowActions(refreshedOverlayRow).moveBackwardButton.dispatch("click");
+
+    assert.deepEqual(UI.getSceneUiModel().nodes.map((node) => node.id), ["overlay-1", "orbs-1"]);
+    assert.equal(UI.getSceneUiModel().nodes[0].zIndex, 0);
+    assert.equal(UI.getSceneUiModel().nodes[1].zIndex, 1);
+  });
+});
+
+test("Scene panel band overlay inspector updates live overlay settings", async () => {
+  await withUiWireHarnessState({}, () => {
+    readSceneRowActions(readSceneRowAt(1)).selectButton.dispatch("click");
+
+    assert.equal(UI.getSceneUiModel().selectedNode.id, "overlay-1");
+
+    const pointSizeRow = findSceneInspectorRow("Point Size Px");
+    assert.ok(pointSizeRow);
+    pointSizeRow.children[1].value = "7";
+    pointSizeRow.children[1].dispatch("change");
+
+    assert.equal(preferences.bands.overlay.pointSizePx, 7);
+    assert.equal(UI.getSceneUiModel().selectedNode.settings.pointSizePx, 7);
+    assert.equal(state.ui.sceneInspectorTitle.textContent, "Band Overlay");
+  });
+});
+
+test("Scene panel orb inspector adds, edits, and removes current orb routing entries", async () => {
+  await withUiWireHarnessState({}, () => {
+    const initialOrbCount = preferences.orbs.length;
+    const orbActionRow = state.ui.sceneInspectorFields.children[1];
+    const addOrbButton = orbActionRow.children[0];
+    addOrbButton.dispatch("click");
+
+    assert.equal(preferences.orbs.length, initialOrbCount + 1);
+
+    const orbList = state.ui.sceneInspectorFields.children[2];
+    const newCard = orbList.children[initialOrbCount];
+    const idRow = newCard.children[1];
+    const channelRow = newCard.children[2];
+    const bandIdsRow = newCard.children[3];
+    const chiralityRow = newCard.children[4];
+    const angleRow = newCard.children[5];
+
+    idRow.children[1].value = "ORB_SCENE";
+    idRow.children[1].dispatch("change");
+    channelRow.children[1].value = "L";
+    channelRow.children[1].dispatch("change");
+    bandIdsRow.children[1].value = "1, 3, 7";
+    bandIdsRow.children[1].dispatch("change");
+    chiralityRow.children[1].value = "1";
+    chiralityRow.children[1].dispatch("change");
+    angleRow.children[1].value = "1.5";
+    angleRow.children[1].dispatch("change");
+
+    const latestOrb = preferences.orbs[preferences.orbs.length - 1];
+    assert.equal(latestOrb.id, "ORB_SCENE");
+    assert.equal(latestOrb.chanId, "L");
+    assert.deepEqual(latestOrb.bandIds, [1, 3, 7]);
+    assert.equal(latestOrb.chirality, 1);
+    assert.equal(latestOrb.startAngleRad, 1.5);
+
+    newCard.children[0].children[1].dispatch("click");
+    assert.equal(preferences.orbs.length, initialOrbCount);
+  });
+});
+
+test("Scene runtime state stays out of presets and orb schema remains within Phase 18 scope", async () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
+  const locationStub = {
+    pathname: "/",
+    search: "",
+    hash: "",
+  };
+
+  globalThis.location = locationStub;
+  globalThis.history = { replaceState(_state, _title, url) { locationStub.hash = new URL(url, "https://example.test").hash; } };
+  globalThis.btoa = (value) => Buffer.from(value, "utf8").toString("base64");
+  globalThis.atob = (value) => Buffer.from(value, "base64").toString("utf8");
+
+  try {
+    await withUiWireHarnessState({}, () => {
+      assert.equal(PRESET_SCHEMA_VERSION, 8);
+
+      UrlPreset.writeHashFromPrefs();
+      const beforeHash = locationStub.hash;
+      const beforePayload = decodePresetHash(beforeHash);
+
+      const orbsActions = readSceneRowActions(readSceneRowAt(0));
+      orbsActions.enabledInput.checked = false;
+      orbsActions.enabledInput.dispatch("change");
+      readSceneRowActions(readSceneRowAt(1)).moveBackwardButton.dispatch("click");
+      readSceneRowActions(readSceneRowAt(0)).selectButton.dispatch("click");
+
+      UrlPreset.writeHashFromPrefs();
+      const afterHash = locationStub.hash;
+      const afterPayload = decodePresetHash(afterHash);
+      const orbSchema = readSceneSettingsSchema("orbs");
+
+      assert.equal(afterHash, beforeHash);
+      assert.equal(Object.prototype.hasOwnProperty.call(beforePayload.prefs, "scene"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs, "scene"), false);
+      assert.deepEqual(
+        Object.keys(orbSchema.item.fields).sort(),
+        ["bandIds", "chanId", "chirality", "id", "startAngleRad"]
+      );
+      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "hueOffsetDeg"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "centerX"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "centerY"), false);
+    });
+  } finally {
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
 });
 
 test("status launcher opens the runtime log drawer and clears unread state", async () => {

@@ -74,6 +74,13 @@ function createRuntimeLogObserverState() {
   };
 }
 
+function createSceneState() {
+  return {
+    nodes: [],
+    selectedNodeId: "",
+  };
+}
+
 const state = {
   canvas: null,
   ctx: null,
@@ -90,6 +97,8 @@ const state = {
   source: createSourceState(),
 
   recording: createRecordingState(),
+
+  scene: createSceneState(),
 
   bands: {
     lowHz: [],
@@ -123,6 +132,7 @@ export {
   createRecordingState,
   createRuntimeLogObserverState,
   createRuntimeLogState,
+  createSceneState,
   createSourceState,
   state,
 };
