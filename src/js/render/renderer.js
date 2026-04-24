@@ -2,34 +2,13 @@ import { clamp } from "../core/utils.js";
 import { BAND_NAMES, runtime } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { createCompositor } from "./compositor.js";
+import { readSceneRuntime } from "./scene-runtime.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualizer.js";
 
 /* =============================================================================
    Renderer
    ========================================================================== */
 const Renderer = (() => {
-  const LEGACY_COMPAT_ORBS_NODE = Object.freeze({
-    id: "orbsRoot",
-    type: "orbs",
-    enabled: true,
-    zIndex: 0,
-    bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
-    anchor: Object.freeze({ x: 0.5, y: 0.5 }),
-    settings: Object.freeze({}),
-  });
-  const LEGACY_COMPAT_OVERLAY_NODE = {
-    id: "bandOverlayRoot",
-    type: "bandOverlay",
-    enabled: true,
-    zIndex: 1,
-    bounds: Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 }),
-    anchor: Object.freeze({ x: 0.5, y: 0.5 }),
-    settings: Object.freeze({}),
-  };
-  const LEGACY_COMPAT_SCENE = {
-    nodes: [LEGACY_COMPAT_ORBS_NODE, LEGACY_COMPAT_OVERLAY_NODE],
-  };
-
   function clearFrame() {
     const ctx = state.ctx;
     const s = runtime.settings;
@@ -230,8 +209,7 @@ const Renderer = (() => {
     clearFrame();
 
     const target = getRenderTarget();
-    LEGACY_COMPAT_OVERLAY_NODE.enabled = !!runtime.settings.bands.overlay.enabled;
-    compositor.syncScene(LEGACY_COMPAT_SCENE, target);
+    compositor.syncScene(readSceneRuntime(), target);
     compositor.update(buildBandFrame(bandSnapshot, nowSec), dtSec);
     compositor.render(target);
   }

@@ -31,6 +31,12 @@ function readPositiveNumber(value, fallback) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function readOverlaySettingsFromNode(node) {
+  return node && node.settings && typeof node.settings === "object"
+    ? node.settings
+    : runtime.settings.bands.overlay;
+}
+
 function readFallbackBandCount() {
   const count = runtime.settings && runtime.settings.bands
     ? runtime.settings.bands.count
@@ -99,7 +105,8 @@ function drawBandOverlay(ctx, centerWaveform, overlay, energies01, bandCount, ta
 }
 
 class BandOverlayVisualizer {
-  constructor() {
+  constructor({ node = null } = {}) {
+    this.node = node;
     this.context = null;
     this.boundsPx = null;
     this.frame = null;
@@ -111,6 +118,11 @@ class BandOverlayVisualizer {
 
   init(context) {
     this.context = context || null;
+    if (context && context.node) this.node = context.node;
+  }
+
+  configure(node) {
+    this.node = node || null;
   }
 
   update(frame, dtSec) {
@@ -131,7 +143,7 @@ class BandOverlayVisualizer {
   }
 
   render(target, _viewTransform) {
-    const overlay = runtime.settings.bands.overlay;
+    const overlay = readOverlaySettingsFromNode(this.node);
     const ctx = (target && target.ctx) || (this.context && this.context.ctx) || state.ctx;
     const targetMetrics = {
       widthPx: readPositiveNumber(target && target.widthPx, readPositiveNumber(this.context && this.context.widthPx, 0)),
@@ -160,6 +172,7 @@ class BandOverlayVisualizer {
   }
 
   dispose() {
+    this.node = null;
     this.context = null;
     this.boundsPx = null;
     this.frame = null;
