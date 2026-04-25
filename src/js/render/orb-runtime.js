@@ -1,6 +1,7 @@
 import { clamp } from "../core/utils.js";
 import { runtime, normalizeOrbChannelId } from "../core/preferences.js";
 import { state } from "../core/state.js";
+import { normalizeSceneOrbSettings } from "./orb-settings.js";
 import { Orb } from "./orb.js";
 
 /* =============================================================================
@@ -10,7 +11,7 @@ const activeOrbVisualizers = [];
 
 function createOrbsFromSettings(settings = runtime.settings) {
   const defs = Array.isArray(settings && settings.orbs) ? settings.orbs : [];
-  return defs.map((def) => new Orb(def));
+  return normalizeSceneOrbSettings(defs).map((def) => new Orb(def));
 }
 
 function readVisualizerOrbs(instance) {
@@ -92,6 +93,29 @@ function readBandEnergy01(frame, bandIndex) {
   return 0;
 }
 
+function readDominantBandIndex(frame) {
+  if (Number.isInteger(frame && frame.dominantBandIndex) && frame.dominantBandIndex >= 0) {
+    return frame.dominantBandIndex;
+  }
+  if (Number.isInteger(frame && frame.dominantBand && frame.dominantBand.index) && frame.dominantBand.index >= 0) {
+    return frame.dominantBand.index;
+  }
+
+  const bands = Array.isArray(frame && frame.bands) ? frame.bands : [];
+  let strongestBandIndex = null;
+  let strongestEnergy = -1;
+
+  for (const band of bands) {
+    const bandIndex = Number.isInteger(band && band.index) ? band.index : null;
+    const energy = Number.isFinite(band && band.energy) ? clamp(band.energy, 0, 1) : 0;
+    if (!Number.isInteger(bandIndex) || energy <= strongestEnergy) continue;
+    strongestBandIndex = bandIndex;
+    strongestEnergy = energy;
+  }
+
+  return strongestBandIndex;
+}
+
 function getBandForOrb(orb, frame) {
   const channel = normalizeOrbChannelId(orb && orb.chanId, orb && orb.bandId);
   const sourceChannel = readFrameChannel(frame, channel);
@@ -105,13 +129,33 @@ function getBandForOrb(orb, frame) {
     : null;
 
   const bandIds = Array.isArray(orb && orb.bandIds) ? orb.bandIds : [];
-  if (!bandIds.length) return { band: sourceBand, energyOverride01: null };
+  if (!bandIds.length) {
+    return {
+      band: sourceBand,
+      energyOverride01: null,
+      colorBandIndex: readDominantBandIndex(frame),
+    };
+  }
 
   let sum = 0;
-  for (const idx of bandIds) sum += readBandEnergy01(frame, idx);
+  let strongestBandIndex = bandIds[0];
+  let strongestEnergy = -1;
+
+  for (const idx of bandIds) {
+    const energy = readBandEnergy01(frame, idx);
+    sum += energy;
+    if (energy <= strongestEnergy) continue;
+    strongestEnergy = energy;
+    strongestBandIndex = idx;
+  }
+
   const avg = sum / bandIds.length;
 
-  return { band: sourceBand, energyOverride01: clamp(avg, 0, 1) };
+  return {
+    band: sourceBand,
+    energyOverride01: clamp(avg, 0, 1),
+    colorBandIndex: strongestBandIndex,
+  };
 }
 
 function resetOrbTrails() {

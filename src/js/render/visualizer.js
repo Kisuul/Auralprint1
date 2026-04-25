@@ -1,5 +1,6 @@
 import { CONFIG } from "../core/config.js";
 import { deepClone, deepFreeze } from "../core/utils.js";
+import { normalizeSceneOrbSettings } from "./orb-settings.js";
 import { BandOverlayVisualizer } from "./visualizers/band-overlay.js";
 import { OrbVisualizer } from "./visualizers/orb-visualizer.js";
 
@@ -24,6 +25,27 @@ const ORBS_SETTINGS_SCHEMA = deepFreeze({
       },
       chirality: { type: "number", default: -1, enum: [-1, 1] },
       startAngleRad: { type: "number", default: 0 },
+      hueOffsetDeg: {
+        type: "number",
+        default: CONFIG.visualizers.orbs.defaults.hueOffsetDeg,
+        min: CONFIG.visualizers.orbs.limits.hueOffsetDeg.min,
+        max: CONFIG.visualizers.orbs.limits.hueOffsetDeg.max,
+        step: CONFIG.visualizers.orbs.limits.hueOffsetDeg.step,
+      },
+      centerX: {
+        type: "number",
+        default: CONFIG.visualizers.orbs.defaults.centerX,
+        min: CONFIG.visualizers.orbs.limits.centerX.min,
+        max: CONFIG.visualizers.orbs.limits.centerX.max,
+        step: CONFIG.visualizers.orbs.limits.centerX.step,
+      },
+      centerY: {
+        type: "number",
+        default: CONFIG.visualizers.orbs.defaults.centerY,
+        min: CONFIG.visualizers.orbs.limits.centerY.min,
+        max: CONFIG.visualizers.orbs.limits.centerY.max,
+        step: CONFIG.visualizers.orbs.limits.centerY.step,
+      },
     },
   },
 });
@@ -100,7 +122,7 @@ const ORBS_DEFAULT_NODE = deepFreeze({
   zIndex: 0,
   bounds: deepClone(FULL_SURFACE_BOUNDS),
   anchor: deepClone(CENTER_ANCHOR),
-  settings: deepClone(CONFIG.defaults.orbs),
+  settings: normalizeSceneOrbSettings(CONFIG.defaults.orbs),
 });
 
 const BAND_OVERLAY_DEFAULT_NODE = deepFreeze({

@@ -899,6 +899,24 @@ function findSceneInspectorRow(labelText) {
   return rows.find((row) => row && row.children && row.children[0] && row.children[0].textContent === labelText) || null;
 }
 
+function readSceneOrbCardAt(index) {
+  const orbList = state.ui.sceneInspectorFields && state.ui.sceneInspectorFields.children
+    ? state.ui.sceneInspectorFields.children[2] || null
+    : null;
+  return orbList && orbList.children ? orbList.children[index] || null : null;
+}
+
+function findSceneOrbCardRow(card, labelText) {
+  const rows = card && Array.isArray(card.children) ? card.children : [];
+  return rows.find((row, index) => (
+    index > 0
+    && row
+    && row.children
+    && row.children[0]
+    && row.children[0].textContent === labelText
+  )) || null;
+}
+
 test("normalizeOrbDef preserves fallback routing when chanId and bandIds are omitted", () => {
   const fallback = {
     id: "ORB0",
@@ -1979,6 +1997,8 @@ test("Scene panel band overlay inspector updates live overlay settings", async (
 
 test("Scene panel orb inspector adds, edits, and removes current orb routing entries", async () => {
   await withUiWireHarnessState({}, () => {
+    readSceneRowActions(readSceneRowAt(0)).selectButton.dispatch("click");
+
     const initialOrbCount = preferences.orbs.length;
     const orbActionRow = state.ui.sceneInspectorFields.children[1];
     const addOrbButton = orbActionRow.children[0];
@@ -1986,13 +2006,15 @@ test("Scene panel orb inspector adds, edits, and removes current orb routing ent
 
     assert.equal(preferences.orbs.length, initialOrbCount + 1);
 
-    const orbList = state.ui.sceneInspectorFields.children[2];
-    const newCard = orbList.children[initialOrbCount];
-    const idRow = newCard.children[1];
-    const channelRow = newCard.children[2];
-    const bandIdsRow = newCard.children[3];
-    const chiralityRow = newCard.children[4];
-    const angleRow = newCard.children[5];
+    const newCard = readSceneOrbCardAt(initialOrbCount);
+    const idRow = findSceneOrbCardRow(newCard, "ID");
+    const channelRow = findSceneOrbCardRow(newCard, "Channel");
+    const bandIdsRow = findSceneOrbCardRow(newCard, "Band IDs");
+    const chiralityRow = findSceneOrbCardRow(newCard, "Chirality");
+    const angleRow = findSceneOrbCardRow(newCard, "Start Angle");
+    const hueRow = findSceneOrbCardRow(newCard, "Hue Offset");
+    const centerXRow = findSceneOrbCardRow(newCard, "Center X");
+    const centerYRow = findSceneOrbCardRow(newCard, "Center Y");
 
     idRow.children[1].value = "ORB_SCENE";
     idRow.children[1].dispatch("change");
@@ -2004,20 +2026,61 @@ test("Scene panel orb inspector adds, edits, and removes current orb routing ent
     chiralityRow.children[1].dispatch("change");
     angleRow.children[1].value = "1.5";
     angleRow.children[1].dispatch("change");
+    hueRow.children[1].value = "120";
+    hueRow.children[1].dispatch("change");
+    centerXRow.children[1].value = "0.25";
+    centerXRow.children[1].dispatch("change");
+    centerYRow.children[1].value = "-0.5";
+    centerYRow.children[1].dispatch("change");
 
     const latestOrb = preferences.orbs[preferences.orbs.length - 1];
+    const latestSceneOrb = UI.getSceneUiModel().selectedNode.settings[preferences.orbs.length - 1];
     assert.equal(latestOrb.id, "ORB_SCENE");
     assert.equal(latestOrb.chanId, "L");
     assert.deepEqual(latestOrb.bandIds, [1, 3, 7]);
     assert.equal(latestOrb.chirality, 1);
     assert.equal(latestOrb.startAngleRad, 1.5);
+    assert.equal(Object.prototype.hasOwnProperty.call(latestOrb, "hueOffsetDeg"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(latestOrb, "centerX"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(latestOrb, "centerY"), false);
+    assert.equal(latestSceneOrb.hueOffsetDeg, 120);
+    assert.equal(latestSceneOrb.centerX, 0.25);
+    assert.equal(latestSceneOrb.centerY, -0.5);
 
     newCard.children[0].children[1].dispatch("click");
     assert.equal(preferences.orbs.length, initialOrbCount);
   });
 });
 
-test("Scene runtime state stays out of presets and orb schema remains within Phase 18 scope", async () => {
+test("Scene panel keeps scene-only orb fields across applyPrefs sync while legacy prefs stay clean", async () => {
+  await withUiWireHarnessState({}, () => {
+    readSceneRowActions(readSceneRowAt(0)).selectButton.dispatch("click");
+
+    const firstCard = readSceneOrbCardAt(0);
+    const hueRow = findSceneOrbCardRow(firstCard, "Hue Offset");
+    const centerXRow = findSceneOrbCardRow(firstCard, "Center X");
+    const centerYRow = findSceneOrbCardRow(firstCard, "Center Y");
+
+    hueRow.children[1].value = "45";
+    hueRow.children[1].dispatch("change");
+    centerXRow.children[1].value = "0.2";
+    centerXRow.children[1].dispatch("change");
+    centerYRow.children[1].value = "-0.3";
+    centerYRow.children[1].dispatch("change");
+
+    UI.applyPrefs(null);
+
+    const selectedOrb = UI.getSceneUiModel().selectedNode.settings[0];
+    assert.equal(selectedOrb.hueOffsetDeg, 45);
+    assert.equal(selectedOrb.centerX, 0.2);
+    assert.equal(selectedOrb.centerY, -0.3);
+    assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "hueOffsetDeg"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerX"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerY"), false);
+  });
+});
+
+test("Scene runtime state stays out of presets while orb scene-only fields remain off the Schema 8 path", async () => {
   const previousLocation = globalThis.location;
   const previousHistory = globalThis.history;
   const previousBtoa = globalThis.btoa;
@@ -2041,6 +2104,18 @@ test("Scene runtime state stays out of presets and orb schema remains within Pha
       const beforeHash = locationStub.hash;
       const beforePayload = decodePresetHash(beforeHash);
 
+      const firstCard = readSceneOrbCardAt(0);
+      const hueRow = findSceneOrbCardRow(firstCard, "Hue Offset");
+      const centerXRow = findSceneOrbCardRow(firstCard, "Center X");
+      const centerYRow = findSceneOrbCardRow(firstCard, "Center Y");
+
+      hueRow.children[1].value = "90";
+      hueRow.children[1].dispatch("change");
+      centerXRow.children[1].value = "0.4";
+      centerXRow.children[1].dispatch("change");
+      centerYRow.children[1].value = "-0.4";
+      centerYRow.children[1].dispatch("change");
+
       const orbsActions = readSceneRowActions(readSceneRowAt(0));
       orbsActions.enabledInput.checked = false;
       orbsActions.enabledInput.dispatch("change");
@@ -2057,11 +2132,13 @@ test("Scene runtime state stays out of presets and orb schema remains within Pha
       assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs, "scene"), false);
       assert.deepEqual(
         Object.keys(orbSchema.item.fields).sort(),
-        ["bandIds", "chanId", "chirality", "id", "startAngleRad"]
+        ["bandIds", "centerX", "centerY", "chanId", "chirality", "hueOffsetDeg", "id", "startAngleRad"]
       );
-      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "hueOffsetDeg"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "centerX"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "centerY"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "hueOffsetDeg"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerX"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerY"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "camera"), false);
+      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "viewTransform"), false);
     });
   } finally {
     globalThis.location = previousLocation;

@@ -1476,7 +1476,7 @@ const UI = (() => {
 
     const hint = document.createElement("div");
     hint.className = "sceneInspectorHint";
-    hint.textContent = "Scene panel v1 edits current orb routing only. Per-orb color phase and center offsets stay deferred to later Build 115 work.";
+    hint.textContent = "Scene panel v1 now exposes per-orb routing, hue phase, and center offsets. These advanced orb fields stay scene-only until later preset rollout work.";
     fieldsContainer.appendChild(hint);
 
     const orbActions = document.createElement("div");
@@ -1604,6 +1604,61 @@ const UI = (() => {
         labelText: "Start Angle",
         valueText: `${formatSceneFieldValue(orb.startAngleRad)} rad`,
         input: angleInput,
+      });
+
+      const hueInput = document.createElement("input");
+      hueInput.id = sceneControlId(node.id, "orb", orbIndex, "hueOffsetDeg");
+      hueInput.type = "number";
+      if (Number.isFinite(itemFields.hueOffsetDeg && itemFields.hueOffsetDeg.min)) {
+        hueInput.min = String(itemFields.hueOffsetDeg.min);
+      }
+      if (Number.isFinite(itemFields.hueOffsetDeg && itemFields.hueOffsetDeg.max)) {
+        hueInput.max = String(itemFields.hueOffsetDeg.max);
+      }
+      hueInput.step = String(itemFields.hueOffsetDeg && itemFields.hueOffsetDeg.step ? itemFields.hueOffsetDeg.step : 1);
+      hueInput.value = String(orb.hueOffsetDeg);
+      hueInput.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { hueOffsetDeg: Number(hueInput.value) }, "scene orb hue offset");
+      });
+      appendSceneOrbRow(card, {
+        controlId: hueInput.id,
+        labelText: "Hue Offset",
+        valueText: `${formatSceneFieldValue(orb.hueOffsetDeg)}°`,
+        input: hueInput,
+      });
+
+      const centerXInput = document.createElement("input");
+      centerXInput.id = sceneControlId(node.id, "orb", orbIndex, "centerX");
+      centerXInput.type = "number";
+      if (Number.isFinite(itemFields.centerX && itemFields.centerX.min)) centerXInput.min = String(itemFields.centerX.min);
+      if (Number.isFinite(itemFields.centerX && itemFields.centerX.max)) centerXInput.max = String(itemFields.centerX.max);
+      centerXInput.step = String(itemFields.centerX && itemFields.centerX.step ? itemFields.centerX.step : 0.01);
+      centerXInput.value = String(orb.centerX);
+      centerXInput.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { centerX: Number(centerXInput.value) }, "scene orb center x");
+      });
+      appendSceneOrbRow(card, {
+        controlId: centerXInput.id,
+        labelText: "Center X",
+        valueText: formatSceneFieldValue(orb.centerX),
+        input: centerXInput,
+      });
+
+      const centerYInput = document.createElement("input");
+      centerYInput.id = sceneControlId(node.id, "orb", orbIndex, "centerY");
+      centerYInput.type = "number";
+      if (Number.isFinite(itemFields.centerY && itemFields.centerY.min)) centerYInput.min = String(itemFields.centerY.min);
+      if (Number.isFinite(itemFields.centerY && itemFields.centerY.max)) centerYInput.max = String(itemFields.centerY.max);
+      centerYInput.step = String(itemFields.centerY && itemFields.centerY.step ? itemFields.centerY.step : 0.01);
+      centerYInput.value = String(orb.centerY);
+      centerYInput.addEventListener("change", () => {
+        commitSceneOrbPatch(node.id, orbIndex, { centerY: Number(centerYInput.value) }, "scene orb center y");
+      });
+      appendSceneOrbRow(card, {
+        controlId: centerYInput.id,
+        labelText: "Center Y",
+        valueText: formatSceneFieldValue(orb.centerY),
+        input: centerYInput,
       });
 
       orbList.appendChild(card);

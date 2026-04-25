@@ -23,13 +23,17 @@ function canonicalOrbSettingsKey(orbSettings) {
     bandIds: Array.isArray(orb && orb.bandIds) ? orb.bandIds.slice() : [],
     chirality: Number.isFinite(orb && orb.chirality) ? orb.chirality : null,
     startAngleRad: Number.isFinite(orb && orb.startAngleRad) ? orb.startAngleRad : null,
+    hueOffsetDeg: Number.isFinite(orb && orb.hueOffsetDeg) ? orb.hueOffsetDeg : null,
+    centerX: Number.isFinite(orb && orb.centerX) ? orb.centerX : null,
+    centerY: Number.isFinite(orb && orb.centerY) ? orb.centerY : null,
   })));
 }
 
-function drawTrailLines(ctx, particles) {
+function drawTrailLines(ctx, orb) {
   const s = runtime.settings;
   if (!s.trace.lines) return;
 
+  const particles = orb && orb.trail ? orb.trail.particles : null;
   const segments = s.trace.numLines;
   const neededPts = segments + 1;
   if (!particles || particles.length < 2) return;
@@ -38,7 +42,10 @@ function drawTrailLines(ctx, particles) {
   const slice = particles.slice(startIdx);
   if (slice.length < 2) return;
 
-  const rgb = ColorPolicy.pickLineColorRgb01(particles);
+  const rgb = ColorPolicy.pickLineColorRgb01(particles, {
+    bandIndex: orb ? orb.lastColorBandIndex : null,
+    hueOffsetDeg: orb ? orb.hueOffsetDeg : 0,
+  });
   const stroke = rgb01ToCss(rgb, s.trace.lineAlpha);
 
   ctx.save();
@@ -162,8 +169,11 @@ class OrbVisualizer {
     for (const orb of this.orbs) {
       const selection = getBandForOrb(orb, this.frame);
       const orbBand = selection ? selection.band : null;
-      const energyOverride01 = selection ? selection.energyOverride01 : null;
-      orb.step(this.dtSec, this.nowSec, orbBand, energyOverride01);
+      orb.step(this.dtSec, this.nowSec, orbBand, {
+        energyOverride01: selection ? selection.energyOverride01 : null,
+        colorBandIndex: selection ? selection.colorBandIndex : null,
+        boundsPx: this.boundsPx,
+      });
     }
   }
 
@@ -183,7 +193,7 @@ class OrbVisualizer {
     try {
       for (const orb of this.orbs) {
         const particles = orb.trail.particles;
-        drawTrailLines(ctx, particles);
+        drawTrailLines(ctx, orb);
         drawParticles(ctx, particles, this.nowSec);
       }
     } finally {
