@@ -252,9 +252,10 @@ const Renderer = (() => {
     clearFrame();
 
     const target = getRenderTarget();
-    compositor.syncScene(readSceneRuntime(), target);
+    const sceneRuntime = readSceneRuntime();
+    compositor.syncScene(sceneRuntime, target);
     compositor.update(buildBandFrame(bandSnapshot, nowSec), dtSec);
-    compositor.render(target);
+    compositor.render(target, sceneRuntime.viewTransform);
   }
 
   // RecorderEngine owns captureStream() and any MediaStream lifecycle.

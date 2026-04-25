@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { CONFIG } from "../src/js/core/config.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
 import { BandOverlayVisualizer } from "../src/js/render/visualizers/band-overlay.js";
 import { OrbVisualizer } from "../src/js/render/visualizers/orb-visualizer.js";
@@ -68,6 +69,8 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
   );
   assert.equal(typeof bandOverlaySchema.fields.phaseMode, "object");
   assert.equal(bandOverlayDefaultNode.id, "overlay-1");
+  assert.deepEqual(orbsDefaultNode, CONFIG.defaults.scene.nodes[0]);
+  assert.deepEqual(bandOverlayDefaultNode, CONFIG.defaults.scene.nodes[1]);
   assert.equal(registry.get("bandOverlay").type, "bandOverlay");
   assert.ok(orbsInstance instanceof OrbVisualizer);
   assert.ok(bandOverlayInstance instanceof BandOverlayVisualizer);

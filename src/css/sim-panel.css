@@ -186,6 +186,10 @@
       letter-spacing: normal;
     }
 
+    .sceneCameraNote {
+      margin-top: 12px;
+    }
+
     .sceneOrbList {
       display: grid;
       gap: 10px;

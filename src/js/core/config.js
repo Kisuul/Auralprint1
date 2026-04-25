@@ -434,13 +434,69 @@ const CONFIG = deepFreeze({
     //   startAngleRad — initial phase offset in radians (engine done; UI deferred)
     //
     // Scene-only orb-overhaul fields live under CONFIG.visualizers.orbs and the
-    // current Scene runtime until Schema 9 rollout:
+    // canonical Scene runtime/preset path:
     //   hueOffsetDeg  — per-orb color phase offset
     //   centerX/Y     — orb origin offset in sim space
     orbs: [
       { id: "ORB0", chanId: "R", bandIds: [], chirality: -1, startAngleRad: 0 },
 	  { id: "ORB1", chanId: "L", bandIds: [], chirality: -1, startAngleRad: Math.PI },
     ],
+
+    scene: {
+      nodes: [
+        {
+          id: "orbs-1",
+          type: "orbs",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: [
+            {
+              id: "ORB0",
+              chanId: "R",
+              bandIds: [],
+              chirality: -1,
+              startAngleRad: 0,
+              hueOffsetDeg: 0,
+              centerX: 0,
+              centerY: 0,
+            },
+            {
+              id: "ORB1",
+              chanId: "L",
+              bandIds: [],
+              chirality: -1,
+              startAngleRad: Math.PI,
+              hueOffsetDeg: 0,
+              centerX: 0,
+              centerY: 0,
+            },
+          ],
+        },
+        {
+          id: "overlay-1",
+          type: "bandOverlay",
+          enabled: true,
+          zIndex: 1,
+          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: {
+            enabled: true,
+            connectAdjacent: true,
+            alpha: 0.65,
+            pointSizePx: 3,
+            minRadiusFrac: 0.01,
+            maxRadiusFrac: 0.80,
+            waveformRadialDisplaceFrac: 0.18,
+            lineAlpha: 0.35,
+            lineWidthPx: 1,
+            phaseMode: "free",
+            ringSpeedRadPerSec: 0.0,
+          },
+        },
+      ],
+    },
 
 bands: {
   // Ceiling adjusted (Now 22.5K) to restore band 255 functionality. Should now be 22.5K to 24K (Effectively, depending on nyquist)
@@ -454,7 +510,7 @@ bands: {
   distributionMode: "erb",  // "linear" | "log" | "mel" | "bark" | "erb"
 
       overlay: {
-        enabled: false,
+        enabled: true,
         connectAdjacent: true,
         alpha: 0.65,
         pointSizePx: 3,

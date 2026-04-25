@@ -84,7 +84,7 @@
   // src/js/core/constants.js
   var TAU = Math.PI * 2;
   var RAD_TO_DEG = 180 / Math.PI;
-  var PRESET_SCHEMA_VERSION = 8;
+  var PRESET_SCHEMA_VERSION = 9;
   var LEGACY_SCHEMA_V2 = 2;
   var LEGACY_SCHEMA_V3 = 3;
   var LEGACY_SCHEMA_V4 = 4;
@@ -493,13 +493,68 @@
       //   startAngleRad — initial phase offset in radians (engine done; UI deferred)
       //
       // Scene-only orb-overhaul fields live under CONFIG.visualizers.orbs and the
-      // current Scene runtime until Schema 9 rollout:
+      // canonical Scene runtime/preset path:
       //   hueOffsetDeg  — per-orb color phase offset
       //   centerX/Y     — orb origin offset in sim space
       orbs: [
         { id: "ORB0", chanId: "R", bandIds: [], chirality: -1, startAngleRad: 0 },
         { id: "ORB1", chanId: "L", bandIds: [], chirality: -1, startAngleRad: Math.PI }
       ],
+      scene: {
+        nodes: [
+          {
+            id: "orbs-1",
+            type: "orbs",
+            enabled: true,
+            zIndex: 0,
+            bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+            anchor: { x: 0.5, y: 0.5 },
+            settings: [
+              {
+                id: "ORB0",
+                chanId: "R",
+                bandIds: [],
+                chirality: -1,
+                startAngleRad: 0,
+                hueOffsetDeg: 0,
+                centerX: 0,
+                centerY: 0
+              },
+              {
+                id: "ORB1",
+                chanId: "L",
+                bandIds: [],
+                chirality: -1,
+                startAngleRad: Math.PI,
+                hueOffsetDeg: 0,
+                centerX: 0,
+                centerY: 0
+              }
+            ]
+          },
+          {
+            id: "overlay-1",
+            type: "bandOverlay",
+            enabled: true,
+            zIndex: 1,
+            bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+            anchor: { x: 0.5, y: 0.5 },
+            settings: {
+              enabled: true,
+              connectAdjacent: true,
+              alpha: 0.65,
+              pointSizePx: 3,
+              minRadiusFrac: 0.01,
+              maxRadiusFrac: 0.8,
+              waveformRadialDisplaceFrac: 0.18,
+              lineAlpha: 0.35,
+              lineWidthPx: 1,
+              phaseMode: "free",
+              ringSpeedRadPerSec: 0
+            }
+          }
+        ]
+      },
       bands: {
         // Ceiling adjusted (Now 22.5K) to restore band 255 functionality. Should now be 22.5K to 24K (Effectively, depending on nyquist)
         // To others: Ceiling should be under assumed Nyquist cap: To prevent band 255 death. 
@@ -511,7 +566,7 @@
         distributionMode: "erb",
         // "linear" | "log" | "mel" | "bark" | "erb"
         overlay: {
-          enabled: false,
+          enabled: true,
           connectAdjacent: true,
           alpha: 0.65,
           pointSizePx: 3,
@@ -629,18 +684,6 @@
       return out;
     }
     return [];
-  }
-  function normalizeOrbDef(incomingOrb, fallbackOrb) {
-    const fallback = fallbackOrb || {};
-    const orb = incomingOrb && typeof incomingOrb === "object" ? incomingOrb : {};
-    const hasOwn2 = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
-    const id = typeof orb.id === "string" && orb.id.trim() ? orb.id : typeof fallback.id === "string" ? fallback.id : "ORB";
-    const chiralityRaw = Number.isFinite(orb.chirality) ? orb.chirality : fallback.chirality;
-    const chirality = chiralityRaw >= 0 ? 1 : -1;
-    const startAngleRad = Number.isFinite(orb.startAngleRad) ? orb.startAngleRad : Number.isFinite(fallback.startAngleRad) ? fallback.startAngleRad : 0;
-    const chanId = hasOwn2(orb, "chanId") || hasOwn2(orb, "bandId") ? normalizeOrbChannelId(orb.chanId, orb.bandId) : normalizeOrbChannelId(fallback.chanId, fallback.bandId);
-    const bandIds = hasOwn2(orb, "bandIds") || hasOwn2(orb, "bandNames") ? sanitizeOrbBandIds(orb.bandIds, orb.bandNames) : sanitizeOrbBandIds(fallback.bandIds, fallback.bandNames);
-    return { id, chanId, bandIds, chirality, startAngleRad };
   }
 
   // src/js/ui/panel-state.js
@@ -813,6 +856,63 @@
     };
   }
 
+  // src/js/render/view-transform.js
+  var IDENTITY_VIEW_TRANSFORM_MATRIX = Object.freeze([1, 0, 0, 1, 0, 0]);
+  var IDENTITY_VIEW_TRANSFORM = Object.freeze({
+    kind: "2d-affine",
+    mode: "identity",
+    runtimeOnly: true,
+    matrix: IDENTITY_VIEW_TRANSFORM_MATRIX
+  });
+  function readFiniteNumber(value, fallback) {
+    return Number.isFinite(value) ? value : fallback;
+  }
+  function readMatrix(rawMatrix) {
+    const source = Array.isArray(rawMatrix) ? rawMatrix : IDENTITY_VIEW_TRANSFORM_MATRIX;
+    return [
+      readFiniteNumber(source[0], 1),
+      readFiniteNumber(source[1], 0),
+      readFiniteNumber(source[2], 0),
+      readFiniteNumber(source[3], 1),
+      readFiniteNumber(source[4], 0),
+      readFiniteNumber(source[5], 0)
+    ];
+  }
+  function isIdentityMatrix(matrix) {
+    return Array.isArray(matrix) && matrix.length >= 6 && matrix[0] === 1 && matrix[1] === 0 && matrix[2] === 0 && matrix[3] === 1 && matrix[4] === 0 && matrix[5] === 0;
+  }
+  function hasCanonicalViewTransformKeys(viewTransform) {
+    const keys = Object.keys(viewTransform);
+    return keys.length === 4 && keys.includes("kind") && keys.includes("mode") && keys.includes("runtimeOnly") && keys.includes("matrix");
+  }
+  function isCanonicalMatrix(matrix) {
+    return Array.isArray(matrix) && matrix.length === 6 && Object.isFrozen(matrix) && matrix.every((value) => Number.isFinite(value));
+  }
+  function isCanonicalViewTransform(viewTransform) {
+    return !!viewTransform && typeof viewTransform === "object" && Object.isFrozen(viewTransform) && hasCanonicalViewTransformKeys(viewTransform) && viewTransform.kind === "2d-affine" && typeof viewTransform.mode === "string" && viewTransform.mode.trim().length > 0 && viewTransform.runtimeOnly === true && isCanonicalMatrix(viewTransform.matrix);
+  }
+  function normalizeViewTransform(rawViewTransform = null) {
+    if (!rawViewTransform || typeof rawViewTransform !== "object") return IDENTITY_VIEW_TRANSFORM;
+    if (rawViewTransform === IDENTITY_VIEW_TRANSFORM) return IDENTITY_VIEW_TRANSFORM;
+    if (isCanonicalViewTransform(rawViewTransform)) {
+      const identity2 = isIdentityMatrix(rawViewTransform.matrix);
+      return identity2 && rawViewTransform.mode === "identity" ? IDENTITY_VIEW_TRANSFORM : rawViewTransform;
+    }
+    const matrix = readMatrix(rawViewTransform.matrix);
+    const identity = isIdentityMatrix(matrix);
+    const mode = typeof rawViewTransform.mode === "string" && rawViewTransform.mode.trim() ? rawViewTransform.mode : identity ? "identity" : "placeholder";
+    if (identity && mode === "identity") return IDENTITY_VIEW_TRANSFORM;
+    return Object.freeze({
+      kind: "2d-affine",
+      mode,
+      runtimeOnly: true,
+      matrix: Object.freeze(matrix)
+    });
+  }
+  function isIdentityViewTransform(viewTransform) {
+    return normalizeViewTransform(viewTransform) === IDENTITY_VIEW_TRANSFORM;
+  }
+
   // src/js/core/state.js
   function createSourceState() {
     return {
@@ -879,7 +979,8 @@
   function createSceneState() {
     return {
       nodes: [],
-      selectedNodeId: ""
+      selectedNodeId: "",
+      viewTransform: IDENTITY_VIEW_TRANSFORM
     };
   }
   var state = {
@@ -947,10 +1048,293 @@
     }
   }
 
+  // src/js/render/orb-settings.js
+  var DEFAULT_LEGACY_ORB = Object.freeze({
+    id: "ORB0",
+    chanId: "C",
+    bandIds: [],
+    chirality: -1,
+    startAngleRad: 0
+  });
+  var SCENE_ORB_RUNTIME_FIELDS = Object.freeze(["hueOffsetDeg", "centerX", "centerY"]);
+  function hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+  function readSceneOrbDefaults() {
+    return CONFIG.visualizers && CONFIG.visualizers.orbs && CONFIG.visualizers.orbs.defaults || {
+      hueOffsetDeg: 0,
+      centerX: 0,
+      centerY: 0
+    };
+  }
+  function readSceneOrbLimits() {
+    return CONFIG.visualizers && CONFIG.visualizers.orbs && CONFIG.visualizers.orbs.limits || {};
+  }
+  function sanitizeSceneOrbScalar(fieldName, rawValue, fallbackValue) {
+    const defaults = readSceneOrbDefaults();
+    const limits = readSceneOrbLimits();
+    const fieldLimits = limits[fieldName] || {};
+    const fallback = Number.isFinite(fallbackValue) ? fallbackValue : Number.isFinite(defaults[fieldName]) ? defaults[fieldName] : 0;
+    const numeric = Number.isFinite(rawValue) ? rawValue : fallback;
+    const min = Number.isFinite(fieldLimits.min) ? fieldLimits.min : -Infinity;
+    const max = Number.isFinite(fieldLimits.max) ? fieldLimits.max : Infinity;
+    return clamp(numeric, min, max);
+  }
+  function readDefaultSceneOrbFallback(index = 0) {
+    const defaults = Array.isArray(CONFIG.defaults.orbs) ? CONFIG.defaults.orbs : [];
+    const legacyFallback = defaults[index % Math.max(1, defaults.length)] || DEFAULT_LEGACY_ORB;
+    return {
+      id: typeof legacyFallback.id === "string" ? legacyFallback.id : DEFAULT_LEGACY_ORB.id,
+      chanId: normalizeOrbChannelId(legacyFallback.chanId, legacyFallback.bandId),
+      bandIds: sanitizeOrbBandIds(legacyFallback.bandIds, legacyFallback.bandNames),
+      chirality: Number.isFinite(legacyFallback.chirality) && legacyFallback.chirality >= 0 ? 1 : -1,
+      startAngleRad: Number.isFinite(legacyFallback.startAngleRad) ? legacyFallback.startAngleRad : DEFAULT_LEGACY_ORB.startAngleRad,
+      ...readSceneOrbDefaults()
+    };
+  }
+  function normalizeSceneOrbDef(incomingOrb, fallbackOrb = null) {
+    const fallback = fallbackOrb && typeof fallbackOrb === "object" ? fallbackOrb : readDefaultSceneOrbFallback(0);
+    const orb = incomingOrb && typeof incomingOrb === "object" ? incomingOrb : {};
+    const id = typeof orb.id === "string" && orb.id.trim() ? orb.id : typeof fallback.id === "string" ? fallback.id : DEFAULT_LEGACY_ORB.id;
+    const chiralityRaw = Number.isFinite(orb.chirality) ? orb.chirality : fallback.chirality;
+    const chirality = chiralityRaw >= 0 ? 1 : -1;
+    const startAngleRad = Number.isFinite(orb.startAngleRad) ? orb.startAngleRad : Number.isFinite(fallback.startAngleRad) ? fallback.startAngleRad : DEFAULT_LEGACY_ORB.startAngleRad;
+    const chanId = hasOwn(orb, "chanId") || hasOwn(orb, "bandId") ? normalizeOrbChannelId(orb.chanId, orb.bandId) : normalizeOrbChannelId(fallback.chanId, fallback.bandId);
+    const bandIds = hasOwn(orb, "bandIds") || hasOwn(orb, "bandNames") ? sanitizeOrbBandIds(orb.bandIds, orb.bandNames) : sanitizeOrbBandIds(fallback.bandIds, fallback.bandNames);
+    return {
+      id,
+      chanId,
+      bandIds,
+      chirality,
+      startAngleRad,
+      hueOffsetDeg: sanitizeSceneOrbScalar("hueOffsetDeg", orb.hueOffsetDeg, fallback.hueOffsetDeg),
+      centerX: sanitizeSceneOrbScalar("centerX", orb.centerX, fallback.centerX),
+      centerY: sanitizeSceneOrbScalar("centerY", orb.centerY, fallback.centerY)
+    };
+  }
+  function normalizeSceneOrbSettings(rawSettings) {
+    const input = Array.isArray(rawSettings) ? rawSettings : CONFIG.defaults.orbs;
+    return input.map((orb, index) => normalizeSceneOrbDef(orb, readDefaultSceneOrbFallback(index)));
+  }
+  function toLegacyOrbDef(orb, fallbackOrb = null) {
+    const normalized = normalizeSceneOrbDef(orb, fallbackOrb || void 0);
+    return {
+      id: normalized.id,
+      chanId: normalized.chanId,
+      bandIds: normalized.bandIds.slice(),
+      chirality: normalized.chirality,
+      startAngleRad: normalized.startAngleRad
+    };
+  }
+
+  // src/js/render/scene-persistence.js
+  var SUPPORTED_SCENE_NODE_TYPES = Object.freeze(["orbs", "bandOverlay"]);
+  var DEFAULT_BOUNDS = Object.freeze({ x: 0.5, y: 0.5, w: 1, h: 1 });
+  var DEFAULT_ANCHOR = Object.freeze({ x: 0.5, y: 0.5 });
+  function hasOwn2(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+  function readDefaultSceneNodes() {
+    const nodes = CONFIG && CONFIG.defaults && CONFIG.defaults.scene && Array.isArray(CONFIG.defaults.scene.nodes) ? CONFIG.defaults.scene.nodes : [];
+    return deepClone(nodes);
+  }
+  function readDefaultSceneNode(type) {
+    return readDefaultSceneNodes().find((node) => node && node.type === type) || null;
+  }
+  function sanitizeSceneScalar(value, fallback, min, max) {
+    const numeric = Number.isFinite(value) ? value : fallback;
+    return clamp(numeric, min, max);
+  }
+  function sanitizeBounds(rawBounds, fallbackBounds = DEFAULT_BOUNDS) {
+    const source = rawBounds && typeof rawBounds === "object" ? rawBounds : {};
+    const fallback = fallbackBounds && typeof fallbackBounds === "object" ? fallbackBounds : DEFAULT_BOUNDS;
+    return {
+      x: sanitizeSceneScalar(source.x, Number.isFinite(fallback.x) ? fallback.x : DEFAULT_BOUNDS.x, 0, 1),
+      y: sanitizeSceneScalar(source.y, Number.isFinite(fallback.y) ? fallback.y : DEFAULT_BOUNDS.y, 0, 1),
+      w: sanitizeSceneScalar(source.w, Number.isFinite(fallback.w) ? fallback.w : DEFAULT_BOUNDS.w, 0, 1),
+      h: sanitizeSceneScalar(source.h, Number.isFinite(fallback.h) ? fallback.h : DEFAULT_BOUNDS.h, 0, 1)
+    };
+  }
+  function sanitizeAnchor(rawAnchor, fallbackAnchor = DEFAULT_ANCHOR) {
+    const source = rawAnchor && typeof rawAnchor === "object" ? rawAnchor : {};
+    const fallback = fallbackAnchor && typeof fallbackAnchor === "object" ? fallbackAnchor : DEFAULT_ANCHOR;
+    return {
+      x: sanitizeSceneScalar(source.x, Number.isFinite(fallback.x) ? fallback.x : DEFAULT_ANCHOR.x, 0, 1),
+      y: sanitizeSceneScalar(source.y, Number.isFinite(fallback.y) ? fallback.y : DEFAULT_ANCHOR.y, 0, 1)
+    };
+  }
+  function sanitizeOverlaySettings(rawSettings, { enabled = null } = {}) {
+    const source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
+    const defaults = CONFIG.defaults.bands.overlay;
+    const next = deepClone(defaults);
+    next.enabled = typeof enabled === "boolean" ? enabled : typeof source.enabled === "boolean" ? source.enabled : !!defaults.enabled;
+    if (typeof source.connectAdjacent === "boolean") next.connectAdjacent = source.connectAdjacent;
+    if (Number.isFinite(source.alpha)) {
+      const lim = CONFIG.limits.bands.overlayAlpha;
+      next.alpha = clamp(source.alpha, lim.min, lim.max);
+    }
+    if (Number.isFinite(source.pointSizePx)) {
+      const lim = CONFIG.limits.bands.pointSizePx;
+      next.pointSizePx = clamp(source.pointSizePx, lim.min, lim.max);
+    }
+    if (Number.isFinite(source.minRadiusFrac)) {
+      const lim = CONFIG.limits.bands.overlayMinRadiusFrac;
+      next.minRadiusFrac = clamp(source.minRadiusFrac, lim.min, lim.max);
+    }
+    if (Number.isFinite(source.maxRadiusFrac)) {
+      const lim = CONFIG.limits.bands.overlayMaxRadiusFrac;
+      next.maxRadiusFrac = clamp(source.maxRadiusFrac, lim.min, lim.max);
+    }
+    if (Number.isFinite(source.waveformRadialDisplaceFrac)) {
+      const lim = CONFIG.limits.bands.overlayWaveformRadialDisplaceFrac;
+      next.waveformRadialDisplaceFrac = clamp(source.waveformRadialDisplaceFrac, lim.min, lim.max);
+    }
+    if (Number.isFinite(source.lineAlpha)) {
+      const lim = CONFIG.limits.trace.lineAlpha;
+      next.lineAlpha = clamp(source.lineAlpha, lim.min, lim.max);
+    }
+    if (Number.isFinite(source.lineWidthPx)) {
+      const lim = CONFIG.limits.trace.lineWidthPx;
+      next.lineWidthPx = clamp(source.lineWidthPx, lim.min, lim.max);
+    }
+    if (typeof source.phaseMode === "string" && ["orb", "free"].includes(source.phaseMode)) {
+      next.phaseMode = source.phaseMode;
+    }
+    if (Number.isFinite(source.ringSpeedRadPerSec)) {
+      const lim = CONFIG.limits.bands.ringSpeedRadPerSec;
+      next.ringSpeedRadPerSec = clamp(source.ringSpeedRadPerSec, lim.min, lim.max);
+    }
+    return next;
+  }
+  function sanitizeSettingsForSceneType(type, rawSettings, { enabled = null } = {}) {
+    switch (type) {
+      case "orbs":
+        return normalizeSceneOrbSettings(rawSettings);
+      case "bandOverlay":
+        return sanitizeOverlaySettings(rawSettings, { enabled });
+      default:
+        return deepClone(rawSettings);
+    }
+  }
+  function nextUniqueNodeId(candidateId, type, seenIds) {
+    const fallbackId = (readDefaultSceneNode(type) || {}).id || `${type}-1`;
+    const baseId = typeof candidateId === "string" && candidateId.trim() ? candidateId : fallbackId;
+    if (!seenIds.has(baseId)) {
+      seenIds.add(baseId);
+      return baseId;
+    }
+    const prefix = `${type}-`;
+    let suffix = 1;
+    while (seenIds.has(`${prefix}${suffix}`)) suffix += 1;
+    const uniqueId = `${prefix}${suffix}`;
+    seenIds.add(uniqueId);
+    return uniqueId;
+  }
+  function sanitizeSceneNode(rawNode, { seenIds = null } = {}) {
+    if (!rawNode || typeof rawNode !== "object") return null;
+    const type = typeof rawNode.type === "string" ? rawNode.type.trim() : "";
+    if (!SUPPORTED_SCENE_NODE_TYPES.includes(type)) return null;
+    const fallbackNode = readDefaultSceneNode(type) || {
+      id: `${type}-1`,
+      enabled: true,
+      zIndex: 0,
+      bounds: DEFAULT_BOUNDS,
+      anchor: DEFAULT_ANCHOR,
+      settings: type === "orbs" ? [] : {}
+    };
+    const enabled = typeof rawNode.enabled === "boolean" ? rawNode.enabled : !!fallbackNode.enabled;
+    const node = {
+      id: typeof rawNode.id === "string" && rawNode.id.trim() ? rawNode.id : typeof fallbackNode.id === "string" ? fallbackNode.id : `${type}-1`,
+      type,
+      enabled,
+      zIndex: Number.isFinite(rawNode.zIndex) ? rawNode.zIndex : Number.isFinite(fallbackNode.zIndex) ? fallbackNode.zIndex : 0,
+      bounds: sanitizeBounds(rawNode.bounds, fallbackNode.bounds),
+      anchor: sanitizeAnchor(rawNode.anchor, fallbackNode.anchor),
+      settings: sanitizeSettingsForSceneType(type, rawNode.settings, { enabled })
+    };
+    if (seenIds) node.id = nextUniqueNodeId(node.id, type, seenIds);
+    return node;
+  }
+  function reindexSceneNodes(nodes) {
+    return nodes.map((node, index) => ({
+      ...node,
+      zIndex: index
+    }));
+  }
+  function sanitizePersistedSceneNodes(rawNodes, { synthesizeDefaultWhenEmpty = false } = {}) {
+    const source = Array.isArray(rawNodes) ? rawNodes : [];
+    const seenIds = /* @__PURE__ */ new Set();
+    const nodes = source.map((node) => sanitizeSceneNode(node, { seenIds })).filter(Boolean);
+    if (nodes.length) return reindexSceneNodes(nodes);
+    if (!synthesizeDefaultWhenEmpty) return [];
+    const defaultSeenIds = /* @__PURE__ */ new Set();
+    return reindexSceneNodes(
+      readDefaultSceneNodes().map((node) => sanitizeSceneNode(node, { seenIds: defaultSeenIds })).filter(Boolean)
+    );
+  }
+  function buildSceneNodeFromLegacy(type, rawSettings) {
+    const defaultNode = readDefaultSceneNode(type);
+    if (!defaultNode) return null;
+    return sanitizeSceneNode({
+      ...defaultNode,
+      enabled: type === "bandOverlay" ? !!(rawSettings && typeof rawSettings === "object" && rawSettings.enabled) : !!defaultNode.enabled,
+      settings: rawSettings
+    });
+  }
+  function readLegacyOverlaySource(rawPrefs) {
+    if (!rawPrefs || typeof rawPrefs !== "object") return null;
+    if (hasOwn2(rawPrefs, "overlay") && rawPrefs.overlay && typeof rawPrefs.overlay === "object") {
+      return rawPrefs.overlay;
+    }
+    if (rawPrefs.bands && typeof rawPrefs.bands === "object" && hasOwn2(rawPrefs.bands, "overlay") && rawPrefs.bands.overlay && typeof rawPrefs.bands.overlay === "object") {
+      return rawPrefs.bands.overlay;
+    }
+    return null;
+  }
+  function migrateLegacyVisualRootsToSceneNodes(rawPrefs) {
+    const nodes = [];
+    if (rawPrefs && hasOwn2(rawPrefs, "orbs") && Array.isArray(rawPrefs.orbs)) {
+      const orbsNode = buildSceneNodeFromLegacy("orbs", rawPrefs.orbs);
+      if (orbsNode) nodes.push(orbsNode);
+    }
+    const overlaySource = readLegacyOverlaySource(rawPrefs);
+    if (overlaySource) {
+      const overlayNode = buildSceneNodeFromLegacy("bandOverlay", overlaySource);
+      if (overlayNode) nodes.push(overlayNode);
+    }
+    return reindexSceneNodes(nodes);
+  }
+  function deriveSceneNodesFromPreset(rawPrefs) {
+    if (rawPrefs && rawPrefs.scene && Array.isArray(rawPrefs.scene.nodes)) {
+      return sanitizePersistedSceneNodes(rawPrefs.scene.nodes);
+    }
+    const legacyNodes = migrateLegacyVisualRootsToSceneNodes(rawPrefs);
+    if (legacyNodes.length) return legacyNodes;
+    return sanitizePersistedSceneNodes([], { synthesizeDefaultWhenEmpty: true });
+  }
+  function readDisabledCompatOverlayDefaults() {
+    return {
+      ...deepClone(CONFIG.defaults.bands.overlay),
+      enabled: false
+    };
+  }
+  function applySceneNodesToCompatPrefs(targetPrefs, rawSceneNodes) {
+    const sceneNodes = sanitizePersistedSceneNodes(rawSceneNodes);
+    if (!targetPrefs.scene || typeof targetPrefs.scene !== "object") targetPrefs.scene = {};
+    targetPrefs.scene.nodes = sceneNodes;
+    const orbsNode = sceneNodes.find((node) => node.type === "orbs") || null;
+    const overlayNode = sceneNodes.find((node) => node.type === "bandOverlay") || null;
+    targetPrefs.orbs = orbsNode ? orbsNode.settings.map((orb, index) => toLegacyOrbDef(orb, readDefaultSceneOrbFallback(index))) : [];
+    if (!targetPrefs.bands || typeof targetPrefs.bands !== "object") targetPrefs.bands = {};
+    targetPrefs.bands.overlay = overlayNode ? sanitizeOverlaySettings(overlayNode.settings, { enabled: overlayNode.enabled }) : readDisabledCompatOverlayDefaults();
+    return targetPrefs;
+  }
+
   // src/js/presets/url-preset.js
   var UrlPreset = (() => {
     const SUPPORTED_SCHEMAS = Object.freeze([
       PRESET_SCHEMA_VERSION,
+      8,
       LEGACY_SCHEMA_V7,
       LEGACY_SCHEMA_V6,
       LEGACY_SCHEMA_V5,
@@ -1029,176 +1413,126 @@
       }
     }
     function sanitizeAndApply(incoming) {
+      const source = incoming && typeof incoming === "object" ? incoming : {};
       const next = deepClone(CONFIG.defaults);
-      if (incoming.visuals) {
-        if (isValidHexColor(incoming.visuals.backgroundColor)) next.visuals.backgroundColor = incoming.visuals.backgroundColor;
-        if (isValidHexColor(incoming.visuals.particleColor)) next.visuals.particleColor = incoming.visuals.particleColor;
+      if (source.visuals) {
+        if (isValidHexColor(source.visuals.backgroundColor)) next.visuals.backgroundColor = source.visuals.backgroundColor;
+        if (isValidHexColor(source.visuals.particleColor)) next.visuals.particleColor = source.visuals.particleColor;
       }
-      if (incoming.trace) {
-        if (typeof incoming.trace.lines === "boolean") next.trace.lines = incoming.trace.lines;
-        if (Number.isFinite(incoming.trace.numLines)) {
+      if (source.trace) {
+        if (typeof source.trace.lines === "boolean") next.trace.lines = source.trace.lines;
+        if (Number.isFinite(source.trace.numLines)) {
           const lim = CONFIG.limits.trace.numLines;
-          next.trace.numLines = clamp(incoming.trace.numLines, lim.min, lim.max);
+          next.trace.numLines = clamp(source.trace.numLines, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.trace.lineAlpha)) {
+        if (Number.isFinite(source.trace.lineAlpha)) {
           const lim = CONFIG.limits.trace.lineAlpha;
-          next.trace.lineAlpha = clamp(incoming.trace.lineAlpha, lim.min, lim.max);
+          next.trace.lineAlpha = clamp(source.trace.lineAlpha, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.trace.lineWidthPx)) {
+        if (Number.isFinite(source.trace.lineWidthPx)) {
           const lim = CONFIG.limits.trace.lineWidthPx;
-          next.trace.lineWidthPx = clamp(incoming.trace.lineWidthPx, lim.min, lim.max);
+          next.trace.lineWidthPx = clamp(source.trace.lineWidthPx, lim.min, lim.max);
         }
-        if (typeof incoming.trace.lineColorMode === "string") {
-          if (["fixed", "lastParticle", "dominantBand"].includes(incoming.trace.lineColorMode)) {
-            next.trace.lineColorMode = incoming.trace.lineColorMode;
+        if (typeof source.trace.lineColorMode === "string") {
+          if (["fixed", "lastParticle", "dominantBand"].includes(source.trace.lineColorMode)) {
+            next.trace.lineColorMode = source.trace.lineColorMode;
           }
         }
       }
-      if (incoming.particles) {
+      if (source.particles) {
         for (const k of ["emitPerSecond", "sizeMaxPx", "sizeMinPx", "sizeToMinSec", "ttlSec", "overlapRadiusPx"]) {
-          if (Number.isFinite(incoming.particles[k])) {
+          if (Number.isFinite(source.particles[k])) {
             const lim = CONFIG.limits.particles[k];
-            next.particles[k] = clamp(incoming.particles[k], lim.min, lim.max);
+            next.particles[k] = clamp(source.particles[k], lim.min, lim.max);
           }
         }
       }
-      if (incoming.motion) {
-        if (Number.isFinite(incoming.motion.angularSpeedRadPerSec)) {
+      if (source.motion) {
+        if (Number.isFinite(source.motion.angularSpeedRadPerSec)) {
           const lim = CONFIG.limits.motion.angularSpeedRadPerSec;
-          next.motion.angularSpeedRadPerSec = clamp(incoming.motion.angularSpeedRadPerSec, lim.min, lim.max);
+          next.motion.angularSpeedRadPerSec = clamp(source.motion.angularSpeedRadPerSec, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.motion.waveformRadialDisplaceFrac)) {
+        if (Number.isFinite(source.motion.waveformRadialDisplaceFrac)) {
           const lim = CONFIG.limits.motion.waveformRadialDisplaceFrac;
-          next.motion.waveformRadialDisplaceFrac = clamp(incoming.motion.waveformRadialDisplaceFrac, lim.min, lim.max);
+          next.motion.waveformRadialDisplaceFrac = clamp(source.motion.waveformRadialDisplaceFrac, lim.min, lim.max);
         }
       }
-      if (incoming.audio) {
-        if (Number.isFinite(incoming.audio.rmsGain)) {
+      if (source.audio) {
+        if (Number.isFinite(source.audio.rmsGain)) {
           const lim = CONFIG.limits.audio.rmsGain;
-          next.audio.rmsGain = clamp(incoming.audio.rmsGain, lim.min, lim.max);
+          next.audio.rmsGain = clamp(source.audio.rmsGain, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.audio.minRadiusFrac)) {
+        if (Number.isFinite(source.audio.minRadiusFrac)) {
           const lim = CONFIG.limits.audio.minRadiusFrac;
-          next.audio.minRadiusFrac = clamp(incoming.audio.minRadiusFrac, lim.min, lim.max);
+          next.audio.minRadiusFrac = clamp(source.audio.minRadiusFrac, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.audio.maxRadiusFrac)) {
+        if (Number.isFinite(source.audio.maxRadiusFrac)) {
           const lim = CONFIG.limits.audio.maxRadiusFrac;
-          next.audio.maxRadiusFrac = clamp(incoming.audio.maxRadiusFrac, lim.min, lim.max);
+          next.audio.maxRadiusFrac = clamp(source.audio.maxRadiusFrac, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.audio.smoothingTimeConstant)) {
+        if (Number.isFinite(source.audio.smoothingTimeConstant)) {
           const lim = CONFIG.limits.audio.smoothingTimeConstant;
-          next.audio.smoothingTimeConstant = clamp(incoming.audio.smoothingTimeConstant, lim.min, lim.max);
+          next.audio.smoothingTimeConstant = clamp(source.audio.smoothingTimeConstant, lim.min, lim.max);
         }
-        if (Number.isFinite(incoming.audio.fftSize) && CONFIG.limits.audio.fftSizes.includes(incoming.audio.fftSize)) {
-          next.audio.fftSize = incoming.audio.fftSize;
+        if (Number.isFinite(source.audio.fftSize) && CONFIG.limits.audio.fftSizes.includes(source.audio.fftSize)) {
+          next.audio.fftSize = source.audio.fftSize;
         }
-        if (["none", "one", "all"].includes(incoming.audio.repeatMode)) next.audio.repeatMode = incoming.audio.repeatMode;
-        else if (typeof incoming.audio.loop === "boolean") next.audio.repeatMode = incoming.audio.loop ? "one" : "none";
-        if (typeof incoming.audio.muted === "boolean") next.audio.muted = incoming.audio.muted;
-        if (Number.isFinite(incoming.audio.volume)) {
-          next.audio.volume = clamp(incoming.audio.volume, CONFIG.ui.volume.min, CONFIG.ui.volume.max);
+        if (["none", "one", "all"].includes(source.audio.repeatMode)) next.audio.repeatMode = source.audio.repeatMode;
+        else if (typeof source.audio.loop === "boolean") next.audio.repeatMode = source.audio.loop ? "one" : "none";
+        if (typeof source.audio.muted === "boolean") next.audio.muted = source.audio.muted;
+        if (Number.isFinite(source.audio.volume)) {
+          next.audio.volume = clamp(source.audio.volume, CONFIG.ui.volume.min, CONFIG.ui.volume.max);
         }
       }
-      if (incoming.bands) {
+      if (source.bands) {
         const maxBandCount = Array.isArray(CONFIG.bandNames) && CONFIG.bandNames.length ? CONFIG.bandNames.length : CONFIG.defaults.bands.count;
-        if (Number.isInteger(incoming.bands.count) && incoming.bands.count >= 2 && incoming.bands.count <= maxBandCount) {
-          next.bands.count = incoming.bands.count;
+        if (Number.isInteger(source.bands.count) && source.bands.count >= 2 && source.bands.count <= maxBandCount) {
+          next.bands.count = source.bands.count;
         }
-        if (Number.isFinite(incoming.bands.floorHz) && incoming.bands.floorHz > 0) {
-          next.bands.floorHz = incoming.bands.floorHz;
+        if (Number.isFinite(source.bands.floorHz) && source.bands.floorHz > 0) {
+          next.bands.floorHz = source.bands.floorHz;
         }
-        if (Number.isFinite(incoming.bands.ceilingHz) && incoming.bands.ceilingHz > 0) {
-          next.bands.ceilingHz = incoming.bands.ceilingHz;
+        if (Number.isFinite(source.bands.ceilingHz) && source.bands.ceilingHz > 0) {
+          next.bands.ceilingHz = source.bands.ceilingHz;
         }
-        if (incoming.bands.overlay) {
-          if (typeof incoming.bands.overlay.enabled === "boolean") next.bands.overlay.enabled = incoming.bands.overlay.enabled;
-          if (typeof incoming.bands.overlay.connectAdjacent === "boolean") next.bands.overlay.connectAdjacent = incoming.bands.overlay.connectAdjacent;
-          if (Number.isFinite(incoming.bands.overlay.alpha)) {
-            const lim = CONFIG.limits.bands.overlayAlpha;
-            next.bands.overlay.alpha = clamp(incoming.bands.overlay.alpha, lim.min, lim.max);
-          }
-          if (Number.isFinite(incoming.bands.overlay.pointSizePx)) {
-            const lim = CONFIG.limits.bands.pointSizePx;
-            next.bands.overlay.pointSizePx = clamp(incoming.bands.overlay.pointSizePx, lim.min, lim.max);
-          }
-          if (Number.isFinite(incoming.bands.overlay.minRadiusFrac)) {
-            const lim = CONFIG.limits.bands.overlayMinRadiusFrac;
-            next.bands.overlay.minRadiusFrac = clamp(incoming.bands.overlay.minRadiusFrac, lim.min, lim.max);
-          }
-          if (Number.isFinite(incoming.bands.overlay.maxRadiusFrac)) {
-            const lim = CONFIG.limits.bands.overlayMaxRadiusFrac;
-            next.bands.overlay.maxRadiusFrac = clamp(incoming.bands.overlay.maxRadiusFrac, lim.min, lim.max);
-          }
-          if (Number.isFinite(incoming.bands.overlay.waveformRadialDisplaceFrac)) {
-            const lim = CONFIG.limits.bands.overlayWaveformRadialDisplaceFrac;
-            next.bands.overlay.waveformRadialDisplaceFrac = clamp(incoming.bands.overlay.waveformRadialDisplaceFrac, lim.min, lim.max);
-          }
-          if (Number.isFinite(incoming.bands.overlay.lineAlpha)) {
-            const lim = CONFIG.limits.trace.lineAlpha;
-            next.bands.overlay.lineAlpha = clamp(incoming.bands.overlay.lineAlpha, lim.min, lim.max);
-          }
-          if (Number.isFinite(incoming.bands.overlay.lineWidthPx)) {
-            const lim = CONFIG.limits.trace.lineWidthPx;
-            next.bands.overlay.lineWidthPx = clamp(incoming.bands.overlay.lineWidthPx, lim.min, lim.max);
-          }
-          if (typeof incoming.bands.overlay.phaseMode === "string") {
-            if (["orb", "free"].includes(incoming.bands.overlay.phaseMode)) {
-              next.bands.overlay.phaseMode = incoming.bands.overlay.phaseMode;
-            }
-          }
-          if (Number.isFinite(incoming.bands.overlay.ringSpeedRadPerSec)) {
-            const lim = CONFIG.limits.bands.ringSpeedRadPerSec;
-            next.bands.overlay.ringSpeedRadPerSec = clamp(incoming.bands.overlay.ringSpeedRadPerSec, lim.min, lim.max);
-          }
-        }
-        if (incoming.bands.rainbow) {
-          if (Number.isFinite(incoming.bands.rainbow.hueOffsetDeg)) {
+        if (source.bands.rainbow) {
+          if (Number.isFinite(source.bands.rainbow.hueOffsetDeg)) {
             const lim = CONFIG.limits.bands.hueOffsetDeg;
-            next.bands.rainbow.hueOffsetDeg = clamp(incoming.bands.rainbow.hueOffsetDeg, lim.min, lim.max);
+            next.bands.rainbow.hueOffsetDeg = clamp(source.bands.rainbow.hueOffsetDeg, lim.min, lim.max);
           }
-          if (Number.isFinite(incoming.bands.rainbow.saturation)) {
+          if (Number.isFinite(source.bands.rainbow.saturation)) {
             const lim = CONFIG.limits.bands.saturation;
-            next.bands.rainbow.saturation = clamp(incoming.bands.rainbow.saturation, lim.min, lim.max);
+            next.bands.rainbow.saturation = clamp(source.bands.rainbow.saturation, lim.min, lim.max);
           }
-          if (Number.isFinite(incoming.bands.rainbow.value)) {
+          if (Number.isFinite(source.bands.rainbow.value)) {
             const lim = CONFIG.limits.bands.value;
-            next.bands.rainbow.value = clamp(incoming.bands.rainbow.value, lim.min, lim.max);
+            next.bands.rainbow.value = clamp(source.bands.rainbow.value, lim.min, lim.max);
           }
         }
-        if (typeof incoming.bands.particleColorSource === "string") {
-          if (["fixed", "dominant", "angle"].includes(incoming.bands.particleColorSource)) {
-            next.bands.particleColorSource = incoming.bands.particleColorSource;
+        if (typeof source.bands.particleColorSource === "string") {
+          if (["fixed", "dominant", "angle"].includes(source.bands.particleColorSource)) {
+            next.bands.particleColorSource = source.bands.particleColorSource;
           }
         }
-        if (typeof incoming.bands.distributionMode === "string") {
-          if (CONFIG.limits.bands.distributionModes.includes(incoming.bands.distributionMode)) {
-            next.bands.distributionMode = incoming.bands.distributionMode;
+        if (typeof source.bands.distributionMode === "string") {
+          if (CONFIG.limits.bands.distributionModes.includes(source.bands.distributionMode)) {
+            next.bands.distributionMode = source.bands.distributionMode;
           }
         }
-        if (typeof incoming.bands.logSpacing === "boolean" && incoming.bands.distributionMode == null) {
-          next.bands.distributionMode = incoming.bands.logSpacing ? "log" : "linear";
+        if (typeof source.bands.logSpacing === "boolean" && source.bands.distributionMode == null) {
+          next.bands.distributionMode = source.bands.logSpacing ? "log" : "linear";
         }
       }
-      if (incoming.timing) {
-        if (Number.isFinite(incoming.timing.maxDeltaTimeSec) && incoming.timing.maxDeltaTimeSec > 0) {
-          next.timing.maxDeltaTimeSec = incoming.timing.maxDeltaTimeSec;
+      if (source.timing) {
+        if (Number.isFinite(source.timing.maxDeltaTimeSec) && source.timing.maxDeltaTimeSec > 0) {
+          next.timing.maxDeltaTimeSec = source.timing.maxDeltaTimeSec;
         }
       }
       next.bands.ceilingHz = Math.max(next.bands.floorHz, next.bands.ceilingHz);
-      if (Array.isArray(incoming.orbs)) {
-        const defaults = CONFIG.defaults.orbs;
-        next.orbs = incoming.orbs.map((orb, i) => {
-          const mappedOrb = orb && typeof orb === "object" ? deepClone(orb) : orb;
-          if (mappedOrb && !Array.isArray(mappedOrb.bandIds) && Array.isArray(mappedOrb.bandNames)) {
-            mappedOrb.bandIds = sanitizeOrbBandIds(void 0, mappedOrb.bandNames);
-          }
-          if (mappedOrb && typeof mappedOrb === "object") delete mappedOrb.bandNames;
-          return normalizeOrbDef(mappedOrb, defaults[i % defaults.length]);
-        });
-      }
       if (next.bands && typeof next.bands === "object") delete next.bands.names;
       next.particles.sizeMinPx = Math.min(next.particles.sizeMinPx, next.particles.sizeMaxPx);
       next.particles.ttlSec = Math.max(next.particles.ttlSec, next.particles.sizeToMinSec);
+      applySceneNodesToCompatPrefs(next, deriveSceneNodesFromPreset(source));
       replacePreferences(next);
       resolveSettings();
       return true;
@@ -1218,7 +1552,7 @@
         return {
           ok: true,
           code: decoded.code,
-          schema: decoded.schema,
+          schema: PRESET_SCHEMA_VERSION,
           migratedFromSchema: decoded.migratedFromSchema
         };
       } catch {
@@ -1230,14 +1564,61 @@
         };
       }
     }
+    function mergeCompatVisualStateIntoSceneNodes(prefsLike) {
+      const sceneNodes = prefsLike && prefsLike.scene && Array.isArray(prefsLike.scene.nodes) ? deepClone(prefsLike.scene.nodes) : deriveSceneNodesFromPreset(prefsLike);
+      const orbsIndex = sceneNodes.findIndex((node) => node && node.type === "orbs");
+      if (orbsIndex >= 0) {
+        const existingOrbSettings = Array.isArray(sceneNodes[orbsIndex].settings) ? sceneNodes[orbsIndex].settings : [];
+        const compatOrbSettings = Array.isArray(prefsLike && prefsLike.orbs) ? prefsLike.orbs : [];
+        sceneNodes[orbsIndex] = {
+          ...sceneNodes[orbsIndex],
+          settings: compatOrbSettings.map((orb, index) => ({
+            ...existingOrbSettings[index] || {},
+            ...deepClone(orb)
+          }))
+        };
+      }
+      const overlayIndex = sceneNodes.findIndex((node) => node && node.type === "bandOverlay");
+      if (overlayIndex >= 0) {
+        const overlaySettings = prefsLike && prefsLike.bands && prefsLike.bands.overlay && typeof prefsLike.bands.overlay === "object" ? deepClone(prefsLike.bands.overlay) : deepClone(CONFIG.defaults.bands.overlay);
+        sceneNodes[overlayIndex] = {
+          ...sceneNodes[overlayIndex],
+          enabled: !!overlaySettings.enabled,
+          settings: overlaySettings
+        };
+      }
+      return sceneNodes;
+    }
     function writeHashFromPrefs() {
       const encodedPrefs = deepClone(preferences);
       if (encodedPrefs.bands && typeof encodedPrefs.bands === "object") delete encodedPrefs.bands.names;
-      if (Array.isArray(encodedPrefs.orbs)) {
-        encodedPrefs.orbs = encodedPrefs.orbs.map((orb, i) => {
-          const fallback = CONFIG.defaults.orbs[i % CONFIG.defaults.orbs.length];
-          return normalizeOrbDef(orb, fallback);
-        });
+      applySceneNodesToCompatPrefs(
+        encodedPrefs,
+        mergeCompatVisualStateIntoSceneNodes(encodedPrefs)
+      );
+      encodedPrefs.scene = {
+        nodes: deepClone(encodedPrefs.scene && encodedPrefs.scene.nodes || [])
+      };
+      delete encodedPrefs.orbs;
+      delete encodedPrefs.overlay;
+      delete encodedPrefs.viewTransform;
+      delete encodedPrefs.camera;
+      delete encodedPrefs.source;
+      delete encodedPrefs.queue;
+      delete encodedPrefs.playback;
+      delete encodedPrefs.recording;
+      delete encodedPrefs.runtimeLog;
+      delete encodedPrefs.permissions;
+      delete encodedPrefs.ui;
+      if (encodedPrefs.scene && typeof encodedPrefs.scene === "object") {
+        delete encodedPrefs.scene.selectedNodeId;
+        delete encodedPrefs.scene.viewTransform;
+        delete encodedPrefs.scene.editor;
+        delete encodedPrefs.scene.ui;
+        delete encodedPrefs.scene.camera;
+      }
+      if (encodedPrefs.bands && typeof encodedPrefs.bands === "object") {
+        delete encodedPrefs.bands.overlay;
       }
       const hash = encodePrefsToHash(encodedPrefs);
       history.replaceState(null, "", location.pathname + location.search + hash);
@@ -2836,102 +3217,6 @@
     return { init, loadFile, reset, draw };
   })();
 
-  // src/js/render/orb-settings.js
-  var DEFAULT_LEGACY_ORB = Object.freeze({
-    id: "ORB0",
-    chanId: "C",
-    bandIds: [],
-    chirality: -1,
-    startAngleRad: 0
-  });
-  var SCENE_ORB_RUNTIME_FIELDS = Object.freeze(["hueOffsetDeg", "centerX", "centerY"]);
-  function hasOwn(obj, key) {
-    return Object.prototype.hasOwnProperty.call(obj, key);
-  }
-  function readSceneOrbDefaults() {
-    return CONFIG.visualizers && CONFIG.visualizers.orbs && CONFIG.visualizers.orbs.defaults || {
-      hueOffsetDeg: 0,
-      centerX: 0,
-      centerY: 0
-    };
-  }
-  function readSceneOrbLimits() {
-    return CONFIG.visualizers && CONFIG.visualizers.orbs && CONFIG.visualizers.orbs.limits || {};
-  }
-  function sanitizeSceneOrbScalar(fieldName, rawValue, fallbackValue) {
-    const defaults = readSceneOrbDefaults();
-    const limits = readSceneOrbLimits();
-    const fieldLimits = limits[fieldName] || {};
-    const fallback = Number.isFinite(fallbackValue) ? fallbackValue : Number.isFinite(defaults[fieldName]) ? defaults[fieldName] : 0;
-    const numeric = Number.isFinite(rawValue) ? rawValue : fallback;
-    const min = Number.isFinite(fieldLimits.min) ? fieldLimits.min : -Infinity;
-    const max = Number.isFinite(fieldLimits.max) ? fieldLimits.max : Infinity;
-    return clamp(numeric, min, max);
-  }
-  function readDefaultSceneOrbFallback(index = 0) {
-    const defaults = Array.isArray(CONFIG.defaults.orbs) ? CONFIG.defaults.orbs : [];
-    const legacyFallback = defaults[index % Math.max(1, defaults.length)] || DEFAULT_LEGACY_ORB;
-    return {
-      id: typeof legacyFallback.id === "string" ? legacyFallback.id : DEFAULT_LEGACY_ORB.id,
-      chanId: normalizeOrbChannelId(legacyFallback.chanId, legacyFallback.bandId),
-      bandIds: sanitizeOrbBandIds(legacyFallback.bandIds, legacyFallback.bandNames),
-      chirality: Number.isFinite(legacyFallback.chirality) && legacyFallback.chirality >= 0 ? 1 : -1,
-      startAngleRad: Number.isFinite(legacyFallback.startAngleRad) ? legacyFallback.startAngleRad : DEFAULT_LEGACY_ORB.startAngleRad,
-      ...readSceneOrbDefaults()
-    };
-  }
-  function normalizeSceneOrbDef(incomingOrb, fallbackOrb = null) {
-    const fallback = fallbackOrb && typeof fallbackOrb === "object" ? fallbackOrb : readDefaultSceneOrbFallback(0);
-    const orb = incomingOrb && typeof incomingOrb === "object" ? incomingOrb : {};
-    const id = typeof orb.id === "string" && orb.id.trim() ? orb.id : typeof fallback.id === "string" ? fallback.id : DEFAULT_LEGACY_ORB.id;
-    const chiralityRaw = Number.isFinite(orb.chirality) ? orb.chirality : fallback.chirality;
-    const chirality = chiralityRaw >= 0 ? 1 : -1;
-    const startAngleRad = Number.isFinite(orb.startAngleRad) ? orb.startAngleRad : Number.isFinite(fallback.startAngleRad) ? fallback.startAngleRad : DEFAULT_LEGACY_ORB.startAngleRad;
-    const chanId = hasOwn(orb, "chanId") || hasOwn(orb, "bandId") ? normalizeOrbChannelId(orb.chanId, orb.bandId) : normalizeOrbChannelId(fallback.chanId, fallback.bandId);
-    const bandIds = hasOwn(orb, "bandIds") || hasOwn(orb, "bandNames") ? sanitizeOrbBandIds(orb.bandIds, orb.bandNames) : sanitizeOrbBandIds(fallback.bandIds, fallback.bandNames);
-    return {
-      id,
-      chanId,
-      bandIds,
-      chirality,
-      startAngleRad,
-      hueOffsetDeg: sanitizeSceneOrbScalar("hueOffsetDeg", orb.hueOffsetDeg, fallback.hueOffsetDeg),
-      centerX: sanitizeSceneOrbScalar("centerX", orb.centerX, fallback.centerX),
-      centerY: sanitizeSceneOrbScalar("centerY", orb.centerY, fallback.centerY)
-    };
-  }
-  function normalizeSceneOrbSettings(rawSettings) {
-    const input = Array.isArray(rawSettings) ? rawSettings : CONFIG.defaults.orbs;
-    return input.map((orb, index) => normalizeSceneOrbDef(orb, readDefaultSceneOrbFallback(index)));
-  }
-  function toLegacyOrbDef(orb, fallbackOrb = null) {
-    const normalized = normalizeSceneOrbDef(orb, fallbackOrb || void 0);
-    return {
-      id: normalized.id,
-      chanId: normalized.chanId,
-      bandIds: normalized.bandIds.slice(),
-      chirality: normalized.chirality,
-      startAngleRad: normalized.startAngleRad
-    };
-  }
-  function readSceneOrbRuntimePatch(orb) {
-    const patch = {};
-    if (!orb || typeof orb !== "object") return patch;
-    for (const fieldName of SCENE_ORB_RUNTIME_FIELDS) {
-      if (!hasOwn(orb, fieldName)) continue;
-      patch[fieldName] = orb[fieldName];
-    }
-    return patch;
-  }
-  function mergeSceneOrbSettingsWithRuntimeFields(rawSettings, runtimeSettings) {
-    const next = normalizeSceneOrbSettings(rawSettings);
-    const existing = Array.isArray(runtimeSettings) ? runtimeSettings : [];
-    return next.map((orb, index) => normalizeSceneOrbDef({
-      ...orb,
-      ...readSceneOrbRuntimePatch(existing[index])
-    }, orb));
-  }
-
   // src/js/render/color-policy.js
   var ColorPolicy = /* @__PURE__ */ (() => {
     function resolveBandIndex(index, fallbackIndex = 0) {
@@ -3082,7 +3367,8 @@
       }
       this.dtSec = Number.isFinite(dtSec) ? dtSec : 0;
     }
-    render(target, _viewTransform) {
+    render(target, viewTransform) {
+      void viewTransform;
       const overlay = readOverlaySettingsFromNode(this.node);
       const ctx = target && target.ctx || this.context && this.context.ctx || state.ctx;
       const targetMetrics = {
@@ -3523,7 +3809,8 @@
         });
       }
     }
-    render(target, _viewTransform) {
+    render(target, viewTransform) {
+      void viewTransform;
       if (!this.orbs.length) return;
       const ctx = target && target.ctx || this.context && this.context.ctx || state.ctx;
       if (!ctx) return;
@@ -3666,16 +3953,12 @@
       }
     }
   });
-  var ORBS_DEFAULT_NODE = deepFreeze({
-    id: "orbs-1",
-    type: "orbs",
-    enabled: true,
-    zIndex: 0,
-    bounds: deepClone(FULL_SURFACE_BOUNDS),
-    anchor: deepClone(CENTER_ANCHOR),
-    settings: normalizeSceneOrbSettings(CONFIG.defaults.orbs)
-  });
-  var BAND_OVERLAY_DEFAULT_NODE = deepFreeze({
+  function readConfiguredDefaultNode(type, fallbackNode) {
+    const configuredNodes = CONFIG && CONFIG.defaults && CONFIG.defaults.scene && Array.isArray(CONFIG.defaults.scene.nodes) ? CONFIG.defaults.scene.nodes : [];
+    const configuredNode = configuredNodes.find((node) => node && node.type === type) || null;
+    return deepFreeze(deepClone(configuredNode || fallbackNode));
+  }
+  var BAND_OVERLAY_FALLBACK_NODE = deepFreeze({
     id: "overlay-1",
     type: "bandOverlay",
     enabled: true,
@@ -3684,6 +3967,16 @@
     anchor: deepClone(CENTER_ANCHOR),
     settings: deepClone(CONFIG.defaults.bands.overlay)
   });
+  var ORBS_DEFAULT_NODE = readConfiguredDefaultNode("orbs", {
+    id: "orbs-1",
+    type: "orbs",
+    enabled: true,
+    zIndex: 0,
+    bounds: deepClone(FULL_SURFACE_BOUNDS),
+    anchor: deepClone(CENTER_ANCHOR),
+    settings: normalizeSceneOrbSettings(CONFIG.defaults.orbs)
+  });
+  var BAND_OVERLAY_DEFAULT_NODE = readConfiguredDefaultNode("bandOverlay", BAND_OVERLAY_FALLBACK_NODE);
   function cloneMaybe(value) {
     return value == null ? null : deepClone(value);
   }
@@ -3804,7 +4097,6 @@
   }
 
   // src/js/render/compositor.js
-  var IDENTITY_VIEW_TRANSFORM = Object.freeze({ kind: "identity" });
   function defaultWarningSink({ message, type = "", nodeId = "" }) {
     if (typeof console !== "object" || typeof console.warn !== "function" || !message) return;
     const nodePart = nodeId ? ` node "${nodeId}"` : "";
@@ -3954,9 +4246,10 @@
         if (typeof entry.instance.update === "function") entry.instance.update(frame, dtSec);
       }
     }
-    function render(target) {
+    function render(target, viewTransform = IDENTITY_VIEW_TRANSFORM) {
+      const activeViewTransform = normalizeViewTransform(viewTransform);
       for (const entry of activeEntries) {
-        if (typeof entry.instance.render === "function") entry.instance.render(target, IDENTITY_VIEW_TRANSFORM);
+        if (typeof entry.instance.render === "function") entry.instance.render(target, activeViewTransform);
       }
     }
     function dispose() {
@@ -3968,7 +4261,6 @@
   }
 
   // src/js/render/scene-runtime.js
-  var SCENE_TYPE_ORDER = Object.freeze(["orbs", "bandOverlay"]);
   var SCENE_TYPE_LABELS = Object.freeze({
     orbs: "Orbs",
     bandOverlay: "Band Overlay"
@@ -3979,112 +4271,32 @@
     if (!state.scene || typeof state.scene !== "object") {
       state.scene = {
         nodes: [],
-        selectedNodeId: ""
+        selectedNodeId: "",
+        viewTransform: IDENTITY_VIEW_TRANSFORM
       };
     }
     if (!Array.isArray(state.scene.nodes)) state.scene.nodes = [];
     if (typeof state.scene.selectedNodeId !== "string") state.scene.selectedNodeId = "";
+    state.scene.viewTransform = normalizeViewTransform(state.scene.viewTransform);
     return state.scene;
-  }
-  function sanitizeSceneNumber(value, schema) {
-    const fallback = Number.isFinite(schema && schema.default) ? schema.default : 0;
-    const numeric = Number.isFinite(value) ? value : fallback;
-    const min = Number.isFinite(schema && schema.min) ? schema.min : -Infinity;
-    const max = Number.isFinite(schema && schema.max) ? schema.max : Infinity;
-    return clamp(numeric, min, max);
-  }
-  function sanitizeSettingValue(value, schema) {
-    if (!schema || typeof schema !== "object") return deepClone(value);
-    if (schema.type === "boolean") {
-      return typeof value === "boolean" ? value : !!schema.default;
-    }
-    if (schema.type === "string") {
-      if (Array.isArray(schema.enum) && schema.enum.length) {
-        return schema.enum.includes(value) ? value : schema.default;
-      }
-      return typeof value === "string" ? value : typeof schema.default === "string" ? schema.default : "";
-    }
-    if (schema.type === "number") {
-      return sanitizeSceneNumber(value, schema);
-    }
-    if (schema.type === "array") {
-      return Array.isArray(value) ? deepClone(value) : deepClone(schema.default);
-    }
-    return deepClone(value);
-  }
-  function sanitizeOverlaySettings(rawSettings) {
-    const defaultNode = sceneRegistry.getDefaultNode("bandOverlay") || { settings: {} };
-    const schema = sceneRegistry.getSettingsSchema("bandOverlay") || { fields: {} };
-    const source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
-    const next = deepClone(defaultNode.settings || {});
-    for (const [fieldName, fieldSchema] of Object.entries(schema.fields || {})) {
-      const hasOwn2 = Object.prototype.hasOwnProperty.call(source, fieldName);
-      const sourceValue = hasOwn2 ? source[fieldName] : next[fieldName];
-      next[fieldName] = sanitizeSettingValue(sourceValue, fieldSchema);
-    }
-    return next;
   }
   function sanitizeOrbSettings(rawSettings) {
     return normalizeSceneOrbSettings(rawSettings);
   }
-  function sanitizeSettingsForType(type, rawSettings) {
-    switch (type) {
-      case "orbs":
-        return sanitizeOrbSettings(rawSettings);
-      case "bandOverlay":
-        return sanitizeOverlaySettings(rawSettings);
-      default:
-        return deepClone(rawSettings);
-    }
-  }
-  function reindexSceneNodes(nodes) {
-    return nodes.map((node, index) => ({
-      ...node,
-      zIndex: index
-    }));
-  }
-  function buildSceneNodeFromPreferences(type) {
-    const defaultNode = sceneRegistry.getDefaultNode(type);
-    if (!defaultNode) return null;
-    const node = deepClone(defaultNode);
-    if (type === "orbs") {
-      node.settings = sanitizeOrbSettings(preferences.orbs);
-      node.enabled = true;
-    } else if (type === "bandOverlay") {
-      node.settings = sanitizeOverlaySettings(preferences.bands.overlay);
-      node.enabled = !!node.settings.enabled;
-    }
-    return node;
+  function persistScenePreferences(nodes) {
+    const nextPrefs = applySceneNodesToCompatPrefs(preferences, nodes);
+    resolveSettings();
+    return deepClone(nextPrefs.scene && nextPrefs.scene.nodes || []);
   }
   function buildSceneNodesFromPreferences({ preserveRuntimeState = false } = {}) {
-    const sceneState = ensureSceneState();
-    const existingNodes = Array.isArray(sceneState.nodes) ? sceneState.nodes : [];
-    const existingById = new Map(existingNodes.map((node) => [node.id, node]));
-    const freshNodes = SCENE_TYPE_ORDER.map((type) => buildSceneNodeFromPreferences(type)).filter(Boolean);
-    if (!preserveRuntimeState) return reindexSceneNodes(freshNodes);
-    const freshById = new Map(freshNodes.map((node) => [node.id, node]));
-    const orderedIds = [];
-    for (const node of existingNodes) {
-      if (!node || typeof node.id !== "string" || !freshById.has(node.id)) continue;
-      orderedIds.push(node.id);
-    }
-    for (const node of freshNodes) {
-      if (!orderedIds.includes(node.id)) orderedIds.push(node.id);
-    }
-    return reindexSceneNodes(orderedIds.map((id) => {
-      const freshNode = freshById.get(id);
-      const existingNode = existingById.get(id) || null;
-      return {
-        ...freshNode,
-        settings: freshNode.type === "orbs" && existingNode ? mergeSceneOrbSettingsWithRuntimeFields(freshNode.settings, existingNode.settings) : freshNode.settings,
-        enabled: existingNode ? !!existingNode.enabled : !!freshNode.enabled
-      };
-    }));
+    void preserveRuntimeState;
+    const rawSceneNodes = preferences.scene && Array.isArray(preferences.scene.nodes) ? preferences.scene.nodes : [];
+    return sanitizePersistedSceneNodes(rawSceneNodes, { synthesizeDefaultWhenEmpty: true });
   }
   function setSceneNodes(nodes, { preserveSelection = false } = {}) {
     const sceneState = ensureSceneState();
     const previousSelection = preserveSelection ? sceneState.selectedNodeId : "";
-    sceneState.nodes = reindexSceneNodes((Array.isArray(nodes) ? nodes : []).map((node) => deepClone(node)));
+    sceneState.nodes = sanitizePersistedSceneNodes(nodes);
     sceneState.selectedNodeId = sceneState.nodes.some((node) => node.id === previousSelection) ? previousSelection : sceneState.nodes[0] ? sceneState.nodes[0].id : "";
     return readSceneSnapshot();
   }
@@ -4097,7 +4309,8 @@
     const sceneState = readSceneRuntime();
     return deepClone({
       nodes: sceneState.nodes,
-      selectedNodeId: sceneState.selectedNodeId
+      selectedNodeId: sceneState.selectedNodeId,
+      viewTransform: sceneState.viewTransform
     });
   }
   function readSceneNodeDisplayName(type) {
@@ -4122,20 +4335,17 @@
   }
   function persistSceneNodeSettings(node) {
     if (!node || typeof node !== "object") return null;
-    if (node.type === "orbs") {
-      node.settings = sanitizeOrbSettings(node.settings);
-      preferences.orbs = node.settings.map((orb, index) => toLegacyOrbDef(orb, readDefaultSceneOrbFallback(index)));
-    } else if (node.type === "bandOverlay") {
-      node.settings = sanitizeOverlaySettings(node.settings);
-      preferences.bands.overlay = deepClone(node.settings);
+    if (node.type === "orbs" || node.type === "bandOverlay") {
+      node.settings = sanitizeSettingsForSceneType(node.type, node.settings, { enabled: node.enabled });
     }
-    resolveSettings();
+    const sceneState = readSceneRuntime();
+    sceneState.nodes = persistScenePreferences(sceneState.nodes);
     return node;
   }
   function replaceSceneNodeSettings(nodeId, nextSettings, { persist = false } = {}) {
     const node = findMutableSceneNode(nodeId);
     if (!node) return null;
-    node.settings = sanitizeSettingsForType(node.type, nextSettings);
+    node.settings = sanitizeSettingsForSceneType(node.type, nextSettings, { enabled: node.enabled });
     if (persist) persistSceneNodeSettings(node);
     return deepClone(node);
   }
@@ -4154,7 +4364,7 @@
     if (nextIndex === currentIndex) return readSceneSnapshot();
     const [node] = sceneState.nodes.splice(currentIndex, 1);
     sceneState.nodes.splice(nextIndex, 0, node);
-    sceneState.nodes = reindexSceneNodes(sceneState.nodes);
+    sceneState.nodes = persistScenePreferences(sceneState.nodes);
     return readSceneSnapshot();
   }
   function toggleSceneNodeEnabled(nodeId, nextEnabled = null) {
@@ -4162,6 +4372,14 @@
     if (!node) return readSceneSnapshot();
     const enabled = typeof nextEnabled === "boolean" ? nextEnabled : !node.enabled;
     node.enabled = enabled;
+    if (node.type === "bandOverlay" && node.settings && typeof node.settings === "object") {
+      node.settings = {
+        ...node.settings,
+        enabled
+      };
+    }
+    const sceneState = readSceneRuntime();
+    sceneState.nodes = persistScenePreferences(sceneState.nodes);
     return readSceneSnapshot();
   }
   function buildNextOrbId(orbs) {
@@ -4215,6 +4433,31 @@
   }
   function syncSceneRuntimeFromPreferences() {
     return setSceneNodes(buildSceneNodesFromPreferences({ preserveRuntimeState: true }), { preserveSelection: true });
+  }
+  function syncSceneNodeFromCompatPreferences(type, { createIfMissing = false } = {}) {
+    const sceneNodes = sanitizePersistedSceneNodes(
+      preferences.scene && Array.isArray(preferences.scene.nodes) ? preferences.scene.nodes : []
+    );
+    const nodeIndex = sceneNodes.findIndex((node) => node.type === type);
+    if (nodeIndex < 0 && !createIfMissing) return sceneNodes;
+    let compatNode = null;
+    if (type === "orbs") {
+      compatNode = buildSceneNodeFromLegacy("orbs", preferences.orbs);
+    } else if (type === "bandOverlay") {
+      compatNode = buildSceneNodeFromLegacy("bandOverlay", preferences.bands && preferences.bands.overlay);
+    }
+    if (!compatNode) return sceneNodes;
+    if (nodeIndex >= 0) {
+      const existingNode = sceneNodes[nodeIndex];
+      sceneNodes[nodeIndex] = {
+        ...existingNode,
+        enabled: type === "bandOverlay" ? !!(preferences.bands && preferences.bands.overlay && preferences.bands.overlay.enabled) : existingNode.enabled,
+        settings: compatNode.settings
+      };
+    } else {
+      sceneNodes.push(compatNode);
+    }
+    return persistScenePreferences(sceneNodes);
   }
 
   // src/js/render/renderer.js
@@ -4426,9 +4669,10 @@
     function renderFrame({ bandSnapshot = null, dtSec = 0, nowSec = 0 } = {}) {
       clearFrame();
       const target = getRenderTarget();
-      compositor.syncScene(readSceneRuntime(), target);
+      const sceneRuntime = readSceneRuntime();
+      compositor.syncScene(sceneRuntime, target);
       compositor.update(buildBandFrame(bandSnapshot, nowSec), dtSec);
-      compositor.render(target);
+      compositor.render(target, sceneRuntime.viewTransform);
     }
     function getRecorderTap() {
       return {
@@ -4473,7 +4717,7 @@
       activeMimeType: null,
       isStopRequested: false
     };
-    function hasOwn2(obj, key) {
+    function hasOwn3(obj, key) {
       return Object.prototype.hasOwnProperty.call(obj, key);
     }
     function readConfig() {
@@ -4744,33 +4988,33 @@
     function buildStatus(ok, code, message, extra = {}) {
       const support = extra.support || readSupportDetails();
       const recording = readStateRef() || {};
-      const phase = hasOwn2(extra, "phase") ? extra.phase : runtime2.lifecycle.phase;
-      const startedAtMs = hasOwn2(extra, "startedAtMs") ? extra.startedAtMs : Number.isFinite(runtime2.startedAtMs) ? runtime2.startedAtMs : recording.startedAtMs;
-      const stoppedAtMs = hasOwn2(extra, "stoppedAtMs") ? extra.stoppedAtMs : Number.isFinite(runtime2.stoppedAtMs) ? runtime2.stoppedAtMs : recording.stoppedAtMs;
-      const elapsedMs = hasOwn2(extra, "elapsedMs") ? extra.elapsedMs : Number.isFinite(recording.elapsedMs) ? recording.elapsedMs : 0;
-      const chunkCount = hasOwn2(extra, "chunkCount") ? extra.chunkCount : runtime2.chunkCount > 0 || phase === "recording" || phase === "finalizing" ? runtime2.chunkCount : recording.chunkCount || 0;
+      const phase = hasOwn3(extra, "phase") ? extra.phase : runtime2.lifecycle.phase;
+      const startedAtMs = hasOwn3(extra, "startedAtMs") ? extra.startedAtMs : Number.isFinite(runtime2.startedAtMs) ? runtime2.startedAtMs : recording.startedAtMs;
+      const stoppedAtMs = hasOwn3(extra, "stoppedAtMs") ? extra.stoppedAtMs : Number.isFinite(runtime2.stoppedAtMs) ? runtime2.stoppedAtMs : recording.stoppedAtMs;
+      const elapsedMs = hasOwn3(extra, "elapsedMs") ? extra.elapsedMs : Number.isFinite(recording.elapsedMs) ? recording.elapsedMs : 0;
+      const chunkCount = hasOwn3(extra, "chunkCount") ? extra.chunkCount : runtime2.chunkCount > 0 || phase === "recording" || phase === "finalizing" ? runtime2.chunkCount : recording.chunkCount || 0;
       return {
         ok,
         code,
         message,
         hooksEnabled: readHooksEnabled(),
-        includePlaybackAudio: hasOwn2(extra, "includePlaybackAudio") ? !!extra.includePlaybackAudio : readIncludePlaybackAudio(),
-        targetFps: hasOwn2(extra, "targetFps") ? normalizeTargetFps(extra.targetFps) : readCaptureFps(),
+        includePlaybackAudio: hasOwn3(extra, "includePlaybackAudio") ? !!extra.includePlaybackAudio : readIncludePlaybackAudio(),
+        targetFps: hasOwn3(extra, "targetFps") ? normalizeTargetFps(extra.targetFps) : readCaptureFps(),
         phase,
-        supportProbeStatus: hasOwn2(extra, "supportProbeStatus") ? extra.supportProbeStatus : support.supportProbeStatus,
-        isSupported: hasOwn2(extra, "isSupported") ? extra.isSupported : support.isSupported,
-        availableMimeTypes: hasOwn2(extra, "availableMimeTypes") ? extra.availableMimeTypes.slice() : support.availableMimeTypes.slice(),
-        selectedMimeType: hasOwn2(extra, "selectedMimeType") ? extra.selectedMimeType : support.selectedMimeType,
-        resolvedMimeType: hasOwn2(extra, "resolvedMimeType") ? extra.resolvedMimeType : runtime2.activeMimeType || support.resolvedMimeType || recording.resolvedMimeType || null,
+        supportProbeStatus: hasOwn3(extra, "supportProbeStatus") ? extra.supportProbeStatus : support.supportProbeStatus,
+        isSupported: hasOwn3(extra, "isSupported") ? extra.isSupported : support.isSupported,
+        availableMimeTypes: hasOwn3(extra, "availableMimeTypes") ? extra.availableMimeTypes.slice() : support.availableMimeTypes.slice(),
+        selectedMimeType: hasOwn3(extra, "selectedMimeType") ? extra.selectedMimeType : support.selectedMimeType,
+        resolvedMimeType: hasOwn3(extra, "resolvedMimeType") ? extra.resolvedMimeType : runtime2.activeMimeType || support.resolvedMimeType || recording.resolvedMimeType || null,
         startedAtMs,
         stoppedAtMs,
         elapsedMs: Math.max(0, Math.round(elapsedMs)),
         chunkCount,
-        lastExportUrl: hasOwn2(extra, "lastExportUrl") ? extra.lastExportUrl : recording.lastExportUrl || null,
-        lastExportFileName: hasOwn2(extra, "lastExportFileName") ? extra.lastExportFileName : recording.lastExportFileName || "",
-        lastExportByteSize: hasOwn2(extra, "lastExportByteSize") ? extra.lastExportByteSize : recording.lastExportByteSize || 0,
+        lastExportUrl: hasOwn3(extra, "lastExportUrl") ? extra.lastExportUrl : recording.lastExportUrl || null,
+        lastExportFileName: hasOwn3(extra, "lastExportFileName") ? extra.lastExportFileName : recording.lastExportFileName || "",
+        lastExportByteSize: hasOwn3(extra, "lastExportByteSize") ? extra.lastExportByteSize : recording.lastExportByteSize || 0,
         configuredMimeTypes: support.configuredMimeTypes.slice(),
-        requestedMimeType: hasOwn2(extra, "requestedMimeType") ? extra.requestedMimeType : null
+        requestedMimeType: hasOwn3(extra, "requestedMimeType") ? extra.requestedMimeType : null
       };
     }
     function commitStatus(status, action = null) {
@@ -5717,6 +5961,11 @@
     ui.sceneSummaryPrimary = document.getElementById("sceneSummaryPrimary");
     ui.sceneSummaryActive = document.getElementById("sceneSummaryActive");
     ui.sceneSummarySelected = document.getElementById("sceneSummarySelected");
+    ui.sceneCameraCard = document.getElementById("sceneCameraCard");
+    ui.sceneCameraPrimary = document.getElementById("sceneCameraPrimary");
+    ui.sceneCameraMode = document.getElementById("sceneCameraMode");
+    ui.sceneCameraScope = document.getElementById("sceneCameraScope");
+    ui.sceneCameraNote = document.getElementById("sceneCameraNote");
     ui.sceneNodeEmpty = document.getElementById("sceneNodeEmpty");
     ui.sceneNodeList = document.getElementById("sceneNodeList");
     ui.sceneInspectorEmpty = document.getElementById("sceneInspectorEmpty");
@@ -6435,7 +6684,7 @@
     const STATUS_DEFAULTS = Object.freeze({
       analysis: "Analysis panel: FFT, smoothing, RMS gain.",
       banking: "Banking panel: dominant band, distribution, color policy, and optional detailed inspection.",
-      scene: "Scene panel: enable, order, and configure active visualizers while keeping legacy visual controls available below.",
+      scene: "Scene panel: manage active visualizers and the runtime-only camera hook while keeping legacy visual controls available below.",
       workspace: "Workspace / Presets panel: share, apply URL presets, and reset preferences."
     });
     const panelStatusToastTimers = /* @__PURE__ */ Object.create(null);
@@ -6915,6 +7164,8 @@
     }
     function readSceneUiModel() {
       const snapshot = readSceneSnapshot();
+      const viewTransform = normalizeViewTransform(snapshot.viewTransform);
+      const identityViewTransform = isIdentityViewTransform(viewTransform);
       const nodes = snapshot.nodes.map((node, index) => ({
         ...node,
         displayName: readSceneNodeDisplayName(node.type),
@@ -6932,7 +7183,17 @@
         nodeCount: nodes.length,
         activeCount: nodes.filter((node) => node.enabled).length,
         nodes,
-        selectedNode
+        selectedNode,
+        viewTransform,
+        camera: {
+          mode: identityViewTransform ? "identity" : viewTransform.mode || "placeholder",
+          modeText: identityViewTransform ? "Identity" : "Placeholder",
+          scope: viewTransform.runtimeOnly ? "runtime-only" : "persisted",
+          scopeText: viewTransform.runtimeOnly ? "Runtime only" : "Persisted",
+          primaryText: identityViewTransform ? "Identity ViewTransform active" : "Placeholder ViewTransform active",
+          noteText: "Camera controls are deferred to Build 116. Build 115 keeps ViewTransform as a runtime-only seam through the compositor.",
+          controlsDeferred: true
+        }
       };
     }
     function buildSceneUiSyncKey() {
@@ -7108,7 +7369,7 @@
       if (!fieldsContainer) return;
       const hint = document.createElement("div");
       hint.className = "sceneInspectorHint";
-      hint.textContent = "Scene panel v1 now exposes per-orb routing, hue phase, and center offsets. These advanced orb fields stay scene-only until later preset rollout work.";
+      hint.textContent = "Scene panel v1 now exposes per-orb routing, hue phase, and center offsets. In Schema 9 these orb-specific fields persist under scene.nodes settings rather than the legacy root orb list.";
       fieldsContainer.appendChild(hint);
       const orbActions = document.createElement("div");
       orbActions.className = "sceneInspectorActionRow";
@@ -7324,6 +7585,10 @@
         model.activeCount === 1 ? "1 active" : `${model.activeCount} active`
       );
       setTextIfChanged(ui.sceneSummarySelected, selectedLabel);
+      setTextIfChanged(ui.sceneCameraPrimary, model.camera.primaryText);
+      setTextIfChanged(ui.sceneCameraMode, model.camera.modeText);
+      setTextIfChanged(ui.sceneCameraScope, model.camera.scopeText);
+      setTextIfChanged(ui.sceneCameraNote, model.camera.noteText);
       if (ui.sceneNodeEmpty) {
         const hasNodes = model.nodeCount > 0;
         ui.sceneNodeEmpty.hidden = hasNodes;
@@ -8609,35 +8874,42 @@ ${liveTitle}` : liveTitle;
       ui.chkBandOverlay.addEventListener("change", () => {
         const enabled = !!ui.chkBandOverlay.checked;
         preferences.bands.overlay.enabled = enabled;
-        toggleSceneNodeEnabled("overlay-1", enabled);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: enabled });
         applyPrefs("band overlay", { statusTarget: "banking" });
       });
       ui.chkBandConnect.addEventListener("change", () => {
         preferences.bands.overlay.connectAdjacent = !!ui.chkBandConnect.checked;
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("band connect", { statusTarget: "banking" });
       });
       ui.rngBandAlpha.addEventListener("input", () => {
         preferences.bands.overlay.alpha = Number(ui.rngBandAlpha.value);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("overlay alpha", { statusTarget: "banking" });
       });
       ui.rngBandPoint.addEventListener("input", () => {
         preferences.bands.overlay.pointSizePx = Number(ui.rngBandPoint.value);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("overlay point size", { statusTarget: "banking" });
       });
       ui.rngBandOverlayMinRad.addEventListener("input", () => {
         preferences.bands.overlay.minRadiusFrac = Number(ui.rngBandOverlayMinRad.value);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("overlay min radius", { statusTarget: "banking" });
       });
       ui.rngBandOverlayMaxRad.addEventListener("input", () => {
         preferences.bands.overlay.maxRadiusFrac = Number(ui.rngBandOverlayMaxRad.value);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("overlay max radius", { statusTarget: "banking" });
       });
       ui.rngBandOverlayWfDisp.addEventListener("input", () => {
         preferences.bands.overlay.waveformRadialDisplaceFrac = Number(ui.rngBandOverlayWfDisp.value);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("overlay waveform disp", { statusTarget: "banking" });
       });
       ui.selRingPhaseMode.addEventListener("change", () => {
         preferences.bands.overlay.phaseMode = ui.selRingPhaseMode.value;
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("ring phase mode", { statusTarget: "banking" });
       });
       ui.selDistMode.addEventListener("change", () => {
@@ -8649,6 +8921,7 @@ ${liveTitle}` : liveTitle;
       });
       ui.rngRingSpeed.addEventListener("input", () => {
         preferences.bands.overlay.ringSpeedRadPerSec = Number(ui.rngRingSpeed.value);
+        syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
         applyPrefs("ring speed", { statusTarget: "banking" });
       });
       ui.rngHueOff.addEventListener("input", () => {

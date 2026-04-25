@@ -1,13 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { IDENTITY_VIEW_TRANSFORM, createCompositor } from "../src/js/render/compositor.js";
+import { createCompositor } from "../src/js/render/compositor.js";
 import { BandBank } from "../src/js/audio/band-bank.js";
 import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
 import { ColorPolicy } from "../src/js/render/color-policy.js";
 import { getActiveOrbPrimaryAngleRad, resetOrbTrails, resetOrbsToDesignedPhases } from "../src/js/render/orb-runtime.js";
+import { IDENTITY_VIEW_TRANSFORM, normalizeViewTransform } from "../src/js/render/view-transform.js";
+import { OrbVisualizer } from "../src/js/render/visualizers/orb-visualizer.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
 
 function createTarget(overrides = {}) {
@@ -138,6 +140,7 @@ function restoreRenderGlobals(snapshot) {
   state.orbs.push(...snapshot.orbs);
   state.scene.nodes = structuredClone(snapshot.scene.nodes);
   state.scene.selectedNodeId = snapshot.scene.selectedNodeId;
+  state.scene.viewTransform = structuredClone(snapshot.scene.viewTransform);
   state.bands.lowHz = snapshot.bands.lowHz.slice();
   state.bands.highHz = snapshot.bands.highHz.slice();
   state.bands.energies01 = snapshot.bands.energies01.slice();
@@ -210,6 +213,49 @@ test("compositor creates enabled nodes, forwards bounds, and renders with the id
   const renderCall = recorder.calls.find((call) => call.kind === "render");
   assert.equal(renderCall.target, target);
   assert.equal(renderCall.viewTransform, IDENTITY_VIEW_TRANSFORM);
+});
+
+test("compositor canonicalizes raw ViewTransform input before forwarding it to visualizers", () => {
+  const recorder = createVisualizerRecorder();
+  const compositor = createCompositor({
+    registry: createRegistry({
+      overlay: recorder.factory(),
+    }),
+  });
+  const target = createTarget();
+  const customViewTransform = {
+    mode: "placeholder",
+    matrix: [1, 0, 0, 1, 24, -12],
+    callerOnly: "ignore-me",
+  };
+
+  compositor.syncScene({
+    nodes: [
+      {
+        id: "overlay-root",
+        type: "overlay",
+        enabled: true,
+        zIndex: 0,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: {},
+      },
+    ],
+  }, target);
+
+  compositor.update({ bands: [] }, 0.016);
+  compositor.render(target, customViewTransform);
+
+  const renderCall = recorder.calls.find((call) => call.kind === "render");
+  assert.notEqual(renderCall.viewTransform, customViewTransform);
+  assert.equal(normalizeViewTransform(renderCall.viewTransform), renderCall.viewTransform);
+  assert.deepEqual(renderCall.viewTransform, {
+    kind: "2d-affine",
+    mode: "placeholder",
+    runtimeOnly: true,
+    matrix: [1, 0, 0, 1, 24, -12],
+  });
+  assert.equal(Object.hasOwn(renderCall.viewTransform, "callerOnly"), false);
 });
 
 test("compositor renders in zIndex order and preserves scene order for zIndex ties", () => {
@@ -577,6 +623,87 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     compositor.render(target);
 
     assert.equal(drawCalls.length, drawCountBeforeDisable);
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("built-in bandOverlay visualizer keeps Build 115 rendering unchanged for placeholder ViewTransform values", () => {
+  const snapshot = captureRenderGlobals();
+  const identityDrawCalls = [];
+  const placeholderDrawCalls = [];
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.bands.count = 4;
+    runtime.settings.bands.overlay.enabled = true;
+    runtime.settings.bands.overlay.connectAdjacent = true;
+    runtime.settings.bands.overlay.pointSizePx = 1;
+    runtime.settings.bands.overlay.minRadiusFrac = 0.1;
+    runtime.settings.bands.overlay.maxRadiusFrac = 0.4;
+    runtime.settings.bands.overlay.waveformRadialDisplaceFrac = 0;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = createDrawRecorderContext(identityDrawCalls);
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.orbs.length = 0;
+    state.bands.energies01 = [0, 0, 0, 0];
+    state.bands.ringPhaseRad = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const scene = {
+      nodes: [
+        {
+          id: "overlay-root",
+          type: "bandOverlay",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: {
+            ...structuredClone(runtime.settings.bands.overlay),
+            enabled: false,
+            pointSizePx: 2,
+          },
+        },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        compat: {
+          centerWaveform: Float32Array.from([0.1, -0.2, 0.3, -0.1]),
+        },
+      },
+      bands: [
+        { index: 0, energy: 1 },
+        { index: 1, energy: 0 },
+        { index: 2, energy: 0.5 },
+        { index: 3, energy: 0.25 },
+      ],
+    };
+
+    compositor.syncScene(scene, createTarget({ ctx: state.ctx, widthPx: 800, heightPx: 600, dpr: 3 }));
+    compositor.update(frame, 0.016);
+    compositor.render(createTarget({ ctx: state.ctx, widthPx: 800, heightPx: 600, dpr: 3 }), IDENTITY_VIEW_TRANSFORM);
+
+    const placeholderCtx = createDrawRecorderContext(placeholderDrawCalls);
+    const placeholderViewTransform = normalizeViewTransform({
+      mode: "placeholder",
+      matrix: [1, 0, 0, 1, 48, -24],
+    });
+    compositor.render(
+      createTarget({ ctx: placeholderCtx, widthPx: 800, heightPx: 600, dpr: 3 }),
+      placeholderViewTransform
+    );
+
+    assert.deepEqual(placeholderDrawCalls, identityDrawCalls);
     compositor.dispose();
   } finally {
     restoreRenderGlobals(snapshot);
@@ -1054,6 +1181,103 @@ test("built-in orb visualizer offsets orb origins within node bounds using norma
   }
 });
 
+test("built-in orb visualizer keeps Build 115 rendering unchanged for placeholder ViewTransform values", () => {
+  const snapshot = captureRenderGlobals();
+  const identityDrawCalls = [];
+  const placeholderDrawCalls = [];
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.orbs = [
+      {
+        id: "TEST_ORB",
+        chanId: "C",
+        bandIds: [1],
+        chirality: 1,
+        startAngleRad: 0,
+        hueOffsetDeg: 0,
+        centerX: 0,
+        centerY: 0,
+      },
+    ];
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.5;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = createDrawRecorderContext(identityDrawCalls);
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.time.simPaused = false;
+    state.orbs.length = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: state.ctx, widthPx: 400, heightPx: 200, dpr: 1 });
+    const scene = {
+      nodes: [
+        {
+          id: "orbs-root",
+          type: "orbs",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: structuredClone(runtime.settings.orbs),
+        },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        channels: [
+          {
+            id: "C",
+            label: "Center",
+            energy: 0.25,
+            timeDomain: Float32Array.from([0, 0, 0, 0]),
+          },
+        ],
+      },
+      bands: [
+        { index: 0, energy: 0.1 },
+        { index: 1, energy: 0.75 },
+      ],
+    };
+
+    compositor.syncScene(scene, target);
+    compositor.update(frame, 1);
+    compositor.render(target, IDENTITY_VIEW_TRANSFORM);
+
+    const placeholderCtx = createDrawRecorderContext(placeholderDrawCalls);
+    compositor.render(
+      createTarget({ ctx: placeholderCtx, widthPx: 400, heightPx: 200, dpr: 1 }),
+      {
+        mode: "placeholder",
+        matrix: [1, 0, 0, 1, 32, -16],
+        callerOnly: true,
+      }
+    );
+
+    assert.deepEqual(placeholderDrawCalls, identityDrawCalls);
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
 test("Renderer.renderFrame keeps the live seam on plain frame data and clips compositor visualizers to bounds", () => {
   const snapshot = captureRenderGlobals();
   const drawCalls = [];
@@ -1180,6 +1404,104 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips com
     assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
     assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 6);
   } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("Renderer.renderFrame passes the canonical runtime ViewTransform through the live visualizer path", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+  const originalRender = OrbVisualizer.prototype.render;
+  const receivedViewTransforms = [];
+
+  OrbVisualizer.prototype.render = function patchedRender(target, viewTransform) {
+    receivedViewTransforms.push(viewTransform);
+    return originalRender.call(this, target, viewTransform);
+  };
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.5;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.orbs.length = 0;
+    state.time.simPaused = false;
+    state.scene.nodes = [
+      {
+        id: "orbs-1",
+        type: "orbs",
+        enabled: true,
+        zIndex: 0,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: [
+          { id: "TEST_ORB", chanId: "C", bandIds: [1], chirality: 1, startAngleRad: 0, hueOffsetDeg: 0, centerX: 0, centerY: 0 },
+        ],
+      },
+    ];
+    state.scene.selectedNodeId = "orbs-1";
+    state.scene.viewTransform = {
+      mode: "placeholder",
+      matrix: [1, 0, 0, 1, 16, -8],
+      callerOnly: "ignore-me",
+    };
+    state.bands.lowHz = [0, 12000];
+    state.bands.highHz = [12000, Infinity];
+    state.bands.energies01 = [0.1, 0.75];
+    state.bands.meta.sampleRateHz = 48000;
+    state.bands.meta.nyquistHz = 24000;
+    state.bands.meta.configCeilingHz = 22500;
+    state.bands.meta.effectiveCeilingHz = 22500;
+    state.bands.dominantIndex = 1;
+    state.bands.dominantName = "Band 1";
+    state.bands.ringPhaseRad = 0;
+
+    Renderer.renderFrame({
+      bandSnapshot: {
+        ready: true,
+        bands: {
+          C: {
+            id: "C",
+            label: "Center",
+            rms: 0.25,
+            energy01: 0.25,
+            timeDomain: Float32Array.from([0, 0, 0, 0]),
+            freqDb: Float32Array.from([-24, -12, -6, -18]),
+          },
+        },
+      },
+      dtSec: 1,
+      nowSec: 1,
+    });
+
+    assert.equal(receivedViewTransforms.length, 1);
+    assert.equal(receivedViewTransforms[0], state.scene.viewTransform);
+    assert.equal(normalizeViewTransform(receivedViewTransforms[0]), receivedViewTransforms[0]);
+    assert.deepEqual(receivedViewTransforms[0], {
+      kind: "2d-affine",
+      mode: "placeholder",
+      runtimeOnly: true,
+      matrix: [1, 0, 0, 1, 16, -8],
+    });
+    assert.equal(Object.hasOwn(receivedViewTransforms[0], "callerOnly"), false);
+  } finally {
+    OrbVisualizer.prototype.render = originalRender;
     restoreRenderGlobals(snapshot);
   }
 });

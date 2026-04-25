@@ -1,5 +1,6 @@
 import { CONFIG } from "./config.js";
 import { createPanelShellState } from "../ui/panel-state.js";
+import { IDENTITY_VIEW_TRANSFORM } from "../render/view-transform.js";
 
 /* =============================================================================
    App State
@@ -78,6 +79,7 @@ function createSceneState() {
   return {
     nodes: [],
     selectedNodeId: "",
+    viewTransform: IDENTITY_VIEW_TRANSFORM,
   };
 }
 

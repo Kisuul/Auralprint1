@@ -177,7 +177,10 @@ class OrbVisualizer {
     }
   }
 
-  render(target, _viewTransform) {
+  render(target, viewTransform) {
+    // Build 115 keeps ViewTransform as an identity hook. Orb camera motion is
+    // deferred to Build 116 so current particle/orb placement stays unchanged.
+    void viewTransform;
     if (!this.orbs.length) return;
 
     const ctx = (target && target.ctx) || (this.context && this.context.ctx) || state.ctx;

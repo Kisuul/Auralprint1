@@ -1,4 +1,3 @@
-import { CONFIG } from "../core/config.js";
 import {
   preferences,
   resolveSettings,
@@ -6,15 +5,19 @@ import {
 import { state } from "../core/state.js";
 import { clamp, deepClone } from "../core/utils.js";
 import {
-  mergeSceneOrbSettingsWithRuntimeFields,
   normalizeSceneOrbDef,
   normalizeSceneOrbSettings,
   readDefaultSceneOrbFallback,
-  toLegacyOrbDef,
 } from "./orb-settings.js";
+import {
+  applySceneNodesToCompatPrefs,
+  buildSceneNodeFromLegacy,
+  sanitizePersistedSceneNodes,
+  sanitizeSettingsForSceneType,
+} from "./scene-persistence.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualizer.js";
+import { IDENTITY_VIEW_TRANSFORM, normalizeViewTransform } from "./view-transform.js";
 
-const SCENE_TYPE_ORDER = Object.freeze(["orbs", "bandOverlay"]);
 const SCENE_TYPE_LABELS = Object.freeze({
   orbs: "Orbs",
   bandOverlay: "Band Overlay",
@@ -28,139 +31,38 @@ function ensureSceneState() {
     state.scene = {
       nodes: [],
       selectedNodeId: "",
+      viewTransform: IDENTITY_VIEW_TRANSFORM,
     };
   }
 
   if (!Array.isArray(state.scene.nodes)) state.scene.nodes = [];
   if (typeof state.scene.selectedNodeId !== "string") state.scene.selectedNodeId = "";
+  state.scene.viewTransform = normalizeViewTransform(state.scene.viewTransform);
   return state.scene;
-}
-
-function sanitizeSceneNumber(value, schema) {
-  const fallback = Number.isFinite(schema && schema.default) ? schema.default : 0;
-  const numeric = Number.isFinite(value) ? value : fallback;
-  const min = Number.isFinite(schema && schema.min) ? schema.min : -Infinity;
-  const max = Number.isFinite(schema && schema.max) ? schema.max : Infinity;
-  return clamp(numeric, min, max);
-}
-
-function sanitizeSettingValue(value, schema) {
-  if (!schema || typeof schema !== "object") return deepClone(value);
-
-  if (schema.type === "boolean") {
-    return typeof value === "boolean" ? value : !!schema.default;
-  }
-
-  if (schema.type === "string") {
-    if (Array.isArray(schema.enum) && schema.enum.length) {
-      return schema.enum.includes(value) ? value : schema.default;
-    }
-    return typeof value === "string" ? value : (typeof schema.default === "string" ? schema.default : "");
-  }
-
-  if (schema.type === "number") {
-    return sanitizeSceneNumber(value, schema);
-  }
-
-  if (schema.type === "array") {
-    return Array.isArray(value) ? deepClone(value) : deepClone(schema.default);
-  }
-
-  return deepClone(value);
-}
-
-function sanitizeOverlaySettings(rawSettings) {
-  const defaultNode = sceneRegistry.getDefaultNode("bandOverlay") || { settings: {} };
-  const schema = sceneRegistry.getSettingsSchema("bandOverlay") || { fields: {} };
-  const source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
-  const next = deepClone(defaultNode.settings || {});
-
-  for (const [fieldName, fieldSchema] of Object.entries(schema.fields || {})) {
-    const hasOwn = Object.prototype.hasOwnProperty.call(source, fieldName);
-    const sourceValue = hasOwn ? source[fieldName] : next[fieldName];
-    next[fieldName] = sanitizeSettingValue(sourceValue, fieldSchema);
-  }
-
-  return next;
 }
 
 function sanitizeOrbSettings(rawSettings) {
   return normalizeSceneOrbSettings(rawSettings);
 }
 
-function sanitizeSettingsForType(type, rawSettings) {
-  switch (type) {
-    case "orbs":
-      return sanitizeOrbSettings(rawSettings);
-    case "bandOverlay":
-      return sanitizeOverlaySettings(rawSettings);
-    default:
-      return deepClone(rawSettings);
-  }
-}
-
-function reindexSceneNodes(nodes) {
-  return nodes.map((node, index) => ({
-    ...node,
-    zIndex: index,
-  }));
-}
-
-function buildSceneNodeFromPreferences(type) {
-  const defaultNode = sceneRegistry.getDefaultNode(type);
-  if (!defaultNode) return null;
-
-  const node = deepClone(defaultNode);
-  if (type === "orbs") {
-    node.settings = sanitizeOrbSettings(preferences.orbs);
-    node.enabled = true;
-  } else if (type === "bandOverlay") {
-    node.settings = sanitizeOverlaySettings(preferences.bands.overlay);
-    node.enabled = !!node.settings.enabled;
-  }
-
-  return node;
+function persistScenePreferences(nodes) {
+  const nextPrefs = applySceneNodesToCompatPrefs(preferences, nodes);
+  resolveSettings();
+  return deepClone((nextPrefs.scene && nextPrefs.scene.nodes) || []);
 }
 
 function buildSceneNodesFromPreferences({ preserveRuntimeState = false } = {}) {
-  const sceneState = ensureSceneState();
-  const existingNodes = Array.isArray(sceneState.nodes) ? sceneState.nodes : [];
-  const existingById = new Map(existingNodes.map((node) => [node.id, node]));
-  const freshNodes = SCENE_TYPE_ORDER
-    .map((type) => buildSceneNodeFromPreferences(type))
-    .filter(Boolean);
-
-  if (!preserveRuntimeState) return reindexSceneNodes(freshNodes);
-
-  const freshById = new Map(freshNodes.map((node) => [node.id, node]));
-  const orderedIds = [];
-
-  for (const node of existingNodes) {
-    if (!node || typeof node.id !== "string" || !freshById.has(node.id)) continue;
-    orderedIds.push(node.id);
-  }
-
-  for (const node of freshNodes) {
-    if (!orderedIds.includes(node.id)) orderedIds.push(node.id);
-  }
-
-  return reindexSceneNodes(orderedIds.map((id) => {
-    const freshNode = freshById.get(id);
-    const existingNode = existingById.get(id) || null;
-    return {
-      ...freshNode,
-      settings: freshNode.type === "orbs" && existingNode
-        ? mergeSceneOrbSettingsWithRuntimeFields(freshNode.settings, existingNode.settings)
-        : freshNode.settings,
-      enabled: existingNode ? !!existingNode.enabled : !!freshNode.enabled,
-    };
-  }));
+  void preserveRuntimeState;
+  const rawSceneNodes = preferences.scene && Array.isArray(preferences.scene.nodes)
+    ? preferences.scene.nodes
+    : [];
+  return sanitizePersistedSceneNodes(rawSceneNodes, { synthesizeDefaultWhenEmpty: true });
 }
 
 function setSceneNodes(nodes, { preserveSelection = false } = {}) {
   const sceneState = ensureSceneState();
   const previousSelection = preserveSelection ? sceneState.selectedNodeId : "";
-  sceneState.nodes = reindexSceneNodes((Array.isArray(nodes) ? nodes : []).map((node) => deepClone(node)));
+  sceneState.nodes = sanitizePersistedSceneNodes(nodes);
   sceneState.selectedNodeId = sceneState.nodes.some((node) => node.id === previousSelection)
     ? previousSelection
     : (sceneState.nodes[0] ? sceneState.nodes[0].id : "");
@@ -178,6 +80,7 @@ function readSceneSnapshot() {
   return deepClone({
     nodes: sceneState.nodes,
     selectedNodeId: sceneState.selectedNodeId,
+    viewTransform: sceneState.viewTransform,
   });
 }
 
@@ -209,15 +112,12 @@ function selectSceneNode(nodeId) {
 function persistSceneNodeSettings(node) {
   if (!node || typeof node !== "object") return null;
 
-  if (node.type === "orbs") {
-    node.settings = sanitizeOrbSettings(node.settings);
-    preferences.orbs = node.settings.map((orb, index) => toLegacyOrbDef(orb, readDefaultSceneOrbFallback(index)));
-  } else if (node.type === "bandOverlay") {
-    node.settings = sanitizeOverlaySettings(node.settings);
-    preferences.bands.overlay = deepClone(node.settings);
+  if (node.type === "orbs" || node.type === "bandOverlay") {
+    node.settings = sanitizeSettingsForSceneType(node.type, node.settings, { enabled: node.enabled });
   }
 
-  resolveSettings();
+  const sceneState = readSceneRuntime();
+  sceneState.nodes = persistScenePreferences(sceneState.nodes);
   return node;
 }
 
@@ -225,7 +125,7 @@ function replaceSceneNodeSettings(nodeId, nextSettings, { persist = false } = {}
   const node = findMutableSceneNode(nodeId);
   if (!node) return null;
 
-  node.settings = sanitizeSettingsForType(node.type, nextSettings);
+  node.settings = sanitizeSettingsForSceneType(node.type, nextSettings, { enabled: node.enabled });
   if (persist) persistSceneNodeSettings(node);
   return deepClone(node);
 }
@@ -249,7 +149,7 @@ function moveSceneNode(nodeId, delta) {
 
   const [node] = sceneState.nodes.splice(currentIndex, 1);
   sceneState.nodes.splice(nextIndex, 0, node);
-  sceneState.nodes = reindexSceneNodes(sceneState.nodes);
+  sceneState.nodes = persistScenePreferences(sceneState.nodes);
   return readSceneSnapshot();
 }
 
@@ -259,6 +159,14 @@ function toggleSceneNodeEnabled(nodeId, nextEnabled = null) {
 
   const enabled = typeof nextEnabled === "boolean" ? nextEnabled : !node.enabled;
   node.enabled = enabled;
+  if (node.type === "bandOverlay" && node.settings && typeof node.settings === "object") {
+    node.settings = {
+      ...node.settings,
+      enabled,
+    };
+  }
+  const sceneState = readSceneRuntime();
+  sceneState.nodes = persistScenePreferences(sceneState.nodes);
 
   return readSceneSnapshot();
 }
@@ -324,6 +232,35 @@ function syncSceneRuntimeFromPreferences() {
   return setSceneNodes(buildSceneNodesFromPreferences({ preserveRuntimeState: true }), { preserveSelection: true });
 }
 
+function syncSceneNodeFromCompatPreferences(type, { createIfMissing = false } = {}) {
+  const sceneNodes = sanitizePersistedSceneNodes(
+    preferences.scene && Array.isArray(preferences.scene.nodes) ? preferences.scene.nodes : []
+  );
+  const nodeIndex = sceneNodes.findIndex((node) => node.type === type);
+  if (nodeIndex < 0 && !createIfMissing) return sceneNodes;
+
+  let compatNode = null;
+  if (type === "orbs") {
+    compatNode = buildSceneNodeFromLegacy("orbs", preferences.orbs);
+  } else if (type === "bandOverlay") {
+    compatNode = buildSceneNodeFromLegacy("bandOverlay", preferences.bands && preferences.bands.overlay);
+  }
+  if (!compatNode) return sceneNodes;
+
+  if (nodeIndex >= 0) {
+    const existingNode = sceneNodes[nodeIndex];
+    sceneNodes[nodeIndex] = {
+      ...existingNode,
+      enabled: type === "bandOverlay" ? !!(preferences.bands && preferences.bands.overlay && preferences.bands.overlay.enabled) : existingNode.enabled,
+      settings: compatNode.settings,
+    };
+  } else {
+    sceneNodes.push(compatNode);
+  }
+
+  return persistScenePreferences(sceneNodes);
+}
+
 export {
   addSceneOrb,
   moveSceneNode,
@@ -336,6 +273,7 @@ export {
   replaceSceneNodeSettings,
   resetSceneRuntimeFromPreferences,
   selectSceneNode,
+  syncSceneNodeFromCompatPreferences,
   syncSceneRuntimeFromPreferences,
   toggleSceneNodeEnabled,
   updateSceneNodeSettings,

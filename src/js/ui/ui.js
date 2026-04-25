@@ -21,11 +21,13 @@ import {
   removeSceneOrb,
   resetSceneRuntimeFromPreferences,
   selectSceneNode,
+  syncSceneNodeFromCompatPreferences,
   syncSceneRuntimeFromPreferences,
   toggleSceneNodeEnabled,
   updateSceneNodeSettings,
   updateSceneOrb,
 } from "../render/scene-runtime.js";
+import { isIdentityViewTransform, normalizeViewTransform } from "../render/view-transform.js";
 import { RecorderEngine } from "../recording/recorder-engine.js";
 import { initOrbs, resetOrbTrails, resetOrbsToDesignedPhases } from "../render/orb-runtime.js";
 import { primeDomCache } from "./dom-cache.js";
@@ -602,7 +604,7 @@ const UI = (() => {
   const STATUS_DEFAULTS = Object.freeze({
     analysis: "Analysis panel: FFT, smoothing, RMS gain.",
     banking: "Banking panel: dominant band, distribution, color policy, and optional detailed inspection.",
-    scene: "Scene panel: enable, order, and configure active visualizers while keeping legacy visual controls available below.",
+    scene: "Scene panel: manage active visualizers and the runtime-only camera hook while keeping legacy visual controls available below.",
     workspace: "Workspace / Presets panel: share, apply URL presets, and reset preferences.",
   });
   const panelStatusToastTimers = Object.create(null);
@@ -1247,6 +1249,8 @@ const UI = (() => {
 
   function readSceneUiModel() {
     const snapshot = readSceneSnapshot();
+    const viewTransform = normalizeViewTransform(snapshot.viewTransform);
+    const identityViewTransform = isIdentityViewTransform(viewTransform);
     const nodes = snapshot.nodes.map((node, index) => ({
       ...node,
       displayName: readSceneNodeDisplayName(node.type),
@@ -1268,6 +1272,18 @@ const UI = (() => {
       activeCount: nodes.filter((node) => node.enabled).length,
       nodes,
       selectedNode,
+      viewTransform,
+      camera: {
+        mode: identityViewTransform ? "identity" : (viewTransform.mode || "placeholder"),
+        modeText: identityViewTransform ? "Identity" : "Placeholder",
+        scope: viewTransform.runtimeOnly ? "runtime-only" : "persisted",
+        scopeText: viewTransform.runtimeOnly ? "Runtime only" : "Persisted",
+        primaryText: identityViewTransform
+          ? "Identity ViewTransform active"
+          : "Placeholder ViewTransform active",
+        noteText: "Camera controls are deferred to Build 116. Build 115 keeps ViewTransform as a runtime-only seam through the compositor.",
+        controlsDeferred: true,
+      },
     };
   }
 
@@ -1479,7 +1495,7 @@ const UI = (() => {
 
     const hint = document.createElement("div");
     hint.className = "sceneInspectorHint";
-    hint.textContent = "Scene panel v1 now exposes per-orb routing, hue phase, and center offsets. These advanced orb fields stay scene-only until later preset rollout work.";
+    hint.textContent = "Scene panel v1 now exposes per-orb routing, hue phase, and center offsets. In Schema 9 these orb-specific fields persist under scene.nodes settings rather than the legacy root orb list.";
     fieldsContainer.appendChild(hint);
 
     const orbActions = document.createElement("div");
@@ -1729,6 +1745,10 @@ const UI = (() => {
       model.activeCount === 1 ? "1 active" : `${model.activeCount} active`
     );
     setTextIfChanged(ui.sceneSummarySelected, selectedLabel);
+    setTextIfChanged(ui.sceneCameraPrimary, model.camera.primaryText);
+    setTextIfChanged(ui.sceneCameraMode, model.camera.modeText);
+    setTextIfChanged(ui.sceneCameraScope, model.camera.scopeText);
+    setTextIfChanged(ui.sceneCameraNote, model.camera.noteText);
 
     if (ui.sceneNodeEmpty) {
       const hasNodes = model.nodeCount > 0;
@@ -3275,19 +3295,44 @@ const UI = (() => {
     ui.chkBandOverlay.addEventListener("change", () => {
       const enabled = !!ui.chkBandOverlay.checked;
       preferences.bands.overlay.enabled = enabled;
-      toggleSceneNodeEnabled("overlay-1", enabled);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: enabled });
       applyPrefs("band overlay", { statusTarget: "banking" });
     });
-    ui.chkBandConnect.addEventListener("change", () => { preferences.bands.overlay.connectAdjacent = !!ui.chkBandConnect.checked; applyPrefs("band connect", { statusTarget: "banking" }); });
+    ui.chkBandConnect.addEventListener("change", () => {
+      preferences.bands.overlay.connectAdjacent = !!ui.chkBandConnect.checked;
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
+      applyPrefs("band connect", { statusTarget: "banking" });
+    });
 
-    ui.rngBandAlpha.addEventListener("input", () => { preferences.bands.overlay.alpha = Number(ui.rngBandAlpha.value); applyPrefs("overlay alpha", { statusTarget: "banking" }); });
-    ui.rngBandPoint.addEventListener("input", () => { preferences.bands.overlay.pointSizePx = Number(ui.rngBandPoint.value); applyPrefs("overlay point size", { statusTarget: "banking" }); });
-    ui.rngBandOverlayMinRad.addEventListener("input", () => { preferences.bands.overlay.minRadiusFrac = Number(ui.rngBandOverlayMinRad.value); applyPrefs("overlay min radius", { statusTarget: "banking" }); });
-    ui.rngBandOverlayMaxRad.addEventListener("input", () => { preferences.bands.overlay.maxRadiusFrac = Number(ui.rngBandOverlayMaxRad.value); applyPrefs("overlay max radius", { statusTarget: "banking" }); });
-    ui.rngBandOverlayWfDisp.addEventListener("input", () => { preferences.bands.overlay.waveformRadialDisplaceFrac = Number(ui.rngBandOverlayWfDisp.value); applyPrefs("overlay waveform disp", { statusTarget: "banking" }); });
+    ui.rngBandAlpha.addEventListener("input", () => {
+      preferences.bands.overlay.alpha = Number(ui.rngBandAlpha.value);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
+      applyPrefs("overlay alpha", { statusTarget: "banking" });
+    });
+    ui.rngBandPoint.addEventListener("input", () => {
+      preferences.bands.overlay.pointSizePx = Number(ui.rngBandPoint.value);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
+      applyPrefs("overlay point size", { statusTarget: "banking" });
+    });
+    ui.rngBandOverlayMinRad.addEventListener("input", () => {
+      preferences.bands.overlay.minRadiusFrac = Number(ui.rngBandOverlayMinRad.value);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
+      applyPrefs("overlay min radius", { statusTarget: "banking" });
+    });
+    ui.rngBandOverlayMaxRad.addEventListener("input", () => {
+      preferences.bands.overlay.maxRadiusFrac = Number(ui.rngBandOverlayMaxRad.value);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
+      applyPrefs("overlay max radius", { statusTarget: "banking" });
+    });
+    ui.rngBandOverlayWfDisp.addEventListener("input", () => {
+      preferences.bands.overlay.waveformRadialDisplaceFrac = Number(ui.rngBandOverlayWfDisp.value);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
+      applyPrefs("overlay waveform disp", { statusTarget: "banking" });
+    });
 
     ui.selRingPhaseMode.addEventListener("change", () => {
       preferences.bands.overlay.phaseMode = ui.selRingPhaseMode.value;
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
       applyPrefs("ring phase mode", { statusTarget: "banking" });
     });
 
@@ -3301,6 +3346,7 @@ const UI = (() => {
 
     ui.rngRingSpeed.addEventListener("input", () => {
       preferences.bands.overlay.ringSpeedRadPerSec = Number(ui.rngRingSpeed.value);
+      syncSceneNodeFromCompatPreferences("bandOverlay", { createIfMissing: true });
       applyPrefs("ring speed", { statusTarget: "banking" });
     });
 
