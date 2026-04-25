@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T10:13:36.940Z",
+  "generatedAt": "2026-04-25T12:03:55.701Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -108,7 +108,7 @@
         "format": "esm"
       },
       "src/js/render/scene-persistence.js": {
-        "bytes": 10234,
+        "bytes": 10566,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -513,7 +513,7 @@
         "format": "esm"
       },
       "src/js/render/scene-runtime.js": {
-        "bytes": 9437,
+        "bytes": 9505,
         "imports": [
           {
             "path": "src/js/core/preferences.js",
@@ -858,7 +858,7 @@
             "bytesInOutput": 4084
           },
           "src/js/render/scene-persistence.js": {
-            "bytesInOutput": 10009
+            "bytesInOutput": 10329
           },
           "src/js/presets/url-preset.js": {
             "bytesInOutput": 12886
@@ -903,7 +903,7 @@
             "bytesInOutput": 6736
           },
           "src/js/render/scene-runtime.js": {
-            "bytesInOutput": 8720
+            "bytesInOutput": 8796
           },
           "src/js/render/renderer.js": {
             "bytesInOutput": 9087
@@ -927,7 +927,7 @@
             "bytesInOutput": 2604
           }
         },
-        "bytes": 389069
+        "bytes": 389465
       }
     }
   },

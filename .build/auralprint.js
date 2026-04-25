@@ -1262,11 +1262,17 @@
       zIndex: index
     }));
   }
+  function sortSceneNodesByPersistedZIndex(nodes) {
+    return nodes.map((node, index) => ({ node, index })).sort((left, right) => {
+      const zIndexDelta = left.node.zIndex - right.node.zIndex;
+      return zIndexDelta || left.index - right.index;
+    }).map(({ node }) => node);
+  }
   function sanitizePersistedSceneNodes(rawNodes, { synthesizeDefaultWhenEmpty = false } = {}) {
     const source = Array.isArray(rawNodes) ? rawNodes : [];
     const seenIds = /* @__PURE__ */ new Set();
     const nodes = source.map((node) => sanitizeSceneNode(node, { seenIds })).filter(Boolean);
-    if (nodes.length) return reindexSceneNodes(nodes);
+    if (nodes.length) return reindexSceneNodes(sortSceneNodesByPersistedZIndex(nodes));
     if (!synthesizeDefaultWhenEmpty) return [];
     const defaultSeenIds = /* @__PURE__ */ new Set();
     return reindexSceneNodes(
@@ -4289,6 +4295,12 @@
   });
   var sceneRegistry = createVisualizerRegistry();
   registerBuiltInVisualizers(sceneRegistry);
+  function reindexSceneNodesInCurrentOrder(nodes) {
+    return nodes.map((node, index) => ({
+      ...node,
+      zIndex: index
+    }));
+  }
   function ensureSceneState() {
     if (!state.scene || typeof state.scene !== "object") {
       state.scene = {
@@ -4310,8 +4322,7 @@
     resolveSettings();
     return deepClone(nextPrefs.scene && nextPrefs.scene.nodes || []);
   }
-  function buildSceneNodesFromPreferences({ preserveRuntimeState = false } = {}) {
-    void preserveRuntimeState;
+  function buildSceneNodesFromPreferences() {
     const rawSceneNodes = preferences.scene && Array.isArray(preferences.scene.nodes) ? preferences.scene.nodes : [];
     return sanitizePersistedSceneNodes(rawSceneNodes, { synthesizeDefaultWhenEmpty: true });
   }
@@ -4386,7 +4397,7 @@
     if (nextIndex === currentIndex) return readSceneSnapshot();
     const [node] = sceneState.nodes.splice(currentIndex, 1);
     sceneState.nodes.splice(nextIndex, 0, node);
-    sceneState.nodes = persistScenePreferences(sceneState.nodes);
+    sceneState.nodes = persistScenePreferences(reindexSceneNodesInCurrentOrder(sceneState.nodes));
     return readSceneSnapshot();
   }
   function toggleSceneNodeEnabled(nodeId, nextEnabled = null) {
@@ -4454,7 +4465,7 @@
     return setSceneNodes(buildSceneNodesFromPreferences(), { preserveSelection: false });
   }
   function syncSceneRuntimeFromPreferences() {
-    return setSceneNodes(buildSceneNodesFromPreferences({ preserveRuntimeState: true }), { preserveSelection: true });
+    return setSceneNodes(buildSceneNodesFromPreferences(), { preserveSelection: true });
   }
   function syncSceneNodeFromCompatPreferences(type, { createIfMissing = false } = {}) {
     const sceneNodes = sanitizePersistedSceneNodes(

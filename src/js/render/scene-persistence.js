@@ -161,6 +161,16 @@ function reindexSceneNodes(nodes) {
   }));
 }
 
+function sortSceneNodesByPersistedZIndex(nodes) {
+  return nodes
+    .map((node, index) => ({ node, index }))
+    .sort((left, right) => {
+      const zIndexDelta = left.node.zIndex - right.node.zIndex;
+      return zIndexDelta || (left.index - right.index);
+    })
+    .map(({ node }) => node);
+}
+
 function sanitizePersistedSceneNodes(rawNodes, { synthesizeDefaultWhenEmpty = false } = {}) {
   const source = Array.isArray(rawNodes) ? rawNodes : [];
   const seenIds = new Set();
@@ -168,7 +178,7 @@ function sanitizePersistedSceneNodes(rawNodes, { synthesizeDefaultWhenEmpty = fa
     .map((node) => sanitizeSceneNode(node, { seenIds }))
     .filter(Boolean);
 
-  if (nodes.length) return reindexSceneNodes(nodes);
+  if (nodes.length) return reindexSceneNodes(sortSceneNodesByPersistedZIndex(nodes));
   if (!synthesizeDefaultWhenEmpty) return [];
 
   const defaultSeenIds = new Set();
