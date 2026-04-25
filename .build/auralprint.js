@@ -1284,6 +1284,8 @@
     return edges;
   }
   var BandBank = /* @__PURE__ */ (() => {
+    const DEFAULT_ANALYSER_MIN_DB = -100;
+    const DEFAULT_ANALYSER_MAX_DB = -30;
     function getBandRangeData(index) {
       const n = runtime.settings.bands.count;
       if (!Number.isInteger(index) || index < 0 || index >= n) return null;
@@ -1348,48 +1350,74 @@
       idx = clamp(idx, 0, n - 1);
       return idx;
     }
-    function computeEnergiesFromCAnalyser(cBand, audioContextSampleRate) {
+    function computeBandEnergiesFromFreqDb({
+      freqDb = null,
+      minDb = DEFAULT_ANALYSER_MIN_DB,
+      maxDb = DEFAULT_ANALYSER_MAX_DB,
+      nyquistHz = null
+    } = {}) {
       const s = runtime.settings;
       const n = s.bands.count;
-      if (!cBand || !cBand.freqDb) return;
-      const nyquist = audioContextSampleRate * 0.5;
-      const bins = cBand.freqDb.length;
-      const minDb = cBand.analyser.minDecibels;
-      const maxDb = cBand.analyser.maxDecibels;
+      const energies01 = new Array(n).fill(0);
+      if (!freqDb || !Number.isFinite(nyquistHz) || nyquistHz <= 0) {
+        return { energies01, dominantIndex: n > 0 ? 0 : -1 };
+      }
+      const bins = freqDb.length;
       const dbSpan = Math.max(1e-6, maxDb - minDb);
-      let dominant = 0;
+      let dominant = n > 0 ? 0 : -1;
       let dominantVal = -1;
       for (let i = 0; i < n; i++) {
         const loHz = state.bands.lowHz[i];
         const hiHzRaw = state.bands.highHz[i];
-        const hiHz = Math.min(nyquist, hiHzRaw === Infinity ? nyquist : hiHzRaw);
-        const loBin = Math.floor(loHz / nyquist * (bins - 1));
-        const hiBin = Math.ceil(hiHz / nyquist * (bins - 1));
+        const hiHz = Math.min(nyquistHz, hiHzRaw === Infinity ? nyquistHz : hiHzRaw);
+        const loBin = Math.floor(loHz / nyquistHz * (bins - 1));
+        const hiBin = Math.ceil(hiHz / nyquistHz * (bins - 1));
         const a = clamp(loBin, 0, bins - 1);
         const b = clamp(hiBin, 0, bins - 1);
         if (b < a) {
-          state.bands.energies01[i] = 0;
           continue;
         }
         let sum = 0;
         let count = 0;
         for (let k = a; k <= b; k++) {
-          const t = clamp((cBand.freqDb[k] - minDb) / dbSpan, 0, 1);
+          const t = clamp((freqDb[k] - minDb) / dbSpan, 0, 1);
           sum += t;
           count += 1;
         }
         const avg = count > 0 ? sum / count : 0;
-        state.bands.energies01[i] = avg;
+        energies01[i] = avg;
         if (avg > dominantVal) {
           dominantVal = avg;
           dominant = i;
         }
       }
-      state.bands.dominantIndex = dominant;
+      return { energies01, dominantIndex: dominant };
+    }
+    function computeEnergiesFromCAnalyser(cBand, audioContextSampleRate) {
+      if (!cBand || !cBand.freqDb) return;
+      const minDb = Number.isFinite(cBand.minDb) ? cBand.minDb : cBand.analyser ? cBand.analyser.minDecibels : DEFAULT_ANALYSER_MIN_DB;
+      const maxDb = Number.isFinite(cBand.maxDb) ? cBand.maxDb : cBand.analyser ? cBand.analyser.maxDecibels : DEFAULT_ANALYSER_MAX_DB;
+      const spectrum = computeBandEnergiesFromFreqDb({
+        freqDb: cBand.freqDb,
+        minDb,
+        maxDb,
+        nyquistHz: audioContextSampleRate * 0.5
+      });
+      state.bands.energies01.length = 0;
+      state.bands.energies01.push(...spectrum.energies01);
+      state.bands.dominantIndex = spectrum.dominantIndex;
+      const dominant = spectrum.dominantIndex;
       const name = BAND_NAMES[dominant] || `Band ${dominant}`;
       state.bands.dominantName = name;
     }
-    return { rebuild, bandIndexFromAngleRad, computeEnergiesFromCAnalyser, getBandRangeData, formatBandRangeText };
+    return {
+      rebuild,
+      bandIndexFromAngleRad,
+      computeBandEnergiesFromFreqDb,
+      computeEnergiesFromCAnalyser,
+      getBandRangeData,
+      formatBandRangeText
+    };
   })();
 
   // src/js/audio/band-bank-controller.js
@@ -1615,7 +1643,17 @@
       a.smoothingTimeConstant = runtime.settings.audio.smoothingTimeConstant;
       const timeDomain = new Float32Array(a.fftSize);
       const freqDb = new Float32Array(a.frequencyBinCount);
-      return { id, label, analyser: a, timeDomain, freqDb, rms: 0, energy01: 0 };
+      return {
+        id,
+        label,
+        analyser: a,
+        timeDomain,
+        freqDb,
+        rms: 0,
+        energy01: 0,
+        minDb: a.minDecibels,
+        maxDb: a.maxDecibels
+      };
     }
     function applyPlaybackSettingsLive() {
       if (!outputGain) return;
@@ -1884,6 +1922,8 @@
       bandL.energy01 = computeEnergy01(bandL.rms);
       bandR.energy01 = computeEnergy01(bandR.rms);
       bandC.energy01 = computeEnergy01(bandC.rms);
+      bandL.analyser.getFloatFrequencyData(bandL.freqDb);
+      bandR.analyser.getFloatFrequencyData(bandR.freqDb);
       bandC.analyser.getFloatFrequencyData(bandC.freqDb);
       BandBank.computeEnergiesFromCAnalyser(bandC, ensureContext().sampleRate);
       return { ready: true, monoLike: status.monoLike, bands: { L: bandL, R: bandR, C: bandC }, debug: { corrLR: status.corrLR } };
@@ -3254,6 +3294,12 @@
     if (Number.isFinite(band && band.energy)) return clamp(band.energy, 0, 1);
     return 0;
   }
+  function readChannelBandEnergy01(channel, bandIndex) {
+    const bandEnergies01 = Array.isArray(channel && channel.bandEnergies01) ? channel.bandEnergies01 : null;
+    if (!bandEnergies01 || !Number.isInteger(bandIndex)) return null;
+    const energy = bandEnergies01[bandIndex];
+    return Number.isFinite(energy) ? clamp(energy, 0, 1) : 0;
+  }
   function readDominantBandIndex(frame) {
     if (Number.isInteger(frame && frame.dominantBandIndex) && frame.dominantBandIndex >= 0) {
       return frame.dominantBandIndex;
@@ -3293,8 +3339,9 @@
     let sum = 0;
     let strongestBandIndex = bandIds[0];
     let strongestEnergy = -1;
+    const hasChannelBandSpectrum = Array.isArray(sourceChannel && sourceChannel.bandEnergies01);
     for (const idx of bandIds) {
-      const energy = readBandEnergy01(frame, idx);
+      const energy = hasChannelBandSpectrum ? readChannelBandEnergy01(sourceChannel, idx) : readBandEnergy01(frame, idx);
       sum += energy;
       if (energy <= strongestEnergy) continue;
       strongestEnergy = energy;
@@ -4210,9 +4257,39 @@
         minEnergy: 0
       };
       const channelEntries = {
-        L: { id: "L", label: "Left", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
-        R: { id: "R", label: "Right", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
-        C: { id: "C", label: "Center", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null }
+        L: {
+          id: "L",
+          label: "Left",
+          rms: 0,
+          energy: 0,
+          energy01: 0,
+          timeDomain: null,
+          magnitudes: null,
+          bandEnergies01: null,
+          phase: null
+        },
+        R: {
+          id: "R",
+          label: "Right",
+          rms: 0,
+          energy: 0,
+          energy01: 0,
+          timeDomain: null,
+          magnitudes: null,
+          bandEnergies01: null,
+          phase: null
+        },
+        C: {
+          id: "C",
+          label: "Center",
+          rms: 0,
+          energy: 0,
+          energy01: 0,
+          timeDomain: null,
+          magnitudes: null,
+          bandEnergies01: null,
+          phase: null
+        }
       };
       function ensureBandEntries(count) {
         while (bandFrame.bands.length < count) {
@@ -4243,7 +4320,9 @@
           rms: Number.isFinite(liveBand.rms) ? liveBand.rms : 0,
           energy: Number.isFinite(liveBand.energy01) ? clamp(liveBand.energy01, 0, 1) : 0,
           timeDomain: liveBand.timeDomain || null,
-          freqDb: liveBand.freqDb || null
+          freqDb: liveBand.freqDb || null,
+          minDb: Number.isFinite(liveBand.minDb) ? liveBand.minDb : null,
+          maxDb: Number.isFinite(liveBand.maxDb) ? liveBand.maxDb : null
         })) : [];
         const centerChannel = orderedBands.find((channel) => channel.id === "C") || null;
         const fftBins = centerChannel && centerChannel.freqDb ? centerChannel.freqDb.length : 0;
@@ -4279,6 +4358,12 @@
         bandFrame.analysis.compat.centerWaveform = centerChannel ? centerChannel.timeDomain : null;
         let globalMax = 0;
         for (const liveBand of orderedBands) {
+          const channelSpectrum = liveBand.freqDb && Number.isFinite(nyquistHz) && nyquistHz > 0 ? BandBank.computeBandEnergiesFromFreqDb({
+            freqDb: liveBand.freqDb,
+            minDb: Number.isFinite(liveBand.minDb) ? liveBand.minDb : void 0,
+            maxDb: Number.isFinite(liveBand.maxDb) ? liveBand.maxDb : void 0,
+            nyquistHz
+          }) : null;
           const channelEntry = channelEntries[liveBand.id] || {
             id: liveBand.id,
             label: liveBand.label || liveBand.id,
@@ -4287,6 +4372,7 @@
             energy01: 0,
             timeDomain: null,
             magnitudes: null,
+            bandEnergies01: null,
             phase: null
           };
           channelEntry.label = liveBand.label || channelEntry.label;
@@ -4295,6 +4381,7 @@
           channelEntry.energy01 = liveBand.energy;
           channelEntry.timeDomain = liveBand.timeDomain;
           channelEntry.magnitudes = liveBand.id === "C" && liveBand.freqDb ? liveBand.freqDb : null;
+          channelEntry.bandEnergies01 = channelSpectrum ? channelSpectrum.energies01 : null;
           channelEntry.phase = null;
           bandFrame.analysis.channels.push(channelEntry);
           const rms = liveBand.rms;
@@ -6994,11 +7081,12 @@
       container.appendChild(row);
     }
     function appendSceneOrbRow(container, { controlId, labelText, valueText, input }) {
+      const safeValueText = typeof valueText === "string" ? valueText.replace(/\u00C2\u00B0/g, " deg").replace(/\u00B0/g, " deg") : valueText;
       const { row } = createSceneInspectorRow({
         labelText,
         controlId,
         control: input,
-        valueText
+        valueText: safeValueText
       });
       container.appendChild(row);
     }

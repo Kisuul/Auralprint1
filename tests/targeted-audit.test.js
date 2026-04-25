@@ -2046,6 +2046,7 @@ test("Scene panel orb inspector adds, edits, and removes current orb routing ent
     assert.equal(latestSceneOrb.hueOffsetDeg, 120);
     assert.equal(latestSceneOrb.centerX, 0.25);
     assert.equal(latestSceneOrb.centerY, -0.5);
+    assert.equal(findSceneOrbCardRow(readSceneOrbCardAt(initialOrbCount), "Hue Offset").children[2].textContent, "120 deg");
 
     newCard.children[0].children[1].dispatch("click");
     assert.equal(preferences.orbs.length, initialOrbCount);

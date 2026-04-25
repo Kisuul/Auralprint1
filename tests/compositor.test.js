@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { IDENTITY_VIEW_TRANSFORM, createCompositor } from "../src/js/render/compositor.js";
+import { BandBank } from "../src/js/audio/band-bank.js";
 import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
@@ -94,6 +95,21 @@ function assertRgbNearlyEqual(actual, expected, message) {
   assertNearlyEqual(actual.r, expected.r, `${message} (r)`);
   assertNearlyEqual(actual.g, expected.g, `${message} (g)`);
   assertNearlyEqual(actual.b, expected.b, `${message} (b)`);
+}
+
+function createFreqDbForBandLevels(levelsByBand, { bins = 64, nyquistHz = 24000, floorDb = -100 } = {}) {
+  const freqDb = new Float32Array(bins).fill(floorDb);
+  for (const [bandIndexText, bandDb] of Object.entries(levelsByBand || {})) {
+    const bandIndex = Number(bandIndexText);
+    if (!Number.isInteger(bandIndex)) continue;
+    const lowHz = Number.isFinite(state.bands.lowHz[bandIndex]) ? state.bands.lowHz[bandIndex] : 0;
+    const highHzRaw = state.bands.highHz[bandIndex];
+    const highHz = Math.min(nyquistHz, highHzRaw === Infinity ? nyquistHz : highHzRaw);
+    const loBin = Math.max(0, Math.min(bins - 1, Math.floor((lowHz / nyquistHz) * (bins - 1))));
+    const hiBin = Math.max(loBin, Math.min(bins - 1, Math.ceil((highHz / nyquistHz) * (bins - 1))));
+    for (let i = loBin; i <= hiBin; i++) freqDb[i] = bandDb;
+  }
+  return freqDb;
 }
 
 function captureRenderGlobals() {
@@ -1096,8 +1112,8 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips com
       },
     ];
     state.scene.selectedNodeId = "orbs-1";
-    state.bands.lowHz = [0, 100, 200, 300];
-    state.bands.highHz = [100, 200, 300, Infinity];
+    state.bands.lowHz = [0, 6000, 12000, 18000];
+    state.bands.highHz = [6000, 12000, 18000, Infinity];
     state.bands.energies01 = [0.1, 0.3, 0.6, 0.2];
     state.bands.meta.sampleRateHz = 48000;
     state.bands.meta.nyquistHz = 24000;
@@ -1163,6 +1179,173 @@ test("Renderer.renderFrame keeps the live seam on plain frame data and clips com
     assert.deepEqual(rectCalls[1], { kind: "rect", x: 0, y: 0, width: 400, height: 200 });
     assert.equal(drawCalls.filter((call) => call.kind === "stroke").length, 4);
     assert.equal(drawCalls.filter((call) => call.kind === "arc").length, 6);
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("Renderer.renderFrame resolves targeted orb bands against each orb's routed channel spectrum", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.bands.count = 4;
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.5;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.orbs.length = 0;
+    state.time.simPaused = false;
+    state.scene.nodes = [
+      {
+        id: "orbs-1",
+        type: "orbs",
+        enabled: true,
+        zIndex: 0,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+        settings: [
+          { id: "LEFT_TARGET", chanId: "L", bandIds: [1, 3], chirality: 1, startAngleRad: 0, hueOffsetDeg: 0, centerX: 0, centerY: 0 },
+          { id: "RIGHT_TARGET", chanId: "R", bandIds: [1, 3], chirality: 1, startAngleRad: 0, hueOffsetDeg: 0, centerX: 0, centerY: 0 },
+        ],
+      },
+    ];
+    state.scene.selectedNodeId = "orbs-1";
+    state.bands.lowHz = [0, 6000, 12000, 18000];
+    state.bands.highHz = [6000, 12000, 18000, Infinity];
+    state.bands.energies01 = [0.05, 0.05, 0.9, 0.05];
+    state.bands.meta.sampleRateHz = 48000;
+    state.bands.meta.nyquistHz = 24000;
+    state.bands.meta.configCeilingHz = 22500;
+    state.bands.meta.effectiveCeilingHz = 22500;
+    state.bands.dominantIndex = 2;
+    state.bands.dominantName = "Band 2";
+    state.bands.ringPhaseRad = 0;
+
+    const spectrumFloorDb = -100;
+    const spectrumCeilingDb = 0;
+    const nyquistHz = state.bands.meta.nyquistHz;
+    const leftFreqDb = createFreqDbForBandLevels({ 1: 0, 3: -60 }, {
+      bins: 64,
+      nyquistHz,
+      floorDb: spectrumFloorDb,
+    });
+    const rightFreqDb = createFreqDbForBandLevels({ 1: -90, 3: -40 }, {
+      bins: 64,
+      nyquistHz,
+      floorDb: spectrumFloorDb,
+    });
+    const centerFreqDb = createFreqDbForBandLevels({ 2: 0 }, {
+      bins: 64,
+      nyquistHz,
+      floorDb: spectrumFloorDb,
+    });
+
+    const leftSpectrum = BandBank.computeBandEnergiesFromFreqDb({
+      freqDb: leftFreqDb,
+      minDb: spectrumFloorDb,
+      maxDb: spectrumCeilingDb,
+      nyquistHz,
+    });
+    const rightSpectrum = BandBank.computeBandEnergiesFromFreqDb({
+      freqDb: rightFreqDb,
+      minDb: spectrumFloorDb,
+      maxDb: spectrumCeilingDb,
+      nyquistHz,
+    });
+    const radiusMinPx = Math.min(state.widthPx, state.heightPx) * runtime.settings.audio.minRadiusFrac;
+    const radiusMaxPx = Math.min(state.widthPx, state.heightPx) * runtime.settings.audio.maxRadiusFrac;
+    const expectedLeftEnergy = (leftSpectrum.energies01[1] + leftSpectrum.energies01[3]) * 0.5;
+    const expectedRightEnergy = (rightSpectrum.energies01[1] + rightSpectrum.energies01[3]) * 0.5;
+    const analyserAccessed = { value: false };
+    const makeForbiddenAnalyser = () => ({
+      get minDecibels() {
+        analyserAccessed.value = true;
+        throw new Error("Renderer must not read analyser internals while bridging orb spectra.");
+      },
+      get maxDecibels() {
+        analyserAccessed.value = true;
+        throw new Error("Renderer must not read analyser internals while bridging orb spectra.");
+      },
+    });
+
+    Renderer.renderFrame({
+      bandSnapshot: {
+        ready: true,
+        bands: {
+          L: {
+            id: "L",
+            label: "Left",
+            rms: 0.25,
+            energy01: 0.25,
+            timeDomain: Float32Array.from([0.1, -0.1, 0.1, -0.1]),
+            freqDb: leftFreqDb,
+            minDb: spectrumFloorDb,
+            maxDb: spectrumCeilingDb,
+            analyser: makeForbiddenAnalyser(),
+          },
+          R: {
+            id: "R",
+            label: "Right",
+            rms: 0.25,
+            energy01: 0.25,
+            timeDomain: Float32Array.from([0.1, -0.1, 0.1, -0.1]),
+            freqDb: rightFreqDb,
+            minDb: spectrumFloorDb,
+            maxDb: spectrumCeilingDb,
+            analyser: makeForbiddenAnalyser(),
+          },
+          C: {
+            id: "C",
+            label: "Center",
+            rms: 0.8,
+            energy01: 0.8,
+            timeDomain: Float32Array.from([0.1, -0.2, 0.3, -0.1]),
+            freqDb: centerFreqDb,
+            minDb: spectrumFloorDb,
+            maxDb: spectrumCeilingDb,
+            analyser: makeForbiddenAnalyser(),
+          },
+        },
+      },
+      dtSec: 1,
+      nowSec: 2,
+    });
+
+    assert.equal(analyserAccessed.value, false);
+    assert.equal(state.orbs.length, 2);
+    assertNearlyEqual(
+      state.orbs[0].baseRadiusPx,
+      radiusMinPx + (radiusMaxPx - radiusMinPx) * expectedLeftEnergy,
+      "Expected left-routed targeted energy to drive the left orb radius"
+    );
+    assertNearlyEqual(
+      state.orbs[1].baseRadiusPx,
+      radiusMinPx + (radiusMaxPx - radiusMinPx) * expectedRightEnergy,
+      "Expected right-routed targeted energy to drive the right orb radius"
+    );
+    assert.ok(
+      state.orbs[0].baseRadiusPx > state.orbs[1].baseRadiusPx,
+      "Expected routed channel spectra to produce distinct targeted orb radii"
+    );
+    assert.equal(state.orbs[0].lastColorBandIndex, 1);
+    assert.equal(state.orbs[1].lastColorBandIndex, 3);
   } finally {
     restoreRenderGlobals(snapshot);
   }

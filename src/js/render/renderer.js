@@ -1,6 +1,7 @@
 import { clamp } from "../core/utils.js";
 import { BAND_NAMES, runtime } from "../core/preferences.js";
 import { state } from "../core/state.js";
+import { BandBank } from "../audio/band-bank.js";
 import { createCompositor } from "./compositor.js";
 import { readSceneRuntime } from "./scene-runtime.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualizer.js";
@@ -50,9 +51,39 @@ const Renderer = (() => {
     };
 
     const channelEntries = {
-      L: { id: "L", label: "Left", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
-      R: { id: "R", label: "Right", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
-      C: { id: "C", label: "Center", rms: 0, energy: 0, energy01: 0, timeDomain: null, magnitudes: null, phase: null },
+      L: {
+        id: "L",
+        label: "Left",
+        rms: 0,
+        energy: 0,
+        energy01: 0,
+        timeDomain: null,
+        magnitudes: null,
+        bandEnergies01: null,
+        phase: null,
+      },
+      R: {
+        id: "R",
+        label: "Right",
+        rms: 0,
+        energy: 0,
+        energy01: 0,
+        timeDomain: null,
+        magnitudes: null,
+        bandEnergies01: null,
+        phase: null,
+      },
+      C: {
+        id: "C",
+        label: "Center",
+        rms: 0,
+        energy: 0,
+        energy01: 0,
+        timeDomain: null,
+        magnitudes: null,
+        bandEnergies01: null,
+        phase: null,
+      },
     };
 
     function ensureBandEntries(count) {
@@ -89,6 +120,8 @@ const Renderer = (() => {
             energy: Number.isFinite(liveBand.energy01) ? clamp(liveBand.energy01, 0, 1) : 0,
             timeDomain: liveBand.timeDomain || null,
             freqDb: liveBand.freqDb || null,
+            minDb: Number.isFinite(liveBand.minDb) ? liveBand.minDb : null,
+            maxDb: Number.isFinite(liveBand.maxDb) ? liveBand.maxDb : null,
           }))
         : [];
       const centerChannel = orderedBands.find((channel) => channel.id === "C") || null;
@@ -135,6 +168,14 @@ const Renderer = (() => {
 
       let globalMax = 0;
       for (const liveBand of orderedBands) {
+        const channelSpectrum = liveBand.freqDb && Number.isFinite(nyquistHz) && nyquistHz > 0
+          ? BandBank.computeBandEnergiesFromFreqDb({
+            freqDb: liveBand.freqDb,
+            minDb: Number.isFinite(liveBand.minDb) ? liveBand.minDb : undefined,
+            maxDb: Number.isFinite(liveBand.maxDb) ? liveBand.maxDb : undefined,
+            nyquistHz,
+          })
+          : null;
         const channelEntry = channelEntries[liveBand.id] || {
           id: liveBand.id,
           label: liveBand.label || liveBand.id,
@@ -143,6 +184,7 @@ const Renderer = (() => {
           energy01: 0,
           timeDomain: null,
           magnitudes: null,
+          bandEnergies01: null,
           phase: null,
         };
         channelEntry.label = liveBand.label || channelEntry.label;
@@ -151,6 +193,7 @@ const Renderer = (() => {
         channelEntry.energy01 = liveBand.energy;
         channelEntry.timeDomain = liveBand.timeDomain;
         channelEntry.magnitudes = liveBand.id === "C" && liveBand.freqDb ? liveBand.freqDb : null;
+        channelEntry.bandEnergies01 = channelSpectrum ? channelSpectrum.energies01 : null;
         channelEntry.phase = null;
         bandFrame.analysis.channels.push(channelEntry);
 

@@ -1445,11 +1445,14 @@ const UI = (() => {
   }
 
   function appendSceneOrbRow(container, { controlId, labelText, valueText, input }) {
+    const safeValueText = typeof valueText === "string"
+      ? valueText.replace(/\u00C2\u00B0/g, " deg").replace(/\u00B0/g, " deg")
+      : valueText;
     const { row } = createSceneInspectorRow({
       labelText,
       controlId,
       control: input,
-      valueText,
+      valueText: safeValueText,
     });
     container.appendChild(row);
   }

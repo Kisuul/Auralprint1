@@ -93,6 +93,13 @@ function readBandEnergy01(frame, bandIndex) {
   return 0;
 }
 
+function readChannelBandEnergy01(channel, bandIndex) {
+  const bandEnergies01 = Array.isArray(channel && channel.bandEnergies01) ? channel.bandEnergies01 : null;
+  if (!bandEnergies01 || !Number.isInteger(bandIndex)) return null;
+  const energy = bandEnergies01[bandIndex];
+  return Number.isFinite(energy) ? clamp(energy, 0, 1) : 0;
+}
+
 function readDominantBandIndex(frame) {
   if (Number.isInteger(frame && frame.dominantBandIndex) && frame.dominantBandIndex >= 0) {
     return frame.dominantBandIndex;
@@ -140,9 +147,12 @@ function getBandForOrb(orb, frame) {
   let sum = 0;
   let strongestBandIndex = bandIds[0];
   let strongestEnergy = -1;
+  const hasChannelBandSpectrum = Array.isArray(sourceChannel && sourceChannel.bandEnergies01);
 
   for (const idx of bandIds) {
-    const energy = readBandEnergy01(frame, idx);
+    const energy = hasChannelBandSpectrum
+      ? readChannelBandEnergy01(sourceChannel, idx)
+      : readBandEnergy01(frame, idx);
     sum += energy;
     if (energy <= strongestEnergy) continue;
     strongestEnergy = energy;
