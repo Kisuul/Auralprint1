@@ -85,6 +85,7 @@
   var TAU = Math.PI * 2;
   var RAD_TO_DEG = 180 / Math.PI;
   var PRESET_SCHEMA_VERSION = 9;
+  var LEGACY_SCHEMA_V1 = 1;
   var LEGACY_SCHEMA_V2 = 2;
   var LEGACY_SCHEMA_V3 = 3;
   var LEGACY_SCHEMA_V4 = 4;
@@ -1275,9 +1276,10 @@
   function buildSceneNodeFromLegacy(type, rawSettings) {
     const defaultNode = readDefaultSceneNode(type);
     if (!defaultNode) return null;
+    const hasLegacyEnabled = type === "bandOverlay" && rawSettings && typeof rawSettings === "object" && Object.prototype.hasOwnProperty.call(rawSettings, "enabled") && typeof rawSettings.enabled === "boolean";
     return sanitizeSceneNode({
       ...defaultNode,
-      enabled: type === "bandOverlay" ? !!(rawSettings && typeof rawSettings === "object" && rawSettings.enabled) : !!defaultNode.enabled,
+      enabled: type === "bandOverlay" ? hasLegacyEnabled ? rawSettings.enabled : !!defaultNode.enabled : !!defaultNode.enabled,
       settings: rawSettings
     });
   }
@@ -1340,7 +1342,8 @@
       LEGACY_SCHEMA_V5,
       LEGACY_SCHEMA_V4,
       LEGACY_SCHEMA_V3,
-      LEGACY_SCHEMA_V2
+      LEGACY_SCHEMA_V2,
+      LEGACY_SCHEMA_V1
     ]);
     function base64UrlEncode(bytes) {
       let s = "";
@@ -1385,7 +1388,7 @@
             prefs: null
           };
         }
-        const schema = Number.isInteger(obj.schema) ? obj.schema : null;
+        const schema = Object.prototype.hasOwnProperty.call(obj, "schema") ? Number.isInteger(obj.schema) ? obj.schema : null : LEGACY_SCHEMA_V1;
         if (!SUPPORTED_SCHEMAS.includes(schema)) {
           return {
             ok: false,

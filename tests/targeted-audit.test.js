@@ -1769,6 +1769,7 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       },
       expectedNodeIds: ["orbs-1", "overlay-1"],
       expectedNodeTypes: ["orbs", "bandOverlay"],
+      expectedNodeEnabled: [true, true],
     },
     {
       name: "schema 7 legacy flow",
@@ -1790,6 +1791,7 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       },
       expectedNodeIds: ["orbs-1", "overlay-1"],
       expectedNodeTypes: ["orbs", "bandOverlay"],
+      expectedNodeEnabled: [true, false],
     },
     {
       name: "schema 8 with no visual roots synthesizes the canonical scene",
@@ -1801,6 +1803,7 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       },
       expectedNodeIds: ["orbs-1", "overlay-1"],
       expectedNodeTypes: ["orbs", "bandOverlay"],
+      expectedNodeEnabled: [true, true],
     },
     {
       name: "schema 8 orbs only preserves overlay absence",
@@ -1812,6 +1815,7 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       },
       expectedNodeIds: ["orbs-1"],
       expectedNodeTypes: ["orbs"],
+      expectedNodeEnabled: [true],
     },
     {
       name: "schema 8 overlay only preserves orb absence",
@@ -1826,6 +1830,46 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       },
       expectedNodeIds: ["overlay-1"],
       expectedNodeTypes: ["bandOverlay"],
+      expectedNodeEnabled: [true],
+    },
+    {
+      name: "schema 8 overlay without enabled defaults the migrated node on",
+      schema: 8,
+      prefs: {
+        overlay: {
+          alpha: 0.25,
+          pointSizePx: 4,
+        },
+      },
+      expectedNodeIds: ["overlay-1"],
+      expectedNodeTypes: ["bandOverlay"],
+      expectedNodeEnabled: [true],
+    },
+    {
+      name: "missing schema follows the legacy schema 1 migration path",
+      schema: undefined,
+      expectedMigratedFromSchema: 1,
+      prefs: {
+        trace: {
+          lineAlpha: 0.2,
+        },
+      },
+      expectedNodeIds: ["orbs-1", "overlay-1"],
+      expectedNodeTypes: ["orbs", "bandOverlay"],
+      expectedNodeEnabled: [true, true],
+    },
+    {
+      name: "explicit schema 1 follows the legacy migration path",
+      schema: 1,
+      prefs: {
+        overlay: {
+          enabled: false,
+          alpha: 0.33,
+        },
+      },
+      expectedNodeIds: ["overlay-1"],
+      expectedNodeTypes: ["bandOverlay"],
+      expectedNodeEnabled: [false],
     },
   ];
 
@@ -1849,15 +1893,54 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       }));
       assert.equal(result.ok, true, fixture.name);
       assert.equal(result.schema, PRESET_SCHEMA_VERSION, fixture.name);
-      assert.equal(result.migratedFromSchema, fixture.schema, fixture.name);
+      assert.equal(
+        result.migratedFromSchema,
+        Object.prototype.hasOwnProperty.call(fixture, "expectedMigratedFromSchema")
+          ? fixture.expectedMigratedFromSchema
+          : fixture.schema,
+        fixture.name
+      );
 
       UrlPreset.writeHashFromPrefs();
       const saved = decodePresetHash(locationStub.hash);
       assert.equal(saved.schema, PRESET_SCHEMA_VERSION, fixture.name);
       assert.deepEqual(saved.prefs.scene.nodes.map((node) => node.id), fixture.expectedNodeIds, fixture.name);
       assert.deepEqual(saved.prefs.scene.nodes.map((node) => node.type), fixture.expectedNodeTypes, fixture.name);
-      assert.ok(saved.prefs.scene.nodes.every((node) => Object.prototype.hasOwnProperty.call(node, "bounds")), fixture.name);
-      assert.ok(saved.prefs.scene.nodes.every((node) => Object.prototype.hasOwnProperty.call(node, "anchor")), fixture.name);
+      assert.deepEqual(saved.prefs.scene.nodes.map((node) => node.enabled), fixture.expectedNodeEnabled, fixture.name);
+      assert.deepEqual(
+        saved.prefs.scene.nodes.map((node) => node.zIndex),
+        saved.prefs.scene.nodes.map((_node, index) => index),
+        fixture.name
+      );
+      assert.ok(saved.prefs.scene.nodes.every((node) => typeof node.id === "string" && !!node.id), fixture.name);
+      assert.ok(saved.prefs.scene.nodes.every((node) => typeof node.type === "string" && !!node.type), fixture.name);
+      assert.ok(saved.prefs.scene.nodes.every((node) => typeof node.enabled === "boolean"), fixture.name);
+      assert.ok(
+        saved.prefs.scene.nodes.every((node) => (
+          Object.prototype.hasOwnProperty.call(node, "bounds")
+          && JSON.stringify(node.bounds) === JSON.stringify({ x: 0.5, y: 0.5, w: 1, h: 1 })
+        )),
+        fixture.name
+      );
+      assert.ok(
+        saved.prefs.scene.nodes.every((node) => (
+          Object.prototype.hasOwnProperty.call(node, "anchor")
+          && JSON.stringify(node.anchor) === JSON.stringify({ x: 0.5, y: 0.5 })
+        )),
+        fixture.name
+      );
+      assert.ok(
+        saved.prefs.scene.nodes.every((node) => Object.prototype.hasOwnProperty.call(node, "settings")),
+        fixture.name
+      );
+      assert.ok(
+        saved.prefs.scene.nodes.every((node) => (
+          node.type === "orbs"
+            ? Array.isArray(node.settings)
+            : !!(node.settings && typeof node.settings === "object")
+        )),
+        fixture.name
+      );
       assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs, "orbs"), false, fixture.name);
       assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs, "overlay"), false, fixture.name);
       assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs.bands, "overlay"), false, fixture.name);
@@ -1877,6 +1960,14 @@ test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
       }
       if (fixture.schema === 7) {
         assert.equal(saved.prefs.bands.distributionMode, "log", fixture.name);
+      }
+      if (fixture.name === "schema 8 overlay without enabled defaults the migrated node on") {
+        assert.equal(saved.prefs.scene.nodes[0].enabled, true, fixture.name);
+        assert.equal(saved.prefs.scene.nodes[0].settings.enabled, true, fixture.name);
+      }
+      if (fixture.name === "schema 7 legacy flow" || fixture.name === "explicit schema 1 follows the legacy migration path") {
+        assert.equal(saved.prefs.scene.nodes.at(-1).enabled, false, fixture.name);
+        assert.equal(saved.prefs.scene.nodes.at(-1).settings.enabled, false, fixture.name);
       }
     }
 

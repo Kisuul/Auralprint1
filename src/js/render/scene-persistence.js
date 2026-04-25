@@ -182,10 +182,17 @@ function sanitizePersistedSceneNodes(rawNodes, { synthesizeDefaultWhenEmpty = fa
 function buildSceneNodeFromLegacy(type, rawSettings) {
   const defaultNode = readDefaultSceneNode(type);
   if (!defaultNode) return null;
+  const hasLegacyEnabled = (
+    type === "bandOverlay"
+    && rawSettings
+    && typeof rawSettings === "object"
+    && Object.prototype.hasOwnProperty.call(rawSettings, "enabled")
+    && typeof rawSettings.enabled === "boolean"
+  );
   return sanitizeSceneNode({
     ...defaultNode,
     enabled: type === "bandOverlay"
-      ? !!(rawSettings && typeof rawSettings === "object" && rawSettings.enabled)
+      ? (hasLegacyEnabled ? rawSettings.enabled : !!defaultNode.enabled)
       : !!defaultNode.enabled,
     settings: rawSettings,
   });

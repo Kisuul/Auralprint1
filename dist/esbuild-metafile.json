@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T07:54:29.202Z",
+  "generatedAt": "2026-04-25T08:55:03.493Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -8,7 +8,7 @@
         "format": "esm"
       },
       "src/js/core/constants.js": {
-        "bytes": 1141,
+        "bytes": 1176,
         "imports": [],
         "format": "esm"
       },
@@ -108,7 +108,7 @@
         "format": "esm"
       },
       "src/js/render/scene-persistence.js": {
-        "bytes": 10008,
+        "bytes": 10234,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -129,7 +129,7 @@
         "format": "esm"
       },
       "src/js/presets/url-preset.js": {
-        "bytes": 13336,
+        "bytes": 13467,
         "imports": [
           {
             "path": "src/js/core/constants.js",
@@ -834,7 +834,7 @@
             "bytesInOutput": 2072
           },
           "src/js/core/constants.js": {
-            "bytesInOutput": 260
+            "bytesInOutput": 288
           },
           "src/js/core/config.js": {
             "bytesInOutput": 16566
@@ -858,10 +858,10 @@
             "bytesInOutput": 4084
           },
           "src/js/render/scene-persistence.js": {
-            "bytesInOutput": 9809
+            "bytesInOutput": 10009
           },
           "src/js/presets/url-preset.js": {
-            "bytesInOutput": 12789
+            "bytesInOutput": 12886
           },
           "src/js/audio/band-bank.js": {
             "bytesInOutput": 6817
@@ -927,7 +927,7 @@
             "bytesInOutput": 2604
           }
         },
-        "bytes": 387755
+        "bytes": 388080
       }
     }
   },

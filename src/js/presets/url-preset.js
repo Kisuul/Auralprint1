@@ -1,4 +1,4 @@
-import { PRESET_SCHEMA_VERSION, LEGACY_SCHEMA_V2, LEGACY_SCHEMA_V3, LEGACY_SCHEMA_V4, LEGACY_SCHEMA_V5, LEGACY_SCHEMA_V6, LEGACY_SCHEMA_V7 } from "../core/constants.js";
+import { PRESET_SCHEMA_VERSION, LEGACY_SCHEMA_V1, LEGACY_SCHEMA_V2, LEGACY_SCHEMA_V3, LEGACY_SCHEMA_V4, LEGACY_SCHEMA_V5, LEGACY_SCHEMA_V6, LEGACY_SCHEMA_V7 } from "../core/constants.js";
 import { clamp, deepClone, isValidHexColor } from "../core/utils.js";
 import { CONFIG } from "../core/config.js";
 import { preferences, replacePreferences, resolveSettings } from "../core/preferences.js";
@@ -17,6 +17,7 @@ const UrlPreset = (() => {
     LEGACY_SCHEMA_V4,
     LEGACY_SCHEMA_V3,
     LEGACY_SCHEMA_V2,
+    LEGACY_SCHEMA_V1,
   ]);
 
   function base64UrlEncode(bytes) {
@@ -67,7 +68,9 @@ const UrlPreset = (() => {
         };
       }
 
-      const schema = Number.isInteger(obj.schema) ? obj.schema : null;
+      const schema = Object.prototype.hasOwnProperty.call(obj, "schema")
+        ? (Number.isInteger(obj.schema) ? obj.schema : null)
+        : LEGACY_SCHEMA_V1;
       if (!SUPPORTED_SCHEMAS.includes(schema)) {
         return {
           ok: false,
