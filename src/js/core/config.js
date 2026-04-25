@@ -367,6 +367,21 @@ const CONFIG = deepFreeze({
     },
   },
 
+  visualizers: {
+    orbs: {
+      defaults: {
+        hueOffsetDeg: 0,
+        centerX: 0,
+        centerY: 0,
+      },
+      limits: {
+        hueOffsetDeg: { min: 0, max: 360, step: 1 },
+        centerX: { min: -1, max: 1, step: 0.01 },
+        centerY: { min: -1, max: 1, step: 0.01 },
+      },
+    },
+  },
+
   defaults: {
     visuals: {
       backgroundColor: "#000000",
@@ -418,7 +433,8 @@ const CONFIG = deepFreeze({
     //   chirality     — +1 or -1 rotation direction (engine done; UI deferred)
     //   startAngleRad — initial phase offset in radians (engine done; UI deferred)
     //
-    // TODO/FUTURE fields (not yet in engine — add here + sanitizeAndApply + schema bump):
+    // Scene-only orb-overhaul fields live under CONFIG.visualizers.orbs and the
+    // current Scene runtime until Schema 9 rollout:
     //   hueOffsetDeg  — per-orb color phase offset
     //   centerX/Y     — orb origin offset in sim space
     orbs: [

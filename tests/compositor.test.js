@@ -5,6 +5,7 @@ import { IDENTITY_VIEW_TRANSFORM, createCompositor } from "../src/js/render/comp
 import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
+import { ColorPolicy } from "../src/js/render/color-policy.js";
 import { getActiveOrbPrimaryAngleRad, resetOrbTrails, resetOrbsToDesignedPhases } from "../src/js/render/orb-runtime.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
 
@@ -87,6 +88,12 @@ function assertNearlyEqual(actual, expected, message) {
     Math.abs(actual - expected) < 0.000001,
     `${message}: expected ${expected}, got ${actual}`
   );
+}
+
+function assertRgbNearlyEqual(actual, expected, message) {
+  assertNearlyEqual(actual.r, expected.r, `${message} (r)`);
+  assertNearlyEqual(actual.g, expected.g, `${message} (g)`);
+  assertNearlyEqual(actual.b, expected.b, `${message} (b)`);
 }
 
 function captureRenderGlobals() {
@@ -568,7 +575,16 @@ test("built-in orb visualizer renders through the compositor and supports runtim
   try {
     runtime.settings = structuredClone(snapshot.runtimeSettings);
     runtime.settings.orbs = [
-      { id: "TEST_ORB", chanId: "C", bandIds: [1], chirality: 1, startAngleRad: 0 },
+      {
+        id: "TEST_ORB",
+        chanId: "C",
+        bandIds: [1],
+        chirality: 1,
+        startAngleRad: 0,
+        hueOffsetDeg: 0,
+        centerX: 0,
+        centerY: 0,
+      },
     ];
     runtime.settings.trace.lines = false;
     runtime.settings.particles.emitPerSecond = 1;
@@ -711,7 +727,7 @@ test("built-in orb visualizer keeps compatibility state across multiple active o
       bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
       anchor: { x: 0.5, y: 0.5 },
       settings: [
-        { id: "ORB_A", chanId: "C", bandIds: [], chirality: 1, startAngleRad: 0 },
+        { id: "ORB_A", chanId: "C", bandIds: [], chirality: 1, startAngleRad: 0, hueOffsetDeg: 0, centerX: 0, centerY: 0 },
       ],
     };
     const secondNode = {
@@ -722,7 +738,7 @@ test("built-in orb visualizer keeps compatibility state across multiple active o
       bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
       anchor: { x: 0.5, y: 0.5 },
       settings: [
-        { id: "ORB_B", chanId: "C", bandIds: [], chirality: 1, startAngleRad: Math.PI },
+        { id: "ORB_B", chanId: "C", bandIds: [], chirality: 1, startAngleRad: Math.PI, hueOffsetDeg: 0, centerX: 0, centerY: 0 },
       ],
     };
     const frame = {
@@ -802,7 +818,7 @@ test("built-in orb visualizer updates reused node settings through compositor sy
       bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
       anchor: { x: 0.5, y: 0.5 },
       settings: [
-        { id: "ORB_BEFORE", chanId: "C", bandIds: [], chirality: 1, startAngleRad: 0 },
+        { id: "ORB_BEFORE", chanId: "C", bandIds: [], chirality: 1, startAngleRad: 0, hueOffsetDeg: 0, centerX: 0, centerY: 0 },
       ],
     };
 
@@ -815,7 +831,16 @@ test("built-in orb visualizer updates reused node settings through compositor sy
         {
           ...baseNode,
           settings: [
-            { id: "ORB_AFTER", chanId: "L", bandIds: [1], chirality: -1, startAngleRad: Math.PI },
+            {
+              id: "ORB_AFTER",
+              chanId: "L",
+              bandIds: [1],
+              chirality: -1,
+              startAngleRad: Math.PI,
+              hueOffsetDeg: 90,
+              centerX: 0.25,
+              centerY: -0.5,
+            },
           ],
         },
       ],
@@ -826,7 +851,186 @@ test("built-in orb visualizer updates reused node settings through compositor sy
     assert.deepEqual(state.orbs[0].bandIds, [1]);
     assert.equal(state.orbs[0].chirality, -1);
     assert.equal(state.orbs[0].startAngleRad, Math.PI);
+    assert.equal(state.orbs[0].hueOffsetDeg, 90);
+    assert.equal(state.orbs[0].centerX, 0.25);
+    assert.equal(state.orbs[0].centerY, -0.5);
     assert.equal(getActiveOrbPrimaryAngleRad(), Math.PI);
+
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("built-in orb visualizer averages targeted band energy and applies per-orb hue phase", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.trace.lines = false;
+    runtime.settings.bands.particleColorSource = "dominant";
+    runtime.settings.bands.rainbow.hueOffsetDeg = 0;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.5;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.time.simPaused = false;
+    state.orbs.length = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: fakeCtx, widthPx: 400, heightPx: 200, dpr: 1 });
+    const scene = {
+      nodes: [
+        {
+          id: "orbs-hue",
+          type: "orbs",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: [
+            {
+              id: "PHASED_ORB",
+              chanId: "C",
+              bandIds: [1, 3],
+              chirality: 1,
+              startAngleRad: 0,
+              hueOffsetDeg: 60,
+              centerX: 0,
+              centerY: 0,
+            },
+          ],
+        },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        channels: [
+          { id: "C", label: "Center", energy: 0.2, timeDomain: Float32Array.from([0, 0, 0, 0]) },
+        ],
+      },
+      bands: [
+        { index: 0, energy: 0.1 },
+        { index: 1, energy: 0.25 },
+        { index: 2, energy: 0.05 },
+        { index: 3, energy: 0.75 },
+      ],
+    };
+
+    compositor.syncScene(scene, target);
+    compositor.update(frame, 1);
+
+    assert.equal(state.orbs[0].lastColorBandIndex, 3);
+    assertNearlyEqual(state.orbs[0].baseRadiusPx, 60, "Expected averaged targeted band energy to drive orb radius");
+    assert.equal(state.orbs[0].trail.particles.length, 1);
+    assertRgbNearlyEqual(
+      state.orbs[0].trail.particles[0].rgbStart,
+      ColorPolicy.bandRgb01(3, 60),
+      "Expected targeted hue phase to tint orb particles"
+    );
+
+    compositor.dispose();
+  } finally {
+    restoreRenderGlobals(snapshot);
+  }
+});
+
+test("built-in orb visualizer offsets orb origins within node bounds using normalized center coordinates", () => {
+  const snapshot = captureRenderGlobals();
+  const drawCalls = [];
+  const fakeCtx = createDrawRecorderContext(drawCalls);
+
+  try {
+    runtime.settings = structuredClone(snapshot.runtimeSettings);
+    runtime.settings.trace.lines = false;
+    runtime.settings.particles.emitPerSecond = 1;
+    runtime.settings.particles.sizeMaxPx = 4;
+    runtime.settings.particles.sizeMinPx = 2;
+    runtime.settings.particles.sizeToMinSec = 10;
+    runtime.settings.particles.ttlSec = 20;
+    runtime.settings.particles.overlapRadiusPx = 0;
+    runtime.settings.motion.angularSpeedRadPerSec = 0;
+    runtime.settings.motion.waveformRadialDisplaceFrac = 0;
+    runtime.settings.audio.minRadiusFrac = 0.1;
+    runtime.settings.audio.maxRadiusFrac = 0.1;
+    runtime.settings.timing.maxDeltaTimeSec = 1;
+
+    state.canvas = { id: "canvas" };
+    state.ctx = fakeCtx;
+    state.widthPx = 400;
+    state.heightPx = 200;
+    state.dpr = 1;
+    state.time.simPaused = false;
+    state.orbs.length = 0;
+
+    const registry = createVisualizerRegistry();
+    registerBuiltInVisualizers(registry);
+
+    const compositor = createCompositor({ registry });
+    const target = createTarget({ ctx: fakeCtx, widthPx: 400, heightPx: 200, dpr: 1 });
+    const scene = {
+      nodes: [
+        {
+          id: "orbs-offset",
+          type: "orbs",
+          enabled: true,
+          zIndex: 0,
+          bounds: { x: 0.5, y: 0.5, w: 0.5, h: 0.5 },
+          anchor: { x: 0.5, y: 0.5 },
+          settings: [
+            {
+              id: "OFFSET_ORB",
+              chanId: "C",
+              bandIds: [1],
+              chirality: 1,
+              startAngleRad: 0,
+              hueOffsetDeg: 0,
+              centerX: 0.5,
+              centerY: 0.5,
+            },
+          ],
+        },
+      ],
+    };
+    const frame = {
+      analysis: {
+        timestamp: 1000,
+        channels: [
+          { id: "C", label: "Center", energy: 0.1, timeDomain: Float32Array.from([0, 0, 0, 0]) },
+        ],
+      },
+      bands: [
+        { index: 0, energy: 0.2 },
+        { index: 1, energy: 0.8 },
+      ],
+    };
+
+    compositor.syncScene(scene, target);
+    compositor.update(frame, 1);
+    compositor.render(target);
+
+    const arcCalls = drawCalls.filter((call) => call.kind === "arc");
+    assert.equal(arcCalls.length, 1);
+    assert.deepEqual(arcCalls[0], { kind: "arc", x: 270, y: 75, radius: 4 });
 
     compositor.dispose();
   } finally {

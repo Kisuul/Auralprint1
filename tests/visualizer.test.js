@@ -43,11 +43,23 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
   assert.equal(orbsSchema.kind, "array");
   assert.equal(orbsSchema.item.kind, "object");
   assert.equal(orbsSchema.item.fields.bandIds.item.max, 255);
-  assert.equal(Object.hasOwn(orbsSchema.item.fields, "hueOffsetDeg"), false);
-  assert.equal(Object.hasOwn(orbsSchema.item.fields, "centerX"), false);
-  assert.equal(Object.hasOwn(orbsSchema.item.fields, "centerY"), false);
+  assert.deepEqual(
+    orbsSchema.item.fields.hueOffsetDeg,
+    { type: "number", default: 0, min: 0, max: 360, step: 1 }
+  );
+  assert.deepEqual(
+    orbsSchema.item.fields.centerX,
+    { type: "number", default: 0, min: -1, max: 1, step: 0.01 }
+  );
+  assert.deepEqual(
+    orbsSchema.item.fields.centerY,
+    { type: "number", default: 0, min: -1, max: 1, step: 0.01 }
+  );
   assert.equal(orbsDefaultNode.id, "orbs-1");
   assert.deepEqual(orbsDefaultNode.bounds, { x: 0.5, y: 0.5, w: 1, h: 1 });
+  assert.equal(orbsDefaultNode.settings[0].hueOffsetDeg, 0);
+  assert.equal(orbsDefaultNode.settings[0].centerX, 0);
+  assert.equal(orbsDefaultNode.settings[0].centerY, 0);
   assert.deepEqual(bandOverlayCapabilities, { runtimeImplemented: true, transitional: true });
   assert.equal(bandOverlaySchema.kind, "object");
   assert.deepEqual(
@@ -62,14 +74,18 @@ test("registerBuiltInVisualizers registers the current built-in visualizer types
 
   orbsCapabilities.transitional = false;
   orbsSchema.item.fields.chanId.default = "L";
+  orbsSchema.item.fields.centerX.min = -0.5;
   orbsDefaultNode.settings[0].id = "mutated";
+  orbsDefaultNode.settings[0].hueOffsetDeg = 120;
   bandOverlayCapabilities.transitional = false;
   bandOverlaySchema.fields.lineWidthPx.min = -1;
   bandOverlayDefaultNode.settings.lineWidthPx = 99;
 
   assert.deepEqual(registry.getCapabilities("orbs"), { runtimeImplemented: true, transitional: true });
   assert.equal(registry.getSettingsSchema("orbs").item.fields.chanId.default, "C");
+  assert.equal(registry.getSettingsSchema("orbs").item.fields.centerX.min, -1);
   assert.equal(registry.getDefaultNode("orbs").settings[0].id, "ORB0");
+  assert.equal(registry.getDefaultNode("orbs").settings[0].hueOffsetDeg, 0);
   assert.deepEqual(registry.getCapabilities("bandOverlay"), { runtimeImplemented: true, transitional: true });
   assert.equal(registry.getSettingsSchema("bandOverlay").fields.lineWidthPx.min, 1);
   assert.equal(registry.getDefaultNode("bandOverlay").settings.lineWidthPx, 1);

@@ -1,12 +1,17 @@
 import { CONFIG } from "../core/config.js";
 import {
-  normalizeOrbDef,
   preferences,
   resolveSettings,
-  sanitizeOrbBandIds,
 } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { clamp, deepClone } from "../core/utils.js";
+import {
+  mergeSceneOrbSettingsWithRuntimeFields,
+  normalizeSceneOrbDef,
+  normalizeSceneOrbSettings,
+  readDefaultSceneOrbFallback,
+  toLegacyOrbDef,
+} from "./orb-settings.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "./visualizer.js";
 
 const SCENE_TYPE_ORDER = Object.freeze(["orbs", "bandOverlay"]);
@@ -29,18 +34,6 @@ function ensureSceneState() {
   if (!Array.isArray(state.scene.nodes)) state.scene.nodes = [];
   if (typeof state.scene.selectedNodeId !== "string") state.scene.selectedNodeId = "";
   return state.scene;
-}
-
-function readDefaultOrbFallback(index = 0) {
-  const defaults = Array.isArray(CONFIG.defaults.orbs) ? CONFIG.defaults.orbs : [];
-  const fallback = defaults[index % Math.max(1, defaults.length)] || null;
-  return fallback || {
-    id: "ORB0",
-    chanId: "C",
-    bandIds: [],
-    chirality: -1,
-    startAngleRad: 0,
-  };
 }
 
 function sanitizeSceneNumber(value, schema) {
@@ -92,8 +85,7 @@ function sanitizeOverlaySettings(rawSettings) {
 }
 
 function sanitizeOrbSettings(rawSettings) {
-  const input = Array.isArray(rawSettings) ? rawSettings : deepClone(CONFIG.defaults.orbs);
-  return input.map((orb, index) => normalizeOrbDef(orb, readDefaultOrbFallback(index)));
+  return normalizeSceneOrbSettings(rawSettings);
 }
 
 function sanitizeSettingsForType(type, rawSettings) {
@@ -157,6 +149,9 @@ function buildSceneNodesFromPreferences({ preserveRuntimeState = false } = {}) {
     const existingNode = existingById.get(id) || null;
     return {
       ...freshNode,
+      settings: freshNode.type === "orbs" && existingNode
+        ? mergeSceneOrbSettingsWithRuntimeFields(freshNode.settings, existingNode.settings)
+        : freshNode.settings,
       enabled: existingNode ? !!existingNode.enabled : !!freshNode.enabled,
     };
   }));
@@ -216,7 +211,7 @@ function persistSceneNodeSettings(node) {
 
   if (node.type === "orbs") {
     node.settings = sanitizeOrbSettings(node.settings);
-    preferences.orbs = deepClone(node.settings);
+    preferences.orbs = node.settings.map((orb, index) => toLegacyOrbDef(orb, readDefaultSceneOrbFallback(index)));
   } else if (node.type === "bandOverlay") {
     node.settings = sanitizeOverlaySettings(node.settings);
     preferences.bands.overlay = deepClone(node.settings);
@@ -280,8 +275,8 @@ function buildNextOrbId(orbs) {
 }
 
 function createNewOrbSetting(orbs) {
-  const fallback = readDefaultOrbFallback(Array.isArray(orbs) ? orbs.length : 0);
-  return normalizeOrbDef({
+  const fallback = readDefaultSceneOrbFallback(Array.isArray(orbs) ? orbs.length : 0);
+  return normalizeSceneOrbDef({
     id: buildNextOrbId(Array.isArray(orbs) ? orbs : []),
   }, fallback);
 }
@@ -311,14 +306,10 @@ function updateSceneOrb(nodeId, orbIndex, patch = {}) {
 
     const currentOrb = next[orbIndex];
     const rawPatch = patch && typeof patch === "object" ? patch : {};
-    const nextOrb = normalizeOrbDef({
+    const nextOrb = normalizeSceneOrbDef({
       ...currentOrb,
       ...rawPatch,
-    }, currentOrb || readDefaultOrbFallback(orbIndex));
-
-    if (Object.prototype.hasOwnProperty.call(rawPatch, "bandIds")) {
-      nextOrb.bandIds = sanitizeOrbBandIds(rawPatch.bandIds, null);
-    }
+    }, currentOrb || readDefaultSceneOrbFallback(orbIndex));
 
     next[orbIndex] = nextOrb;
     return next;

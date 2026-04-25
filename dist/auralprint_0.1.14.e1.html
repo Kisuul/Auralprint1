@@ -6,7 +6,7 @@
   <meta name="description" content="Auralprint is a waveform analysis tool, designed for audio - offline-capable: no hosting required." />
   <meta name="keywords" content="auralprint, waveform analyzer, audio analyzer, audio visualizer, analysis, audio, generative art, web audio, canvas, single file" />
   <meta name="author" content="Christopher 'Kisuul' Lohman" />
-  <title>Auralprint - Waveform Analysis Tool - v0.1.14.d3</title>
+  <title>Auralprint - Waveform Analysis Tool - v0.1.14.e1</title>
   <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -2147,6 +2147,20 @@ input[type=color] {
         opacityMax: 1
       }
     },
+    visualizers: {
+      orbs: {
+        defaults: {
+          hueOffsetDeg: 0,
+          centerX: 0,
+          centerY: 0
+        },
+        limits: {
+          hueOffsetDeg: { min: 0, max: 360, step: 1 },
+          centerX: { min: -1, max: 1, step: 0.01 },
+          centerY: { min: -1, max: 1, step: 0.01 }
+        }
+      }
+    },
     defaults: {
       visuals: {
         backgroundColor: "#000000",
@@ -2193,7 +2207,8 @@ input[type=color] {
       //   chirality     — +1 or -1 rotation direction (engine done; UI deferred)
       //   startAngleRad — initial phase offset in radians (engine done; UI deferred)
       //
-      // TODO/FUTURE fields (not yet in engine — add here + sanitizeAndApply + schema bump):
+      // Scene-only orb-overhaul fields live under CONFIG.visualizers.orbs and the
+      // current Scene runtime until Schema 9 rollout:
       //   hueOffsetDeg  — per-orb color phase offset
       //   centerX/Y     — orb origin offset in sim space
       orbs: [
@@ -2333,13 +2348,13 @@ input[type=color] {
   function normalizeOrbDef(incomingOrb, fallbackOrb) {
     const fallback = fallbackOrb || {};
     const orb = incomingOrb && typeof incomingOrb === "object" ? incomingOrb : {};
-    const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+    const hasOwn2 = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
     const id = typeof orb.id === "string" && orb.id.trim() ? orb.id : typeof fallback.id === "string" ? fallback.id : "ORB";
     const chiralityRaw = Number.isFinite(orb.chirality) ? orb.chirality : fallback.chirality;
     const chirality = chiralityRaw >= 0 ? 1 : -1;
     const startAngleRad = Number.isFinite(orb.startAngleRad) ? orb.startAngleRad : Number.isFinite(fallback.startAngleRad) ? fallback.startAngleRad : 0;
-    const chanId = hasOwn(orb, "chanId") || hasOwn(orb, "bandId") ? normalizeOrbChannelId(orb.chanId, orb.bandId) : normalizeOrbChannelId(fallback.chanId, fallback.bandId);
-    const bandIds = hasOwn(orb, "bandIds") || hasOwn(orb, "bandNames") ? sanitizeOrbBandIds(orb.bandIds, orb.bandNames) : sanitizeOrbBandIds(fallback.bandIds, fallback.bandNames);
+    const chanId = hasOwn2(orb, "chanId") || hasOwn2(orb, "bandId") ? normalizeOrbChannelId(orb.chanId, orb.bandId) : normalizeOrbChannelId(fallback.chanId, fallback.bandId);
+    const bandIds = hasOwn2(orb, "bandIds") || hasOwn2(orb, "bandNames") ? sanitizeOrbBandIds(orb.bandIds, orb.bandNames) : sanitizeOrbBandIds(fallback.bandIds, fallback.bandNames);
     return { id, chanId, bandIds, chirality, startAngleRad };
   }
 
@@ -4496,24 +4511,130 @@ input[type=color] {
     return { init, loadFile, reset, draw };
   })();
 
+  // src/js/render/orb-settings.js
+  var DEFAULT_LEGACY_ORB = Object.freeze({
+    id: "ORB0",
+    chanId: "C",
+    bandIds: [],
+    chirality: -1,
+    startAngleRad: 0
+  });
+  var SCENE_ORB_RUNTIME_FIELDS = Object.freeze(["hueOffsetDeg", "centerX", "centerY"]);
+  function hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+  function readSceneOrbDefaults() {
+    return CONFIG.visualizers && CONFIG.visualizers.orbs && CONFIG.visualizers.orbs.defaults || {
+      hueOffsetDeg: 0,
+      centerX: 0,
+      centerY: 0
+    };
+  }
+  function readSceneOrbLimits() {
+    return CONFIG.visualizers && CONFIG.visualizers.orbs && CONFIG.visualizers.orbs.limits || {};
+  }
+  function sanitizeSceneOrbScalar(fieldName, rawValue, fallbackValue) {
+    const defaults = readSceneOrbDefaults();
+    const limits = readSceneOrbLimits();
+    const fieldLimits = limits[fieldName] || {};
+    const fallback = Number.isFinite(fallbackValue) ? fallbackValue : Number.isFinite(defaults[fieldName]) ? defaults[fieldName] : 0;
+    const numeric = Number.isFinite(rawValue) ? rawValue : fallback;
+    const min = Number.isFinite(fieldLimits.min) ? fieldLimits.min : -Infinity;
+    const max = Number.isFinite(fieldLimits.max) ? fieldLimits.max : Infinity;
+    return clamp(numeric, min, max);
+  }
+  function readDefaultSceneOrbFallback(index = 0) {
+    const defaults = Array.isArray(CONFIG.defaults.orbs) ? CONFIG.defaults.orbs : [];
+    const legacyFallback = defaults[index % Math.max(1, defaults.length)] || DEFAULT_LEGACY_ORB;
+    return {
+      id: typeof legacyFallback.id === "string" ? legacyFallback.id : DEFAULT_LEGACY_ORB.id,
+      chanId: normalizeOrbChannelId(legacyFallback.chanId, legacyFallback.bandId),
+      bandIds: sanitizeOrbBandIds(legacyFallback.bandIds, legacyFallback.bandNames),
+      chirality: Number.isFinite(legacyFallback.chirality) && legacyFallback.chirality >= 0 ? 1 : -1,
+      startAngleRad: Number.isFinite(legacyFallback.startAngleRad) ? legacyFallback.startAngleRad : DEFAULT_LEGACY_ORB.startAngleRad,
+      ...readSceneOrbDefaults()
+    };
+  }
+  function normalizeSceneOrbDef(incomingOrb, fallbackOrb = null) {
+    const fallback = fallbackOrb && typeof fallbackOrb === "object" ? fallbackOrb : readDefaultSceneOrbFallback(0);
+    const orb = incomingOrb && typeof incomingOrb === "object" ? incomingOrb : {};
+    const id = typeof orb.id === "string" && orb.id.trim() ? orb.id : typeof fallback.id === "string" ? fallback.id : DEFAULT_LEGACY_ORB.id;
+    const chiralityRaw = Number.isFinite(orb.chirality) ? orb.chirality : fallback.chirality;
+    const chirality = chiralityRaw >= 0 ? 1 : -1;
+    const startAngleRad = Number.isFinite(orb.startAngleRad) ? orb.startAngleRad : Number.isFinite(fallback.startAngleRad) ? fallback.startAngleRad : DEFAULT_LEGACY_ORB.startAngleRad;
+    const chanId = hasOwn(orb, "chanId") || hasOwn(orb, "bandId") ? normalizeOrbChannelId(orb.chanId, orb.bandId) : normalizeOrbChannelId(fallback.chanId, fallback.bandId);
+    const bandIds = hasOwn(orb, "bandIds") || hasOwn(orb, "bandNames") ? sanitizeOrbBandIds(orb.bandIds, orb.bandNames) : sanitizeOrbBandIds(fallback.bandIds, fallback.bandNames);
+    return {
+      id,
+      chanId,
+      bandIds,
+      chirality,
+      startAngleRad,
+      hueOffsetDeg: sanitizeSceneOrbScalar("hueOffsetDeg", orb.hueOffsetDeg, fallback.hueOffsetDeg),
+      centerX: sanitizeSceneOrbScalar("centerX", orb.centerX, fallback.centerX),
+      centerY: sanitizeSceneOrbScalar("centerY", orb.centerY, fallback.centerY)
+    };
+  }
+  function normalizeSceneOrbSettings(rawSettings) {
+    const input = Array.isArray(rawSettings) ? rawSettings : CONFIG.defaults.orbs;
+    return input.map((orb, index) => normalizeSceneOrbDef(orb, readDefaultSceneOrbFallback(index)));
+  }
+  function toLegacyOrbDef(orb, fallbackOrb = null) {
+    const normalized = normalizeSceneOrbDef(orb, fallbackOrb || void 0);
+    return {
+      id: normalized.id,
+      chanId: normalized.chanId,
+      bandIds: normalized.bandIds.slice(),
+      chirality: normalized.chirality,
+      startAngleRad: normalized.startAngleRad
+    };
+  }
+  function readSceneOrbRuntimePatch(orb) {
+    const patch = {};
+    if (!orb || typeof orb !== "object") return patch;
+    for (const fieldName of SCENE_ORB_RUNTIME_FIELDS) {
+      if (!hasOwn(orb, fieldName)) continue;
+      patch[fieldName] = orb[fieldName];
+    }
+    return patch;
+  }
+  function mergeSceneOrbSettingsWithRuntimeFields(rawSettings, runtimeSettings) {
+    const next = normalizeSceneOrbSettings(rawSettings);
+    const existing = Array.isArray(runtimeSettings) ? runtimeSettings : [];
+    return next.map((orb, index) => normalizeSceneOrbDef({
+      ...orb,
+      ...readSceneOrbRuntimePatch(existing[index])
+    }, orb));
+  }
+
   // src/js/render/color-policy.js
   var ColorPolicy = /* @__PURE__ */ (() => {
-    function bandRgb01(index) {
+    function resolveBandIndex(index, fallbackIndex = 0) {
+      const safeCount = Math.max(1, runtime.settings.bands.count);
+      const candidate = Number.isInteger(index) ? index : fallbackIndex;
+      return clamp(Number.isInteger(candidate) ? candidate : 0, 0, safeCount - 1);
+    }
+    function bandRgb01(index, hueOffsetDeg = 0) {
       const s = runtime.settings;
       const n = s.bands.count;
       const hueStep = 360 / n;
-      const hue = s.bands.rainbow.hueOffsetDeg + index * hueStep;
+      const safeIndex = resolveBandIndex(index, state.bands.dominantIndex);
+      const hue = s.bands.rainbow.hueOffsetDeg + hueOffsetDeg + safeIndex * hueStep;
       return hsvToRgb01(hue, s.bands.rainbow.saturation, s.bands.rainbow.value);
     }
-    function pickParticleColorRgb01(angleRad) {
+    function pickParticleColorRgb01(angleRad, { bandIndex = null, hueOffsetDeg = 0 } = {}) {
       const s = runtime.settings;
       if (s.bands.particleColorSource === "fixed") return hexToRgb01(s.visuals.particleColor);
-      if (s.bands.particleColorSource === "angle") return bandRgb01(BandBank.bandIndexFromAngleRad(angleRad));
-      return bandRgb01(state.bands.dominantIndex);
+      if (s.bands.particleColorSource === "angle") {
+        return bandRgb01(BandBank.bandIndexFromAngleRad(angleRad), hueOffsetDeg);
+      }
+      return bandRgb01(resolveBandIndex(bandIndex, state.bands.dominantIndex), hueOffsetDeg);
     }
-    function pickLineColorRgb01(particles) {
+    function pickLineColorRgb01(particles, { bandIndex = null, hueOffsetDeg = 0 } = {}) {
       const s = runtime.settings;
-      if (s.trace.lineColorMode === "dominantBand") return bandRgb01(state.bands.dominantIndex);
+      if (s.trace.lineColorMode === "dominantBand") {
+        return bandRgb01(resolveBandIndex(bandIndex, state.bands.dominantIndex), hueOffsetDeg);
+      }
       if (s.trace.lineColorMode === "lastParticle") {
         const last = particles && particles.length ? particles[particles.length - 1] : null;
         if (last && last.rgbStart) return last.rgbStart;
@@ -4722,12 +4843,16 @@ input[type=color] {
       this.bandIds = sanitizeOrbBandIds(def.bandIds, def.bandNames);
       this.chirality = def.chirality;
       this.startAngleRad = def.startAngleRad;
+      this.hueOffsetDeg = Number.isFinite(def.hueOffsetDeg) ? def.hueOffsetDeg : 0;
+      this.centerX = Number.isFinite(def.centerX) ? def.centerX : 0;
+      this.centerY = Number.isFinite(def.centerY) ? def.centerY : 0;
       this.angleRad = this.startAngleRad;
       this.trail = new TrailSystem();
       this.xSim = 0;
       this.ySim = 0;
       this.baseRadiusPx = 0;
       this.radialDispPx = 0;
+      this.lastColorBandIndex = null;
     }
     resetPhase() {
       this.angleRad = this.startAngleRad;
@@ -4735,8 +4860,11 @@ input[type=color] {
     resetTrail() {
       this.trail.reset();
     }
-    step(dtSec, nowSec, band, energyOverride01) {
+    step(dtSec, nowSec, band, options = {}) {
       const s = runtime.settings;
+      const energyOverride01 = Number.isFinite(options.energyOverride01) ? options.energyOverride01 : null;
+      const colorBandIndex = Number.isInteger(options.colorBandIndex) ? options.colorBandIndex : null;
+      const boundsPx = options.boundsPx && typeof options.boundsPx === "object" ? options.boundsPx : { x: 0, y: 0, width: state.widthPx, height: state.heightPx };
       this.angleRad += this.chirality * s.motion.angularSpeedRadPerSec * dtSec;
       this.angleRad = (this.angleRad % TAU + TAU) % TAU;
       const minDim = Math.min(state.widthPx, state.heightPx);
@@ -4756,9 +4884,17 @@ input[type=color] {
         this.radialDispPx = 0;
       }
       const radius = this.baseRadiusPx + this.radialDispPx;
-      this.xSim = radius * Math.cos(this.angleRad);
-      this.ySim = radius * Math.sin(this.angleRad);
-      const rgbStart = ColorPolicy.pickParticleColorRgb01(this.angleRad);
+      const originScreenX = boundsPx.x + boundsPx.width * 0.5 + this.centerX * boundsPx.width * 0.5;
+      const originScreenY = boundsPx.y + boundsPx.height * 0.5 - this.centerY * boundsPx.height * 0.5;
+      const originXSim = originScreenX - state.widthPx * 0.5;
+      const originYSim = state.heightPx * 0.5 - originScreenY;
+      this.xSim = originXSim + radius * Math.cos(this.angleRad);
+      this.ySim = originYSim + radius * Math.sin(this.angleRad);
+      this.lastColorBandIndex = colorBandIndex;
+      const rgbStart = ColorPolicy.pickParticleColorRgb01(this.angleRad, {
+        bandIndex: this.lastColorBandIndex,
+        hueOffsetDeg: this.hueOffsetDeg
+      });
       this.trail.updateAndEmit(dtSec, nowSec, this.xSim, this.ySim, rgbStart);
     }
   };
@@ -4767,7 +4903,7 @@ input[type=color] {
   var activeOrbVisualizers = [];
   function createOrbsFromSettings(settings = runtime.settings) {
     const defs = Array.isArray(settings && settings.orbs) ? settings.orbs : [];
-    return defs.map((def) => new Orb(def));
+    return normalizeSceneOrbSettings(defs).map((def) => new Orb(def));
   }
   function readVisualizerOrbs(instance) {
     if (!instance || typeof instance.getOrbs !== "function") return [];
@@ -4833,6 +4969,25 @@ input[type=color] {
     if (Number.isFinite(band && band.energy)) return clamp(band.energy, 0, 1);
     return 0;
   }
+  function readDominantBandIndex(frame) {
+    if (Number.isInteger(frame && frame.dominantBandIndex) && frame.dominantBandIndex >= 0) {
+      return frame.dominantBandIndex;
+    }
+    if (Number.isInteger(frame && frame.dominantBand && frame.dominantBand.index) && frame.dominantBand.index >= 0) {
+      return frame.dominantBand.index;
+    }
+    const bands = Array.isArray(frame && frame.bands) ? frame.bands : [];
+    let strongestBandIndex = null;
+    let strongestEnergy = -1;
+    for (const band of bands) {
+      const bandIndex = Number.isInteger(band && band.index) ? band.index : null;
+      const energy = Number.isFinite(band && band.energy) ? clamp(band.energy, 0, 1) : 0;
+      if (!Number.isInteger(bandIndex) || energy <= strongestEnergy) continue;
+      strongestBandIndex = bandIndex;
+      strongestEnergy = energy;
+    }
+    return strongestBandIndex;
+  }
   function getBandForOrb(orb, frame) {
     const channel = normalizeOrbChannelId(orb && orb.chanId, orb && orb.bandId);
     const sourceChannel = readFrameChannel(frame, channel);
@@ -4843,11 +4998,29 @@ input[type=color] {
       energy01: readChannelEnergy01(sourceChannel)
     } : null;
     const bandIds = Array.isArray(orb && orb.bandIds) ? orb.bandIds : [];
-    if (!bandIds.length) return { band: sourceBand, energyOverride01: null };
+    if (!bandIds.length) {
+      return {
+        band: sourceBand,
+        energyOverride01: null,
+        colorBandIndex: readDominantBandIndex(frame)
+      };
+    }
     let sum = 0;
-    for (const idx of bandIds) sum += readBandEnergy01(frame, idx);
+    let strongestBandIndex = bandIds[0];
+    let strongestEnergy = -1;
+    for (const idx of bandIds) {
+      const energy = readBandEnergy01(frame, idx);
+      sum += energy;
+      if (energy <= strongestEnergy) continue;
+      strongestEnergy = energy;
+      strongestBandIndex = idx;
+    }
     const avg = sum / bandIds.length;
-    return { band: sourceBand, energyOverride01: clamp(avg, 0, 1) };
+    return {
+      band: sourceBand,
+      energyOverride01: clamp(avg, 0, 1),
+      colorBandIndex: strongestBandIndex
+    };
   }
   function resetOrbTrails() {
     for (const orb of readActiveOrbs()) orb.resetTrail();
@@ -4891,19 +5064,26 @@ input[type=color] {
       chanId: typeof (orb && orb.chanId) === "string" ? orb.chanId : "",
       bandIds: Array.isArray(orb && orb.bandIds) ? orb.bandIds.slice() : [],
       chirality: Number.isFinite(orb && orb.chirality) ? orb.chirality : null,
-      startAngleRad: Number.isFinite(orb && orb.startAngleRad) ? orb.startAngleRad : null
+      startAngleRad: Number.isFinite(orb && orb.startAngleRad) ? orb.startAngleRad : null,
+      hueOffsetDeg: Number.isFinite(orb && orb.hueOffsetDeg) ? orb.hueOffsetDeg : null,
+      centerX: Number.isFinite(orb && orb.centerX) ? orb.centerX : null,
+      centerY: Number.isFinite(orb && orb.centerY) ? orb.centerY : null
     })));
   }
-  function drawTrailLines(ctx, particles) {
+  function drawTrailLines(ctx, orb) {
     const s = runtime.settings;
     if (!s.trace.lines) return;
+    const particles = orb && orb.trail ? orb.trail.particles : null;
     const segments = s.trace.numLines;
     const neededPts = segments + 1;
     if (!particles || particles.length < 2) return;
     const startIdx = Math.max(0, particles.length - neededPts);
     const slice = particles.slice(startIdx);
     if (slice.length < 2) return;
-    const rgb = ColorPolicy.pickLineColorRgb01(particles);
+    const rgb = ColorPolicy.pickLineColorRgb01(particles, {
+      bandIndex: orb ? orb.lastColorBandIndex : null,
+      hueOffsetDeg: orb ? orb.hueOffsetDeg : 0
+    });
     const stroke = rgb01ToCss(rgb, s.trace.lineAlpha);
     ctx.save();
     ctx.globalAlpha = 1;
@@ -5004,8 +5184,11 @@ input[type=color] {
       for (const orb of this.orbs) {
         const selection = getBandForOrb(orb, this.frame);
         const orbBand = selection ? selection.band : null;
-        const energyOverride01 = selection ? selection.energyOverride01 : null;
-        orb.step(this.dtSec, this.nowSec, orbBand, energyOverride01);
+        orb.step(this.dtSec, this.nowSec, orbBand, {
+          energyOverride01: selection ? selection.energyOverride01 : null,
+          colorBandIndex: selection ? selection.colorBandIndex : null,
+          boundsPx: this.boundsPx
+        });
       }
     }
     render(target, _viewTransform) {
@@ -5021,7 +5204,7 @@ input[type=color] {
       try {
         for (const orb of this.orbs) {
           const particles = orb.trail.particles;
-          drawTrailLines(ctx, particles);
+          drawTrailLines(ctx, orb);
           drawParticles(ctx, particles, this.nowSec);
         }
       } finally {
@@ -5062,7 +5245,28 @@ input[type=color] {
           item: { type: "number", min: 0, max: ORB_BAND_INDEX_LIMIT, step: 1 }
         },
         chirality: { type: "number", default: -1, enum: [-1, 1] },
-        startAngleRad: { type: "number", default: 0 }
+        startAngleRad: { type: "number", default: 0 },
+        hueOffsetDeg: {
+          type: "number",
+          default: CONFIG.visualizers.orbs.defaults.hueOffsetDeg,
+          min: CONFIG.visualizers.orbs.limits.hueOffsetDeg.min,
+          max: CONFIG.visualizers.orbs.limits.hueOffsetDeg.max,
+          step: CONFIG.visualizers.orbs.limits.hueOffsetDeg.step
+        },
+        centerX: {
+          type: "number",
+          default: CONFIG.visualizers.orbs.defaults.centerX,
+          min: CONFIG.visualizers.orbs.limits.centerX.min,
+          max: CONFIG.visualizers.orbs.limits.centerX.max,
+          step: CONFIG.visualizers.orbs.limits.centerX.step
+        },
+        centerY: {
+          type: "number",
+          default: CONFIG.visualizers.orbs.defaults.centerY,
+          min: CONFIG.visualizers.orbs.limits.centerY.min,
+          max: CONFIG.visualizers.orbs.limits.centerY.max,
+          step: CONFIG.visualizers.orbs.limits.centerY.step
+        }
       }
     }
   });
@@ -5137,7 +5341,7 @@ input[type=color] {
     zIndex: 0,
     bounds: deepClone(FULL_SURFACE_BOUNDS),
     anchor: deepClone(CENTER_ANCHOR),
-    settings: deepClone(CONFIG.defaults.orbs)
+    settings: normalizeSceneOrbSettings(CONFIG.defaults.orbs)
   });
   var BAND_OVERLAY_DEFAULT_NODE = deepFreeze({
     id: "overlay-1",
@@ -5450,17 +5654,6 @@ input[type=color] {
     if (typeof state.scene.selectedNodeId !== "string") state.scene.selectedNodeId = "";
     return state.scene;
   }
-  function readDefaultOrbFallback(index = 0) {
-    const defaults = Array.isArray(CONFIG.defaults.orbs) ? CONFIG.defaults.orbs : [];
-    const fallback = defaults[index % Math.max(1, defaults.length)] || null;
-    return fallback || {
-      id: "ORB0",
-      chanId: "C",
-      bandIds: [],
-      chirality: -1,
-      startAngleRad: 0
-    };
-  }
   function sanitizeSceneNumber(value, schema) {
     const fallback = Number.isFinite(schema && schema.default) ? schema.default : 0;
     const numeric = Number.isFinite(value) ? value : fallback;
@@ -5493,15 +5686,14 @@ input[type=color] {
     const source = rawSettings && typeof rawSettings === "object" ? rawSettings : {};
     const next = deepClone(defaultNode.settings || {});
     for (const [fieldName, fieldSchema] of Object.entries(schema.fields || {})) {
-      const hasOwn = Object.prototype.hasOwnProperty.call(source, fieldName);
-      const sourceValue = hasOwn ? source[fieldName] : next[fieldName];
+      const hasOwn2 = Object.prototype.hasOwnProperty.call(source, fieldName);
+      const sourceValue = hasOwn2 ? source[fieldName] : next[fieldName];
       next[fieldName] = sanitizeSettingValue(sourceValue, fieldSchema);
     }
     return next;
   }
   function sanitizeOrbSettings(rawSettings) {
-    const input = Array.isArray(rawSettings) ? rawSettings : deepClone(CONFIG.defaults.orbs);
-    return input.map((orb, index) => normalizeOrbDef(orb, readDefaultOrbFallback(index)));
+    return normalizeSceneOrbSettings(rawSettings);
   }
   function sanitizeSettingsForType(type, rawSettings) {
     switch (type) {
@@ -5552,6 +5744,7 @@ input[type=color] {
       const existingNode = existingById.get(id) || null;
       return {
         ...freshNode,
+        settings: freshNode.type === "orbs" && existingNode ? mergeSceneOrbSettingsWithRuntimeFields(freshNode.settings, existingNode.settings) : freshNode.settings,
         enabled: existingNode ? !!existingNode.enabled : !!freshNode.enabled
       };
     }));
@@ -5599,7 +5792,7 @@ input[type=color] {
     if (!node || typeof node !== "object") return null;
     if (node.type === "orbs") {
       node.settings = sanitizeOrbSettings(node.settings);
-      preferences.orbs = deepClone(node.settings);
+      preferences.orbs = node.settings.map((orb, index) => toLegacyOrbDef(orb, readDefaultSceneOrbFallback(index)));
     } else if (node.type === "bandOverlay") {
       node.settings = sanitizeOverlaySettings(node.settings);
       preferences.bands.overlay = deepClone(node.settings);
@@ -5650,8 +5843,8 @@ input[type=color] {
     return `ORB${maxIndex + 1}`;
   }
   function createNewOrbSetting(orbs) {
-    const fallback = readDefaultOrbFallback(Array.isArray(orbs) ? orbs.length : 0);
-    return normalizeOrbDef({
+    const fallback = readDefaultSceneOrbFallback(Array.isArray(orbs) ? orbs.length : 0);
+    return normalizeSceneOrbDef({
       id: buildNextOrbId(Array.isArray(orbs) ? orbs : [])
     }, fallback);
   }
@@ -5677,13 +5870,10 @@ input[type=color] {
       if (!Number.isInteger(orbIndex) || orbIndex < 0 || orbIndex >= next.length) return next;
       const currentOrb = next[orbIndex];
       const rawPatch = patch && typeof patch === "object" ? patch : {};
-      const nextOrb = normalizeOrbDef({
+      const nextOrb = normalizeSceneOrbDef({
         ...currentOrb,
         ...rawPatch
-      }, currentOrb || readDefaultOrbFallback(orbIndex));
-      if (Object.prototype.hasOwnProperty.call(rawPatch, "bandIds")) {
-        nextOrb.bandIds = sanitizeOrbBandIds(rawPatch.bandIds, null);
-      }
+      }, currentOrb || readDefaultSceneOrbFallback(orbIndex));
       next[orbIndex] = nextOrb;
       return next;
     }, { persist: true });
@@ -5911,7 +6101,7 @@ input[type=color] {
       activeMimeType: null,
       isStopRequested: false
     };
-    function hasOwn(obj, key) {
+    function hasOwn2(obj, key) {
       return Object.prototype.hasOwnProperty.call(obj, key);
     }
     function readConfig() {
@@ -6182,33 +6372,33 @@ input[type=color] {
     function buildStatus(ok, code, message, extra = {}) {
       const support = extra.support || readSupportDetails();
       const recording = readStateRef() || {};
-      const phase = hasOwn(extra, "phase") ? extra.phase : runtime2.lifecycle.phase;
-      const startedAtMs = hasOwn(extra, "startedAtMs") ? extra.startedAtMs : Number.isFinite(runtime2.startedAtMs) ? runtime2.startedAtMs : recording.startedAtMs;
-      const stoppedAtMs = hasOwn(extra, "stoppedAtMs") ? extra.stoppedAtMs : Number.isFinite(runtime2.stoppedAtMs) ? runtime2.stoppedAtMs : recording.stoppedAtMs;
-      const elapsedMs = hasOwn(extra, "elapsedMs") ? extra.elapsedMs : Number.isFinite(recording.elapsedMs) ? recording.elapsedMs : 0;
-      const chunkCount = hasOwn(extra, "chunkCount") ? extra.chunkCount : runtime2.chunkCount > 0 || phase === "recording" || phase === "finalizing" ? runtime2.chunkCount : recording.chunkCount || 0;
+      const phase = hasOwn2(extra, "phase") ? extra.phase : runtime2.lifecycle.phase;
+      const startedAtMs = hasOwn2(extra, "startedAtMs") ? extra.startedAtMs : Number.isFinite(runtime2.startedAtMs) ? runtime2.startedAtMs : recording.startedAtMs;
+      const stoppedAtMs = hasOwn2(extra, "stoppedAtMs") ? extra.stoppedAtMs : Number.isFinite(runtime2.stoppedAtMs) ? runtime2.stoppedAtMs : recording.stoppedAtMs;
+      const elapsedMs = hasOwn2(extra, "elapsedMs") ? extra.elapsedMs : Number.isFinite(recording.elapsedMs) ? recording.elapsedMs : 0;
+      const chunkCount = hasOwn2(extra, "chunkCount") ? extra.chunkCount : runtime2.chunkCount > 0 || phase === "recording" || phase === "finalizing" ? runtime2.chunkCount : recording.chunkCount || 0;
       return {
         ok,
         code,
         message,
         hooksEnabled: readHooksEnabled(),
-        includePlaybackAudio: hasOwn(extra, "includePlaybackAudio") ? !!extra.includePlaybackAudio : readIncludePlaybackAudio(),
-        targetFps: hasOwn(extra, "targetFps") ? normalizeTargetFps(extra.targetFps) : readCaptureFps(),
+        includePlaybackAudio: hasOwn2(extra, "includePlaybackAudio") ? !!extra.includePlaybackAudio : readIncludePlaybackAudio(),
+        targetFps: hasOwn2(extra, "targetFps") ? normalizeTargetFps(extra.targetFps) : readCaptureFps(),
         phase,
-        supportProbeStatus: hasOwn(extra, "supportProbeStatus") ? extra.supportProbeStatus : support.supportProbeStatus,
-        isSupported: hasOwn(extra, "isSupported") ? extra.isSupported : support.isSupported,
-        availableMimeTypes: hasOwn(extra, "availableMimeTypes") ? extra.availableMimeTypes.slice() : support.availableMimeTypes.slice(),
-        selectedMimeType: hasOwn(extra, "selectedMimeType") ? extra.selectedMimeType : support.selectedMimeType,
-        resolvedMimeType: hasOwn(extra, "resolvedMimeType") ? extra.resolvedMimeType : runtime2.activeMimeType || support.resolvedMimeType || recording.resolvedMimeType || null,
+        supportProbeStatus: hasOwn2(extra, "supportProbeStatus") ? extra.supportProbeStatus : support.supportProbeStatus,
+        isSupported: hasOwn2(extra, "isSupported") ? extra.isSupported : support.isSupported,
+        availableMimeTypes: hasOwn2(extra, "availableMimeTypes") ? extra.availableMimeTypes.slice() : support.availableMimeTypes.slice(),
+        selectedMimeType: hasOwn2(extra, "selectedMimeType") ? extra.selectedMimeType : support.selectedMimeType,
+        resolvedMimeType: hasOwn2(extra, "resolvedMimeType") ? extra.resolvedMimeType : runtime2.activeMimeType || support.resolvedMimeType || recording.resolvedMimeType || null,
         startedAtMs,
         stoppedAtMs,
         elapsedMs: Math.max(0, Math.round(elapsedMs)),
         chunkCount,
-        lastExportUrl: hasOwn(extra, "lastExportUrl") ? extra.lastExportUrl : recording.lastExportUrl || null,
-        lastExportFileName: hasOwn(extra, "lastExportFileName") ? extra.lastExportFileName : recording.lastExportFileName || "",
-        lastExportByteSize: hasOwn(extra, "lastExportByteSize") ? extra.lastExportByteSize : recording.lastExportByteSize || 0,
+        lastExportUrl: hasOwn2(extra, "lastExportUrl") ? extra.lastExportUrl : recording.lastExportUrl || null,
+        lastExportFileName: hasOwn2(extra, "lastExportFileName") ? extra.lastExportFileName : recording.lastExportFileName || "",
+        lastExportByteSize: hasOwn2(extra, "lastExportByteSize") ? extra.lastExportByteSize : recording.lastExportByteSize || 0,
         configuredMimeTypes: support.configuredMimeTypes.slice(),
-        requestedMimeType: hasOwn(extra, "requestedMimeType") ? extra.requestedMimeType : null
+        requestedMimeType: hasOwn2(extra, "requestedMimeType") ? extra.requestedMimeType : null
       };
     }
     function commitStatus(status, action = null) {
@@ -8545,7 +8735,7 @@ input[type=color] {
       if (!fieldsContainer) return;
       const hint = document.createElement("div");
       hint.className = "sceneInspectorHint";
-      hint.textContent = "Scene panel v1 edits current orb routing only. Per-orb color phase and center offsets stay deferred to later Build 115 work.";
+      hint.textContent = "Scene panel v1 now exposes per-orb routing, hue phase, and center offsets. These advanced orb fields stay scene-only until later preset rollout work.";
       fieldsContainer.appendChild(hint);
       const orbActions = document.createElement("div");
       orbActions.className = "sceneInspectorActionRow";
@@ -8656,6 +8846,58 @@ input[type=color] {
           labelText: "Start Angle",
           valueText: `${formatSceneFieldValue(orb.startAngleRad)} rad`,
           input: angleInput
+        });
+        const hueInput = document.createElement("input");
+        hueInput.id = sceneControlId(node.id, "orb", orbIndex, "hueOffsetDeg");
+        hueInput.type = "number";
+        if (Number.isFinite(itemFields.hueOffsetDeg && itemFields.hueOffsetDeg.min)) {
+          hueInput.min = String(itemFields.hueOffsetDeg.min);
+        }
+        if (Number.isFinite(itemFields.hueOffsetDeg && itemFields.hueOffsetDeg.max)) {
+          hueInput.max = String(itemFields.hueOffsetDeg.max);
+        }
+        hueInput.step = String(itemFields.hueOffsetDeg && itemFields.hueOffsetDeg.step ? itemFields.hueOffsetDeg.step : 1);
+        hueInput.value = String(orb.hueOffsetDeg);
+        hueInput.addEventListener("change", () => {
+          commitSceneOrbPatch(node.id, orbIndex, { hueOffsetDeg: Number(hueInput.value) }, "scene orb hue offset");
+        });
+        appendSceneOrbRow(card, {
+          controlId: hueInput.id,
+          labelText: "Hue Offset",
+          valueText: `${formatSceneFieldValue(orb.hueOffsetDeg)}\xB0`,
+          input: hueInput
+        });
+        const centerXInput = document.createElement("input");
+        centerXInput.id = sceneControlId(node.id, "orb", orbIndex, "centerX");
+        centerXInput.type = "number";
+        if (Number.isFinite(itemFields.centerX && itemFields.centerX.min)) centerXInput.min = String(itemFields.centerX.min);
+        if (Number.isFinite(itemFields.centerX && itemFields.centerX.max)) centerXInput.max = String(itemFields.centerX.max);
+        centerXInput.step = String(itemFields.centerX && itemFields.centerX.step ? itemFields.centerX.step : 0.01);
+        centerXInput.value = String(orb.centerX);
+        centerXInput.addEventListener("change", () => {
+          commitSceneOrbPatch(node.id, orbIndex, { centerX: Number(centerXInput.value) }, "scene orb center x");
+        });
+        appendSceneOrbRow(card, {
+          controlId: centerXInput.id,
+          labelText: "Center X",
+          valueText: formatSceneFieldValue(orb.centerX),
+          input: centerXInput
+        });
+        const centerYInput = document.createElement("input");
+        centerYInput.id = sceneControlId(node.id, "orb", orbIndex, "centerY");
+        centerYInput.type = "number";
+        if (Number.isFinite(itemFields.centerY && itemFields.centerY.min)) centerYInput.min = String(itemFields.centerY.min);
+        if (Number.isFinite(itemFields.centerY && itemFields.centerY.max)) centerYInput.max = String(itemFields.centerY.max);
+        centerYInput.step = String(itemFields.centerY && itemFields.centerY.step ? itemFields.centerY.step : 0.01);
+        centerYInput.value = String(orb.centerY);
+        centerYInput.addEventListener("change", () => {
+          commitSceneOrbPatch(node.id, orbIndex, { centerY: Number(centerYInput.value) }, "scene orb center y");
+        });
+        appendSceneOrbRow(card, {
+          controlId: centerYInput.id,
+          labelText: "Center Y",
+          valueText: formatSceneFieldValue(orb.centerY),
+          input: centerYInput
         });
         orbList.appendChild(card);
       });
