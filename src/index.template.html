@@ -137,7 +137,7 @@
     <div class="panelHeader">
       <div class="panelHeaderText">
         <div class="sectionTitle">Scene</div>
-        <div class="muted panelCopy" id="sceneStatus">Scene panel: enable, order, and configure active visualizers without leaving the live render.</div>
+        <div class="muted panelCopy" id="sceneStatus">Scene panel: enable, order, and inspect active visualizers plus the runtime-only camera hook without leaving the live render.</div>
       </div>
       <div class="panelActionRow">
         <button id="btnResetVisuals" title="Reset orb phases and clear trails (keyboard: R)">Reset Visuals</button>
@@ -161,6 +161,26 @@
           <div id="sceneSummarySelected" class="sceneSummaryStatValue">None</div>
         </div>
       </div>
+    </div>
+
+    <div class="sectionTitle">Camera Hook</div>
+    <div id="sceneCameraCard" class="sceneSummaryCard">
+      <div class="sceneSummaryEyebrow">Build 115 runtime seam</div>
+      <div id="sceneCameraPrimary" class="sceneSummaryPrimary">Identity ViewTransform active</div>
+
+      <div class="sceneSummaryStats">
+        <div class="sceneSummaryStat">
+          <div class="sceneSummaryStatLabel">Mode</div>
+          <div id="sceneCameraMode" class="sceneSummaryStatValue">Identity</div>
+        </div>
+
+        <div class="sceneSummaryStat">
+          <div class="sceneSummaryStatLabel">Scope</div>
+          <div id="sceneCameraScope" class="sceneSummaryStatValue">Runtime only</div>
+        </div>
+      </div>
+
+      <div id="sceneCameraNote" class="sceneInspectorHint sceneCameraNote">Camera controls are deferred to Build 116. Build 115 only exposes the ViewTransform seam through the runtime compositor path.</div>
     </div>
 
     <div id="sceneNodeEmpty" class="muted sceneEmptyCopy">No visualizers are active in the runtime scene.</div>

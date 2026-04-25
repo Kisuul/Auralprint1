@@ -60,6 +60,11 @@ function primeDomCache() {
     ui.sceneSummaryPrimary = document.getElementById("sceneSummaryPrimary");
     ui.sceneSummaryActive = document.getElementById("sceneSummaryActive");
     ui.sceneSummarySelected = document.getElementById("sceneSummarySelected");
+    ui.sceneCameraCard = document.getElementById("sceneCameraCard");
+    ui.sceneCameraPrimary = document.getElementById("sceneCameraPrimary");
+    ui.sceneCameraMode = document.getElementById("sceneCameraMode");
+    ui.sceneCameraScope = document.getElementById("sceneCameraScope");
+    ui.sceneCameraNote = document.getElementById("sceneCameraNote");
     ui.sceneNodeEmpty = document.getElementById("sceneNodeEmpty");
     ui.sceneNodeList = document.getElementById("sceneNodeList");
     ui.sceneInspectorEmpty = document.getElementById("sceneInspectorEmpty");

@@ -115,7 +115,25 @@ const BAND_OVERLAY_SETTINGS_SCHEMA = deepFreeze({
   },
 });
 
-const ORBS_DEFAULT_NODE = deepFreeze({
+function readConfiguredDefaultNode(type, fallbackNode) {
+  const configuredNodes = CONFIG && CONFIG.defaults && CONFIG.defaults.scene && Array.isArray(CONFIG.defaults.scene.nodes)
+    ? CONFIG.defaults.scene.nodes
+    : [];
+  const configuredNode = configuredNodes.find((node) => node && node.type === type) || null;
+  return deepFreeze(deepClone(configuredNode || fallbackNode));
+}
+
+const BAND_OVERLAY_FALLBACK_NODE = deepFreeze({
+  id: "overlay-1",
+  type: "bandOverlay",
+  enabled: true,
+  zIndex: 1,
+  bounds: deepClone(FULL_SURFACE_BOUNDS),
+  anchor: deepClone(CENTER_ANCHOR),
+  settings: deepClone(CONFIG.defaults.bands.overlay),
+});
+
+const ORBS_DEFAULT_NODE = readConfiguredDefaultNode("orbs", {
   id: "orbs-1",
   type: "orbs",
   enabled: true,
@@ -125,15 +143,7 @@ const ORBS_DEFAULT_NODE = deepFreeze({
   settings: normalizeSceneOrbSettings(CONFIG.defaults.orbs),
 });
 
-const BAND_OVERLAY_DEFAULT_NODE = deepFreeze({
-  id: "overlay-1",
-  type: "bandOverlay",
-  enabled: true,
-  zIndex: 1,
-  bounds: deepClone(FULL_SURFACE_BOUNDS),
-  anchor: deepClone(CENTER_ANCHOR),
-  settings: deepClone(CONFIG.defaults.bands.overlay),
-});
+const BAND_OVERLAY_DEFAULT_NODE = readConfiguredDefaultNode("bandOverlay", BAND_OVERLAY_FALLBACK_NODE);
 
 function cloneMaybe(value) {
   return value == null ? null : deepClone(value);

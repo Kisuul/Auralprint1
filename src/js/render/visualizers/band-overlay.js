@@ -142,7 +142,10 @@ class BandOverlayVisualizer {
     this.dtSec = Number.isFinite(dtSec) ? dtSec : 0;
   }
 
-  render(target, _viewTransform) {
+  render(target, viewTransform) {
+    // Build 115 keeps ViewTransform as a runtime seam only. Build 116 applies
+    // camera math here without changing the overlay's current identity output.
+    void viewTransform;
     const overlay = readOverlaySettingsFromNode(this.node);
     const ctx = (target && target.ctx) || (this.context && this.context.ctx) || state.ctx;
     const targetMetrics = {

@@ -1,6 +1,5 @@
 import { createVisualizerRegistry } from "./visualizer.js";
-
-const IDENTITY_VIEW_TRANSFORM = Object.freeze({ kind: "identity" });
+import { IDENTITY_VIEW_TRANSFORM, normalizeViewTransform } from "./view-transform.js";
 
 function defaultWarningSink({ message, type = "", nodeId = "" }) {
   if (typeof console !== "object" || typeof console.warn !== "function" || !message) return;
@@ -187,9 +186,10 @@ function createCompositor({ registry = createVisualizerRegistry(), onWarning = n
     }
   }
 
-  function render(target) {
+  function render(target, viewTransform = IDENTITY_VIEW_TRANSFORM) {
+    const activeViewTransform = normalizeViewTransform(viewTransform);
     for (const entry of activeEntries) {
-      if (typeof entry.instance.render === "function") entry.instance.render(target, IDENTITY_VIEW_TRANSFORM);
+      if (typeof entry.instance.render === "function") entry.instance.render(target, activeViewTransform);
     }
   }
 
@@ -202,4 +202,4 @@ function createCompositor({ registry = createVisualizerRegistry(), onWarning = n
   return { syncScene, update, render, dispose };
 }
 
-export { IDENTITY_VIEW_TRANSFORM, createCompositor };
+export { createCompositor };

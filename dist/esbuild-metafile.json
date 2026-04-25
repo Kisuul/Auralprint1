@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T00:08:30.121Z",
+  "generatedAt": "2026-04-25T08:55:03.493Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -8,12 +8,12 @@
         "format": "esm"
       },
       "src/js/core/constants.js": {
-        "bytes": 1136,
+        "bytes": 1176,
         "imports": [],
         "format": "esm"
       },
       "src/js/core/config.js": {
-        "bytes": 14428,
+        "bytes": 15804,
         "imports": [
           {
             "path": "src/js/core/constants.js",
@@ -49,8 +49,13 @@
         "imports": [],
         "format": "esm"
       },
+      "src/js/render/view-transform.js": {
+        "bytes": 2949,
+        "imports": [],
+        "format": "esm"
+      },
       "src/js/core/state.js": {
-        "bytes": 3195,
+        "bytes": 3310,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -61,6 +66,11 @@
             "path": "src/js/ui/panel-state.js",
             "kind": "import-statement",
             "original": "../ui/panel-state.js"
+          },
+          {
+            "path": "src/js/render/view-transform.js",
+            "kind": "import-statement",
+            "original": "../render/view-transform.js"
           }
         ],
         "format": "esm"
@@ -76,8 +86,50 @@
         ],
         "format": "esm"
       },
+      "src/js/render/orb-settings.js": {
+        "bytes": 5000,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/preferences.js",
+            "kind": "import-statement",
+            "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "src/js/render/scene-persistence.js": {
+        "bytes": 10234,
+        "imports": [
+          {
+            "path": "src/js/core/config.js",
+            "kind": "import-statement",
+            "original": "../core/config.js"
+          },
+          {
+            "path": "src/js/core/utils.js",
+            "kind": "import-statement",
+            "original": "../core/utils.js"
+          },
+          {
+            "path": "src/js/render/orb-settings.js",
+            "kind": "import-statement",
+            "original": "./orb-settings.js"
+          }
+        ],
+        "format": "esm"
+      },
       "src/js/presets/url-preset.js": {
-        "bytes": 15134,
+        "bytes": 13467,
         "imports": [
           {
             "path": "src/js/core/constants.js",
@@ -98,12 +150,17 @@
             "path": "src/js/core/preferences.js",
             "kind": "import-statement",
             "original": "../core/preferences.js"
+          },
+          {
+            "path": "src/js/render/scene-persistence.js",
+            "kind": "import-statement",
+            "original": "../render/scene-persistence.js"
           }
         ],
         "format": "esm"
       },
       "src/js/audio/band-bank.js": {
-        "bytes": 6335,
+        "bytes": 7253,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -150,7 +207,7 @@
         "format": "esm"
       },
       "src/js/audio/audio-engine.js": {
-        "bytes": 20068,
+        "bytes": 20279,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -227,27 +284,6 @@
         ],
         "format": "esm"
       },
-      "src/js/render/orb-settings.js": {
-        "bytes": 5000,
-        "imports": [
-          {
-            "path": "src/js/core/config.js",
-            "kind": "import-statement",
-            "original": "../core/config.js"
-          },
-          {
-            "path": "src/js/core/preferences.js",
-            "kind": "import-statement",
-            "original": "../core/preferences.js"
-          },
-          {
-            "path": "src/js/core/utils.js",
-            "kind": "import-statement",
-            "original": "../core/utils.js"
-          }
-        ],
-        "format": "esm"
-      },
       "src/js/render/color-policy.js": {
         "bytes": 2239,
         "imports": [
@@ -275,7 +311,7 @@
         "format": "esm"
       },
       "src/js/render/visualizers/band-overlay.js": {
-        "bytes": 5765,
+        "bytes": 5947,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -358,7 +394,7 @@
         "format": "esm"
       },
       "src/js/render/orb-runtime.js": {
-        "bytes": 6497,
+        "bytes": 7012,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -389,7 +425,7 @@
         "format": "esm"
       },
       "src/js/render/visualizers/orb-visualizer.js": {
-        "bytes": 6535,
+        "bytes": 6717,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -430,7 +466,7 @@
         "format": "esm"
       },
       "src/js/render/visualizer.js": {
-        "bytes": 9708,
+        "bytes": 10221,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -461,24 +497,24 @@
         "format": "esm"
       },
       "src/js/render/compositor.js": {
-        "bytes": 6638,
+        "bytes": 6738,
         "imports": [
           {
             "path": "src/js/render/visualizer.js",
             "kind": "import-statement",
             "original": "./visualizer.js"
+          },
+          {
+            "path": "src/js/render/view-transform.js",
+            "kind": "import-statement",
+            "original": "./view-transform.js"
           }
         ],
         "format": "esm"
       },
       "src/js/render/scene-runtime.js": {
-        "bytes": 11300,
+        "bytes": 9437,
         "imports": [
-          {
-            "path": "src/js/core/config.js",
-            "kind": "import-statement",
-            "original": "../core/config.js"
-          },
           {
             "path": "src/js/core/preferences.js",
             "kind": "import-statement",
@@ -500,15 +536,25 @@
             "original": "./orb-settings.js"
           },
           {
+            "path": "src/js/render/scene-persistence.js",
+            "kind": "import-statement",
+            "original": "./scene-persistence.js"
+          },
+          {
             "path": "src/js/render/visualizer.js",
             "kind": "import-statement",
             "original": "./visualizer.js"
+          },
+          {
+            "path": "src/js/render/view-transform.js",
+            "kind": "import-statement",
+            "original": "./view-transform.js"
           }
         ],
         "format": "esm"
       },
       "src/js/render/renderer.js": {
-        "bytes": 8534,
+        "bytes": 9630,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -524,6 +570,11 @@
             "path": "src/js/core/state.js",
             "kind": "import-statement",
             "original": "../core/state.js"
+          },
+          {
+            "path": "src/js/audio/band-bank.js",
+            "kind": "import-statement",
+            "original": "../audio/band-bank.js"
           },
           {
             "path": "src/js/render/compositor.js",
@@ -565,7 +616,7 @@
         "format": "esm"
       },
       "src/js/ui/dom-cache.js": {
-        "bytes": 15093,
+        "bytes": 15446,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -586,7 +637,7 @@
         "format": "esm"
       },
       "src/js/ui/ui.js": {
-        "bytes": 138584,
+        "bytes": 140815,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -657,6 +708,11 @@
             "path": "src/js/render/scene-runtime.js",
             "kind": "import-statement",
             "original": "../render/scene-runtime.js"
+          },
+          {
+            "path": "src/js/render/view-transform.js",
+            "kind": "import-statement",
+            "original": "../render/view-transform.js"
           },
           {
             "path": "src/js/recording/recorder-engine.js",
@@ -778,34 +834,43 @@
             "bytesInOutput": 2072
           },
           "src/js/core/constants.js": {
-            "bytesInOutput": 260
+            "bytesInOutput": 288
           },
           "src/js/core/config.js": {
-            "bytesInOutput": 15083
+            "bytesInOutput": 16566
           },
           "src/js/core/preferences.js": {
-            "bytesInOutput": 2877
+            "bytesInOutput": 1772
           },
           "src/js/ui/panel-state.js": {
             "bytesInOutput": 6483
           },
+          "src/js/render/view-transform.js": {
+            "bytesInOutput": 2846
+          },
           "src/js/core/state.js": {
-            "bytesInOutput": 2894
+            "bytesInOutput": 2940
           },
           "src/js/core/spaces.js": {
             "bytesInOutput": 791
           },
+          "src/js/render/orb-settings.js": {
+            "bytesInOutput": 4084
+          },
+          "src/js/render/scene-persistence.js": {
+            "bytesInOutput": 10009
+          },
           "src/js/presets/url-preset.js": {
-            "bytesInOutput": 13841
+            "bytesInOutput": 12886
           },
           "src/js/audio/band-bank.js": {
-            "bytesInOutput": 5821
+            "bytesInOutput": 6817
           },
           "src/js/audio/band-bank-controller.js": {
             "bytesInOutput": 1825
           },
           "src/js/audio/audio-engine.js": {
-            "bytesInOutput": 18992
+            "bytesInOutput": 19230
           },
           "src/js/audio/input-source-manager.js": {
             "bytesInOutput": 24391
@@ -813,14 +878,11 @@
           "src/js/audio/scrubber.js": {
             "bytesInOutput": 9241
           },
-          "src/js/render/orb-settings.js": {
-            "bytesInOutput": 4731
-          },
           "src/js/render/color-policy.js": {
             "bytesInOutput": 1871
           },
           "src/js/render/visualizers/band-overlay.js": {
-            "bytesInOutput": 5711
+            "bytesInOutput": 5736
           },
           "src/js/render/trail-system.js": {
             "bytesInOutput": 1478
@@ -829,22 +891,22 @@
             "bytesInOutput": 3070
           },
           "src/js/render/orb-runtime.js": {
-            "bytesInOutput": 6110
+            "bytesInOutput": 6626
           },
           "src/js/render/visualizers/orb-visualizer.js": {
-            "bytesInOutput": 6348
+            "bytesInOutput": 6373
           },
           "src/js/render/visualizer.js": {
-            "bytesInOutput": 9754
+            "bytesInOutput": 10267
           },
           "src/js/render/compositor.js": {
-            "bytesInOutput": 6695
+            "bytesInOutput": 6736
           },
           "src/js/render/scene-runtime.js": {
-            "bytesInOutput": 10836
+            "bytesInOutput": 8720
           },
           "src/js/render/renderer.js": {
-            "bytesInOutput": 8007
+            "bytesInOutput": 9087
           },
           "src/js/recording/recorder-engine.js": {
             "bytesInOutput": 49112
@@ -853,19 +915,19 @@
             "bytesInOutput": 2453
           },
           "src/js/ui/dom-cache.js": {
-            "bytesInOutput": 14145
+            "bytesInOutput": 14498
           },
           "src/js/ui/runtime-log.js": {
             "bytesInOutput": 2243
           },
           "src/js/ui/ui.js": {
-            "bytesInOutput": 131853
+            "bytesInOutput": 133870
           },
           "src/js/main.js": {
             "bytesInOutput": 2604
           }
         },
-        "bytes": 372608
+        "bytes": 388080
       }
     }
   },
@@ -888,7 +950,7 @@
         "imports": []
       },
       "src/css/sim-panel.css": {
-        "bytes": 4991,
+        "bytes": 5045,
         "imports": []
       },
       "src/css/bands-panel.css": {
@@ -958,7 +1020,7 @@
             "bytesInOutput": 440
           },
           "src/css/sim-panel.css": {
-            "bytesInOutput": 4163
+            "bytesInOutput": 4204
           },
           "src/css/bands-panel.css": {
             "bytesInOutput": 2958
@@ -970,7 +1032,7 @@
             "bytesInOutput": 2926
           }
         },
-        "bytes": 25619
+        "bytes": 25660
       }
     }
   }

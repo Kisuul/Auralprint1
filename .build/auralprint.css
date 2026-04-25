@@ -746,6 +746,9 @@ input[type=color]:focus:not(:focus-visible) {
   text-transform: none;
   letter-spacing: normal;
 }
+.sceneCameraNote {
+  margin-top: 12px;
+}
 .sceneOrbList {
   display: grid;
   gap: 10px;
