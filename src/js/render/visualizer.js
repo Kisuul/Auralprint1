@@ -256,18 +256,10 @@ function createVisualizerRegistry() {
   return { register, has, get, create, getCapabilities, getSettingsSchema, getDefaultNode };
 }
 
-function registerBuiltInVisualizers(registry, { legacyRenderFactory = null } = {}) {
+function registerBuiltInVisualizers(registry) {
   if (!registry || typeof registry.register !== "function") {
     throw new Error("A visualizer registry with a register() method is required.");
   }
-
-  registry.register("legacyRender", legacyRenderFactory, {
-    capabilities: {
-      compatibilityMode: true,
-      runtimeImplemented: typeof legacyRenderFactory === "function",
-      transitional: true,
-    },
-  });
 
   registry.register("orbs", OrbVisualizer, {
     capabilities: {

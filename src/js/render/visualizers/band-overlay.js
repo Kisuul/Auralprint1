@@ -14,8 +14,8 @@ function overlayWaveformDisplacementPx(baseRadiusPx, angleRad, waveform, overlay
 
 function simToTargetScreen(xSim, ySim, targetMetrics) {
   return {
-    x: targetMetrics.widthPx * 0.5 + xSim,
-    y: targetMetrics.heightPx * 0.5 - ySim,
+    x: targetMetrics.xPx + targetMetrics.widthPx * 0.5 + xSim,
+    y: targetMetrics.yPx + targetMetrics.heightPx * 0.5 - ySim,
   };
 }
 
@@ -29,6 +29,37 @@ function readFrameBands(frame) {
 
 function readPositiveNumber(value, fallback) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function readRenderMetrics(targetMetrics, boundsPx = null) {
+  const fallbackWidthPx = readPositiveNumber(targetMetrics && targetMetrics.widthPx, 0);
+  const fallbackHeightPx = readPositiveNumber(targetMetrics && targetMetrics.heightPx, 0);
+  const fallbackDpr = readPositiveNumber(targetMetrics && targetMetrics.dpr, 1);
+
+  if (
+    boundsPx
+    && typeof boundsPx === "object"
+    && Number.isFinite(boundsPx.x)
+    && Number.isFinite(boundsPx.y)
+    && Number.isFinite(boundsPx.width)
+    && Number.isFinite(boundsPx.height)
+  ) {
+    return {
+      xPx: boundsPx.x,
+      yPx: boundsPx.y,
+      widthPx: Math.max(0, boundsPx.width),
+      heightPx: Math.max(0, boundsPx.height),
+      dpr: fallbackDpr,
+    };
+  }
+
+  return {
+    xPx: 0,
+    yPx: 0,
+    widthPx: fallbackWidthPx,
+    heightPx: fallbackHeightPx,
+    dpr: fallbackDpr,
+  };
 }
 
 function readOverlaySettingsFromNode(node) {
@@ -148,11 +179,11 @@ class BandOverlayVisualizer {
     void viewTransform;
     const overlay = readOverlaySettingsFromNode(this.node);
     const ctx = (target && target.ctx) || (this.context && this.context.ctx) || state.ctx;
-    const targetMetrics = {
+    const targetMetrics = readRenderMetrics({
       widthPx: readPositiveNumber(target && target.widthPx, readPositiveNumber(this.context && this.context.widthPx, 0)),
       heightPx: readPositiveNumber(target && target.heightPx, readPositiveNumber(this.context && this.context.heightPx, 0)),
       dpr: readPositiveNumber(target && target.dpr, readPositiveNumber(this.context && this.context.dpr, 1)),
-    };
+    }, this.boundsPx);
 
     if (!ctx || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
 
