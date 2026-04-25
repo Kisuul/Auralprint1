@@ -3268,8 +3268,8 @@
   }
   function simToTargetScreen(xSim, ySim, targetMetrics) {
     return {
-      x: targetMetrics.widthPx * 0.5 + xSim,
-      y: targetMetrics.heightPx * 0.5 - ySim
+      x: targetMetrics.xPx + targetMetrics.widthPx * 0.5 + xSim,
+      y: targetMetrics.yPx + targetMetrics.heightPx * 0.5 - ySim
     };
   }
   function readFrameEnergy01(band) {
@@ -3280,6 +3280,27 @@
   }
   function readPositiveNumber(value, fallback) {
     return Number.isFinite(value) && value > 0 ? value : fallback;
+  }
+  function readRenderMetrics(targetMetrics, boundsPx = null) {
+    const fallbackWidthPx = readPositiveNumber(targetMetrics && targetMetrics.widthPx, 0);
+    const fallbackHeightPx = readPositiveNumber(targetMetrics && targetMetrics.heightPx, 0);
+    const fallbackDpr = readPositiveNumber(targetMetrics && targetMetrics.dpr, 1);
+    if (boundsPx && typeof boundsPx === "object" && Number.isFinite(boundsPx.x) && Number.isFinite(boundsPx.y) && Number.isFinite(boundsPx.width) && Number.isFinite(boundsPx.height)) {
+      return {
+        xPx: boundsPx.x,
+        yPx: boundsPx.y,
+        widthPx: Math.max(0, boundsPx.width),
+        heightPx: Math.max(0, boundsPx.height),
+        dpr: fallbackDpr
+      };
+    }
+    return {
+      xPx: 0,
+      yPx: 0,
+      widthPx: fallbackWidthPx,
+      heightPx: fallbackHeightPx,
+      dpr: fallbackDpr
+    };
   }
   function readOverlaySettingsFromNode(node) {
     return node && node.settings && typeof node.settings === "object" ? node.settings : runtime.settings.bands.overlay;
@@ -3374,11 +3395,11 @@
       void viewTransform;
       const overlay = readOverlaySettingsFromNode(this.node);
       const ctx = target && target.ctx || this.context && this.context.ctx || state.ctx;
-      const targetMetrics = {
+      const targetMetrics = readRenderMetrics({
         widthPx: readPositiveNumber(target && target.widthPx, readPositiveNumber(this.context && this.context.widthPx, 0)),
         heightPx: readPositiveNumber(target && target.heightPx, readPositiveNumber(this.context && this.context.heightPx, 0)),
         dpr: readPositiveNumber(target && target.dpr, readPositiveNumber(this.context && this.context.dpr, 1))
-      };
+      }, this.boundsPx);
       if (!ctx || !this.centerWaveform || !targetMetrics.widthPx || !targetMetrics.heightPx) return;
       ctx.save();
       if (this.boundsPx) {
@@ -3478,10 +3499,15 @@
       const s = runtime.settings;
       const energyOverride01 = Number.isFinite(options.energyOverride01) ? options.energyOverride01 : null;
       const colorBandIndex = Number.isInteger(options.colorBandIndex) ? options.colorBandIndex : null;
-      const boundsPx = options.boundsPx && typeof options.boundsPx === "object" ? options.boundsPx : { x: 0, y: 0, width: state.widthPx, height: state.heightPx };
+      const boundsPx = options.boundsPx && typeof options.boundsPx === "object" && Number.isFinite(options.boundsPx.x) && Number.isFinite(options.boundsPx.y) && Number.isFinite(options.boundsPx.width) && Number.isFinite(options.boundsPx.height) ? {
+        x: options.boundsPx.x,
+        y: options.boundsPx.y,
+        width: Math.max(0, options.boundsPx.width),
+        height: Math.max(0, options.boundsPx.height)
+      } : { x: 0, y: 0, width: state.widthPx, height: state.heightPx };
       this.angleRad += this.chirality * s.motion.angularSpeedRadPerSec * dtSec;
       this.angleRad = (this.angleRad % TAU + TAU) % TAU;
-      const minDim = Math.min(state.widthPx, state.heightPx);
+      const minDim = Math.min(boundsPx.width, boundsPx.height);
       const minR = minDim * s.audio.minRadiusFrac;
       const maxR = minDim * s.audio.maxRadiusFrac;
       const safeMin = Math.min(minR, maxR);
@@ -4069,17 +4095,10 @@
     }
     return { register, has, get, create, getCapabilities, getSettingsSchema, getDefaultNode };
   }
-  function registerBuiltInVisualizers(registry, { legacyRenderFactory = null } = {}) {
+  function registerBuiltInVisualizers(registry) {
     if (!registry || typeof registry.register !== "function") {
       throw new Error("A visualizer registry with a register() method is required.");
     }
-    registry.register("legacyRender", legacyRenderFactory, {
-      capabilities: {
-        compatibilityMode: true,
-        runtimeImplemented: typeof legacyRenderFactory === "function",
-        transitional: true
-      }
-    });
     registry.register("orbs", OrbVisualizer, {
       capabilities: {
         runtimeImplemented: true,

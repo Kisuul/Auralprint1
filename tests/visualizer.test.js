@@ -19,17 +19,12 @@ function createValidVisualizerInstance(extra = {}) {
 
 test("registerBuiltInVisualizers registers the current built-in visualizer types and exposes cloned metadata", () => {
   const registry = createVisualizerRegistry();
-  registerBuiltInVisualizers(registry, {
-    legacyRenderFactory: () => createValidVisualizerInstance(),
-  });
+  registerBuiltInVisualizers(registry);
 
-  assert.equal(registry.has("legacyRender"), true);
   assert.equal(registry.has("orbs"), true);
   assert.equal(registry.has("bandOverlay"), true);
+  assert.equal(registry.has("legacyRender"), false);
   assert.equal(registry.get("missing"), null);
-
-  const legacyInstance = registry.create("legacyRender");
-  assert.equal(typeof legacyInstance.render, "function");
   const orbsInstance = registry.create("orbs", { node: { id: "orbs-root" } });
 
   const orbsCapabilities = registry.getCapabilities("orbs");

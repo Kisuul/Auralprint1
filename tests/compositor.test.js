@@ -7,7 +7,12 @@ import { runtime } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { Renderer } from "../src/js/render/renderer.js";
 import { ColorPolicy } from "../src/js/render/color-policy.js";
-import { getActiveOrbPrimaryAngleRad, resetOrbTrails, resetOrbsToDesignedPhases } from "../src/js/render/orb-runtime.js";
+import {
+  clearActiveOrbVisualizer,
+  getActiveOrbPrimaryAngleRad,
+  resetOrbTrails,
+  resetOrbsToDesignedPhases,
+} from "../src/js/render/orb-runtime.js";
 import { IDENTITY_VIEW_TRANSFORM, normalizeViewTransform } from "../src/js/render/view-transform.js";
 import { OrbVisualizer } from "../src/js/render/visualizers/orb-visualizer.js";
 import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
@@ -136,6 +141,7 @@ function restoreRenderGlobals(snapshot) {
   state.widthPx = snapshot.widthPx;
   state.heightPx = snapshot.heightPx;
   state.dpr = snapshot.dpr;
+  clearActiveOrbVisualizer();
   state.orbs.length = 0;
   state.orbs.push(...snapshot.orbs);
   state.scene.nodes = structuredClone(snapshot.scene.nodes);
@@ -543,15 +549,7 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     state.bands.ringPhaseRad = 0;
 
     const registry = createVisualizerRegistry();
-    registerBuiltInVisualizers(registry, {
-      legacyRenderFactory: () => ({
-        init() {},
-        update() {},
-        render() {},
-        resize() {},
-        dispose() {},
-      }),
-    });
+    registerBuiltInVisualizers(registry);
 
     const compositor = createCompositor({ registry });
     const target = createTarget({ ctx: fakeCtx, widthPx: 800, heightPx: 600, dpr: 3 });
@@ -601,13 +599,13 @@ test("built-in bandOverlay visualizer renders through the compositor and stops d
     assert.equal(arcCalls.length, 4);
     assert.equal(runtime.settings.bands.overlay.pointSizePx, 1);
     assert.equal(activeScene.nodes[0].settings.enabled, false);
-    assert.deepEqual(arcCalls[0], { kind: "arc", x: 640, y: 300, radius: 6 });
-    assert.deepEqual(arcCalls[1], { kind: "arc", x: 400, y: 240, radius: 6 });
-    assertNearlyEqual(arcCalls[2].x, 250, "Expected third frame-driven overlay point x");
+    assert.deepEqual(arcCalls[0], { kind: "arc", x: 520, y: 300, radius: 6 });
+    assert.deepEqual(arcCalls[1], { kind: "arc", x: 400, y: 270, radius: 6 });
+    assertNearlyEqual(arcCalls[2].x, 325, "Expected third frame-driven overlay point x");
     assertNearlyEqual(arcCalls[2].y, 300, "Expected third frame-driven overlay point y");
     assert.equal(arcCalls[2].radius, 6);
     assertNearlyEqual(arcCalls[3].x, 400, "Expected fourth frame-driven overlay point x");
-    assertNearlyEqual(arcCalls[3].y, 405, "Expected fourth frame-driven overlay point y");
+    assertNearlyEqual(arcCalls[3].y, 352.5, "Expected fourth frame-driven overlay point y");
     assert.equal(arcCalls[3].radius, 6);
 
     const drawCountBeforeDisable = drawCalls.length;
@@ -812,7 +810,7 @@ test("built-in orb visualizer renders through the compositor and supports runtim
     assert.equal(clipCalls.length, 1);
     assert.deepEqual(rectCalls[0], { kind: "rect", x: 100, y: 50, width: 200, height: 100 });
     assert.equal(arcCalls.length, 1);
-    assert.deepEqual(arcCalls[0], { kind: "arc", x: 280, y: 100, radius: 4 });
+    assert.deepEqual(arcCalls[0], { kind: "arc", x: 240, y: 100, radius: 4 });
 
     const drawCountBeforeDisable = drawCalls.length;
     compositor.syncScene({
@@ -1173,7 +1171,7 @@ test("built-in orb visualizer offsets orb origins within node bounds using norma
 
     const arcCalls = drawCalls.filter((call) => call.kind === "arc");
     assert.equal(arcCalls.length, 1);
-    assert.deepEqual(arcCalls[0], { kind: "arc", x: 270, y: 75, radius: 4 });
+    assert.deepEqual(arcCalls[0], { kind: "arc", x: 260, y: 75, radius: 4 });
 
     compositor.dispose();
   } finally {

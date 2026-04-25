@@ -14,8 +14,12 @@ import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { UrlPreset } from "../src/js/presets/url-preset.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
+import { createCompositor } from "../src/js/render/compositor.js";
+import { Orb } from "../src/js/render/orb.js";
 import { readSceneSettingsSchema } from "../src/js/render/scene-runtime.js";
 import { IDENTITY_VIEW_TRANSFORM, normalizeViewTransform } from "../src/js/render/view-transform.js";
+import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
+import { BandOverlayVisualizer } from "../src/js/render/visualizers/band-overlay.js";
 import { createPanelShellState, getPanelShellStateSnapshot } from "../src/js/ui/panel-state.js";
 import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
@@ -27,6 +31,30 @@ function createAudioBuffer(channels) {
     getChannelData(index) {
       return Float32Array.from(channels[index]);
     },
+  };
+}
+
+function createArcCaptureContext() {
+  const arcs = [];
+  return {
+    arcs,
+    save() {},
+    restore() {},
+    beginPath() {},
+    moveTo() {},
+    lineTo() {},
+    stroke() {},
+    rect() {},
+    clip() {},
+    fill() {},
+    arc(x, y, r) {
+      arcs.push({ x, y, r });
+    },
+    set fillStyle(_value) {},
+    set strokeStyle(_value) {},
+    set lineWidth(_value) {},
+    set lineJoin(_value) {},
+    set lineCap(_value) {},
   };
 }
 
@@ -953,6 +981,277 @@ test("normalizeOrbDef still honors explicit incoming routing and band selections
 
   assert.equal(normalized.chanId, "C");
   assert.deepEqual(normalized.bandIds, []);
+});
+
+test("Orb uses scene node bounds for radius and origin instead of full-canvas metrics", () => {
+  const previousPrefs = structuredClone(preferences);
+  const previousWidthPx = state.widthPx;
+  const previousHeightPx = state.heightPx;
+
+  try {
+    replacePreferences(structuredClone(CONFIG.defaults));
+    resolveSettings();
+    state.widthPx = 1000;
+    state.heightPx = 1000;
+
+    const orb = new Orb({
+      id: "BOUNDED",
+      chanId: "C",
+      bandIds: [],
+      chirality: 1,
+      startAngleRad: 0,
+      hueOffsetDeg: 0,
+      centerX: 0.5,
+      centerY: -0.5,
+    });
+    const boundsPx = { x: 100, y: 200, width: 200, height: 100 };
+
+    orb.step(0, 0, {
+      energy01: 1,
+      timeDomain: null,
+    }, {
+      boundsPx,
+    });
+
+    const screenX = state.widthPx * 0.5 + orb.xSim;
+    const screenY = state.heightPx * 0.5 - orb.ySim;
+
+    assert.equal(orb.baseRadiusPx, 80);
+    assert.equal(screenX, 330);
+    assert.equal(screenY, 275);
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    state.widthPx = previousWidthPx;
+    state.heightPx = previousHeightPx;
+  }
+});
+
+test("Band overlay uses node-local metrics instead of full-canvas ring geometry", () => {
+  const previousPrefs = structuredClone(preferences);
+  const previousWidthPx = state.widthPx;
+  const previousHeightPx = state.heightPx;
+  const previousDpr = state.dpr;
+  const previousRingPhaseRad = state.bands.ringPhaseRad;
+
+  try {
+    replacePreferences(structuredClone(CONFIG.defaults));
+    resolveSettings();
+    state.widthPx = 1000;
+    state.heightPx = 1000;
+    state.dpr = 1;
+    state.bands.ringPhaseRad = 0;
+
+    const ctx = createArcCaptureContext();
+    const node = {
+      id: "overlay-1",
+      type: "bandOverlay",
+      settings: structuredClone(CONFIG.defaults.bands.overlay),
+    };
+    const boundsPx = { x: 100, y: 150, width: 200, height: 100 };
+    const visualizer = new BandOverlayVisualizer({ node });
+
+    visualizer.init({
+      ctx,
+      widthPx: state.widthPx,
+      heightPx: state.heightPx,
+      dpr: state.dpr,
+      node,
+    });
+    visualizer.resize(boundsPx);
+    visualizer.update({
+      analysis: {
+        compat: {
+          centerWaveform: new Float32Array([0]),
+        },
+      },
+      bands: [
+        { energy: 1 },
+      ],
+    }, 0);
+    visualizer.render({
+      ctx,
+      widthPx: state.widthPx,
+      heightPx: state.heightPx,
+      dpr: state.dpr,
+    }, IDENTITY_VIEW_TRANSFORM);
+
+    assert.equal(ctx.arcs.length, 1);
+    assert.deepEqual(ctx.arcs[0], { x: 280, y: 200, r: 3 });
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    state.widthPx = previousWidthPx;
+    state.heightPx = previousHeightPx;
+    state.dpr = previousDpr;
+    state.bands.ringPhaseRad = previousRingPhaseRad;
+  }
+});
+
+test("built-in visualizer registry exposes only real Build 115 runtime types", () => {
+  const registry = createVisualizerRegistry();
+  registerBuiltInVisualizers(registry);
+
+  const orbDescriptor = registry.get("orbs");
+  const overlayDescriptor = registry.get("bandOverlay");
+
+  assert.equal(registry.has("orbs"), true);
+  assert.equal(registry.has("bandOverlay"), true);
+  assert.equal(registry.has("legacyRender"), false);
+  assert.equal(registry.get("legacyRender"), null);
+  assert.equal(orbDescriptor.type, "orbs");
+  assert.equal(orbDescriptor.defaultNode.type, "orbs");
+  assert.equal(overlayDescriptor.type, "bandOverlay");
+  assert.equal(overlayDescriptor.defaultNode.type, "bandOverlay");
+});
+
+test("compositor syncScene owns visualizer lifecycle and render ordering honestly", () => {
+  const events = [];
+  const warnings = [];
+  let nextInstanceToken = 1;
+
+  class ProbeVisualizer {
+    constructor({ node }) {
+      this.node = node;
+      this.token = nextInstanceToken++;
+      events.push({ type: "construct", id: node.id, token: this.token });
+    }
+
+    init({ node }) {
+      events.push({ type: "init", id: node.id, token: this.token });
+    }
+
+    configure(node) {
+      this.node = node;
+      events.push({ type: "configure", id: node.id, zIndex: node.zIndex, token: this.token });
+    }
+
+    resize(boundsPx) {
+      events.push({ type: "resize", id: this.node.id, boundsPx: { ...boundsPx }, token: this.token });
+    }
+
+    update(_frame, dtSec) {
+      events.push({ type: "update", id: this.node.id, dtSec, token: this.token });
+    }
+
+    render(_target, viewTransform) {
+      events.push({ type: "render", id: this.node.id, mode: viewTransform.mode, token: this.token });
+    }
+
+    dispose() {
+      events.push({ type: "dispose", id: this.node.id, token: this.token });
+    }
+  }
+
+  const registry = createVisualizerRegistry();
+  registry.register("probe", ProbeVisualizer);
+
+  const compositor = createCompositor({
+    registry,
+    onWarning(warning) {
+      warnings.push(warning);
+    },
+  });
+
+  const createNode = ({ id, enabled = true, zIndex = 0, bounds, anchor }) => ({
+    id,
+    type: "probe",
+    enabled,
+    zIndex,
+    bounds,
+    anchor,
+  });
+
+  const targetA = { canvas: null, ctx: null, widthPx: 100, heightPx: 80, dpr: 1 };
+  compositor.syncScene({
+    nodes: [
+      createNode({
+        id: "a",
+        zIndex: 2,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+      }),
+      createNode({
+        id: "b",
+        zIndex: 1,
+        bounds: { x: 0.25, y: 0.25, w: 0.5, h: 0.5 },
+        anchor: { x: 0, y: 0 },
+      }),
+      createNode({
+        id: "c",
+        zIndex: 1,
+        bounds: { x: 0.75, y: 0.75, w: 0.25, h: 0.25 },
+        anchor: { x: 1, y: 1 },
+      }),
+      createNode({
+        id: "skip",
+        enabled: false,
+        zIndex: 0,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+      }),
+    ],
+  }, targetA);
+  compositor.update({ ok: true }, 0.25);
+  compositor.render(targetA, IDENTITY_VIEW_TRANSFORM);
+
+  assert.deepEqual(events.filter((event) => event.type === "construct").map((event) => event.id), ["a", "b", "c"]);
+  assert.deepEqual(events.filter((event) => event.type === "update").map((event) => event.id), ["b", "c", "a"]);
+  assert.deepEqual(events.filter((event) => event.type === "render").map((event) => event.id), ["b", "c", "a"]);
+  assert.deepEqual(
+    events.filter((event) => event.type === "resize").map((event) => ({ id: event.id, boundsPx: event.boundsPx })),
+    [
+      { id: "a", boundsPx: { x: 0, y: 0, width: 100, height: 80 } },
+      { id: "b", boundsPx: { x: 25, y: 20, width: 50, height: 40 } },
+      { id: "c", boundsPx: { x: 50, y: 40, width: 25, height: 20 } },
+    ]
+  );
+
+  events.length = 0;
+
+  const targetB = { canvas: null, ctx: null, widthPx: 200, heightPx: 100, dpr: 2 };
+  compositor.syncScene({
+    nodes: [
+      createNode({
+        id: "c",
+        zIndex: 3,
+        bounds: { x: 0.5, y: 0.5, w: 0.5, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+      }),
+      createNode({
+        id: "a",
+        enabled: false,
+        zIndex: 2,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+      }),
+      createNode({
+        id: "d",
+        zIndex: 1,
+        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
+        anchor: { x: 0.5, y: 0.5 },
+      }),
+    ],
+  }, targetB);
+  compositor.update({ ok: true }, 0.5);
+  compositor.render(targetB, IDENTITY_VIEW_TRANSFORM);
+
+  assert.deepEqual(events.filter((event) => event.type === "construct").map((event) => event.id), ["d"]);
+  assert.deepEqual(events.filter((event) => event.type === "dispose").map((event) => event.id).sort(), ["a", "b"]);
+  assert.deepEqual(events.filter((event) => event.type === "render").map((event) => event.id), ["d", "c"]);
+  assert.deepEqual(
+    events.filter((event) => event.type === "resize").map((event) => ({ id: event.id, boundsPx: event.boundsPx })),
+    [
+      { id: "c", boundsPx: { x: 50, y: 0, width: 100, height: 100 } },
+      { id: "d", boundsPx: { x: 0, y: 0, width: 200, height: 100 } },
+    ]
+  );
+  assert.deepEqual(warnings, []);
+
+  events.length = 0;
+  compositor.dispose();
+
+  assert.deepEqual(events.filter((event) => event.type === "dispose").map((event) => event.id).sort(), ["c", "d"]);
 });
 
 test("buildWaveformPeaks keeps mono peak behavior unchanged", () => {

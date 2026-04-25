@@ -37,13 +37,22 @@ class Orb {
     const energyOverride01 = Number.isFinite(options.energyOverride01) ? options.energyOverride01 : null;
     const colorBandIndex = Number.isInteger(options.colorBandIndex) ? options.colorBandIndex : null;
     const boundsPx = options.boundsPx && typeof options.boundsPx === "object"
-      ? options.boundsPx
+      && Number.isFinite(options.boundsPx.x)
+      && Number.isFinite(options.boundsPx.y)
+      && Number.isFinite(options.boundsPx.width)
+      && Number.isFinite(options.boundsPx.height)
+      ? {
+        x: options.boundsPx.x,
+        y: options.boundsPx.y,
+        width: Math.max(0, options.boundsPx.width),
+        height: Math.max(0, options.boundsPx.height),
+      }
       : { x: 0, y: 0, width: state.widthPx, height: state.heightPx };
 
     this.angleRad += this.chirality * s.motion.angularSpeedRadPerSec * dtSec;
     this.angleRad = ((this.angleRad % TAU) + TAU) % TAU;
 
-    const minDim = Math.min(state.widthPx, state.heightPx);
+    const minDim = Math.min(boundsPx.width, boundsPx.height);
     const minR = minDim * s.audio.minRadiusFrac;
     const maxR = minDim * s.audio.maxRadiusFrac;
     const safeMin = Math.min(minR, maxR);

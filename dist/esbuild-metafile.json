@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T08:55:03.493Z",
+  "generatedAt": "2026-04-25T10:13:36.940Z",
   "js": {
     "inputs": {
       "src/js/core/utils.js": {
@@ -311,7 +311,7 @@
         "format": "esm"
       },
       "src/js/render/visualizers/band-overlay.js": {
-        "bytes": 5947,
+        "bytes": 6867,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -358,7 +358,7 @@
         "format": "esm"
       },
       "src/js/render/orb.js": {
-        "bytes": 3506,
+        "bytes": 3852,
         "imports": [
           {
             "path": "src/js/core/utils.js",
@@ -466,7 +466,7 @@
         "format": "esm"
       },
       "src/js/render/visualizer.js": {
-        "bytes": 10221,
+        "bytes": 9965,
         "imports": [
           {
             "path": "src/js/core/config.js",
@@ -882,13 +882,13 @@
             "bytesInOutput": 1871
           },
           "src/js/render/visualizers/band-overlay.js": {
-            "bytesInOutput": 5736
+            "bytesInOutput": 6665
           },
           "src/js/render/trail-system.js": {
             "bytesInOutput": 1478
           },
           "src/js/render/orb.js": {
-            "bytesInOutput": 3070
+            "bytesInOutput": 3397
           },
           "src/js/render/orb-runtime.js": {
             "bytesInOutput": 6626
@@ -897,7 +897,7 @@
             "bytesInOutput": 6373
           },
           "src/js/render/visualizer.js": {
-            "bytesInOutput": 10267
+            "bytesInOutput": 10000
           },
           "src/js/render/compositor.js": {
             "bytesInOutput": 6736
@@ -927,7 +927,7 @@
             "bytesInOutput": 2604
           }
         },
-        "bytes": 388080
+        "bytes": 389069
       }
     }
   },
