@@ -1,6 +1,6 @@
 import { clamp } from "../core/utils.js";
 import { TAU } from "../core/constants.js";
-import { runtime, normalizeOrbChannelId, sanitizeOrbBandIds } from "../core/preferences.js";
+import { normalizeOrbChannelId, sanitizeOrbBandIds } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { TrailSystem } from "./trail-system.js";
 import { ColorPolicy } from "./color-policy.js";
@@ -15,9 +15,14 @@ class Orb {
     this.bandIds = sanitizeOrbBandIds(def.bandIds, def.bandNames);
     this.chirality = def.chirality;
     this.startAngleRad = def.startAngleRad;
-    this.hueOffsetDeg = Number.isFinite(def.hueOffsetDeg) ? def.hueOffsetDeg : 0;
-    this.centerX = Number.isFinite(def.centerX) ? def.centerX : 0;
-    this.centerY = Number.isFinite(def.centerY) ? def.centerY : 0;
+    this.hueOffsetDeg = def.hueOffsetDeg;
+    this.colorSource = def.colorSource;
+    this.centerXFrac = def.centerXFrac;
+    this.centerYFrac = def.centerYFrac;
+    this.motion = def.motion;
+    this.response = def.response;
+    this.particles = def.particles;
+    this.trace = def.trace;
     this.angleRad = this.startAngleRad;
 
     this.trail = new TrailSystem();
@@ -26,35 +31,35 @@ class Orb {
     this.ySim = 0;
     this.baseRadiusPx = 0;
     this.radialDispPx = 0;
-    this.lastColorBandIndex = null;
   }
 
   resetPhase() { this.angleRad = this.startAngleRad; }
   resetTrail() { this.trail.reset(); }
 
-  step(dtSec, nowSec, band, options = {}) {
-    const s = runtime.settings;
-    const energyOverride01 = Number.isFinite(options.energyOverride01) ? options.energyOverride01 : null;
-    const colorBandIndex = Number.isInteger(options.colorBandIndex) ? options.colorBandIndex : null;
-    const boundsPx = options.boundsPx && typeof options.boundsPx === "object"
-      && Number.isFinite(options.boundsPx.x)
-      && Number.isFinite(options.boundsPx.y)
-      && Number.isFinite(options.boundsPx.width)
-      && Number.isFinite(options.boundsPx.height)
-      ? {
-        x: options.boundsPx.x,
-        y: options.boundsPx.y,
-        width: Math.max(0, options.boundsPx.width),
-        height: Math.max(0, options.boundsPx.height),
-      }
-      : { x: 0, y: 0, width: state.widthPx, height: state.heightPx };
+  syncFromDef(def) {
+    this.chanId = normalizeOrbChannelId(def.chanId, def.bandId);
+    this.chirality = def.chirality;
+    this.startAngleRad = def.startAngleRad;
+    this.hueOffsetDeg = def.hueOffsetDeg;
+    this.colorSource = def.colorSource;
+    this.centerXFrac = def.centerXFrac;
+    this.centerYFrac = def.centerYFrac;
+    this.bandIds = sanitizeOrbBandIds(def.bandIds, def.bandNames);
+    this.motion = def.motion;
+    this.response = def.response;
+    this.particles = def.particles;
+    this.trace = def.trace;
+  }
 
-    this.angleRad += this.chirality * s.motion.angularSpeedRadPerSec * dtSec;
+  // Legacy direct callers omit motionDtSec and retain their supplied delta.
+  // The application frame loop supplies independently bounded emission/motion.
+  step(dtSec, nowSec, band, energyOverride01, globalDominantBandIndex, selectedDominantBandIndex = null, motionDtSec = dtSec) {
+    this.angleRad += this.chirality * this.motion.angularSpeedRadPerSec * motionDtSec;
     this.angleRad = ((this.angleRad % TAU) + TAU) % TAU;
 
-    const minDim = Math.min(boundsPx.width, boundsPx.height);
-    const minR = minDim * s.audio.minRadiusFrac;
-    const maxR = minDim * s.audio.maxRadiusFrac;
+    const minDim = Math.min(state.widthPx, state.heightPx);
+    const minR = minDim * this.response.minRadiusFrac;
+    const maxR = minDim * this.response.maxRadiusFrac;
     const safeMin = Math.min(minR, maxR);
     const safeMax = Math.max(minR, maxR);
 
@@ -63,31 +68,28 @@ class Orb {
       : (band ? band.energy01 : 0);
     this.baseRadiusPx = safeMin + (safeMax - safeMin) * energy01;
 
-    const wf = band ? band.timeDomain : null;
+    const wf = band ? band.waveform : null;
     if (wf && wf.length > 0) {
       const phase01 = this.angleRad / TAU;
       const idx = Math.floor(phase01 * (wf.length - 1));
       const sample = wf[idx];
-      this.radialDispPx = this.baseRadiusPx * s.motion.waveformRadialDisplaceFrac * sample;
+      this.radialDispPx = this.baseRadiusPx * this.response.waveformRadialDisplaceFrac * sample;
     } else {
       this.radialDispPx = 0;
     }
 
     const radius = this.baseRadiusPx + this.radialDispPx;
-    const originScreenX = boundsPx.x + boundsPx.width * 0.5 + this.centerX * boundsPx.width * 0.5;
-    const originScreenY = boundsPx.y + boundsPx.height * 0.5 - this.centerY * boundsPx.height * 0.5;
-    const originXSim = originScreenX - state.widthPx * 0.5;
-    const originYSim = state.heightPx * 0.5 - originScreenY;
 
-    this.xSim = originXSim + radius * Math.cos(this.angleRad);
-    this.ySim = originYSim + radius * Math.sin(this.angleRad);
+    this.xSim = radius * Math.cos(this.angleRad) + this.centerXFrac * minDim;
+    this.ySim = radius * Math.sin(this.angleRad) + this.centerYFrac * minDim;
 
-    this.lastColorBandIndex = colorBandIndex;
-    const rgbStart = ColorPolicy.pickParticleColorRgb01(this.angleRad, {
-      bandIndex: this.lastColorBandIndex,
-      hueOffsetDeg: this.hueOffsetDeg,
-    });
-    this.trail.updateAndEmit(dtSec, nowSec, this.xSim, this.ySim, rgbStart);
+    const rgbStart = ColorPolicy.pickParticleColorRgb01(
+      this.angleRad,
+      this,
+      globalDominantBandIndex,
+      selectedDominantBandIndex,
+    );
+    this.trail.updateAndEmit(dtSec, nowSec, this.xSim, this.ySim, rgbStart, this.particles, state.dpr);
   }
 }
 

@@ -23,15 +23,18 @@ function buildWaveformPeaks(audioBuffer, bucketCount = 512) {
   for (let i = 0; i < channelCount; i++) channels.push(audioBuffer.getChannelData(i));
 
   const sampleLength = channels[0] ? channels[0].length : 0;
-  const bucketSize = Math.max(1, Math.floor(sampleLength / buckets));
+  if (!sampleLength) return peaks;
 
   for (let b = 0; b < buckets; b++) {
     let max = 0;
-    const start = b * bucketSize;
-    for (let s = 0; s < bucketSize; s++) {
-      const sampleIndex = start + s;
+    const start = Math.floor((b * sampleLength) / buckets);
+    const proportionalEnd = Math.floor(((b + 1) * sampleLength) / buckets);
+    const endExclusive = proportionalEnd > start
+      ? proportionalEnd
+      : Math.min(sampleLength, start + 1);
+    for (let sampleIndex = start; sampleIndex < endExclusive; sampleIndex++) {
       for (const channel of channels) {
-        const abs = Math.abs(channel[sampleIndex] || 0);
+        const abs = Math.abs(channel[sampleIndex]);
         if (abs > max) max = abs;
       }
     }
@@ -51,6 +54,7 @@ const Scrubber = (() => {
   let _waveformStatus = "empty"; // empty | decoding | ready | unavailable
 
   function init(canvasEl) {
+    _dragging = false;
     _canvas = canvasEl;
     _ctx2d = _canvas.getContext("2d");
     _canvas.addEventListener("mousedown", onMouseDown);
@@ -59,12 +63,14 @@ const Scrubber = (() => {
     _canvas.addEventListener("touchstart", onTouchStart, { passive: false });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
   }
 
   // Called on every new file load. Decodes the file for the waveform overview,
   // completely independently of the media element used for playback. Does not
   // block — decode runs async; draw() will pick up _waveform once it is ready.
   async function loadFile(file) {
+    _dragging = false;
     const decodeToken = ++_decodeToken;
     _decodeInFlight = true;
     _waveformStatus = "decoding";
@@ -99,6 +105,7 @@ const Scrubber = (() => {
 
   // Reset: clear waveform and redraw blank canvas. Called on queue clear.
   function reset() {
+    _dragging = false;
     _decodeToken++;
     _decodeInFlight = false;
     _waveformStatus = "empty";

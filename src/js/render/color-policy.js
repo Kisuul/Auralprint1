@@ -1,46 +1,45 @@
-import { clamp, hexToRgb01, hsvToRgb01 } from "../core/utils.js";
+import { hexToRgb01, hsvToRgb01 } from "../core/utils.js";
 import { runtime } from "../core/preferences.js";
-import { state } from "../core/state.js";
 import { BandBank } from "../audio/band-bank.js";
 
 /* =============================================================================
    ColorPolicy
    ========================================================================== */
 const ColorPolicy = (() => {
-  function resolveBandIndex(index, fallbackIndex = 0) {
-    const safeCount = Math.max(1, runtime.settings.bands.count);
-    const candidate = Number.isInteger(index) ? index : fallbackIndex;
-    return clamp(Number.isInteger(candidate) ? candidate : 0, 0, safeCount - 1);
-  }
-
-  function bandRgb01(index, hueOffsetDeg = 0) {
+  function bandRgb01(index, extraHueOffsetDeg = 0) {
+    // Scene's shared band palette is consumed by Orbs, Spectral Ring, and the
+    // Analysis HUD. extraHueOffsetDeg is an Orb-local addition when supplied.
     const s = runtime.settings;
     const n = s.bands.count;
     const hueStep = 360 / n;
-    const safeIndex = resolveBandIndex(index, state.bands.dominantIndex);
-    const hue = s.bands.rainbow.hueOffsetDeg + hueOffsetDeg + safeIndex * hueStep;
+    const hue = s.bands.rainbow.hueOffsetDeg + extraHueOffsetDeg + index * hueStep;
     return hsvToRgb01(hue, s.bands.rainbow.saturation, s.bands.rainbow.value);
   }
 
-  function pickParticleColorRgb01(angleRad, { bandIndex = null, hueOffsetDeg = 0 } = {}) {
+  function pickParticleColorRgb01(angleRad, orb = null, globalDominantBandIndex = 0, selectedDominantBandIndex = null) {
+    // Resolve the Scene default only for inherit; explicit dominant remains
+    // global combined-C while inherited targeted dominant may be channel-local.
     const s = runtime.settings;
+    const extraHue = orb && Number.isFinite(orb.hueOffsetDeg) ? orb.hueOffsetDeg : 0;
+    const requestedSource = orb?.colorSource || "inherit";
+    const source = requestedSource === "inherit" ? s.bands.particleColorSource : requestedSource;
 
-    if (s.bands.particleColorSource === "fixed") return hexToRgb01(s.visuals.particleColor);
-    if (s.bands.particleColorSource === "angle") {
-      return bandRgb01(BandBank.bandIndexFromAngleRad(angleRad), hueOffsetDeg);
-    }
+    if (source === "fixed") return hexToRgb01(s.visuals.particleColor);
+    if (source === "angle") return bandRgb01(BandBank.bandIndexFromAngleRad(angleRad), extraHue);
 
-    return bandRgb01(resolveBandIndex(bandIndex, state.bands.dominantIndex), hueOffsetDeg); // dominant
+    const dominantBandIndex = requestedSource === "inherit" && Number.isInteger(selectedDominantBandIndex)
+      ? selectedDominantBandIndex
+      : globalDominantBandIndex;
+    return bandRgb01(dominantBandIndex, extraHue); // dominant
   }
 
-  function pickLineColorRgb01(particles, { bandIndex = null, hueOffsetDeg = 0 } = {}) {
+  function pickLineColorRgb01(particles, dominantBandIndex = 0, lineColorMode = "fixed") {
+    // Trace mode is Orb-local; its fixed fallback and palette are Scene-owned.
     const s = runtime.settings;
-    if (s.trace.lineColorMode === "dominantBand") {
-      return bandRgb01(resolveBandIndex(bandIndex, state.bands.dominantIndex), hueOffsetDeg);
-    }
+    if (lineColorMode === "dominantBand") return bandRgb01(dominantBandIndex);
 
-    if (s.trace.lineColorMode === "lastParticle") {
-      const last = particles && particles.length ? particles[particles.length - 1] : null;
+    if (lineColorMode === "lastParticle") {
+      const last = particles && particles.length ? particles.at(-1) : null;
       if (last && last.rgbStart) return last.rgbStart;
       return hexToRgb01(s.visuals.particleColor);
     }

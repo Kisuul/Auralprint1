@@ -6,7 +6,7 @@ import { BandBankController } from "./band-bank-controller.js";
 import { BandBank } from "./band-bank.js";
 
 /* =============================================================================
-   Audio Engine (L/R/C) + freq data for C
+   Audio Engine — complete time-domain and frequency-domain L/R/C analysis
    ========================================================================== */
 const AudioEngine = (() => {
   let audioContext = null;
@@ -50,7 +50,8 @@ const AudioEngine = (() => {
     revokeObjectUrl(objectUrl);
   }
 
-  function describePlaybackError(err) {
+  function describePlaybackError(err, { contextFailure = false } = {}) {
+    if (contextFailure) return `Playback failed: AudioContext could not start: ${err?.message || err?.name || "unknown error"}`;
     if (!err) return "Playback failed.";
     if (err.name === "NotSupportedError") return "Playback failed: unsupported or unreadable audio file.";
     if (err.name === "AbortError") return "Playback was interrupted before start.";
@@ -58,7 +59,10 @@ const AudioEngine = (() => {
   }
 
   function describeUpstreamError(descriptor, err) {
-    if (descriptor && descriptor.kind === "file") return describePlaybackError(err);
+    if (descriptor && descriptor.kind === "file") {
+      if (err?.name === "AbortError") return describePlaybackError(err);
+      return `Playback failed: audio source attachment failed: ${err?.message || err?.name || "unknown error"}`;
+    }
     if (!err) return "Source activation failed.";
     return `Source activation failed: ${err.message || err.name || "unknown error"}`;
   }
@@ -138,7 +142,12 @@ const AudioEngine = (() => {
     try { if (sourceNode) sourceNode.disconnect(); } catch {}
     try { if (splitter) splitter.disconnect(); } catch {}
     try { if (sumNode) sumNode.disconnect(); } catch {}
+    try { if (sumGainL) sumGainL.disconnect(); } catch {}
+    try { if (sumGainR) sumGainR.disconnect(); } catch {}
     try { if (outputGain) outputGain.disconnect(); } catch {}
+    for (const band of bands.values()) {
+      try { band.analyser.disconnect(); } catch {}
+    }
 
     bands.clear();
     sourceNode = null;
@@ -169,23 +178,19 @@ const AudioEngine = (() => {
   function makeAnalyserBand(id, label) {
     const ctx = ensureContext();
     const a = ctx.createAnalyser();
-    a.fftSize = runtime.settings.audio.fftSize;
-    a.smoothingTimeConstant = runtime.settings.audio.smoothingTimeConstant;
+    try {
+      a.fftSize = runtime.settings.audio.fftSize;
+      a.smoothingTimeConstant = runtime.settings.audio.smoothingTimeConstant;
 
-    const timeDomain = new Float32Array(a.fftSize);
-    const freqDb = new Float32Array(a.frequencyBinCount);
+      const timeDomain = new Float32Array(a.fftSize);
+      const freqDb = new Float32Array(a.frequencyBinCount);
 
-    return {
-      id,
-      label,
-      analyser: a,
-      timeDomain,
-      freqDb,
-      rms: 0,
-      energy01: 0,
-      minDb: a.minDecibels,
-      maxDb: a.maxDecibels,
-    };
+      return { id, label, analyser: a, timeDomain, freqDb, rms: 0, energy01: 0 };
+    } catch (err) {
+      // This analyser has not yet entered the engine-owned band map.
+      try { a.disconnect(); } catch {}
+      throw err;
+    }
   }
 
   function applyPlaybackSettingsLive() {
@@ -218,11 +223,10 @@ const AudioEngine = (() => {
     sumGainR.gain.value = 0.5;
 
     const bandL = makeAnalyserBand("L", "Left");
-    const bandR = makeAnalyserBand("R", "Right");
-    const bandC = makeAnalyserBand("C", "Center");
-
     bands.set("L", bandL);
+    const bandR = makeAnalyserBand("R", "Right");
     bands.set("R", bandR);
+    const bandC = makeAnalyserBand("C", "Center");
     bands.set("C", bandC);
 
     sourceNode.connect(splitter);
@@ -264,9 +268,13 @@ const AudioEngine = (() => {
     throw new Error(`Unsupported sourceType: ${descriptor.sourceType || "unknown"}`);
   }
 
-  async function attachSource(descriptor) {
+  async function attachSource(descriptor, options = {}) {
     const ctx = ensureContext();
     if (ctx.state === "suspended") await ctx.resume();
+
+    // A superseded activation may release its own stream, but cannot replace
+    // the graph installed by the current owner while resume was pending.
+    if (options.isCurrent && !options.isCurrent()) return false;
 
     teardown();
 
@@ -293,7 +301,7 @@ const AudioEngine = (() => {
       label: opts.label || "",
       monitorOutput: !!opts.monitorOutput,
       mediaStream: nextMediaStream,
-    });
+    }, { isCurrent: opts.isCurrent });
   }
 
   async function loadFile(file, requestId = null, opts = {}) {
@@ -304,8 +312,20 @@ const AudioEngine = (() => {
       return AudioEngine._isLoadRequestCurrent(requestId);
     };
 
-    const ctx = ensureContext();
-    if (ctx.state === "suspended") await ctx.resume();
+    if (!isCurrentRequest()) return false;
+    try {
+      const ctx = ensureContext();
+      if (ctx.state === "closed") throw new Error("AudioContext is closed. Reload to restore audio.");
+      if (ctx.state === "suspended") await ctx.resume();
+    } catch (err) {
+      // Startup has not allocated a candidate. Only the current File may fail.
+      if (!isCurrentRequest()) return false;
+      state.audio.isLoaded = false;
+      state.audio.filename = "";
+      state.audio.isPlaying = false;
+      state.audio.transportError = describePlaybackError(err, { contextFailure: true });
+      return false;
+    }
 
     if (!isCurrentRequest()) return false;
 
@@ -318,14 +338,27 @@ const AudioEngine = (() => {
     const url = URL.createObjectURL(file);
     nextMediaEl.src = url;
     const playbackErrorMessage = "Playback error: unsupported or unreadable audio file.";
+    const isCurrentMedia = () => isCurrentRequest() && mediaEl === nextMediaEl && !nextAbort.signal.aborted;
+    const releaseCandidate = () => {
+      // Attachment can transfer ownership before graph construction fails.
+      // Only this request's installed media may release the engine graph.
+      if (isCurrentRequest() && mediaEl === nextMediaEl) {
+        teardown();
+        return;
+      }
+      if (nextAbort.signal.aborted) return; // Active teardown already released it.
+      nextAbort.abort();
+      releaseMediaElement(nextMediaEl, url);
+    };
 
     nextMediaEl.addEventListener("loadeddata", () => {
-      if (mediaObjectUrl === url) mediaObjectUrl = null;
+      if (isCurrentMedia() && mediaObjectUrl === url) mediaObjectUrl = null;
       revokeObjectUrl(url);
     }, { once: true, ...sig });
     nextMediaEl.addEventListener("error", () => {
-      if (mediaObjectUrl === url) mediaObjectUrl = null;
+      if (isCurrentMedia() && mediaObjectUrl === url) mediaObjectUrl = null;
       revokeObjectUrl(url);
+      if (!isCurrentMedia()) return;
       state.audio.isLoaded = false;
       state.audio.filename = "";
       state.audio.isPlaying = false;
@@ -342,13 +375,16 @@ const AudioEngine = (() => {
     }, { once: true, ...sig });
 
     nextMediaEl.addEventListener("play", () => {
+      if (!isCurrentMedia()) return;
       state.audio.isPlaying = true;
       state.audio.transportError = "";
     }, sig);
     nextMediaEl.addEventListener("pause", () => {
+      if (!isCurrentMedia()) return;
       state.audio.isPlaying = false;
     }, sig);
     nextMediaEl.addEventListener("ended", () => {
+      if (!isCurrentMedia()) return;
       state.audio.isPlaying = false;
       if (typeof AudioEngine._onTrackEnded === "function") {
         AudioEngine._onTrackEnded();
@@ -356,7 +392,7 @@ const AudioEngine = (() => {
     }, sig);
 
     try {
-      await attachSource({
+      const attached = await attachSource({
         kind: "file",
         sourceType: "media-element",
         label: file && file.name ? file.name : "",
@@ -364,9 +400,14 @@ const AudioEngine = (() => {
         mediaEl: nextMediaEl,
         abortController: nextAbort,
         objectUrl: url,
-      });
+      }, { isCurrent: isCurrentRequest });
+      if (!attached || !isCurrentMedia()) {
+        releaseCandidate();
+        return false;
+      }
     } catch (err) {
-      releaseMediaElement(nextMediaEl, url);
+      releaseCandidate();
+      if (!isCurrentRequest()) return false;
       state.audio.isLoaded = false;
       state.audio.filename = "";
       state.audio.isPlaying = false;
@@ -380,7 +421,7 @@ const AudioEngine = (() => {
     }
 
     if (!isCurrentRequest() || mediaEl !== nextMediaEl) {
-      releaseMediaElement(nextMediaEl, url);
+      releaseCandidate();
       return false;
     }
 
@@ -392,24 +433,42 @@ const AudioEngine = (() => {
       : (playErr ? describePlaybackError(playErr) : "");
     state.audio.isPlaying = !hardFailure && autoPlay && !nextMediaEl.paused;
 
+    // A failed activation has no valid session to retain. Recoverable Play
+    // errors on an already loaded File follow playPause(), not this branch.
+    if (hardFailure) releaseCandidate();
+
     return !hardFailure;
   }
 
   async function playPause() {
-    if (!mediaEl) return;
-    const ctx = ensureContext();
-    if (ctx.state === "suspended") await ctx.resume();
+    const target = mediaEl;
+    if (!target) return;
+    try {
+      const ctx = ensureContext();
+      if (ctx.state === "closed") throw new Error("AudioContext is closed. Reload to restore audio.");
+      if (ctx.state === "suspended") await ctx.resume();
+    } catch (err) {
+      if (mediaEl !== target) return;
+      // Resume failure does not invalidate the loaded File/session or graph.
+      state.audio.isPlaying = !target.paused;
+      state.audio.transportError = describePlaybackError(err, { contextFailure: true });
+      return;
+    }
+    // Clear/replacement owns teardown; superseded transport work stays silent.
+    if (mediaEl !== target) return;
 
-    if (mediaEl.paused) {
-      const err = await mediaEl.play().then(() => null).catch((e) => e);
+    if (target.paused) {
+      let err = null;
+      try { await target.play(); } catch (e) { err = e; }
+      if (mediaEl !== target) return;
       if (err) {
         state.audio.isPlaying = false;
         state.audio.transportError = describePlaybackError(err);
         return;
       }
-    } else mediaEl.pause();
+    } else target.pause();
 
-    state.audio.isPlaying = !mediaEl.paused;
+    state.audio.isPlaying = !target.paused;
   }
 
   function stop() {
@@ -516,7 +575,14 @@ const AudioEngine = (() => {
     bandL.analyser.getFloatFrequencyData(bandL.freqDb);
     bandR.analyser.getFloatFrequencyData(bandR.freqDb);
     bandC.analyser.getFloatFrequencyData(bandC.freqDb);
-    BandBank.computeEnergiesFromCAnalyser(bandC, ensureContext().sampleRate);
+
+    const sampleRate = audioContext.sampleRate;
+    BandBank.computeEnergiesFromAnalyser(bandL, sampleRate, state.bands.channels.L.energies01);
+    BandBank.computeEnergiesFromAnalyser(bandR, sampleRate, state.bands.channels.R.energies01);
+    const dominantIndex = BandBank.computeEnergiesFromAnalyser(
+      bandC, sampleRate, state.bands.channels.C.energies01,
+    );
+    if (Number.isInteger(dominantIndex)) BandBank.updateGlobalDominant(dominantIndex);
 
     return { ready: true, monoLike: status.monoLike, bands: { L: bandL, R: bandR, C: bandC }, debug: { corrLR: status.corrLR } };
   }

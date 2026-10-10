@@ -36,9 +36,6 @@ function computeInteriorEdges(mode, n, f0, f1) {
 }
 
 const BandBank = (() => {
-  const DEFAULT_ANALYSER_MIN_DB = -100;
-  const DEFAULT_ANALYSER_MAX_DB = -30;
-
   function getBandRangeData(index) {
     const n = runtime.settings.bands.count;
     if (!Number.isInteger(index) || index < 0 || index >= n) return null;
@@ -83,9 +80,10 @@ const BandBank = (() => {
   function rebuild(effectiveCeilingHz, sampleRateHz = null) {
     const s = runtime.settings;
     const n = s.bands.count;
-    const f0 = s.bands.floorHz;
+    const configuredFloorHz = s.bands.floorHz;
     const configCeilingHz = s.bands.ceilingHz;
-    const f1 = Math.max(f0, Number.isFinite(effectiveCeilingHz) ? effectiveCeilingHz : configCeilingHz);
+    const f1 = Number.isFinite(effectiveCeilingHz) ? effectiveCeilingHz : configCeilingHz;
+    const f0 = Math.min(configuredFloorHz, f1);
 
     state.bands.lowHz = new Array(n);
     state.bands.highHz = new Array(n);
@@ -95,6 +93,7 @@ const BandBank = (() => {
 
     const interiorBands = n - 2;
     const edges = computeInteriorEdges(s.bands.distributionMode, interiorBands, f0, f1);
+    for (let i = 0; i < edges.length; i++) edges[i] = clamp(edges[i], f0, f1);
     for (let i = 0; i < interiorBands; i++) {
       state.bands.lowHz[1 + i]  = edges[i];
       state.bands.highHz[1 + i] = edges[i + 1];
@@ -103,9 +102,15 @@ const BandBank = (() => {
     state.bands.lowHz[n - 1] = f1;
     state.bands.highHz[n - 1] = Infinity;
 
-    state.bands.energies01 = new Array(n).fill(0);
+    state.bands.channels = {
+      L: { energies01: new Array(n).fill(0) },
+      R: { energies01: new Array(n).fill(0) },
+      C: { energies01: new Array(n).fill(0) },
+    };
+    state.bands.energies01 = state.bands.channels.C.energies01;
     state.bands.meta.sampleRateHz = Number.isFinite(sampleRateHz) ? sampleRateHz : null;
     state.bands.meta.nyquistHz = Number.isFinite(sampleRateHz) ? sampleRateHz * 0.5 : null;
+    state.bands.meta.effectiveFloorHz = f0;
     state.bands.meta.configCeilingHz = configCeilingHz;
     state.bands.meta.effectiveCeilingHz = f1;
   }
@@ -118,50 +123,52 @@ const BandBank = (() => {
     return idx;
   }
 
-  function computeBandEnergiesFromFreqDb({
-    freqDb = null,
-    minDb = DEFAULT_ANALYSER_MIN_DB,
-    maxDb = DEFAULT_ANALYSER_MAX_DB,
-    nyquistHz = null,
-  } = {}) {
+  function computeEnergiesFromAnalyser(analyserBand, audioContextSampleRate, targetEnergies) {
     const s = runtime.settings;
     const n = s.bands.count;
-    const energies01 = new Array(n).fill(0);
-    if (!freqDb || !Number.isFinite(nyquistHz) || nyquistHz <= 0) {
-      return { energies01, dominantIndex: n > 0 ? 0 : -1 };
-    }
+    if (!analyserBand || !analyserBand.freqDb || !targetEnergies) return null;
 
-    const bins = freqDb.length;
+    const nyquist = audioContextSampleRate * 0.5;
+    const bins = analyserBand.freqDb.length;
+
+    const minDb = analyserBand.analyser.minDecibels;
+    const maxDb = analyserBand.analyser.maxDecibels;
     const dbSpan = Math.max(1e-6, (maxDb - minDb));
 
-    let dominant = n > 0 ? 0 : -1;
+    let dominant = 0;
     let dominantVal = -1;
 
     for (let i = 0; i < n; i++) {
-      const loHz = state.bands.lowHz[i];
+      const loHz = Math.min(nyquist, state.bands.lowHz[i]);
       const hiHzRaw = state.bands.highHz[i];
-      const hiHz = Math.min(nyquistHz, (hiHzRaw === Infinity ? nyquistHz : hiHzRaw));
+      const hiHz = Math.min(nyquist, (hiHzRaw === Infinity ? nyquist : hiHzRaw));
 
-      const loBin = Math.floor((loHz / nyquistHz) * (bins - 1));
-      const hiBin = Math.ceil((hiHz / nyquistHz) * (bins - 1));
+      if (hiHz <= loHz) {
+        targetEnergies[i] = 0;
+        continue;
+      }
+
+      const loBin = Math.floor((loHz / nyquist) * bins);
+      const hiBin = Math.ceil((hiHz / nyquist) * bins);
 
       const a = clamp(loBin, 0, bins - 1);
       const b = clamp(hiBin, 0, bins - 1);
 
       if (b < a) {
+        targetEnergies[i] = 0;
         continue;
       }
 
       let sum = 0;
       let count = 0;
       for (let k = a; k <= b; k++) {
-        const t = clamp((freqDb[k] - minDb) / dbSpan, 0, 1);
+        const t = clamp((analyserBand.freqDb[k] - minDb) / dbSpan, 0, 1);
         sum += t;
         count += 1;
       }
 
       const avg = count > 0 ? (sum / count) : 0;
-      energies01[i] = avg;
+      targetEnergies[i] = avg;
 
       if (avg > dominantVal) {
         dominantVal = avg;
@@ -169,41 +176,15 @@ const BandBank = (() => {
       }
     }
 
-    return { energies01, dominantIndex: dominant };
+    return dominant;
   }
 
-  function computeEnergiesFromCAnalyser(cBand, audioContextSampleRate) {
-    if (!cBand || !cBand.freqDb) return;
-
-    const minDb = Number.isFinite(cBand.minDb)
-      ? cBand.minDb
-      : (cBand.analyser ? cBand.analyser.minDecibels : DEFAULT_ANALYSER_MIN_DB);
-    const maxDb = Number.isFinite(cBand.maxDb)
-      ? cBand.maxDb
-      : (cBand.analyser ? cBand.analyser.maxDecibels : DEFAULT_ANALYSER_MAX_DB);
-    const spectrum = computeBandEnergiesFromFreqDb({
-      freqDb: cBand.freqDb,
-      minDb,
-      maxDb,
-      nyquistHz: audioContextSampleRate * 0.5,
-    });
-
-    state.bands.energies01.length = 0;
-    state.bands.energies01.push(...spectrum.energies01);
-    state.bands.dominantIndex = spectrum.dominantIndex;
-    const dominant = spectrum.dominantIndex;
-    const name = BAND_NAMES[dominant] || `Band ${dominant}`;
-    state.bands.dominantName = name;
+  function updateGlobalDominant(dominantIndex) {
+    state.bands.dominantIndex = dominantIndex;
+    state.bands.dominantName = BAND_NAMES[dominantIndex] || `Band ${dominantIndex}`;
   }
 
-  return {
-    rebuild,
-    bandIndexFromAngleRad,
-    computeBandEnergiesFromFreqDb,
-    computeEnergiesFromCAnalyser,
-    getBandRangeData,
-    formatBandRangeText,
-  };
+  return { rebuild, bandIndexFromAngleRad, computeEnergiesFromAnalyser, updateGlobalDominant, getBandRangeData, formatBandRangeText };
 })();
 
 export { hzToMel, melToHz, hzToBark, barkToHz, hzToErb, erbToHz, computeInteriorEdges, BandBank };

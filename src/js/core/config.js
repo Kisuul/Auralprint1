@@ -1,5 +1,18 @@
-import { TAU } from "./constants.js";
+import { TAU, RAD_TO_DEG } from "./constants.js";
 import { deepFreeze } from "./utils.js";
+
+const SIMULATION_MAX_DELTA_TIME_SEC = 1 / 30;
+
+const DEFAULT_ORB_BEHAVIOR = {
+  motion: { angularSpeedRadPerSec: Math.PI * 0.50 },
+  response: { minRadiusFrac: 0.01, maxRadiusFrac: 0.80, waveformRadialDisplaceFrac: 0.10 },
+  particles: { emitPerSecond: 240, sizeMaxPx: 8, sizeMinPx: 1, sizeToMinSec: 3.0, ttlSec: 6.0, minPlacementDistancePx: 0.5 },
+  trace: { lines: true, numLines: 10, lineAlpha: 0.35, lineWidthPx: 2, lineColorMode: "dominantBand" },
+};
+
+function defaultOrb(identity) {
+  return { ...identity, motion: { ...DEFAULT_ORB_BEHAVIOR.motion }, response: { ...DEFAULT_ORB_BEHAVIOR.response }, particles: { ...DEFAULT_ORB_BEHAVIOR.particles }, trace: { ...DEFAULT_ORB_BEHAVIOR.trace } };
+}
 
 /* =============================================================================
    CONFIG — Canonical truth (never mutated)
@@ -280,11 +293,12 @@ const CONFIG = deepFreeze({
   ],
 
   ui: {
-    panelBackgroundRgba: "rgba(0,0,0,0.72)",
+    panelBackgroundRgba: "rgba(17,25,30,0.96)",
     panelBlurPx: 6,
     panelPaddingPx: 10,
     panelGapPx: 10,
     panelRadiusPx: 10,
+    analysisHudIntervalMs: 100,
     audioPanelHeightPx: 106, // pad(10) + scrubber(36) + gap(10) + transport(var(--ui-icon)=40) + pad(10) = 106px
     iconButtonSizePx: 40,
     volume: { min: 0, max: 1, step: 0.01 },
@@ -367,55 +381,16 @@ const CONFIG = deepFreeze({
     },
   },
 
-  visualizers: {
-    orbs: {
-      defaults: {
-        hueOffsetDeg: 0,
-        centerX: 0,
-        centerY: 0,
-      },
-      limits: {
-        hueOffsetDeg: { min: 0, max: 360, step: 1 },
-        centerX: { min: -1, max: 1, step: 0.01 },
-        centerY: { min: -1, max: 1, step: 0.01 },
-      },
-    },
-  },
-
   defaults: {
     visuals: {
       backgroundColor: "#000000",
       particleColor: "#ffffff",
     },
 
-    trace: {
-      lines: true,
-      numLines: 10,
-      lineAlpha: 0.35,
-      lineWidthPx: 2,
-      lineColorMode: "dominantBand", // "fixed" | "lastParticle" | "dominantBand"
-    },
-
-    particles: {
-      emitPerSecond: 240,
-      sizeMaxPx: 8,
-      sizeMinPx: 1,
-      sizeToMinSec: 3.0,
-      ttlSec: 6.0,
-      overlapRadiusPx: 1.0,
-    },
-
-    motion: {
-      angularSpeedRadPerSec: Math.PI * 0.50,
-      waveformRadialDisplaceFrac: 0.10,
-    },
-
     audio: {
       fftSize: 8192,
       smoothingTimeConstant: 0.10,
       rmsGain: 1.0,
-      minRadiusFrac: 0.01,
-      maxRadiusFrac: 0.80,
 
       // Playback knobs (do NOT affect analysis)
       repeatMode: "none",
@@ -426,77 +401,30 @@ const CONFIG = deepFreeze({
     // Orbs: each orb chooses an analyser channel via `chanId` and can optionally
     // target specific spectral bands with `bandIds`.
     // Empty `bandIds` means full-band energy.
-    //
-    // ENGINE-COMPLETE fields (fully working in sim, no UI yet — do not re-implement):
-    //   chanId        — L/R/C channel routing (engine done; UI deferred)
-    //   bandIds       — per-orb spectral band targeting, avg energy (engine done; UI deferred)
-    //   chirality     — +1 or -1 rotation direction (engine done; UI deferred)
-    //   startAngleRad — initial phase offset in radians (engine done; UI deferred)
-    //
-    // Scene-only orb-overhaul fields live under CONFIG.visualizers.orbs and the
-    // canonical Scene runtime/preset path:
-    //   hueOffsetDeg  — per-orb color phase offset
-    //   centerX/Y     — orb origin offset in sim space
     orbs: [
-      { id: "ORB0", chanId: "R", bandIds: [], chirality: -1, startAngleRad: 0 },
-	  { id: "ORB1", chanId: "L", bandIds: [], chirality: -1, startAngleRad: Math.PI },
+      defaultOrb({
+        id: "ORB0",
+        chanId: "R",
+        bandIds: [],
+        chirality: -1,
+        startAngleRad: 0,
+        hueOffsetDeg: 0,
+        colorSource: "inherit",
+        centerXFrac: 0,
+        centerYFrac: 0,
+      }),
+      defaultOrb({
+        id: "ORB1",
+        chanId: "L",
+        bandIds: [],
+        chirality: -1,
+        startAngleRad: Math.PI,
+        hueOffsetDeg: 0,
+        colorSource: "inherit",
+        centerXFrac: 0,
+        centerYFrac: 0,
+      }),
     ],
-
-    scene: {
-      nodes: [
-        {
-          id: "orbs-1",
-          type: "orbs",
-          enabled: true,
-          zIndex: 0,
-          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-          anchor: { x: 0.5, y: 0.5 },
-          settings: [
-            {
-              id: "ORB0",
-              chanId: "R",
-              bandIds: [],
-              chirality: -1,
-              startAngleRad: 0,
-              hueOffsetDeg: 0,
-              centerX: 0,
-              centerY: 0,
-            },
-            {
-              id: "ORB1",
-              chanId: "L",
-              bandIds: [],
-              chirality: -1,
-              startAngleRad: Math.PI,
-              hueOffsetDeg: 0,
-              centerX: 0,
-              centerY: 0,
-            },
-          ],
-        },
-        {
-          id: "overlay-1",
-          type: "bandOverlay",
-          enabled: true,
-          zIndex: 1,
-          bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-          anchor: { x: 0.5, y: 0.5 },
-          settings: {
-            enabled: true,
-            connectAdjacent: true,
-            alpha: 0.65,
-            pointSizePx: 3,
-            minRadiusFrac: 0.01,
-            maxRadiusFrac: 0.80,
-            waveformRadialDisplaceFrac: 0.18,
-            lineAlpha: 0.35,
-            lineWidthPx: 1,
-            phaseMode: "free",
-            ringSpeedRadPerSec: 0.0,
-          },
-        },
-      ],
-    },
 
 bands: {
   // Ceiling adjusted (Now 22.5K) to restore band 255 functionality. Should now be 22.5K to 24K (Effectively, depending on nyquist)
@@ -510,7 +438,7 @@ bands: {
   distributionMode: "erb",  // "linear" | "log" | "mel" | "bark" | "erb"
 
       overlay: {
-        enabled: true,
+        enabled: false,
         connectAdjacent: true,
         alpha: 0.65,
         pointSizePx: 3,
@@ -534,11 +462,17 @@ bands: {
     },
 
     timing: {
-      maxDeltaTimeSec: 1 / 30,
+      maxDeltaTimeSec: SIMULATION_MAX_DELTA_TIME_SEC,
     },
+    particleSafety: { maxEmissionsPerFrame: 512, maxActiveParticles: 16384 },
   },
 
   limits: {
+    particleSafety: {
+      maxEmissionsPerFrame: { min: 0, max: 16384, step: 1 },
+      maxActiveParticles: { min: 0, max: 1048576, step: 1 },
+    },
+    timing: { maxDeltaTimeSec: SIMULATION_MAX_DELTA_TIME_SEC, motionDiscontinuitySec: 0.5 },
     trace: {
       numLines: { min: 10, max: 1000, step: 10 },
       lineAlpha: { min: 0, max: 1, step: 0.01 },
@@ -551,41 +485,63 @@ bands: {
       sizeMinPx: { min: 0.5, max: 6, step: 0.1 },
       sizeToMinSec: { min: 0.1, max: 120, step: 0.1 },
       ttlSec: { min: 0.1, max: 600, step: 0.1 },
-      overlapRadiusPx: { min: 0.5, max: 10, step: 0.1 },
+      minPlacementDistancePx: { min: 0, max: 10, step: 0.1 },
     },
 
     motion: {
       angularSpeedRadPerSec: { min: 0.01, max: 3, step: 0.01 },
-      waveformRadialDisplaceFrac: { min: 0.01, max: 1.00, step: 0.01 },
     },
 
     audio: {
       rmsGain: { min: 0.05, max: 10, step: 0.01 },
-      minRadiusFrac: { min: 0.01, max: 0.4, step: 0.01 },
-      maxRadiusFrac: { min: 0.3, max: 1, step: 0.01 },
       smoothingTimeConstant: { min: 0.01, max: 0.99, step: 0.01 },
       fftSizes: [256, 512, 1024, 2048, 4096, 8192, 16384],
     },
 
     bands: {
+      // Floor band, at least one interior band, and open-ended top band.
+      count: { min: 3, max: 256 },
       overlayAlpha: { min: 0, max: 1, step: 0.01 },
+      overlayLineAlpha: { min: 0, max: 1, step: 0.01 },
+      overlayLineWidthPx: { min: 1, max: 6, step: 1 },
       pointSizePx: { min: 1, max: 10, step: 1 },
       overlayMinRadiusFrac: { min: 0.01, max: 0.4, step: 0.01 },
       overlayMaxRadiusFrac: { min: 0.3, max: 1, step: 0.01 },
       overlayWaveformRadialDisplaceFrac: { min: 0.01, max: 1.00, step: 0.01 },
+      ringSpeedRadPerSec: { min: 0, max: TAU, step: 0.01 },
+      distributionModes: ["linear", "log", "mel", "bark", "erb"],
+    },
+
+    // Scene Appearance owns the shared color policy. Persistence intentionally
+    // remains under the historical visuals.* and bands.* schema-10 paths.
+    sceneColor: {
       hueOffsetDeg: { min: 0, max: 360, step: 1 },
       saturation: { min: 0, max: 1, step: 0.01 },
       value: { min: 0, max: 1, step: 0.01 },
-
-      ringSpeedRadPerSec: { min: 0, max: TAU, step: 0.01 },
-      distributionModes: ["linear", "log", "mel", "bark", "erb"],
+      particleColorSources: ["fixed", "dominant", "angle"],
     },
 
     monoDetect: {
       rightSilenceRms: 0.002,
       lrCorrelationStride: 8,
       lrCorrelationMonoThresh: 0.995
-    }
+    },
+
+    orbs: {
+      // Provisional operational safety ceiling, not a frame-rate guarantee.
+      maxCount: 4096,
+      response: {
+        minRadiusFrac: { min: 0.01, max: 0.4, step: 0.01 },
+        maxRadiusFrac: { min: 0.3, max: 1, step: 0.01 },
+        waveformRadialDisplaceFrac: { min: 0.01, max: 1.00, step: 0.01 },
+      },
+      startAngleRad: { min: 0, max: TAU, step: 1 / RAD_TO_DEG },
+      hueOffsetDeg: { min: 0, max: 360, step: 1 },
+      centerXFrac: { min: -0.95, max: 0.95, step: 0.01 },
+      centerYFrac: { min: -0.95, max: 0.95, step: 0.01 },
+      colorSources: ["inherit", "fixed", "dominant", "angle"],
+      channels: ["L", "R", "C"],
+    },
   }
 });
 

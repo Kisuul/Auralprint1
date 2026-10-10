@@ -143,7 +143,7 @@ test("state.source exists and starts in the idle none state", () => {
   assert.equal(state.source.kind, "none");
   assert.equal(state.source.status, "idle");
   assert.equal(state.source.sessionActive, false);
-  assert.deepEqual(createSourceState().streamMeta, { hasAudio: false, hasVideo: false });
+  assert.deepEqual(createSourceState().streamMeta, { hasAudio: false, hasVideo: false, audioChannelCount: null });
 });
 
 test("input source manager init marks unsupported capabilities when media APIs are absent", () => {
@@ -263,7 +263,10 @@ test("activateMic tears down an active file source, attaches the microphone stre
   assert.equal(calls.unload, 1);
   assert.equal(calls.attachMediaStreamSource.length, 1);
   assert.equal(calls.attachMediaStreamSource[0].mediaStream, micSession.stream);
-  assert.deepEqual(calls.attachMediaStreamSource[0].opts, {
+  assert.equal(typeof calls.attachMediaStreamSource[0].opts.isCurrent, "function");
+  assert.equal(calls.attachMediaStreamSource[0].opts.isCurrent(), true);
+  const { isCurrent, ...attachmentOptions } = calls.attachMediaStreamSource[0].opts;
+  assert.deepEqual(attachmentOptions, {
     kind: "mic",
     label: "USB Microphone",
     monitorOutput: false,
@@ -276,7 +279,7 @@ test("activateMic tears down an active file source, attaches the microphone stre
   assert.equal(stateRef.source.sessionActive, true);
   assert.equal(stateRef.source.permission.mic, "granted");
   assert.equal(stateRef.source.label, "USB Microphone");
-  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: false });
+  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: false, audioChannelCount: null });
 });
 
 test("activateMic reports denied microphone permission as a recoverable error", async () => {
@@ -332,7 +335,10 @@ test("activateStream tears down an active file source, attaches shared stream au
   assert.equal(calls.unload, 1);
   assert.equal(calls.attachMediaStreamSource.length, 1);
   assert.equal(calls.attachMediaStreamSource[0].mediaStream, sharedSession.stream);
-  assert.deepEqual(calls.attachMediaStreamSource[0].opts, {
+  assert.equal(typeof calls.attachMediaStreamSource[0].opts.isCurrent, "function");
+  assert.equal(calls.attachMediaStreamSource[0].opts.isCurrent(), true);
+  const { isCurrent, ...attachmentOptions } = calls.attachMediaStreamSource[0].opts;
+  assert.deepEqual(attachmentOptions, {
     kind: "stream",
     label: "Browser Tab",
     monitorOutput: false,
@@ -345,7 +351,7 @@ test("activateStream tears down an active file source, attaches shared stream au
   assert.equal(stateRef.source.sessionActive, true);
   assert.equal(stateRef.source.permission.stream, "granted");
   assert.equal(stateRef.source.label, "Browser Tab");
-  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: true });
+  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: true, audioChannelCount: null });
 });
 
 test("activateStream accepts audio-only display capture and uses the audio track label", async () => {
@@ -362,7 +368,10 @@ test("activateStream accepts audio-only display capture and uses the audio track
 
   assert.equal(result.ok, true);
   assert.equal(calls.attachMediaStreamSource.length, 1);
-  assert.deepEqual(calls.attachMediaStreamSource[0].opts, {
+  assert.equal(typeof calls.attachMediaStreamSource[0].opts.isCurrent, "function");
+  assert.equal(calls.attachMediaStreamSource[0].opts.isCurrent(), true);
+  const { isCurrent, ...attachmentOptions } = calls.attachMediaStreamSource[0].opts;
+  assert.deepEqual(attachmentOptions, {
     kind: "stream",
     label: "System Mix",
     monitorOutput: false,
@@ -370,7 +379,124 @@ test("activateStream accepts audio-only display capture and uses the audio track
   assert.equal(stateRef.source.kind, "stream");
   assert.equal(stateRef.source.status, "active");
   assert.equal(stateRef.source.label, "System Mix");
-  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: false });
+  assert.deepEqual(stateRef.source.streamMeta, { hasAudio: true, hasVideo: false, audioChannelCount: null });
+});
+
+test("Stream requests supported stereo/fidelity preferences without mandatory constraints", async () => {
+  const session = createFakeMediaStream({ video: true });
+  let requested;
+  const { manager } = createManagerHarness({ mediaDevices: {
+    getSupportedConstraints() {
+      return { channelCount: true, echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+    },
+    async getDisplayMedia(constraints) { requested = constraints; return session.stream; },
+  } });
+  assert.equal((await manager.activateStream()).ok, true);
+  assert.deepEqual(requested, { video: true, audio: {
+    channelCount: { ideal: 2 }, echoCancellation: { ideal: false },
+    noiseSuppression: { ideal: false }, autoGainControl: { ideal: false },
+  } });
+});
+
+test("Stream omits unsupported audio fields and still activates", async () => {
+  const session = createFakeMediaStream();
+  let requested;
+  const { manager } = createManagerHarness({ mediaDevices: {
+    getSupportedConstraints() { return { echoCancellation: true, channelCount: false, noiseSuppression: false }; },
+    async getDisplayMedia(constraints) { requested = constraints; return session.stream; },
+  } });
+  assert.equal((await manager.activateStream()).ok, true);
+  assert.deepEqual(requested, { video: true, audio: { echoCancellation: { ideal: false } } });
+});
+
+test("Stream falls back to audio:true when constraint inspection is missing, empty, or throws", async () => {
+  for (const inspection of [undefined, () => ({}), () => null, () => { throw new Error("unavailable"); }]) {
+    const session = createFakeMediaStream();
+    let requested;
+    const { manager } = createManagerHarness({ mediaDevices: {
+      ...(inspection ? { getSupportedConstraints: inspection } : {}),
+      async getDisplayMedia(constraints) { requested = constraints; return session.stream; },
+    } });
+    assert.equal((await manager.activateStream()).ok, true);
+    assert.deepEqual(requested, { video: true, audio: true });
+  }
+});
+
+test("Stream stores the actual returned channel count and keeps the original live stream", async () => {
+  for (const channelCount of [2, 1, 6]) {
+    const session = createFakeMediaStream({ video: true });
+    session.audioTrack.getSettings = () => ({ channelCount });
+    const { manager, stateRef, calls } = createManagerHarness({ mediaDevices: {
+      getSupportedConstraints() { return { channelCount: true }; },
+      async getDisplayMedia() { return session.stream; },
+    } });
+    assert.equal((await manager.activateStream()).ok, true);
+    assert.equal(stateRef.source.streamMeta.audioChannelCount, channelCount);
+    assert.equal(calls.attachMediaStreamSource[0].mediaStream, session.stream);
+    assert.equal(session.audioTrack.stopCount, 0);
+    assert.equal(session.videoTrack.stopCount, 0);
+  }
+});
+
+test("Stream leaves channel count unknown for absent, unavailable, or invalid track settings", async () => {
+  for (const settings of [undefined, () => ({}), () => null, () => { throw new Error("unavailable"); },
+    ...[0, -1, 1.5, "2", NaN, Infinity].map(channelCount => () => ({ channelCount }))]) {
+    const session = createFakeMediaStream();
+    if (settings) session.audioTrack.getSettings = settings;
+    const { manager, stateRef } = createManagerHarness({ mediaDevices: {
+      async getDisplayMedia() { return session.stream; },
+    } });
+    assert.equal((await manager.activateStream()).ok, true);
+    assert.equal(stateRef.source.streamMeta.audioChannelCount, null);
+  }
+});
+
+test("Stream metadata describes the track selected by MediaStreamAudioSourceNode ID ordering", async () => {
+  const session = createFakeMediaStream({ audioLabels: ["Track B", "Track A"] });
+  session.audioTracks[0].id = "b"; session.audioTracks[1].id = "a";
+  session.audioTracks[0].getSettings = () => ({ channelCount: 1 });
+  session.audioTracks[1].getSettings = () => ({ channelCount: 2 });
+  const { manager, stateRef } = createManagerHarness({ mediaDevices: {
+    async getDisplayMedia() { return session.stream; },
+  } });
+  await manager.activateStream();
+  assert.equal(stateRef.source.streamMeta.audioChannelCount, 2);
+});
+
+test("Stream channel metadata resets on file, mic, end, failure, and a new pending session", async () => {
+  for (const exit of ["file", "mic", "ended", "denied", "attach-failed", "no-audio", "pending", "unknown-session"]) {
+    const first = createFakeMediaStream();
+    first.audioTrack.getSettings = () => ({ channelCount: 2 });
+    const second = createFakeMediaStream({ hasAudio: exit !== "no-audio" });
+    let captures = 0;
+    let resolvePending;
+    const { manager, stateRef } = createManagerHarness({ mediaDevices: {
+      async getUserMedia() { return second.stream; },
+      async getDisplayMedia() {
+        if (++captures === 1) return first.stream;
+        if (exit === "denied") { const err = new Error("denied"); err.name = "NotAllowedError"; throw err; }
+        if (exit === "pending") return new Promise(resolve => { resolvePending = resolve; });
+        return second.stream;
+      },
+    }, onAttachMediaStreamSource() {
+      if (exit === "attach-failed" && captures > 1) throw new Error("attach failed");
+      return true;
+    } });
+    await manager.activateStream();
+    assert.equal(stateRef.source.streamMeta.audioChannelCount, 2, exit);
+    if (exit === "file") await manager.activateFile({ name: "next.wav" });
+    else if (exit === "mic") await manager.activateMic();
+    else if (exit === "ended") { first.audioTrack.emit("ended"); await Promise.resolve(); }
+    else if (exit === "pending") {
+      const pending = manager.activateStream();
+      await Promise.resolve(); await Promise.resolve();
+      assert.equal(stateRef.source.streamMeta.audioChannelCount, null);
+      await manager.teardownActiveSource();
+      resolvePending(second.stream);
+      await pending;
+    } else await manager.activateStream();
+    assert.equal(stateRef.source.streamMeta.audioChannelCount, null, exit);
+  }
 });
 
 test("activateStream rejects shared streams that do not provide usable audio", async () => {
@@ -843,12 +969,15 @@ test("URL preset serialization excludes runtime source state", () => {
   state.source.sessionActive = true;
   state.source.streamMeta.hasAudio = true;
   state.source.streamMeta.hasVideo = true;
+  state.source.streamMeta.audioChannelCount = 2;
 
   try {
     UrlPreset.writeHashFromPrefs();
     const payload = decodePresetHash(locationStub.hash);
     assert.ok(payload && payload.prefs);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "source"), false);
+    assert.equal(payload.schema, 10);
+    assert.doesNotMatch(JSON.stringify(payload), /audioChannelCount/);
   } finally {
     state.source.kind = previousSource.kind;
     state.source.status = previousSource.status;
@@ -862,9 +991,105 @@ test("URL preset serialization excludes runtime source state", () => {
     state.source.sessionActive = previousSource.sessionActive;
     state.source.streamMeta.hasAudio = previousSource.streamMeta.hasAudio;
     state.source.streamMeta.hasVideo = previousSource.streamMeta.hasVideo;
+    state.source.streamMeta.audioChannelCount = previousSource.streamMeta.audioChannelCount;
     globalThis.location = previousLocation;
     globalThis.history = previousHistory;
     globalThis.btoa = previousBtoa;
     globalThis.atob = previousAtob;
   }
 });
+
+for (const kind of ["mic", "stream"]) {
+  test(`AUD-001: stale File continuation after teardown cannot publish over newer ${kind}`, async () => {
+    let current = 1;
+    const live = createFakeMediaStream();
+    const h = createManagerHarness({
+      isLoadRequestCurrent: id => id === current,
+      mediaDevices: { async getUserMedia() { return live.stream; }, async getDisplayMedia() { return live.stream; } },
+    });
+    assert.equal((await h.manager.activateFile({ name: "loaded.wav" }, { requestId: 1 })).ok, true);
+    const writes = [];
+    h.stateRef.source = new Proxy(h.stateRef.source, {
+      set(object, key, value) { writes.push({ key, value }); object[key] = value; return true; },
+    });
+    const obsolete = h.manager.activateFile({ name: "obsolete.wav" }, { requestId: 1 });
+    // teardown has run synchronously, but activateFile has not resumed its await.
+    current = 2;
+    const winner = kind === "mic" ? h.manager.activateMic() : h.manager.activateStream();
+    const boundary = writes.length;
+    assert.equal(await obsolete, false);
+    assert.equal((await winner).ok, true);
+    assert.equal(h.calls.loadFile.length, 1, "obsolete engine work never starts");
+    assert.ok(!writes.slice(boundary).some(x => x.key === "kind" && x.value === "file"));
+    assert.ok(!writes.slice(boundary).some(x => x.key === "label" && x.value === "obsolete.wav"));
+    assert.equal(h.stateRef.source.kind, kind); assert.equal(h.stateRef.source.status, "active");
+    assert.equal(live.audioTrack.stopCount, 0);
+    const before = structuredClone({ ...h.stateRef.source });
+    const unloads = h.calls.unload, count = writes.length;
+    assert.equal(await h.manager.activateFile({ name: "already-stale.wav" }, { requestId: 1 }), false);
+    assert.equal(h.calls.unload, unloads, "stale entry guard cannot tear down the current owner");
+    assert.equal(writes.length, count);
+    assert.deepEqual({ ...h.stateRef.source }, before);
+    assert.equal(live.audioTrack.stopCount, 0);
+    await h.manager.teardownActiveSource();
+  });
+}
+
+for (const failure of ["throw", "reject"]) {
+  test(`AUD-002: manager settles current engine ${failure} into one source failure`, async () => {
+    let fail = true;
+    const h = createManagerHarness({ onLoadFile() {
+      if (fail) {
+        const error = new Error("native media setup refused");
+        if (failure === "throw") throw error;
+        return Promise.reject(error);
+      }
+      return true;
+    } });
+    Object.assign(h.stateRef.audio, { isLoaded: true, isPlaying: false, filename: "old metadata.wav", transportError: "old error" });
+    const result = await h.manager.activateFile({ name: "A.wav" }, { requestId: 1 });
+    assert.equal(result.ok, false); assert.equal(result.status, "error");
+    assert.equal(result.errorCode, "file-activation-failed");
+    assert.equal(result.errorMessage, "Playback failed: native media setup refused");
+    assert.equal(h.stateRef.source.status, "error"); assert.equal(h.stateRef.source.sessionActive, false);
+    assert.equal(h.stateRef.source.streamMeta.hasAudio, false);
+    assert.equal(h.stateRef.audio.isLoaded, false); assert.equal(h.stateRef.audio.isPlaying, false);
+    assert.equal(h.stateRef.audio.filename, ""); assert.equal(h.calls.unload, 1);
+    fail = false;
+    assert.equal((await h.manager.activateFile({ name: "B.wav" }, { requestId: 2 })).ok, true);
+    assert.equal(h.stateRef.source.status, "active"); assert.equal(h.stateRef.source.errorCode, "");
+  });
+}
+
+for (const winner of ["clear", "file", "mic", "stream"]) {
+  test(`AUD-002: manager contains obsolete engine rejection after ${winner} without source/audio writes`, async () => {
+    let reject, entered, current = 1;
+    const started = new Promise(resolve => { entered = resolve; });
+    const held = new Promise((_, no) => { reject = no; });
+    const live = createFakeMediaStream();
+    const h = createManagerHarness({
+      isLoadRequestCurrent: id => id === current,
+      onLoadFile({ file }) { if (file.name === "A.wav") { entered(); return held; } return true; },
+      mediaDevices: { async getUserMedia() { return live.stream; }, async getDisplayMedia() { return live.stream; } },
+    });
+    const pending = h.manager.activateFile({ name: "A.wav" }, { requestId: 1 });
+    await started; current = 2;
+    if (winner === "clear") await h.manager.teardownActiveSource();
+    else if (winner === "file") await h.manager.activateFile({ name: "B.wav" }, { requestId: 2 });
+    else await (winner === "mic" ? h.manager.activateMic() : h.manager.activateStream());
+    h.stateRef.audio.transportError = "winner audio error";
+    h.stateRef.source.errorMessage = "winner source error";
+    const before = structuredClone(h.stateRef), writes = [];
+    for (const key of ["audio", "source"]) h.stateRef[key] = new Proxy(h.stateRef[key], {
+      set(object, field, value) { writes.push({ key, field, value }); object[field] = value; return true; },
+    });
+    const unloads = h.calls.unload;
+    reject(new Error("obsolete engine failure"));
+    let result;
+    await assert.doesNotReject(async () => { result = await pending; });
+    assert.equal(result, false); assert.deepEqual(writes, []);
+    assert.deepEqual({ ...h.stateRef.audio }, before.audio); assert.deepEqual({ ...h.stateRef.source }, before.source);
+    assert.equal(h.calls.unload, unloads); assert.equal(live.audioTrack.stopCount, 0);
+    await h.manager.teardownActiveSource();
+  });
+}

@@ -1,29 +1,42 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 
+import { PRESET_SCHEMA_VERSION, LEGACY_SCHEMA_V8 } from "../src/js/core/constants.js";
 import { CONFIG } from "../src/js/core/config.js";
-import { PRESET_SCHEMA_VERSION } from "../src/js/core/constants.js";
-import { normalizeOrbDef, preferences, replacePreferences, resolveSettings } from "../src/js/core/preferences.js";
+import { normalizeOrbDef, preferences, runtime, replacePreferences, resolveSettings } from "../src/js/core/preferences.js";
 import { state } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
-import { BandBank } from "../src/js/audio/band-bank.js";
+import { BandBankController } from "../src/js/audio/band-bank-controller.js";
+import { createAnalysisFrame, updateAnalysisFrame } from "../src/js/audio/analysis-frame.js";
 import { InputSourceManager, createInputSourceManager } from "../src/js/audio/input-source-manager.js";
 import { Queue } from "../src/js/audio/queue.js";
 import { Scrubber, buildWaveformPeaks } from "../src/js/audio/scrubber.js";
 import { UrlPreset } from "../src/js/presets/url-preset.js";
 import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
-import { createCompositor } from "../src/js/render/compositor.js";
-import { Orb } from "../src/js/render/orb.js";
-import { readSceneSettingsSchema } from "../src/js/render/scene-runtime.js";
-import { IDENTITY_VIEW_TRANSFORM, normalizeViewTransform } from "../src/js/render/view-transform.js";
-import { createVisualizerRegistry, registerBuiltInVisualizers } from "../src/js/render/visualizer.js";
-import { BandOverlayVisualizer } from "../src/js/render/visualizers/band-overlay.js";
-import { createPanelShellState, getPanelShellStateSnapshot } from "../src/js/ui/panel-state.js";
+import { initOrbs } from "../src/js/render/orb-runtime.js";
+import { VisualizerRuntime } from "../src/js/render/visualizer-runtime.js";
 import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/ui.js";
 import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
+
+test("development version metadata and schema remain aligned", () => {
+  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.f");
+  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.f\s/);
+  assert.equal(PRESET_SCHEMA_VERSION, 10);
+});
+
+test("per-Orb commits use one canonical runtime sync and Orb editor refresh authority", () => {
+  const source = readFileSync(new URL("../src/js/ui/ui.js", import.meta.url), "utf8");
+  const perOrbCommit = source.match(/function applyOrbPrefChangeById[\s\S]*?\n  \}/u)?.[0] || "";
+  const applyPrefs = source.match(/function applyPrefs[\s\S]*?\n  \}/u)?.[0] || "";
+  const refreshAll = source.match(/function refreshAllUiText[\s\S]*?\n  \}/u)?.[0] || "";
+  assert.equal((perOrbCommit.match(/syncOrbsFromSettings\(\)/g) || []).length, 0);
+  assert.equal((applyPrefs.match(/syncOrbsFromSettings\(\)/g) || []).length, 1);
+  assert.match(refreshAll, /orbEditorUi\.refresh\(runtime\.settings\)/);
+  assert.doesNotMatch(refreshAll, /orbEditorUi\.refresh\(p\)/);
+});
 
 function createAudioBuffer(channels) {
   return {
@@ -31,30 +44,6 @@ function createAudioBuffer(channels) {
     getChannelData(index) {
       return Float32Array.from(channels[index]);
     },
-  };
-}
-
-function createArcCaptureContext() {
-  const arcs = [];
-  return {
-    arcs,
-    save() {},
-    restore() {},
-    beginPath() {},
-    moveTo() {},
-    lineTo() {},
-    stroke() {},
-    rect() {},
-    clip() {},
-    fill() {},
-    arc(x, y, r) {
-      arcs.push({ x, y, r });
-    },
-    set fillStyle(_value) {},
-    set strokeStyle(_value) {},
-    set lineWidth(_value) {},
-    set lineJoin(_value) {},
-    set lineCap(_value) {},
   };
 }
 
@@ -125,15 +114,6 @@ function decodePresetHash(hash) {
   return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
 }
 
-function encodePresetHashPayload(payload) {
-  const b64 = Buffer.from(JSON.stringify(payload), "utf8")
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-  return `#p=${b64}`;
-}
-
 function snapshotSourceAndAudioState() {
   return {
     source: JSON.parse(JSON.stringify(state.source)),
@@ -141,93 +121,8 @@ function snapshotSourceAndAudioState() {
   };
 }
 
-function snapshotBandState() {
-  return structuredClone(state.bands);
-}
-
-function restoreBandState(snapshot) {
-  state.bands.lowHz = snapshot.lowHz.slice();
-  state.bands.highHz = snapshot.highHz.slice();
-  state.bands.energies01 = snapshot.energies01.slice();
-  state.bands.meta.sampleRateHz = snapshot.meta.sampleRateHz;
-  state.bands.meta.nyquistHz = snapshot.meta.nyquistHz;
-  state.bands.meta.configCeilingHz = snapshot.meta.configCeilingHz;
-  state.bands.meta.effectiveCeilingHz = snapshot.meta.effectiveCeilingHz;
-  state.bands.dominantIndex = snapshot.dominantIndex;
-  state.bands.dominantName = snapshot.dominantName;
-  state.bands.ringPhaseRad = snapshot.ringPhaseRad;
-}
-
-function snapshotSceneState() {
-  return structuredClone(state.scene);
-}
-
-function restoreSceneState(snapshot) {
-  if (!snapshot) return;
-  state.scene.nodes = structuredClone(Array.isArray(snapshot.nodes) ? snapshot.nodes : []);
-  state.scene.selectedNodeId = typeof snapshot.selectedNodeId === "string" ? snapshot.selectedNodeId : "";
-  state.scene.viewTransform = structuredClone(snapshot.viewTransform);
-}
-
-function primeDominantBandState({ dominantIndex = 42, dominantName = "Test Band", energy = 0.67 } = {}) {
-  const bandCount = preferences.bands.count;
-  state.bands.lowHz = Array.from({ length: bandCount }, (_value, index) => index * 100);
-  state.bands.highHz = Array.from(
-    { length: bandCount },
-    (_value, index) => (index === bandCount - 1 ? Infinity : (index + 1) * 100)
-  );
-  state.bands.energies01 = new Array(bandCount).fill(0);
-  state.bands.energies01[dominantIndex] = energy;
-  state.bands.meta.sampleRateHz = 48000;
-  state.bands.meta.nyquistHz = 24000;
-  state.bands.meta.configCeilingHz = preferences.bands.ceilingHz;
-  state.bands.meta.effectiveCeilingHz = preferences.bands.ceilingHz;
-  state.bands.dominantIndex = dominantIndex;
-  state.bands.dominantName = dominantName;
-}
-
-function primeRealBandAnalysis({ dominantIndex = null, sampleRateHz = 48000, bins = 8192 } = {}) {
-  BandBank.rebuild(preferences.bands.ceilingHz, sampleRateHz);
-
-  const nyquistHz = sampleRateHz * 0.5;
-  const minDb = -100;
-  const maxDb = 0;
-  const freqDb = new Float32Array(bins).fill(minDb);
-
-  if (Number.isInteger(dominantIndex)) {
-    const lowHz = state.bands.lowHz[dominantIndex];
-    const highHzRaw = state.bands.highHz[dominantIndex];
-    const highHz = Math.min(nyquistHz, highHzRaw === Infinity ? nyquistHz : highHzRaw);
-    const lowBin = Math.max(0, Math.floor((lowHz / nyquistHz) * (bins - 1)));
-    const highBin = Math.max(lowBin, Math.ceil((highHz / nyquistHz) * (bins - 1)));
-
-    for (let i = lowBin; i <= highBin; i++) freqDb[i] = maxDb;
-  }
-
-  BandBank.computeEnergiesFromCAnalyser({
-    freqDb,
-    analyser: {
-      minDecibels: minDb,
-      maxDecibels: maxDb,
-    },
-  }, sampleRateHz);
-}
-
-function snapshotUiState() {
-  return {
-    ...state.ui,
-    panelShell: getPanelShellStateSnapshot(state.ui.panelShell),
-    runtimeLog: JSON.parse(JSON.stringify(state.ui.runtimeLog)),
-    runtimeLogObserver: JSON.parse(JSON.stringify(state.ui.runtimeLogObserver)),
-  };
-}
-
-function restoreUiState(snapshot) {
-  if (!snapshot) return;
-  Object.assign(state.ui, snapshot);
-  state.ui.panelShell = createPanelShellState(snapshot.panelShell);
-  state.ui.runtimeLog = JSON.parse(JSON.stringify(snapshot.runtimeLog));
-  state.ui.runtimeLogObserver = JSON.parse(JSON.stringify(snapshot.runtimeLogObserver));
+function analysisFrameForUi(monoLike) {
+  return updateAnalysisFrame(createAnalysisFrame(), { ready: true, monoLike, bands: {} }, state.bands);
 }
 
 function applySourceAndAudioState(snapshot) {
@@ -362,10 +257,7 @@ async function withUiWireHarnessState({
   const previous = {
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
-    bands: snapshotBandState(),
-    scene: snapshotSceneState(),
     recording: JSON.parse(JSON.stringify(state.recording)),
-    ui: snapshotUiState(),
     repeatMode: preferences.audio.repeatMode,
   };
 
@@ -399,36 +291,13 @@ async function withUiWireHarnessState({
     Object.assign(state.recording, previous.recording);
     if (recordingState) Object.assign(state.recording, recordingState);
     if (repeatMode !== null) preferences.audio.repeatMode = repeatMode;
+    resolveSettings();
 
     for (const name of queueNames) Queue.add(createNamedAudioFile(name));
     if (currentIndex >= 0) Queue.setCursor(currentIndex);
 
-    state.ui.panelShell = createPanelShellState({
-      openTargets: {
-        audioSource: true,
-        queue: queueVisible,
-        analysis: false,
-        banking: true,
-        scene: true,
-        recording: false,
-        workspace: false,
-        status: false,
-      },
-    });
-    state.ui.recordingUiSyncKey = "";
-    state.ui.runtimeLog = {
-      entries: [],
-      nextId: 1,
-      hasUnread: false,
-      maxEntries: 64,
-    };
-    state.ui.runtimeLogUiSyncKey = "";
-    state.ui.runtimeLogObserver = {
-      sourceSnapshot: null,
-      recordingSnapshot: null,
-    };
-
     UI.wireControls();
+    if (state.ui.queuePanel) state.ui.queuePanel.style.display = queueVisible ? "block" : "none";
     UI.refreshRecordingUi();
     UI.refreshAllUiText(bandSnapshot);
 
@@ -439,16 +308,16 @@ async function withUiWireHarnessState({
   } finally {
     Queue.clear();
     applySourceAndAudioState(previous);
-    restoreBandState(previous.bands);
-    restoreSceneState(previous.scene);
     Object.assign(state.recording, previous.recording);
-    restoreUiState(previous.ui);
     preferences.audio.repeatMode = previous.repeatMode;
+    resolveSettings();
     harness.restore();
   }
 }
 
-function createAudioEngineHarness() {
+let audioEngineHarnessContext = null;
+
+function createAudioEngineHarness({ contextState = "running", onResume = null, freshMediaElements = false, onMediaElement = null } = {}) {
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
   const previousURL = globalThis.URL;
@@ -456,7 +325,19 @@ function createAudioEngineHarness() {
   const previousOnFilePlaybackError = AudioEngine._onFilePlaybackError;
   const revokedUrls = [];
   const connectionLog = [];
+  const analysers = [];
   let destinationNode = null;
+  const previousContextState = audioEngineHarnessContext?.state;
+  const previousResume = audioEngineHarnessContext?.resume;
+  const resume = function () {
+    if (onResume) return onResume(this);
+    this.state = "running";
+    return Promise.resolve();
+  };
+  if (audioEngineHarnessContext) {
+    audioEngineHarnessContext.state = contextState;
+    audioEngineHarnessContext.resume = resume;
+  }
 
   function createNode(extra = {}) {
     const node = {
@@ -473,7 +354,7 @@ function createAudioEngineHarness() {
     return node;
   }
 
-  const audioEl = {
+  function makeAudioElement() { return {
     preload: "",
     src: "",
     paused: true,
@@ -487,13 +368,14 @@ function createAudioEngineHarness() {
     listeners: new Map(),
     addEventListener(type, handler, options = {}) {
       const entries = this.listeners.get(type) || [];
-      entries.push({ handler, once: !!options.once });
+      entries.push({ handler, once: !!options.once, signal: options.signal });
       this.listeners.set(type, entries);
     },
     dispatch(type) {
       const entries = [...(this.listeners.get(type) || [])];
       const kept = [];
       for (const entry of entries) {
+        if (entry.signal?.aborted) continue;
         entry.handler();
         if (!entry.once) kept.push(entry);
       }
@@ -518,12 +400,23 @@ function createAudioEngineHarness() {
     load() {
       this.releaseCalls.load += 1;
     },
-  };
+  }; }
+  const audioEl = makeAudioElement();
+  const mediaElements = [];
+  function createMediaElement() {
+    const element = freshMediaElements ? makeAudioElement() : audioEl;
+    mediaElements.push(element);
+    if (onMediaElement) onMediaElement(element, mediaElements.length - 1);
+    return element;
+  }
+  let objectUrlCount = 0;
 
   class FakeAudioContext {
     constructor() {
       this.sampleRate = 48000;
-      this.state = "running";
+      this.state = contextState;
+      this.resume = resume;
+      audioEngineHarnessContext = this;
       this.destination = createNode({ kind: "destination" });
       destinationNode = this.destination;
     }
@@ -544,13 +437,18 @@ function createAudioEngineHarness() {
       return createNode();
     }
     createAnalyser() {
-      return createNode({
+      const analyser = createNode({
         fftSize: 2048,
         smoothingTimeConstant: 0,
         frequencyBinCount: 1024,
+        minDecibels: -100,
+        maxDecibels: 0,
+        frequencyReadCount: 0,
         getFloatTimeDomainData(buffer) { buffer.fill(0); },
-        getFloatFrequencyData(buffer) { buffer.fill(-100); },
+        getFloatFrequencyData(buffer) { this.frequencyReadCount += 1; buffer.fill(-100); },
       });
+      analysers.push(analyser);
+      return analyser;
     }
     createMediaStreamDestination() {
       return createNode({
@@ -565,12 +463,12 @@ function createAudioEngineHarness() {
   globalThis.document = {
     createElement(tag) {
       if (tag !== "audio") throw new Error(`Unexpected element request: ${tag}`);
-      return audioEl;
+      return createMediaElement();
     },
   };
   globalThis.URL = {
     createObjectURL() {
-      return "blob:test-audio";
+      return freshMediaElements ? `blob:test-audio-${++objectUrlCount}` : "blob:test-audio";
     },
     revokeObjectURL(url) {
       revokedUrls.push(url);
@@ -579,13 +477,20 @@ function createAudioEngineHarness() {
 
   return {
     audioEl,
+    createMediaElement,
+    mediaElements,
     connectionLog,
+    analysers,
     get destinationNode() {
       return destinationNode;
     },
     revokedUrls,
     restore() {
       try { AudioEngine.unload(); } catch {}
+      if (audioEngineHarnessContext) {
+        audioEngineHarnessContext.state = previousContextState || "running";
+        if (previousResume) audioEngineHarnessContext.resume = previousResume;
+      }
       AudioEngine._onFilePlaybackError = previousOnFilePlaybackError;
       state.audio.isLoaded = previousAudioState.isLoaded;
       state.audio.isPlaying = previousAudioState.isPlaying;
@@ -605,7 +510,7 @@ function createRecorderHarness() {
   const previousSource = JSON.parse(JSON.stringify(state.source));
   const previousAudio = { ...state.audio };
   const previousRecording = JSON.parse(JSON.stringify(state.recording));
-  const previousUi = snapshotUiState();
+  const previousUi = { ...state.ui };
   const mediaRecorders = [];
 
   const videoTrack = { kind: "video", stop() {} };
@@ -715,7 +620,7 @@ function createRecorderHarness() {
       state.audio.filename = previousAudio.filename;
       state.audio.transportError = previousAudio.transportError;
       Object.assign(state.recording, previousRecording);
-      restoreUiState(previousUi);
+      Object.assign(state.ui, previousUi);
       globalThis.window = previousWindow;
       globalThis.MediaStream = previousMediaStream;
       globalThis.MediaRecorder = previousMediaRecorder;
@@ -736,6 +641,7 @@ function createStubUiElement(tagName = "div") {
     style: { display: "block" },
     dataset: {},
     children: [],
+    parentNode: null,
     options: [],
     hidden: false,
     disabled: false,
@@ -755,36 +661,61 @@ function createStubUiElement(tagName = "div") {
     },
     dispatch(type, event = {}) {
       const entries = listeners.get(type) || [];
-      for (const handler of entries) {
-        handler({
-          preventDefault() {},
-          stopPropagation() {},
-          target: this,
-          currentTarget: this,
-          ...event,
-        });
-      }
+      return Promise.all(entries.map(handler => handler({
+        preventDefault() {},
+        stopPropagation() {},
+        target: this,
+        currentTarget: this,
+        ...event,
+      })));
     },
     click() {
       if (this.disabled) return;
       this.dispatch("click");
     },
     appendChild(child) {
+      if (child.parentNode) child.parentNode.children = child.parentNode.children.filter((entry) => entry !== child);
+      child.parentNode = this;
       this.children.push(child);
       if (child && child.tagName === "OPTION") this.options.push(child);
       return child;
     },
-    remove() {},
-    focus() {},
-    contains() {
-      return false;
+    insertBefore(child, before) {
+      if (child.parentNode) child.parentNode.children = child.parentNode.children.filter((entry) => entry !== child);
+      child.parentNode = this;
+      const index = before ? this.children.indexOf(before) : -1;
+      if (index < 0) this.children.push(child);
+      else this.children.splice(index, 0, child);
+      return child;
     },
-    closest() {
-      return null;
+    append(...children) {
+      for (const child of children) this.appendChild(child);
     },
-    querySelector() {
-      return null;
+    replaceChildren(...children) {
+      for (const child of [...this.children]) child.remove();
+      for (const child of children.flatMap((child) => child && child.isFragment ? [...child.children] : [child])) this.appendChild(child);
     },
+    remove() {
+      if (this.parentNode) this.parentNode.children = this.parentNode.children.filter((entry) => entry !== this);
+      this.parentNode = null;
+    },
+    focus() { document.activeElement = this; },
+    scrollIntoView() {},
+    contains(target) { return target === this || this.children.some((child) => child.contains(target)); },
+    closest(selector) {
+      if (selector.startsWith(".") && this.className?.split(" ").includes(selector.slice(1))) return this;
+      if (selector === "button[data-action]" && this.tagName === "BUTTON" && this.dataset.action) return this;
+      return this.parentNode?.closest(selector) || null;
+    },
+    querySelectorAll(selector) {
+      const matches = [];
+      for (const child of this.children) {
+        if (selector === child.tagName.toLowerCase() || (selector.startsWith(".") && child.className?.split(" ").includes(selector.slice(1))) || (selector === '[data-action="edit"]' && child.dataset.action === "edit")) matches.push(child);
+        matches.push(...child.querySelectorAll(selector));
+      }
+      return matches;
+    },
+    querySelector(selector) { return this.querySelectorAll(selector)[0] || null; },
     setAttribute(name, value) {
       attributes.set(name, String(value));
     },
@@ -836,16 +767,18 @@ function createUiWireHarness() {
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
   const previousElement = globalThis.Element;
-  const previousUi = snapshotUiState();
+  const previousUi = { ...state.ui };
   const previousCanvas = state.canvas;
-  const previousPreferences = structuredClone(preferences);
-  const previousScene = snapshotSceneState();
   const elements = new Map();
   const windowListeners = new Map();
 
   function getElement(id) {
     if (!elements.has(id)) {
-      const el = createStubUiElement(id === "fileInput" ? "input" : "div");
+      const tag = id.startsWith("sel") ? "select" : (/^(rng|chk|clr)/.test(id) || id === "fileInput" ? "input" : "div");
+      const el = createStubUiElement(tag);
+      el.id = id;
+      if (id.startsWith("chk")) el.type = "checkbox";
+      if (id.startsWith("rng")) el.type = "range";
       if (id === "queuePanel") el.style.display = "none";
       elements.set(id, el);
     }
@@ -870,14 +803,17 @@ function createUiWireHarness() {
     createElement(tag) {
       return createStubUiElement(tag);
     },
+    createDocumentFragment() {
+      const fragment = createStubUiElement("fragment");
+      fragment.isFragment = true;
+      return fragment;
+    },
     body,
     querySelectorAll() {
       return [];
     },
   };
   state.canvas = createStubUiElement("canvas");
-  state.scene.nodes = [];
-  state.scene.selectedNodeId = "";
 
   return {
     getElement,
@@ -897,56 +833,13 @@ function createUiWireHarness() {
       }
     },
     restore() {
-      replacePreferences(structuredClone(previousPreferences));
-      resolveSettings();
-      restoreSceneState(previousScene);
-      restoreUiState(previousUi);
+      Object.assign(state.ui, previousUi);
       state.canvas = previousCanvas;
       globalThis.window = previousWindow;
       globalThis.document = previousDocument;
       globalThis.Element = previousElement;
     },
   };
-}
-
-function readSceneRowAt(index) {
-  return state.ui.sceneNodeList.children[index] || null;
-}
-
-function readSceneRowActions(row) {
-  if (!row || !row.children[1]) return null;
-  const actions = row.children[1];
-  return {
-    selectButton: actions.children[0] || null,
-    enabledLabel: actions.children[1] || null,
-    enabledInput: actions.children[1] ? actions.children[1].children[0] || null : null,
-    moveBackwardButton: actions.children[2] || null,
-    moveForwardButton: actions.children[3] || null,
-  };
-}
-
-function findSceneInspectorRow(labelText) {
-  const container = state.ui.sceneInspectorFields;
-  const rows = container && Array.isArray(container.children) ? container.children : [];
-  return rows.find((row) => row && row.children && row.children[0] && row.children[0].textContent === labelText) || null;
-}
-
-function readSceneOrbCardAt(index) {
-  const orbList = state.ui.sceneInspectorFields && state.ui.sceneInspectorFields.children
-    ? state.ui.sceneInspectorFields.children[2] || null
-    : null;
-  return orbList && orbList.children ? orbList.children[index] || null : null;
-}
-
-function findSceneOrbCardRow(card, labelText) {
-  const rows = card && Array.isArray(card.children) ? card.children : [];
-  return rows.find((row, index) => (
-    index > 0
-    && row
-    && row.children
-    && row.children[0]
-    && row.children[0].textContent === labelText
-  )) || null;
 }
 
 test("normalizeOrbDef preserves fallback routing when chanId and bandIds are omitted", () => {
@@ -983,275 +876,168 @@ test("normalizeOrbDef still honors explicit incoming routing and band selections
   assert.deepEqual(normalized.bandIds, []);
 });
 
-test("Orb uses scene node bounds for radius and origin instead of full-canvas metrics", () => {
+test("normalizeOrbDef clamps hue and sanitizes Build 115 orb fields", () => {
+  const fallback = CONFIG.defaults.orbs[0];
+  const normalized = normalizeOrbDef({
+    id: "ORB0",
+    chanId: "R",
+    hueOffsetDeg: 999,
+    colorSource: "bogus",
+    centerXFrac: 2,
+    centerYFrac: -2,
+  }, fallback);
+
+  assert.equal(normalized.hueOffsetDeg, 360);
+  assert.equal(normalized.colorSource, "inherit");
+  assert.equal(normalized.centerXFrac, CONFIG.limits.orbs.centerXFrac.max);
+  assert.equal(normalized.centerYFrac, CONFIG.limits.orbs.centerYFrac.min);
+});
+
+test("normalizeOrbDef defaults missing v8 orb fields to Build 115 values", () => {
+  const fallback = CONFIG.defaults.orbs[0];
+  const normalized = normalizeOrbDef({
+    id: "legacy",
+    chanId: "L",
+    bandIds: [1],
+    chirality: 1,
+    startAngleRad: 1.5,
+  }, fallback);
+
+  assert.equal(normalized.hueOffsetDeg, 0);
+  assert.equal(normalized.colorSource, "inherit");
+  assert.equal(normalized.centerXFrac, 0);
+  assert.equal(normalized.centerYFrac, 0);
+});
+
+test("URL preset schema 9 round-trips per-orb Build 115 fields", () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousBtoa = globalThis.btoa;
+  const previousAtob = globalThis.atob;
   const previousPrefs = structuredClone(preferences);
-  const previousWidthPx = state.widthPx;
-  const previousHeightPx = state.heightPx;
 
-  try {
-    replacePreferences(structuredClone(CONFIG.defaults));
-    resolveSettings();
-    state.widthPx = 1000;
-    state.heightPx = 1000;
-
-    const orb = new Orb({
-      id: "BOUNDED",
-      chanId: "C",
-      bandIds: [],
-      chirality: 1,
-      startAngleRad: 0,
-      hueOffsetDeg: 0,
-      centerX: 0.5,
-      centerY: -0.5,
-    });
-    const boundsPx = { x: 100, y: 200, width: 200, height: 100 };
-
-    orb.step(0, 0, {
-      energy01: 1,
-      timeDomain: null,
-    }, {
-      boundsPx,
-    });
-
-    const screenX = state.widthPx * 0.5 + orb.xSim;
-    const screenY = state.heightPx * 0.5 - orb.ySim;
-
-    assert.equal(orb.baseRadiusPx, 80);
-    assert.equal(screenX, 330);
-    assert.equal(screenY, 275);
-  } finally {
-    replacePreferences(previousPrefs);
-    resolveSettings();
-    state.widthPx = previousWidthPx;
-    state.heightPx = previousHeightPx;
+  if (typeof globalThis.btoa !== "function") {
+    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
   }
-});
-
-test("Band overlay uses node-local metrics instead of full-canvas ring geometry", () => {
-  const previousPrefs = structuredClone(preferences);
-  const previousWidthPx = state.widthPx;
-  const previousHeightPx = state.heightPx;
-  const previousDpr = state.dpr;
-  const previousRingPhaseRad = state.bands.ringPhaseRad;
-
-  try {
-    replacePreferences(structuredClone(CONFIG.defaults));
-    resolveSettings();
-    state.widthPx = 1000;
-    state.heightPx = 1000;
-    state.dpr = 1;
-    state.bands.ringPhaseRad = 0;
-
-    const ctx = createArcCaptureContext();
-    const node = {
-      id: "overlay-1",
-      type: "bandOverlay",
-      settings: structuredClone(CONFIG.defaults.bands.overlay),
-    };
-    const boundsPx = { x: 100, y: 150, width: 200, height: 100 };
-    const visualizer = new BandOverlayVisualizer({ node });
-
-    visualizer.init({
-      ctx,
-      widthPx: state.widthPx,
-      heightPx: state.heightPx,
-      dpr: state.dpr,
-      node,
-    });
-    visualizer.resize(boundsPx);
-    visualizer.update({
-      analysis: {
-        compat: {
-          centerWaveform: new Float32Array([0]),
-        },
-      },
-      bands: [
-        { energy: 1 },
-      ],
-    }, 0);
-    visualizer.render({
-      ctx,
-      widthPx: state.widthPx,
-      heightPx: state.heightPx,
-      dpr: state.dpr,
-    }, IDENTITY_VIEW_TRANSFORM);
-
-    assert.equal(ctx.arcs.length, 1);
-    assert.deepEqual(ctx.arcs[0], { x: 280, y: 200, r: 3 });
-  } finally {
-    replacePreferences(previousPrefs);
-    resolveSettings();
-    state.widthPx = previousWidthPx;
-    state.heightPx = previousHeightPx;
-    state.dpr = previousDpr;
-    state.bands.ringPhaseRad = previousRingPhaseRad;
-  }
-});
-
-test("built-in visualizer registry exposes only real Build 115 runtime types", () => {
-  const registry = createVisualizerRegistry();
-  registerBuiltInVisualizers(registry);
-
-  const orbDescriptor = registry.get("orbs");
-  const overlayDescriptor = registry.get("bandOverlay");
-
-  assert.equal(registry.has("orbs"), true);
-  assert.equal(registry.has("bandOverlay"), true);
-  assert.equal(registry.has("legacyRender"), false);
-  assert.equal(registry.get("legacyRender"), null);
-  assert.equal(orbDescriptor.type, "orbs");
-  assert.equal(orbDescriptor.defaultNode.type, "orbs");
-  assert.equal(overlayDescriptor.type, "bandOverlay");
-  assert.equal(overlayDescriptor.defaultNode.type, "bandOverlay");
-});
-
-test("compositor syncScene owns visualizer lifecycle and render ordering honestly", () => {
-  const events = [];
-  const warnings = [];
-  let nextInstanceToken = 1;
-
-  class ProbeVisualizer {
-    constructor({ node }) {
-      this.node = node;
-      this.token = nextInstanceToken++;
-      events.push({ type: "construct", id: node.id, token: this.token });
-    }
-
-    init({ node }) {
-      events.push({ type: "init", id: node.id, token: this.token });
-    }
-
-    configure(node) {
-      this.node = node;
-      events.push({ type: "configure", id: node.id, zIndex: node.zIndex, token: this.token });
-    }
-
-    resize(boundsPx) {
-      events.push({ type: "resize", id: this.node.id, boundsPx: { ...boundsPx }, token: this.token });
-    }
-
-    update(_frame, dtSec) {
-      events.push({ type: "update", id: this.node.id, dtSec, token: this.token });
-    }
-
-    render(_target, viewTransform) {
-      events.push({ type: "render", id: this.node.id, mode: viewTransform.mode, token: this.token });
-    }
-
-    dispose() {
-      events.push({ type: "dispose", id: this.node.id, token: this.token });
-    }
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
   }
 
-  const registry = createVisualizerRegistry();
-  registry.register("probe", ProbeVisualizer);
-
-  const compositor = createCompositor({
-    registry,
-    onWarning(warning) {
-      warnings.push(warning);
+  const locationStub = { pathname: "/", search: "", hash: "" };
+  globalThis.location = locationStub;
+  globalThis.history = {
+    replaceState(_state, _title, url) {
+      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
     },
+  };
+
+  try {
+    preferences.orbs[0] = normalizeOrbDef({
+      ...preferences.orbs[0],
+      hueOffsetDeg: 120,
+      colorSource: "angle",
+      centerXFrac: 0.1,
+      centerYFrac: -0.05,
+    }, CONFIG.defaults.orbs[0]);
+    preferences.orbs[1] = normalizeOrbDef({
+      ...preferences.orbs[1],
+      chanId: "C",
+      chirality: 1,
+      hueOffsetDeg: 240,
+    }, CONFIG.defaults.orbs[1]);
+
+    UrlPreset.writeHashFromPrefs();
+    const payload = decodePresetHash(locationStub.hash);
+    assert.equal(payload.schema, PRESET_SCHEMA_VERSION);
+    assert.equal(payload.prefs.orbs[0].hueOffsetDeg, 120);
+    assert.equal(payload.prefs.orbs[0].colorSource, "angle");
+    assert.equal(payload.prefs.orbs[0].centerXFrac, 0.1);
+    assert.equal(payload.prefs.orbs[1].chanId, "C");
+
+    replacePreferences(structuredClone(CONFIG.defaults));
+    resolveSettings();
+    assert.equal(UrlPreset.applyFromLocationHash(), true);
+    assert.equal(preferences.orbs[0].hueOffsetDeg, 120);
+    assert.equal(preferences.orbs[0].colorSource, "angle");
+    assert.equal(preferences.orbs[1].hueOffsetDeg, 240);
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.btoa = previousBtoa;
+    globalThis.atob = previousAtob;
+  }
+});
+
+test("UI refreshAllUiText renders generated per-Orb editor cards", async () => {
+  await withUiWireHarnessState({}, () => {
+    UI.refreshAllUiText();
+    assert.equal(state.ui.orbEditorList.children.length, preferences.orbs.length);
+    assert.deepEqual(state.ui.orbEditorList.children.map((card) => card.dataset.orbId), preferences.orbs.map((orb) => orb.id));
   });
+});
 
-  const createNode = ({ id, enabled = true, zIndex = 0, bounds, anchor }) => ({
-    id,
-    type: "probe",
-    enabled,
-    zIndex,
-    bounds,
-    anchor,
-  });
+test("UI refreshAllUiText represents the current VisualizerRuntime composition", async () => {
+  const previousOrbs = structuredClone(preferences.orbs);
+  try {
+    preferences.orbs = ["ORB0", "ORB7", "ORB3"].map((id, index) => normalizeOrbDef({
+      ...CONFIG.defaults.orbs[index % CONFIG.defaults.orbs.length],
+      id,
+    }, CONFIG.defaults.orbs[index % CONFIG.defaults.orbs.length]));
+    resolveSettings();
+    initOrbs();
+    await withUiWireHarnessState({}, ({ getElement }) => {
+      UI.refreshAllUiText();
+      assert.equal(getElement("visualizersStatus").textContent, "4 visualizers · 3 Orbs");
+      assert.equal(getElement("visualizerList").children.length, 4);
+    });
+  } finally {
+    preferences.orbs = previousOrbs;
+    resolveSettings();
+    initOrbs();
+  }
+});
 
-  const targetA = { canvas: null, ctx: null, widthPx: 100, heightPx: 80, dpr: 1 };
-  compositor.syncScene({
-    nodes: [
-      createNode({
-        id: "a",
-        zIndex: 2,
-        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-        anchor: { x: 0.5, y: 0.5 },
-      }),
-      createNode({
-        id: "b",
-        zIndex: 1,
-        bounds: { x: 0.25, y: 0.25, w: 0.5, h: 0.5 },
-        anchor: { x: 0, y: 0 },
-      }),
-      createNode({
-        id: "c",
-        zIndex: 1,
-        bounds: { x: 0.75, y: 0.75, w: 0.25, h: 0.25 },
-        anchor: { x: 1, y: 1 },
-      }),
-      createNode({
-        id: "skip",
-        enabled: false,
-        zIndex: 0,
-        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-        anchor: { x: 0.5, y: 0.5 },
-      }),
-    ],
-  }, targetA);
-  compositor.update({ ok: true }, 0.25);
-  compositor.render(targetA, IDENTITY_VIEW_TRANSFORM);
+test("URL preset schema 8 orb payloads migrate to Build 115 defaults", () => {
+  const previousLocation = globalThis.location;
+  const previousHistory = globalThis.history;
+  const previousAtob = globalThis.atob;
+  const previousPrefs = structuredClone(preferences);
 
-  assert.deepEqual(events.filter((event) => event.type === "construct").map((event) => event.id), ["a", "b", "c"]);
-  assert.deepEqual(events.filter((event) => event.type === "update").map((event) => event.id), ["b", "c", "a"]);
-  assert.deepEqual(events.filter((event) => event.type === "render").map((event) => event.id), ["b", "c", "a"]);
-  assert.deepEqual(
-    events.filter((event) => event.type === "resize").map((event) => ({ id: event.id, boundsPx: event.boundsPx })),
-    [
-      { id: "a", boundsPx: { x: 0, y: 0, width: 100, height: 80 } },
-      { id: "b", boundsPx: { x: 25, y: 20, width: 50, height: 40 } },
-      { id: "c", boundsPx: { x: 50, y: 40, width: 25, height: 20 } },
-    ]
-  );
+  if (typeof globalThis.atob !== "function") {
+    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
+  }
 
-  events.length = 0;
+  const v8Prefs = structuredClone(CONFIG.defaults);
+  v8Prefs.orbs = CONFIG.defaults.orbs.map((orb) => ({
+    id: orb.id,
+    chanId: orb.chanId,
+    bandIds: [...orb.bandIds],
+    chirality: orb.chirality,
+    startAngleRad: orb.startAngleRad,
+  }));
+  const json = JSON.stringify({ schema: LEGACY_SCHEMA_V8, prefs: v8Prefs });
+  const b64 = Buffer.from(json, "utf8").toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 
-  const targetB = { canvas: null, ctx: null, widthPx: 200, heightPx: 100, dpr: 2 };
-  compositor.syncScene({
-    nodes: [
-      createNode({
-        id: "c",
-        zIndex: 3,
-        bounds: { x: 0.5, y: 0.5, w: 0.5, h: 1 },
-        anchor: { x: 0.5, y: 0.5 },
-      }),
-      createNode({
-        id: "a",
-        enabled: false,
-        zIndex: 2,
-        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-        anchor: { x: 0.5, y: 0.5 },
-      }),
-      createNode({
-        id: "d",
-        zIndex: 1,
-        bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-        anchor: { x: 0.5, y: 0.5 },
-      }),
-    ],
-  }, targetB);
-  compositor.update({ ok: true }, 0.5);
-  compositor.render(targetB, IDENTITY_VIEW_TRANSFORM);
+  const locationStub = { pathname: "/", search: "", hash: `#p=${b64}` };
+  globalThis.location = locationStub;
+  globalThis.history = { replaceState() {} };
 
-  assert.deepEqual(events.filter((event) => event.type === "construct").map((event) => event.id), ["d"]);
-  assert.deepEqual(events.filter((event) => event.type === "dispose").map((event) => event.id).sort(), ["a", "b"]);
-  assert.deepEqual(events.filter((event) => event.type === "render").map((event) => event.id), ["d", "c"]);
-  assert.deepEqual(
-    events.filter((event) => event.type === "resize").map((event) => ({ id: event.id, boundsPx: event.boundsPx })),
-    [
-      { id: "c", boundsPx: { x: 50, y: 0, width: 100, height: 100 } },
-      { id: "d", boundsPx: { x: 0, y: 0, width: 200, height: 100 } },
-    ]
-  );
-  assert.deepEqual(warnings, []);
-
-  events.length = 0;
-  compositor.dispose();
-
-  assert.deepEqual(events.filter((event) => event.type === "dispose").map((event) => event.id).sort(), ["c", "d"]);
+  try {
+    replacePreferences(structuredClone(CONFIG.defaults));
+    resolveSettings();
+    assert.equal(UrlPreset.applyFromLocationHash(), true);
+    assert.equal(preferences.orbs[0].hueOffsetDeg, 0);
+    assert.equal(preferences.orbs[0].colorSource, "inherit");
+    assert.equal(preferences.orbs[0].centerXFrac, 0);
+  } finally {
+    replacePreferences(previousPrefs);
+    resolveSettings();
+    globalThis.location = previousLocation;
+    globalThis.history = previousHistory;
+    globalThis.atob = previousAtob;
+  }
 });
 
 test("buildWaveformPeaks keeps mono peak behavior unchanged", () => {
@@ -1510,6 +1296,13 @@ test("AudioEngine.loadFile does not tear down the freshly created media element 
     assert.equal(AudioEngine.getMediaEl(), harness.audioEl);
     assert.equal(state.audio.isLoaded, true);
     assert.equal(state.audio.filename, "demo.wav");
+    const arraysBefore = Object.fromEntries(Object.entries(state.bands.channels).map(([id, value]) => [id, value.energies01]));
+    assert.equal(AudioEngine.sample().ready, true);
+    assert.deepEqual(harness.analysers.map((analyser) => analyser.frequencyReadCount), [1, 1, 1]);
+    AudioEngine.sample();
+    assert.deepEqual(harness.analysers.map((analyser) => analyser.frequencyReadCount), [2, 2, 2]);
+    for (const id of ["L", "R", "C"]) assert.equal(state.bands.channels[id].energies01, arraysBefore[id]);
+    assert.equal(state.bands.energies01, state.bands.channels.C.energies01);
   } finally {
     harness.restore();
   }
@@ -1726,6 +1519,40 @@ test("readSourceUiModel keeps stream mode honest about live-source affordances",
   assert.equal(shouldShowActiveQueueItem({ kind: "stream" }, { isLoaded: false }, { active: true }), false);
 });
 
+test("Stream status exposes 2ch, mono, and multichannel capture separately from analysed content", () => {
+  for (const [audioChannelCount, captureText] of [[2, "2ch"], [1, "mono (1ch)"], [6, "6ch"]]) {
+    for (const bandText of ["stereo (L≠R)", "mono-ish (L≈R)"]) {
+      const model = readSourceUiModel({
+        sourceState: { kind: "stream", status: "active", label: "Browser Tab", streamMeta: { audioChannelCount } },
+        bandText,
+      });
+      assert.equal(model.audioStatusText, `Stream live: Browser Tab - Capture: ${captureText} - Bands: ${bandText}`);
+    }
+  }
+});
+
+test("Stream status retains the existing format when capture channel count is unknown", () => {
+  for (const audioChannelCount of [null, undefined, 0, -1, 1.5, "2", NaN]) {
+    const model = readSourceUiModel({
+      sourceState: { kind: "stream", status: "active", label: "Browser Tab", streamMeta: { audioChannelCount } },
+      bandText: "stereo (L≠R)",
+    });
+    assert.equal(model.audioStatusText, "Stream live: Browser Tab - Bands: stereo (L≠R)");
+  }
+});
+
+test("inactive Stream and Mic status never expose stale Stream capture metadata", () => {
+  for (const sourceState of [
+    { kind: "stream", status: "requesting" },
+    { kind: "stream", status: "error", errorMessage: "Share failed." },
+    { kind: "mic", status: "active", label: "Podcast Mic" },
+  ]) {
+    assert.doesNotMatch(readSourceUiModel({
+      sourceState: { ...sourceState, streamMeta: { audioChannelCount: 2 } },
+    }).audioStatusText, /Capture:/);
+  }
+});
+
 test("readSourceUiModel treats File as the idle workflow side without implying an active file source", () => {
   const model = readSourceUiModel({
     sourceState: {
@@ -1793,7 +1620,6 @@ test("URL preset serialization excludes runtime source and recording state", () 
   const previousSource = JSON.parse(JSON.stringify(state.source));
   const previousAudio = { ...state.audio };
   const previousRecording = JSON.parse(JSON.stringify(state.recording));
-  const previousUi = snapshotUiState();
 
   if (typeof globalThis.btoa !== "function") {
     globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
@@ -1835,18 +1661,6 @@ test("URL preset serialization excludes runtime source and recording state", () 
   state.recording.chunkCount = 3;
   state.recording.lastCode = "finalizing";
   state.recording.lastMessage = "Finalizing recording export...";
-  state.ui.runtimeLog.entries = [
-    {
-      id: 99,
-      level: "warn",
-      category: "workspace",
-      code: "preset-warning",
-      message: "This should never serialize into presets.",
-      timestampMs: 1234,
-    },
-  ];
-  state.ui.runtimeLog.nextId = 100;
-  state.ui.runtimeLog.hasUnread = true;
 
   try {
     UrlPreset.writeHashFromPrefs();
@@ -1854,15 +1668,9 @@ test("URL preset serialization excludes runtime source and recording state", () 
     assert.ok(payload && payload.prefs);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "source"), false);
     assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "recording"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "runtimeLog"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "ui"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "scene"), true);
-    assert.ok(Array.isArray(payload.prefs.scene.nodes));
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs.scene, "viewTransform"), false);
   } finally {
     applySourceAndAudioState({ source: previousSource, audio: previousAudio });
     Object.assign(state.recording, previousRecording);
-    restoreUiState(previousUi);
     globalThis.location = previousLocation;
     globalThis.history = previousHistory;
     globalThis.btoa = previousBtoa;
@@ -1898,33 +1706,30 @@ test("URL preset round-trips persisted config fields that were previously droppe
   };
 
   try {
-    preferences.trace.lineAlpha = 0.12;
-    preferences.trace.lineWidthPx = 5;
+    preferences.orbs[0].trace.lineAlpha = 0.12;
+    preferences.orbs[0].trace.lineWidthPx = 5;
     preferences.bands.count = 128;
     preferences.bands.floorHz = 40;
     preferences.bands.ceilingHz = 18000;
     preferences.bands.overlay.lineAlpha = 0.18;
     preferences.bands.overlay.lineWidthPx = 4;
-    preferences.timing.maxDeltaTimeSec = 0.5;
+    preferences.timing.maxDeltaTimeSec = 1 / 120;
 
     UrlPreset.writeHashFromPrefs();
 
     replacePreferences(structuredClone(CONFIG.defaults));
     resolveSettings();
 
-    const result = UrlPreset.applyFromLocationHash();
-    assert.equal(result.ok, true);
-    assert.equal(result.code, "preset-applied");
-    assert.equal(result.schema, PRESET_SCHEMA_VERSION);
-    assert.equal(result.migratedFromSchema, null);
-    assert.equal(preferences.trace.lineAlpha, 0.12);
-    assert.equal(preferences.trace.lineWidthPx, 5);
+    const ok = UrlPreset.applyFromLocationHash();
+    assert.equal(ok, true);
+    assert.equal(preferences.orbs[0].trace.lineAlpha, 0.12);
+    assert.equal(preferences.orbs[0].trace.lineWidthPx, 5);
     assert.equal(preferences.bands.count, 128);
     assert.equal(preferences.bands.floorHz, 40);
     assert.equal(preferences.bands.ceilingHz, 18000);
     assert.equal(preferences.bands.overlay.lineAlpha, 0.18);
     assert.equal(preferences.bands.overlay.lineWidthPx, 4);
-    assert.equal(preferences.timing.maxDeltaTimeSec, 0.5);
+    assert.equal(preferences.timing.maxDeltaTimeSec, 1 / 120);
   } finally {
     replacePreferences(previousPrefs);
     resolveSettings();
@@ -1933,1232 +1738,6 @@ test("URL preset round-trips persisted config fields that were previously droppe
     globalThis.btoa = previousBtoa;
     globalThis.atob = previousAtob;
   }
-});
-
-test("hash-driven preset apply reports through Workspace ownership lanes", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const previousPrefs = structuredClone(preferences);
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-
-  if (typeof globalThis.btoa !== "function") {
-    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
-  }
-  if (typeof globalThis.atob !== "function") {
-    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
-  }
-
-  globalThis.location = locationStub;
-  globalThis.history = {
-    replaceState(_state, _title, url) {
-      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
-    },
-  };
-
-  try {
-    await withUiWireHarnessState({}, ({ harness }) => {
-      const sceneStatusBefore = state.ui.sceneStatus.textContent;
-
-      preferences.trace.lineAlpha = 0.12;
-      UrlPreset.writeHashFromPrefs();
-      assert.match(locationStub.hash, /^#p=/);
-
-      replacePreferences(structuredClone(CONFIG.defaults));
-      resolveSettings();
-
-      harness.dispatchWindow("hashchange");
-
-      assert.equal(preferences.trace.lineAlpha, 0.12);
-      assert.equal(state.ui.workspaceStatus.textContent, "Updated: hash preset loaded");
-      assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
-      assert.equal(state.ui.runtimeLog.entries.length, 1);
-      assert.equal(state.ui.runtimeLog.entries[0].category, "workspace");
-      assert.equal(state.ui.runtimeLog.entries[0].code, "preset-applied");
-      assert.match(state.ui.runtimeLog.entries[0].message, /Applied preset from URL hash/);
-      assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
-    });
-  } finally {
-    replacePreferences(previousPrefs);
-    resolveSettings();
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("hash-driven preset migration appends a workspace migration notice", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousPrefs = structuredClone(preferences);
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: encodePresetHashPayload({
-      schema: 7,
-      prefs: {
-        trace: {
-          lineAlpha: 0.21,
-        },
-      },
-    }),
-  };
-
-  globalThis.location = locationStub;
-  globalThis.history = {
-    replaceState() {},
-  };
-
-  try {
-    await withUiWireHarnessState({}, ({ harness }) => {
-      replacePreferences(structuredClone(CONFIG.defaults));
-      resolveSettings();
-
-      harness.dispatchWindow("hashchange");
-
-      assert.equal(preferences.trace.lineAlpha, 0.21);
-      assert.equal(state.ui.runtimeLog.entries.length, 1);
-      assert.equal(state.ui.runtimeLog.entries[0].code, "preset-migrated");
-      assert.match(state.ui.runtimeLog.entries[0].message, /schema v7/i);
-    });
-  } finally {
-    replacePreferences(previousPrefs);
-    resolveSettings();
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-  }
-});
-
-test("legacy preset fixtures migrate forward into Schema 9 scene nodes", () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const previousPrefs = structuredClone(preferences);
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-  const cases = [
-    {
-      name: "schema 8 root orbs and overlay",
-      schema: 8,
-      prefs: {
-        bands: {
-          count: 96,
-          floorHz: 30,
-          ceilingHz: 16000,
-          distributionMode: "mel",
-        },
-        orbs: [
-          { id: "LEGACY_A", chanId: "L", bandIds: [1, 5], chirality: 1, startAngleRad: 0.75 },
-        ],
-        overlay: {
-          enabled: true,
-          alpha: 0.42,
-          pointSizePx: 6,
-        },
-      },
-      expectedNodeIds: ["orbs-1", "overlay-1"],
-      expectedNodeTypes: ["orbs", "bandOverlay"],
-      expectedNodeEnabled: [true, true],
-    },
-    {
-      name: "schema 7 legacy flow",
-      schema: 7,
-      prefs: {
-        bands: {
-          count: 128,
-          floorHz: 48,
-          ceilingHz: 18000,
-          logSpacing: true,
-          overlay: {
-            enabled: false,
-            lineAlpha: 0.22,
-          },
-        },
-        orbs: [
-          { id: "LEGACY_B", chanId: "R", bandIds: [2], chirality: -1, startAngleRad: 1.25 },
-        ],
-      },
-      expectedNodeIds: ["orbs-1", "overlay-1"],
-      expectedNodeTypes: ["orbs", "bandOverlay"],
-      expectedNodeEnabled: [true, false],
-    },
-    {
-      name: "schema 8 with no visual roots synthesizes the canonical scene",
-      schema: 8,
-      prefs: {
-        trace: {
-          lineAlpha: 0.17,
-        },
-      },
-      expectedNodeIds: ["orbs-1", "overlay-1"],
-      expectedNodeTypes: ["orbs", "bandOverlay"],
-      expectedNodeEnabled: [true, true],
-    },
-    {
-      name: "schema 8 orbs only preserves overlay absence",
-      schema: 8,
-      prefs: {
-        orbs: [
-          { id: "LEGACY_ONLY_ORBS", chanId: "C", bandIds: [], chirality: -1, startAngleRad: 0.5 },
-        ],
-      },
-      expectedNodeIds: ["orbs-1"],
-      expectedNodeTypes: ["orbs"],
-      expectedNodeEnabled: [true],
-    },
-    {
-      name: "schema 8 overlay only preserves orb absence",
-      schema: 8,
-      prefs: {
-        bands: {
-          overlay: {
-            enabled: true,
-            ringSpeedRadPerSec: 0.75,
-          },
-        },
-      },
-      expectedNodeIds: ["overlay-1"],
-      expectedNodeTypes: ["bandOverlay"],
-      expectedNodeEnabled: [true],
-    },
-    {
-      name: "schema 8 overlay without enabled defaults the migrated node on",
-      schema: 8,
-      prefs: {
-        overlay: {
-          alpha: 0.25,
-          pointSizePx: 4,
-        },
-      },
-      expectedNodeIds: ["overlay-1"],
-      expectedNodeTypes: ["bandOverlay"],
-      expectedNodeEnabled: [true],
-    },
-    {
-      name: "missing schema follows the legacy schema 1 migration path",
-      schema: undefined,
-      expectedMigratedFromSchema: 1,
-      prefs: {
-        trace: {
-          lineAlpha: 0.2,
-        },
-      },
-      expectedNodeIds: ["orbs-1", "overlay-1"],
-      expectedNodeTypes: ["orbs", "bandOverlay"],
-      expectedNodeEnabled: [true, true],
-    },
-    {
-      name: "explicit schema 1 follows the legacy migration path",
-      schema: 1,
-      prefs: {
-        overlay: {
-          enabled: false,
-          alpha: 0.33,
-        },
-      },
-      expectedNodeIds: ["overlay-1"],
-      expectedNodeTypes: ["bandOverlay"],
-      expectedNodeEnabled: [false],
-    },
-  ];
-
-  globalThis.location = locationStub;
-  globalThis.history = {
-    replaceState(_state, _title, url) {
-      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
-    },
-  };
-  globalThis.btoa = (value) => Buffer.from(value, "utf8").toString("base64");
-  globalThis.atob = (value) => Buffer.from(value, "base64").toString("utf8");
-
-  try {
-    for (const fixture of cases) {
-      replacePreferences(structuredClone(CONFIG.defaults));
-      resolveSettings();
-
-      const result = UrlPreset.applyFromLocationHash(encodePresetHashPayload({
-        schema: fixture.schema,
-        prefs: fixture.prefs,
-      }));
-      assert.equal(result.ok, true, fixture.name);
-      assert.equal(result.schema, PRESET_SCHEMA_VERSION, fixture.name);
-      assert.equal(
-        result.migratedFromSchema,
-        Object.prototype.hasOwnProperty.call(fixture, "expectedMigratedFromSchema")
-          ? fixture.expectedMigratedFromSchema
-          : fixture.schema,
-        fixture.name
-      );
-
-      UrlPreset.writeHashFromPrefs();
-      const saved = decodePresetHash(locationStub.hash);
-      assert.equal(saved.schema, PRESET_SCHEMA_VERSION, fixture.name);
-      assert.deepEqual(saved.prefs.scene.nodes.map((node) => node.id), fixture.expectedNodeIds, fixture.name);
-      assert.deepEqual(saved.prefs.scene.nodes.map((node) => node.type), fixture.expectedNodeTypes, fixture.name);
-      assert.deepEqual(saved.prefs.scene.nodes.map((node) => node.enabled), fixture.expectedNodeEnabled, fixture.name);
-      assert.deepEqual(
-        saved.prefs.scene.nodes.map((node) => node.zIndex),
-        saved.prefs.scene.nodes.map((_node, index) => index),
-        fixture.name
-      );
-      assert.ok(saved.prefs.scene.nodes.every((node) => typeof node.id === "string" && !!node.id), fixture.name);
-      assert.ok(saved.prefs.scene.nodes.every((node) => typeof node.type === "string" && !!node.type), fixture.name);
-      assert.ok(saved.prefs.scene.nodes.every((node) => typeof node.enabled === "boolean"), fixture.name);
-      assert.ok(
-        saved.prefs.scene.nodes.every((node) => (
-          Object.prototype.hasOwnProperty.call(node, "bounds")
-          && JSON.stringify(node.bounds) === JSON.stringify({ x: 0.5, y: 0.5, w: 1, h: 1 })
-        )),
-        fixture.name
-      );
-      assert.ok(
-        saved.prefs.scene.nodes.every((node) => (
-          Object.prototype.hasOwnProperty.call(node, "anchor")
-          && JSON.stringify(node.anchor) === JSON.stringify({ x: 0.5, y: 0.5 })
-        )),
-        fixture.name
-      );
-      assert.ok(
-        saved.prefs.scene.nodes.every((node) => Object.prototype.hasOwnProperty.call(node, "settings")),
-        fixture.name
-      );
-      assert.ok(
-        saved.prefs.scene.nodes.every((node) => (
-          node.type === "orbs"
-            ? Array.isArray(node.settings)
-            : !!(node.settings && typeof node.settings === "object")
-        )),
-        fixture.name
-      );
-      assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs, "orbs"), false, fixture.name);
-      assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs, "overlay"), false, fixture.name);
-      assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs.bands, "overlay"), false, fixture.name);
-      assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs, "viewTransform"), false, fixture.name);
-      assert.equal(Object.prototype.hasOwnProperty.call(saved.prefs.scene, "viewTransform"), false, fixture.name);
-      if (fixture.prefs.bands && Number.isInteger(fixture.prefs.bands.count)) {
-        assert.equal(saved.prefs.bands.count, fixture.prefs.bands.count, fixture.name);
-      }
-      if (fixture.prefs.bands && Number.isFinite(fixture.prefs.bands.floorHz)) {
-        assert.equal(saved.prefs.bands.floorHz, fixture.prefs.bands.floorHz, fixture.name);
-      }
-      if (fixture.prefs.bands && Number.isFinite(fixture.prefs.bands.ceilingHz)) {
-        assert.equal(saved.prefs.bands.ceilingHz, fixture.prefs.bands.ceilingHz, fixture.name);
-      }
-      if (fixture.prefs.bands && typeof fixture.prefs.bands.distributionMode === "string") {
-        assert.equal(saved.prefs.bands.distributionMode, fixture.prefs.bands.distributionMode, fixture.name);
-      }
-      if (fixture.schema === 7) {
-        assert.equal(saved.prefs.bands.distributionMode, "log", fixture.name);
-      }
-      if (fixture.name === "schema 8 overlay without enabled defaults the migrated node on") {
-        assert.equal(saved.prefs.scene.nodes[0].enabled, true, fixture.name);
-        assert.equal(saved.prefs.scene.nodes[0].settings.enabled, true, fixture.name);
-      }
-      if (fixture.name === "schema 7 legacy flow" || fixture.name === "explicit schema 1 follows the legacy migration path") {
-        assert.equal(saved.prefs.scene.nodes.at(-1).enabled, false, fixture.name);
-        assert.equal(saved.prefs.scene.nodes.at(-1).settings.enabled, false, fixture.name);
-      }
-    }
-
-    locationStub.hash = "";
-    replacePreferences(structuredClone(CONFIG.defaults));
-    resolveSettings();
-
-    const pluginResult = UrlPreset.applyFromLocationHash(encodePresetHashPayload({
-      schema: PRESET_SCHEMA_VERSION,
-      prefs: {
-        scene: {
-          nodes: [
-            {
-              id: "plugin-1",
-              type: "spectralPlugin",
-              enabled: true,
-              zIndex: 0,
-              bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-              anchor: { x: 0.5, y: 0.5 },
-              settings: { arbitrary: true },
-            },
-            {
-              id: "overlay-1",
-              type: "bandOverlay",
-              enabled: true,
-              zIndex: 1,
-              bounds: { x: 0.5, y: 0.5, w: 1, h: 1 },
-              anchor: { x: 0.5, y: 0.5 },
-              settings: { enabled: true, alpha: 0.61 },
-            },
-          ],
-          viewTransform: {
-            mode: "placeholder",
-          },
-        },
-        bands: {
-          count: 64,
-          floorHz: 42,
-          ceilingHz: 12000,
-        },
-      },
-    }));
-    assert.equal(pluginResult.ok, true);
-    UrlPreset.writeHashFromPrefs();
-    const pluginSaved = decodePresetHash(locationStub.hash);
-    assert.deepEqual(pluginSaved.prefs.scene.nodes.map((node) => node.type), ["bandOverlay"]);
-    assert.equal(pluginSaved.prefs.bands.count, 64);
-    assert.equal(pluginSaved.prefs.bands.floorHz, 42);
-    assert.equal(pluginSaved.prefs.bands.ceilingHz, 12000);
-    assert.equal(Object.prototype.hasOwnProperty.call(pluginSaved.prefs.scene, "viewTransform"), false);
-  } finally {
-    replacePreferences(previousPrefs);
-    resolveSettings();
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("invalid hash changes append a workspace warning without mutating prefs", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousPrefs = structuredClone(preferences);
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "#p=not-valid",
-  };
-
-  globalThis.location = locationStub;
-  globalThis.history = {
-    replaceState() {},
-  };
-
-  try {
-    await withUiWireHarnessState({}, ({ harness }) => {
-      const lineAlphaBefore = preferences.trace.lineAlpha;
-
-      harness.dispatchWindow("hashchange");
-
-      assert.equal(preferences.trace.lineAlpha, lineAlphaBefore);
-      assert.equal(state.ui.runtimeLog.entries.length, 1);
-      assert.equal(state.ui.runtimeLog.entries[0].category, "workspace");
-      assert.equal(state.ui.runtimeLog.entries[0].code, "invalid-hash");
-      assert.match(state.ui.runtimeLog.entries[0].message, /No valid preset in URL hash/);
-      assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
-    });
-  } finally {
-    replacePreferences(previousPrefs);
-    resolveSettings();
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-  }
-});
-
-test("launcher shell state remains runtime-only and never alters preset hash", () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const previousUi = snapshotUiState();
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-
-  if (typeof globalThis.btoa !== "function") {
-    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
-  }
-  if (typeof globalThis.atob !== "function") {
-    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
-  }
-
-  globalThis.location = locationStub;
-  globalThis.history = {
-    replaceState(_state, _title, url) {
-      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
-    },
-  };
-
-  try {
-    UrlPreset.writeHashFromPrefs();
-    const beforeHash = locationStub.hash;
-
-    state.ui.panelShell = createPanelShellState({
-      activeLauncherId: "status",
-      launcherCollapsed: true,
-      openTargets: {
-        audioSource: false,
-        queue: false,
-        analysis: false,
-        banking: false,
-        scene: true,
-        recording: true,
-        workspace: false,
-        status: true,
-      },
-    });
-
-    UrlPreset.writeHashFromPrefs();
-    const afterHash = locationStub.hash;
-
-    assert.equal(afterHash, beforeHash);
-  } finally {
-    restoreUiState(previousUi);
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("launcher bar collapses and expands through the shell chevron", async () => {
-  await withUiWireHarnessState({}, () => {
-    assert.equal(UI.getPanelShellModel().launcherCollapsed, false);
-    assert.equal(state.ui.launcherBar.dataset.collapsed, "false");
-    assert.equal(state.ui.btnLauncherToggle.getAttribute("aria-expanded"), "true");
-
-    state.ui.btnLauncherToggle.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().launcherCollapsed, true);
-    assert.equal(state.ui.launcherBar.dataset.collapsed, "true");
-    assert.equal(state.ui.btnLauncherToggle.getAttribute("aria-expanded"), "false");
-
-    state.ui.btnLauncherToggle.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().launcherCollapsed, false);
-    assert.equal(state.ui.launcherBar.dataset.collapsed, "false");
-    assert.equal(state.ui.btnLauncherToggle.getAttribute("aria-expanded"), "true");
-  });
-});
-
-test("launchers independently toggle the new Build 115 panel targets", async () => {
-  await withUiWireHarnessState({}, () => {
-    state.ui.btnLauncherAnalysis.dispatch("click");
-    const analysisItem = UI.getPanelShellModel().launcherItems.find((item) => item.launcherId === "analysis");
-
-    assert.equal(UI.getPanelShellModel().activeLauncherId, "analysis");
-    assert.equal(UI.getPanelShellModel().openTargets.analysis, true);
-    assert.equal(state.ui.btnLauncherAnalysis.dataset.active, "true");
-    assert.equal(state.ui.btnLauncherAnalysis.dataset.presentedOpen, "true");
-    assert.deepEqual(
-      { targetOpen: analysisItem.targetOpen, presentedOpen: analysisItem.presentedOpen },
-      { targetOpen: true, presentedOpen: true }
-    );
-    assert.equal(state.ui.analysisPanel.style.display, "block");
-
-    state.ui.btnLauncherWorkspace.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().activeLauncherId, "workspace");
-    assert.equal(UI.getPanelShellModel().openTargets.workspace, true);
-    assert.equal(state.ui.workspacePanel.style.display, "block");
-    assert.equal(state.ui.btnLauncherScene.dataset.targetOpen, "true");
-    assert.equal(state.ui.btnLauncherScene.dataset.presentedOpen, "false");
-    assert.equal(state.ui.btnLauncherWorkspace.dataset.presentedOpen, "true");
-
-    state.ui.btnLauncherScene.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().activeLauncherId, "scene");
-    assert.equal(UI.getPanelShellModel().openTargets.scene, true);
-    assert.equal(state.ui.btnLauncherScene.dataset.presentedOpen, "true");
-    assert.equal(state.ui.btnLauncherWorkspace.dataset.presentedOpen, "false");
-    assert.equal(state.ui.scenePanel.style.display, "block");
-
-    state.ui.btnLauncherScene.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().openTargets.scene, false);
-    assert.equal(state.ui.scenePanel.style.display, "none");
-
-    state.ui.btnLauncherBanking.dispatch("click");
-    assert.equal(UI.getPanelShellModel().activeLauncherId, "banking");
-    assert.equal(UI.getPanelShellModel().openTargets.banking, true);
-    assert.equal(state.ui.btnLauncherBanking.dataset.presentedOpen, "true");
-    assert.equal(state.ui.bankingPanel.style.display, "block");
-
-    state.ui.btnLauncherBanking.dispatch("click");
-    assert.equal(UI.getPanelShellModel().openTargets.banking, false);
-    assert.equal(state.ui.bankingPanel.style.display, "none");
-  });
-});
-
-test("Scene panel renders the runtime node list and selected visualizer inspector", async () => {
-  await withUiWireHarnessState({}, () => {
-    const model = UI.getSceneUiModel();
-
-    assert.equal(model.nodeCount, 2);
-    assert.deepEqual(model.nodes.map((node) => node.id), ["orbs-1", "overlay-1"]);
-    assert.equal(model.selectedNode.id, "orbs-1");
-    assert.equal(state.ui.sceneNodeList.children.length, 2);
-    assert.equal(state.ui.sceneInspectorPanel.hidden, false);
-    assert.equal(state.ui.sceneInspectorEmpty.hidden, true);
-    assert.match(state.ui.sceneSummaryPrimary.textContent, /2 visualizers/);
-    assert.equal(state.ui.sceneInspectorTitle.textContent, "Orbs");
-    assert.equal(state.ui.sceneInspectorType.textContent, "orbs");
-  });
-});
-
-test("Scene panel exposes the runtime-only identity ViewTransform camera hook honestly", async () => {
-  await withUiWireHarnessState({}, () => {
-    const model = UI.getSceneUiModel();
-
-    assert.deepEqual(model.viewTransform, IDENTITY_VIEW_TRANSFORM);
-    assert.equal(model.camera.mode, "identity");
-    assert.equal(model.camera.scope, "runtime-only");
-    assert.equal(model.camera.controlsDeferred, true);
-    assert.equal(state.scene.viewTransform.mode, "identity");
-    assert.deepEqual(state.scene.viewTransform.matrix, [1, 0, 0, 1, 0, 0]);
-    assert.equal(state.ui.sceneCameraPrimary.textContent, "Identity ViewTransform active");
-    assert.equal(state.ui.sceneCameraMode.textContent, "Identity");
-    assert.equal(state.ui.sceneCameraScope.textContent, "Runtime only");
-    assert.match(state.ui.sceneCameraNote.textContent, /Build 116/);
-  });
-});
-
-test("Scene panel persists node enabled state and ordering through explicit controls", async () => {
-  await withUiWireHarnessState({}, () => {
-    const orbsBefore = structuredClone(preferences.orbs);
-    const overlayRow = readSceneRowAt(1);
-    const overlayActions = readSceneRowActions(overlayRow);
-    overlayActions.enabledInput.checked = false;
-    overlayActions.enabledInput.dispatch("change");
-
-    assert.equal(UI.getSceneUiModel().nodes[1].enabled, false);
-    assert.equal(preferences.bands.overlay.enabled, false);
-    assert.equal(preferences.scene.nodes[1].enabled, false);
-
-    const orbsRow = readSceneRowAt(0);
-    const orbsActions = readSceneRowActions(orbsRow);
-    orbsActions.enabledInput.checked = false;
-    orbsActions.enabledInput.dispatch("change");
-
-    assert.equal(UI.getSceneUiModel().nodes.find((node) => node.id === "orbs-1").enabled, false);
-    assert.deepEqual(preferences.orbs, orbsBefore);
-    assert.equal(preferences.scene.nodes.find((node) => node.id === "orbs-1").enabled, false);
-
-    const refreshedOverlayRow = readSceneRowAt(1);
-    readSceneRowActions(refreshedOverlayRow).moveBackwardButton.dispatch("click");
-
-    assert.deepEqual(UI.getSceneUiModel().nodes.map((node) => node.id), ["overlay-1", "orbs-1"]);
-    assert.equal(UI.getSceneUiModel().nodes[0].zIndex, 0);
-    assert.equal(UI.getSceneUiModel().nodes[1].zIndex, 1);
-    assert.deepEqual(preferences.scene.nodes.map((node) => node.id), ["overlay-1", "orbs-1"]);
-  });
-});
-
-test("Scene panel bandOverlay node toggle round-trips through Schema 9 scene nodes", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-
-  globalThis.location = locationStub;
-  globalThis.history = { replaceState(_state, _title, url) { locationStub.hash = new URL(url, "https://example.test").hash; } };
-  globalThis.btoa = (value) => Buffer.from(value, "utf8").toString("base64");
-  globalThis.atob = (value) => Buffer.from(value, "base64").toString("utf8");
-
-  try {
-    await withUiWireHarnessState({}, () => {
-      UrlPreset.writeHashFromPrefs();
-
-      const overlayActions = readSceneRowActions(readSceneRowAt(1));
-      overlayActions.enabledInput.checked = false;
-      overlayActions.enabledInput.dispatch("change");
-
-      UrlPreset.writeHashFromPrefs();
-      const payload = decodePresetHash(locationStub.hash);
-      const overlayNode = payload.prefs.scene.nodes.find((node) => node.id === "overlay-1");
-
-      assert.equal(UI.getSceneUiModel().nodes[1].enabled, false);
-      assert.equal(preferences.bands.overlay.enabled, false);
-      assert.equal(overlayNode.enabled, false);
-      assert.equal(overlayNode.settings.enabled, false);
-      assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs.bands, "overlay"), false);
-    });
-  } finally {
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("Scene panel band overlay inspector updates live overlay settings", async () => {
-  await withUiWireHarnessState({}, () => {
-    readSceneRowActions(readSceneRowAt(1)).selectButton.dispatch("click");
-
-    assert.equal(UI.getSceneUiModel().selectedNode.id, "overlay-1");
-
-    const pointSizeRow = findSceneInspectorRow("Point Size Px");
-    assert.ok(pointSizeRow);
-    pointSizeRow.children[1].value = "7";
-    pointSizeRow.children[1].dispatch("change");
-
-    assert.equal(preferences.bands.overlay.pointSizePx, 7);
-    assert.equal(UI.getSceneUiModel().selectedNode.settings.pointSizePx, 7);
-    assert.equal(state.ui.sceneInspectorTitle.textContent, "Band Overlay");
-  });
-});
-
-test("Scene panel orb inspector adds, edits, and removes current orb routing entries", async () => {
-  await withUiWireHarnessState({}, () => {
-    readSceneRowActions(readSceneRowAt(0)).selectButton.dispatch("click");
-
-    const initialOrbCount = preferences.orbs.length;
-    const orbActionRow = state.ui.sceneInspectorFields.children[1];
-    const addOrbButton = orbActionRow.children[0];
-    addOrbButton.dispatch("click");
-
-    assert.equal(preferences.orbs.length, initialOrbCount + 1);
-
-    const newCard = readSceneOrbCardAt(initialOrbCount);
-    const idRow = findSceneOrbCardRow(newCard, "ID");
-    const channelRow = findSceneOrbCardRow(newCard, "Channel");
-    const bandIdsRow = findSceneOrbCardRow(newCard, "Band IDs");
-    const chiralityRow = findSceneOrbCardRow(newCard, "Chirality");
-    const angleRow = findSceneOrbCardRow(newCard, "Start Angle");
-    const hueRow = findSceneOrbCardRow(newCard, "Hue Offset");
-    const centerXRow = findSceneOrbCardRow(newCard, "Center X");
-    const centerYRow = findSceneOrbCardRow(newCard, "Center Y");
-
-    idRow.children[1].value = "ORB_SCENE";
-    idRow.children[1].dispatch("change");
-    channelRow.children[1].value = "L";
-    channelRow.children[1].dispatch("change");
-    bandIdsRow.children[1].value = "1, 3, 7";
-    bandIdsRow.children[1].dispatch("change");
-    chiralityRow.children[1].value = "1";
-    chiralityRow.children[1].dispatch("change");
-    angleRow.children[1].value = "1.5";
-    angleRow.children[1].dispatch("change");
-    hueRow.children[1].value = "120";
-    hueRow.children[1].dispatch("change");
-    centerXRow.children[1].value = "0.25";
-    centerXRow.children[1].dispatch("change");
-    centerYRow.children[1].value = "-0.5";
-    centerYRow.children[1].dispatch("change");
-
-    const latestOrb = preferences.orbs[preferences.orbs.length - 1];
-    const latestSceneOrb = UI.getSceneUiModel().selectedNode.settings[preferences.orbs.length - 1];
-    assert.equal(latestOrb.id, "ORB_SCENE");
-    assert.equal(latestOrb.chanId, "L");
-    assert.deepEqual(latestOrb.bandIds, [1, 3, 7]);
-    assert.equal(latestOrb.chirality, 1);
-    assert.equal(latestOrb.startAngleRad, 1.5);
-    assert.equal(Object.prototype.hasOwnProperty.call(latestOrb, "hueOffsetDeg"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(latestOrb, "centerX"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(latestOrb, "centerY"), false);
-    assert.equal(latestSceneOrb.hueOffsetDeg, 120);
-    assert.equal(latestSceneOrb.centerX, 0.25);
-    assert.equal(latestSceneOrb.centerY, -0.5);
-    assert.equal(findSceneOrbCardRow(readSceneOrbCardAt(initialOrbCount), "Hue Offset").children[2].textContent, "120 deg");
-
-    newCard.children[0].children[1].dispatch("click");
-    assert.equal(preferences.orbs.length, initialOrbCount);
-  });
-});
-
-test("Scene panel keeps scene-only orb fields across applyPrefs sync while legacy prefs stay clean", async () => {
-  await withUiWireHarnessState({}, () => {
-    readSceneRowActions(readSceneRowAt(0)).selectButton.dispatch("click");
-
-    const firstCard = readSceneOrbCardAt(0);
-    const hueRow = findSceneOrbCardRow(firstCard, "Hue Offset");
-    const centerXRow = findSceneOrbCardRow(firstCard, "Center X");
-    const centerYRow = findSceneOrbCardRow(firstCard, "Center Y");
-
-    hueRow.children[1].value = "45";
-    hueRow.children[1].dispatch("change");
-    centerXRow.children[1].value = "0.2";
-    centerXRow.children[1].dispatch("change");
-    centerYRow.children[1].value = "-0.3";
-    centerYRow.children[1].dispatch("change");
-
-    UI.applyPrefs(null);
-
-    const selectedOrb = UI.getSceneUiModel().selectedNode.settings[0];
-    assert.equal(selectedOrb.hueOffsetDeg, 45);
-    assert.equal(selectedOrb.centerX, 0.2);
-    assert.equal(selectedOrb.centerY, -0.3);
-    assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "hueOffsetDeg"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerX"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerY"), false);
-  });
-});
-
-test("Schema 9 presets persist scene nodes while runtime-only scene state stays excluded", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-
-  globalThis.location = locationStub;
-  globalThis.history = { replaceState(_state, _title, url) { locationStub.hash = new URL(url, "https://example.test").hash; } };
-  globalThis.btoa = (value) => Buffer.from(value, "utf8").toString("base64");
-  globalThis.atob = (value) => Buffer.from(value, "base64").toString("utf8");
-
-  try {
-    await withUiWireHarnessState({}, () => {
-      assert.equal(PRESET_SCHEMA_VERSION, 9);
-
-      UrlPreset.writeHashFromPrefs();
-      const beforeHash = locationStub.hash;
-      const beforePayload = decodePresetHash(beforeHash);
-
-      const firstCard = readSceneOrbCardAt(0);
-      const hueRow = findSceneOrbCardRow(firstCard, "Hue Offset");
-      const centerXRow = findSceneOrbCardRow(firstCard, "Center X");
-      const centerYRow = findSceneOrbCardRow(firstCard, "Center Y");
-
-      hueRow.children[1].value = "90";
-      hueRow.children[1].dispatch("change");
-      centerXRow.children[1].value = "0.4";
-      centerXRow.children[1].dispatch("change");
-      centerYRow.children[1].value = "-0.4";
-      centerYRow.children[1].dispatch("change");
-
-      const orbsActions = readSceneRowActions(readSceneRowAt(0));
-      orbsActions.enabledInput.checked = false;
-      orbsActions.enabledInput.dispatch("change");
-      readSceneRowActions(readSceneRowAt(1)).moveBackwardButton.dispatch("click");
-      readSceneRowActions(readSceneRowAt(0)).selectButton.dispatch("click");
-
-      UrlPreset.writeHashFromPrefs();
-      const afterHash = locationStub.hash;
-      const afterPayload = decodePresetHash(afterHash);
-      const orbSchema = readSceneSettingsSchema("orbs");
-      const savedSceneOrbNode = afterPayload.prefs.scene.nodes.find((node) => node.id === "orbs-1");
-
-      assert.notEqual(afterHash, beforeHash);
-      assert.equal(Object.prototype.hasOwnProperty.call(beforePayload.prefs, "scene"), true);
-      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs, "scene"), true);
-      assert.deepEqual(
-        Object.keys(orbSchema.item.fields).sort(),
-        ["bandIds", "centerX", "centerY", "chanId", "chirality", "hueOffsetDeg", "id", "startAngleRad"]
-      );
-      assert.deepEqual(afterPayload.prefs.scene.nodes.map((node) => node.id), ["overlay-1", "orbs-1"]);
-      assert.equal(savedSceneOrbNode.enabled, false);
-      assert.equal(savedSceneOrbNode.settings[0].hueOffsetDeg, 90);
-      assert.equal(savedSceneOrbNode.settings[0].centerX, 0.4);
-      assert.equal(savedSceneOrbNode.settings[0].centerY, -0.4);
-      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs, "orbs"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs.bands, "overlay"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "hueOffsetDeg"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerX"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(preferences.orbs[0], "centerY"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "camera"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(orbSchema.item.fields, "viewTransform"), false);
-    });
-  } finally {
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("Scene ViewTransform stays runtime-only and never alters preset hash", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-
-  globalThis.location = locationStub;
-  globalThis.history = { replaceState(_state, _title, url) { locationStub.hash = new URL(url, "https://example.test").hash; } };
-  globalThis.btoa = (value) => Buffer.from(value, "utf8").toString("base64");
-  globalThis.atob = (value) => Buffer.from(value, "base64").toString("utf8");
-
-  try {
-    await withUiWireHarnessState({}, () => {
-      UrlPreset.writeHashFromPrefs();
-      const beforeHash = locationStub.hash;
-      const beforePayload = decodePresetHash(beforeHash);
-
-      state.scene.viewTransform = normalizeViewTransform({
-        mode: "placeholder",
-        matrix: [1, 0, 0, 1, 32, -18],
-      });
-
-      UrlPreset.writeHashFromPrefs();
-      const afterHash = locationStub.hash;
-      const afterPayload = decodePresetHash(afterHash);
-
-      assert.equal(afterHash, beforeHash);
-      assert.equal(Object.prototype.hasOwnProperty.call(beforePayload.prefs, "scene"), true);
-      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs, "scene"), true);
-      assert.equal(Object.prototype.hasOwnProperty.call(beforePayload.prefs.scene, "viewTransform"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs.scene, "viewTransform"), false);
-      assert.equal(Object.prototype.hasOwnProperty.call(afterPayload.prefs, "viewTransform"), false);
-    });
-  } finally {
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("status launcher opens the runtime log drawer and clears unread state", async () => {
-  await withUiWireHarnessState({}, () => {
-    state.source.kind = "mic";
-    state.source.status = "active";
-    state.source.label = "Desk Mic";
-    state.source.sessionActive = true;
-    UI.refreshAllUiText();
-
-    assert.equal(state.ui.runtimeLog.entries.length, 1);
-    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
-
-    state.ui.btnLauncherStatus.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().openTargets.status, true);
-    assert.equal(state.ui.statusPanel.style.display, "block");
-    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
-    assert.equal(state.ui.statusLogList.children.length, 1);
-    assert.equal(state.ui.statusLogEmpty.hidden, true);
-    assert.match(state.ui.runtimeLog.entries[0].message, /Switched to microphone input/);
-  });
-});
-
-test("status drawer stays read while open and clear resets the runtime log", async () => {
-  await withUiWireHarnessState({}, () => {
-    state.ui.btnLauncherStatus.dispatch("click");
-
-    state.source.kind = "stream";
-    state.source.status = "active";
-    state.source.label = "Browser Tab";
-    state.source.sessionActive = true;
-    UI.refreshAllUiText();
-
-    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
-    assert.equal(state.ui.statusLogList.children.length, 1);
-
-    state.ui.btnClearStatusLog.dispatch("click");
-
-    assert.equal(state.ui.runtimeLog.entries.length, 0);
-    assert.equal(state.ui.statusLogList.children.length, 0);
-    assert.equal(state.ui.statusLogEmpty.hidden, false);
-    assert.equal(state.ui.btnClearStatusLog.disabled, true);
-  });
-});
-
-test("UI logs external live-input end events into the runtime log", async () => {
-  await withUiWireHarnessState({
-    sourceState: {
-      kind: "stream",
-      status: "active",
-      label: "Browser Tab",
-      sessionActive: true,
-      streamMeta: {
-        hasAudio: true,
-        hasVideo: true,
-      },
-    },
-  }, () => {
-    state.source.kind = "none";
-    state.source.status = "idle";
-    state.source.label = "";
-    state.source.errorCode = "stream-ended";
-    state.source.errorMessage = "Shared stream ended. Select Stream to share again.";
-    state.source.sessionActive = false;
-    UI.refreshAllUiText();
-
-    assert.equal(state.ui.runtimeLog.entries.length, 1);
-    assert.equal(state.ui.runtimeLog.entries[0].level, "warn");
-    assert.equal(state.ui.runtimeLog.entries[0].code, "stream-ended");
-    assert.match(state.ui.runtimeLog.entries[0].message, /Shared stream ended/);
-  });
-});
-
-test("UI logs unsupported microphone outcomes into the runtime log", async () => {
-  await withUiWireHarnessState({}, () => {
-    state.source.kind = "mic";
-    state.source.status = "unsupported";
-    state.source.label = "";
-    state.source.errorCode = "mic-unsupported";
-    state.source.errorMessage = "Microphone capture is unavailable in this browser.";
-    state.source.sessionActive = false;
-    UI.refreshAllUiText();
-
-    assert.equal(state.ui.runtimeLog.entries.length, 1);
-    assert.equal(state.ui.runtimeLog.entries[0].level, "warn");
-    assert.equal(state.ui.runtimeLog.entries[0].category, "source");
-    assert.equal(state.ui.runtimeLog.entries[0].code, "mic-unsupported");
-    assert.match(state.ui.runtimeLog.entries[0].message, /Microphone capture is unavailable/i);
-    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
-  });
-});
-
-test("UI logs unsupported stream outcomes into the runtime log", async () => {
-  await withUiWireHarnessState({}, () => {
-    state.source.kind = "stream";
-    state.source.status = "unsupported";
-    state.source.label = "";
-    state.source.errorCode = "stream-unsupported";
-    state.source.errorMessage = "Stream capture is unavailable in this browser.";
-    state.source.sessionActive = false;
-    UI.refreshAllUiText();
-
-    assert.equal(state.ui.runtimeLog.entries.length, 1);
-    assert.equal(state.ui.runtimeLog.entries[0].level, "warn");
-    assert.equal(state.ui.runtimeLog.entries[0].category, "source");
-    assert.equal(state.ui.runtimeLog.entries[0].code, "stream-unsupported");
-    assert.match(state.ui.runtimeLog.entries[0].message, /Stream capture is unavailable/i);
-    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "true");
-  });
-});
-
-test("UI logs recording lifecycle transitions and active recording warnings once", async () => {
-  await withUiWireHarnessState({
-    recordingState: {
-      hooksEnabled: true,
-      phase: "idle",
-      isSupported: true,
-      includePlaybackAudio: true,
-      lastUpdatedAtMs: 40,
-    },
-  }, () => {
-    state.recording.phase = "recording";
-    state.recording.lastCode = "recorder-input-audio-video";
-    state.recording.lastMessage = "Recording source audio + video.";
-    state.recording.lastUpdatedAtMs = 41;
-    UI.refreshRecordingUi();
-
-    state.recording.lastCode = "audio-unloaded";
-    state.recording.lastMessage = "Recording continues while no audio is currently loaded.";
-    state.recording.lastUpdatedAtMs = 42;
-    UI.refreshRecordingUi();
-    UI.refreshRecordingUi();
-
-    state.recording.phase = "finalizing";
-    state.recording.lastCode = "finalizing";
-    state.recording.lastMessage = "Finalizing recording export...";
-    state.recording.lastUpdatedAtMs = 43;
-    UI.refreshRecordingUi();
-
-    state.recording.phase = "complete";
-    state.recording.lastCode = "complete";
-    state.recording.lastMessage = "Recording export ready.";
-    state.recording.lastExportFileName = "auralprint-test.webm";
-    state.recording.lastUpdatedAtMs = 44;
-    UI.refreshRecordingUi();
-
-    assert.deepEqual(
-      state.ui.runtimeLog.entries.map((entry) => entry.code),
-      ["complete", "finalizing", "audio-unloaded", "recorder-input-audio-video"]
-    );
-    assert.match(state.ui.runtimeLog.entries[0].message, /auralprint-test\.webm/);
-  });
-});
-
-test("repeat control reports through Audio Source ownership after relocation", async () => {
-  await withUiWireHarnessState({
-    sourceState: {
-      kind: "file",
-      status: "active",
-      label: "demo.wav",
-      sessionActive: true,
-    },
-    audioState: {
-      isLoaded: true,
-      isPlaying: false,
-      filename: "demo.wav",
-      transportError: "",
-    },
-    queueNames: ["demo.wav", "bonus.wav"],
-    currentIndex: 0,
-    bandSnapshot: {
-      ready: true,
-      monoLike: false,
-    },
-    repeatMode: "none",
-  }, () => {
-    const sceneStatusBefore = state.ui.sceneStatus.textContent;
-    const runtimeLogCountBefore = state.ui.runtimeLog.entries.length;
-
-    state.ui.btnRepeat.dispatch("click");
-
-    assert.equal(preferences.audio.repeatMode, "one");
-    assert.equal(state.ui.audioStatus.textContent, "Updated: repeat");
-    assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
-    assert.equal(state.ui.runtimeLog.entries.length, runtimeLogCountBefore);
-    assert.equal(state.ui.btnLauncherStatus.dataset.hasUnread, "false");
-  });
-});
-
-test("Banking defaults to a dominant-band-first summary with inspector details collapsed", async () => {
-  await withUiWireHarnessState({}, () => {
-    primeRealBandAnalysis({ dominantIndex: 42 });
-    state.ui.lastBandHudUpdateMs = -Infinity;
-
-    UI.refreshAllUiText({
-      ready: true,
-      monoLike: false,
-    });
-
-    assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "false");
-    assert.equal(state.ui.bandInspectorPanel.hidden, true);
-    assert.equal(state.ui.bandTable.children.length, 0);
-    assert.equal(state.bands.dominantIndex, 42);
-    assert.equal(state.ui.bandDebug.textContent, `Dominant band [42] ${state.bands.dominantName}`);
-    assert.equal(state.ui.bandDominantRange.textContent, BandBank.formatBandRangeText(42));
-    assert.notEqual(state.ui.bandDominantEnergy.textContent, "0% energy");
-    assert.equal(state.ui.bandMetaCount.textContent, `${preferences.bands.count}`);
-    assert.equal(state.ui.bandMetaDistribution.textContent, preferences.bands.distributionMode);
-  });
-});
-
-test("Banking summary keeps silent frames honest instead of inventing a dominant band", async () => {
-  await withUiWireHarnessState({}, () => {
-    primeRealBandAnalysis();
-    state.ui.lastBandHudUpdateMs = -Infinity;
-
-    UI.refreshAllUiText({
-      ready: true,
-      monoLike: false,
-    });
-
-    assert.equal(state.ui.bandDebug.textContent, "No dominant band yet");
-    assert.equal(state.ui.bandDominantRange.textContent, "Awaiting analysis");
-    assert.equal(state.ui.bandDominantEnergy.textContent, "0% energy");
-  });
-});
-
-test("Banking inspector toggle reveals the full live band table on demand", async () => {
-  await withUiWireHarnessState({}, () => {
-    primeDominantBandState({ dominantIndex: 9, dominantName: "Inspector Test", energy: 0.33 });
-    assert.equal(state.ui.bandInspectorPanel.hidden, true);
-    assert.equal(state.ui.bandTable.children.length, 0);
-
-    state.ui.btnToggleBandInspector.dispatch("click");
-
-    assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "true");
-    assert.equal(state.ui.bandInspectorPanel.hidden, false);
-    assert.equal(state.ui.bandTable.children.length, preferences.bands.count * 4);
-
-    state.ui.btnToggleBandInspector.dispatch("click");
-
-    assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "false");
-    assert.equal(state.ui.bandInspectorPanel.hidden, true);
-  });
-});
-
-test("line color mode reports through Banking ownership after relocation", async () => {
-  await withUiWireHarnessState({}, () => {
-    const sceneStatusBefore = state.ui.sceneStatus.textContent;
-    const runtimeLogCountBefore = state.ui.runtimeLog.entries.length;
-
-    state.ui.selLineColorMode.value = "fixed";
-    state.ui.selLineColorMode.dispatch("change");
-
-    assert.equal(preferences.trace.lineColorMode, "fixed");
-    assert.equal(state.ui.bankingStatus.textContent, "Updated: line color mode");
-    assert.equal(state.ui.sceneStatus.textContent, sceneStatusBefore);
-    assert.equal(state.ui.runtimeLog.entries.length, runtimeLogCountBefore);
-  });
-});
-
-test("band inspector disclosure remains runtime-only and never alters preset hash", async () => {
-  const previousLocation = globalThis.location;
-  const previousHistory = globalThis.history;
-  const previousBtoa = globalThis.btoa;
-  const previousAtob = globalThis.atob;
-  const locationStub = {
-    pathname: "/",
-    search: "",
-    hash: "",
-  };
-
-  if (typeof globalThis.btoa !== "function") {
-    globalThis.btoa = (value) => Buffer.from(value, "binary").toString("base64");
-  }
-  if (typeof globalThis.atob !== "function") {
-    globalThis.atob = (value) => Buffer.from(value, "base64").toString("binary");
-  }
-
-  globalThis.location = locationStub;
-  globalThis.history = {
-    replaceState(_state, _title, url) {
-      locationStub.hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
-    },
-  };
-
-  try {
-    await withUiWireHarnessState({}, () => {
-      UrlPreset.writeHashFromPrefs();
-      const beforeHash = locationStub.hash;
-
-      state.ui.btnToggleBandInspector.dispatch("click");
-
-      UrlPreset.writeHashFromPrefs();
-      const afterHash = locationStub.hash;
-
-      assert.equal(state.ui.btnToggleBandInspector.getAttribute("aria-expanded"), "true");
-      assert.equal(afterHash, beforeHash);
-    });
-  } finally {
-    globalThis.location = previousLocation;
-    globalThis.history = previousHistory;
-    globalThis.btoa = previousBtoa;
-    globalThis.atob = previousAtob;
-  }
-});
-
-test("recording cue stays visible on the launcher bar and collapsed chevron while recording", async () => {
-  await withUiWireHarnessState({
-    sourceState: {
-      kind: "file",
-      status: "active",
-      label: "demo.wav",
-      sessionActive: true,
-    },
-    audioState: {
-      isLoaded: true,
-      isPlaying: true,
-      filename: "demo.wav",
-      transportError: "",
-    },
-    recordingState: {
-      hooksEnabled: true,
-      phase: "recording",
-      isSupported: true,
-      includePlaybackAudio: true,
-      lastUpdatedAtMs: 32,
-    },
-  }, () => {
-    UI.refreshRecordingUi();
-
-    assert.equal(state.ui.btnLauncherRecording.classList.contains("is-recording"), true);
-    assert.equal(state.ui.btnLauncherToggle.classList.contains("is-recording-cue"), false);
-
-    state.ui.btnLauncherToggle.dispatch("click");
-
-    assert.equal(UI.getPanelShellModel().launcherCollapsed, true);
-    assert.equal(state.ui.btnLauncherToggle.classList.contains("is-recording-cue"), true);
-  });
 });
 
 test("UI clears retained live-input errors on explicit file-workflow reset", async () => {
@@ -3311,10 +1890,7 @@ test("UI refreshAllUiText keeps file-mode status and selector copy honest in idl
     },
     queueNames: ["demo.wav", "bonus.wav"],
     currentIndex: 0,
-    bandSnapshot: {
-      ready: true,
-      monoLike: false,
-    },
+    bandSnapshot: analysisFrameForUi(false),
     repeatMode: "all",
   }, () => {
     assert.equal(state.ui.audioStatus.textContent, "File [1/2]: demo.wav - Paused - Bands: stereo (L\u2260R)");
@@ -3438,10 +2014,7 @@ test("UI disables file-only controls with clear file-mode-only affordances in li
       filename: "stale.wav",
       transportError: "",
     },
-    bandSnapshot: {
-      ready: true,
-      monoLike: true,
-    },
+    bandSnapshot: analysisFrameForUi(true),
   }, () => {
     assert.match(state.ui.audioStatus.textContent, /Microphone live: Podcast Mic - Bands: mono-ish/);
     assert.doesNotMatch(state.ui.audioStatus.textContent, /stale\.wav/);
@@ -3485,10 +2058,7 @@ test("UI disables file-only controls with clear file-mode-only affordances in li
       filename: "stale.wav",
       transportError: "",
     },
-    bandSnapshot: {
-      ready: true,
-      monoLike: false,
-    },
+    bandSnapshot: analysisFrameForUi(false),
   }, () => {
     assert.equal(state.ui.audioStatus.textContent, "Stream live: Browser Tab - Bands: stereo (L\u2260R)");
     assert.doesNotMatch(state.ui.audioStatus.textContent, /stale\.wav/);
@@ -3758,26 +2328,27 @@ test("UI keeps queue panel recoverable across live source switches and audio pan
       currentIndex: 0,
       queueVisible: true,
     }, async () => {
-      assert.equal(UI.getPanelShellModel().openTargets.queue, true);
       assert.equal(state.ui.queuePanel.style.display, "block");
 
       await UI.dispatchSourceSwitchAction("mic");
-      assert.equal(UI.getPanelShellModel().openTargets.queue, false);
       assert.equal(state.ui.queuePanel.style.display, "none");
 
       await UI.dispatchSourceSwitchAction("file");
       UI.refreshAllUiText();
-      assert.equal(UI.getPanelShellModel().openTargets.queue, false);
       assert.equal(state.ui.queuePanel.style.display, "none");
       assert.equal(state.ui.audioStatus.textContent, "File mode ready. Select a queued file or load audio files.");
       assert.equal(state.ui.btnSourceFile.title, "File workflow selected. Select a queued file or load audio files.");
 
-      state.ui.btnToggleQueue.dispatch("click");
-      assert.equal(UI.getPanelShellModel().openTargets.queue, true);
+      state.ui.queuePanel.style.display = "block";
       state.ui.btnHideAudio.click();
-      assert.equal(UI.getPanelShellModel().openTargets.audioSource, false);
-      assert.equal(UI.getPanelShellModel().openTargets.queue, false);
+      assert.equal(state.ui.queuePanel.style.display, "block");
+      state.ui.btnHideQueue.click();
       assert.equal(state.ui.queuePanel.style.display, "none");
+      state.ui.btnOpenAudio.click();
+      state.ui.btnToggleQueue.click();
+      state.ui.btnHideAudio.click();
+      assert.equal(state.ui.queuePanel.style.display, "block");
+      assert.equal(state.ui.audioPanel.style.display, "none");
     });
   } finally {
     InputSourceManager.activateMic = originalActivateMic;
@@ -4006,19 +2577,21 @@ test("UI restores the recording panel after global hide when it was previously v
     },
   }, async ({ harness, getElement }) => {
     UI.showRecordPanel();
-    assert.equal(UI.getPanelShellModel().openTargets.recording, true);
     assert.equal(getElement("recordPanel").style.display, "block");
-    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "true");
+    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(getElement("openRecord").classList.contains("is-active"), true);
+    assert.equal(getElement("btnOpenRecord").getAttribute("aria-pressed"), "true");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
-    assert.equal(UI.getPanelShellModel().openTargets.recording, false);
     assert.equal(getElement("recordPanel").style.display, "none");
-    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "false");
+    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(getElement("openRecord").classList.contains("is-active"), false);
+    assert.equal(getElement("btnOpenRecord").getAttribute("aria-pressed"), "false");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
-    assert.equal(UI.getPanelShellModel().openTargets.recording, true);
     assert.equal(getElement("recordPanel").style.display, "block");
-    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "true");
+    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(getElement("openRecord").classList.contains("is-active"), true);
   });
 });
 
@@ -4033,18 +2606,96 @@ test("UI keeps the recording launcher reachable after global hide when the panel
     },
   }, async ({ harness, getElement }) => {
     UI.hideRecordPanel();
-    assert.equal(UI.getPanelShellModel().openTargets.recording, false);
     assert.equal(getElement("recordPanel").style.display, "none");
-    assert.equal(state.ui.btnLauncherRecording.disabled, false);
-    assert.equal(state.ui.btnLauncherRecording.dataset.targetOpen, "false");
+    assert.equal(getElement("openRecord").style.display, "grid");
 
     harness.dispatchWindow("keydown", { code: "KeyH" });
     harness.dispatchWindow("keydown", { code: "KeyH" });
 
-    assert.equal(UI.getPanelShellModel().openTargets.recording, false);
     assert.equal(getElement("recordPanel").style.display, "none");
-    assert.equal(state.ui.btnLauncherRecording.disabled, false);
-    assert.equal(state.ui.btnLauncherRecording.getAttribute("aria-pressed"), "false");
+    assert.equal(getElement("openRecord").style.display, "grid");
+    assert.equal(getElement("openRecord").getAttribute("aria-hidden"), "false");
+  });
+});
+
+test("UI workspace launcher toggles panels and active states without hiding launchers", async () => {
+  await withUiWireHarnessState({}, async ({ getElement }) => {
+    assert.equal(getElement("openAudio").style.display, "grid");
+    assert.equal(getElement("openAudio").classList.contains("is-active"), true);
+    assert.equal(getElement("btnOpenAudio").getAttribute("aria-pressed"), "true");
+
+    getElement("btnOpenAudio").dispatch("click");
+    assert.equal(getElement("audioPanel").style.display, "none");
+    assert.equal(getElement("openAudio").style.display, "grid");
+    assert.equal(getElement("openAudio").classList.contains("is-active"), false);
+    assert.equal(getElement("btnOpenAudio").getAttribute("aria-pressed"), "false");
+
+    getElement("btnOpenAudio").dispatch("click");
+    assert.equal(getElement("audioPanel").style.display, "grid");
+    assert.equal(getElement("openAudio").classList.contains("is-active"), true);
+  });
+});
+
+test("UI workspace launcher collapse keeps the shell recoverable", async () => {
+  await withUiWireHarnessState({}, async ({ getElement }) => {
+    const launcher = getElement("workspaceLauncher");
+    const toggle = getElement("btnToggleWorkspaceLauncher");
+
+    assert.equal(launcher.dataset.collapsed, "false");
+    assert.equal(toggle.getAttribute("aria-expanded"), "true");
+
+    toggle.dispatch("click");
+    assert.equal(launcher.dataset.collapsed, "true");
+    assert.equal(toggle.getAttribute("aria-expanded"), "false");
+    assert.equal(toggle.title, "Expand launcher bar");
+
+    toggle.dispatch("click");
+    assert.equal(launcher.dataset.collapsed, "false");
+    assert.equal(toggle.getAttribute("aria-expanded"), "true");
+    assert.equal(toggle.title, "Collapse launcher bar");
+  });
+});
+
+function pickerElements(container) {
+  const all = [];
+  const visit = node => { all.push(node); for (const child of node.children) visit(child); };
+  visit(container);
+  return all;
+}
+
+test("dynamic Orb editor keeps stable card identity across UI refresh", async () => {
+  await withUiWireHarnessState({}, () => {
+    const roots = [...state.ui.orbEditorList.children];
+    UI.refreshAllUiText();
+    assert.deepEqual(state.ui.orbEditorList.children, roots);
+  });
+});
+
+test("dynamic Orb editor does not retain fixed-slot controls", async () => {
+  await withUiWireHarnessState({}, ({ getElement }) => {
+    assert.equal(state.ui.selOrb0Chan, undefined);
+    assert.equal(state.ui.orbEditorList.children.length, preferences.orbs.length);
+  });
+});
+
+test("global view toggle restores the prior panel selection and disclosure keys do not pause simulation", async () => {
+  await withUiWireHarnessState({}, ({ getElement, harness }) => {
+    getElement("btnHideVisualizers").click();
+    getElement("btnHideScene").click();
+    getElement("btnToggleQueue").click();
+    getElement("btnTogglePanels").click();
+    assert.equal(getElement("audioPanel").style.display, "none");
+    assert.equal(getElement("queuePanel").style.display, "none");
+    getElement("btnTogglePanels").click();
+    assert.equal(getElement("audioPanel").style.display, "grid");
+    assert.equal(getElement("queuePanel").style.display, "block");
+    assert.equal(getElement("visualizersPanel").style.display, "none");
+    assert.equal(getElement("scenePanel").style.display, "none");
+    const summary = createStubUiElement("summary");
+    summary.closest = selector => selector.split(", ").includes("summary") ? summary : null;
+    const paused = state.time.simPaused;
+    harness.dispatchWindow("keydown", { code: "Space", target: summary });
+    assert.equal(state.time.simPaused, paused);
   });
 });
 
@@ -4054,7 +2705,7 @@ test("UI blocks live-source switching during active recording without touching t
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
     recording: JSON.parse(JSON.stringify(state.recording)),
-    ui: snapshotUiState(),
+    ui: { ...state.ui },
   };
   const originalActivateMic = InputSourceManager.activateMic;
   const originalActivateStream = InputSourceManager.activateStream;
@@ -4127,7 +2778,6 @@ test("UI blocks live-source switching during active recording without touching t
     InputSourceManager.teardownActiveSource = originalTeardownActiveSource;
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
-    restoreUiState(previous.ui);
     harness.restore();
   }
 });
@@ -4351,7 +3001,7 @@ test("UI.getRecordingUiModel allows active stream sessions to start recording wi
     source: JSON.parse(JSON.stringify(state.source)),
     audio: { ...state.audio },
     recording: JSON.parse(JSON.stringify(state.recording)),
-    ui: snapshotUiState(),
+    ui: { ...state.ui },
   };
 
   try {
@@ -4380,7 +3030,7 @@ test("UI.getRecordingUiModel allows active stream sessions to start recording wi
   } finally {
     applySourceAndAudioState(previous);
     Object.assign(state.recording, previous.recording);
-    restoreUiState(previous.ui);
+    Object.assign(state.ui, previous.ui);
   }
 });
 
@@ -4412,3 +3062,1405 @@ test("prepareWatchBuild creates clean build output directories", async () => {
     }
   }
 });
+
+test("Spectral Ring presentation has one Visualizers owner while shared colors live in Scene", () => {
+  const template = readFileSync(new URL("../src/index.template.html", import.meta.url), "utf8");
+  const visualizers = template.match(/<div id="visualizersPanel"[\s\S]*?<div id="analysisPanel"/)?.[0] || "";
+  const scene = template.slice(template.indexOf('<div id="scenePanel"'), template.indexOf('id="workspaceLauncher"'));
+  for (const id of ["chkBandOverlay", "chkBandConnect", "rngBandAlpha", "rngBandPoint", "rngBandOverlayMinRad", "rngBandOverlayMaxRad", "rngBandOverlayWfDisp", "rngBandLineAlpha", "rngBandLineWidth", "selRingPhaseMode", "rngRingSpeed"]) {
+    assert.equal((template.match(new RegExp(`id="${id}"`, "g")) || []).length, 1);
+    assert.match(visualizers, new RegExp(`id="${id}"`));
+    assert.doesNotMatch(scene, new RegExp(`id="${id}"`));
+  }
+  assert.doesNotMatch(template, /btnVisualizersOpenBandOverlay|bandOverlaySection/);
+  for (const id of ["clrBg", "clrParticle", "selParticleColorSrc", "rngHueOff", "rngSat", "rngVal"]) assert.match(scene, new RegExp(`id="${id}"`));
+});
+
+test("115L exposes one Scene color owner and removes the active Bands shell", () => {
+  const template = readFileSync(new URL("../src/index.template.html", import.meta.url), "utf8");
+  assert.match(template, /id="scenePanel"/); assert.match(template, /id="btnOpenScene"/); assert.match(template, /id="btnHideScene"/);
+  assert.doesNotMatch(template, /id="(?:bandsPanel|btnOpenBands|btnHideBands|openBands|bandsStatus)"/);
+  const scene = template.slice(template.indexOf('<div id="scenePanel"'), template.indexOf('id="recordPanel"'));
+  for (const id of ["clrBg","clrParticle","selParticleColorSrc","rngHueOff","rngSat","rngVal"]) {
+    assert.equal((template.match(new RegExp(`id="${id}"`, "g")) || []).length, 1);
+    assert.match(scene, new RegExp(`id="${id}"`));
+  }
+});
+
+test("preset sanitation uses Scene color and Spectral Ring line limit owners", () => {
+  const source = readFileSync(new URL("../src/js/presets/preset-codec.js", import.meta.url), "utf8");
+  assert.match(source, /CONFIG\.limits\.sceneColor\.particleColorSources/);
+  for (const field of ["hueOffsetDeg","saturation","value"]) assert.match(source, new RegExp(`CONFIG\\.limits\\.sceneColor\\.${field}`));
+  assert.match(source, /CONFIG\.limits\.bands\.overlayLineAlpha/);
+  assert.match(source, /CONFIG\.limits\.bands\.overlayLineWidthPx/);
+});
+
+async function withSettingsActionHarness(t, run) {
+  const harness = createUiWireHarness();
+  const previousPrefs = structuredClone(preferences);
+  const previousSettings = runtime.settings;
+  const previousBands = { ...state.bands };
+  const previousOrbs = state.orbs.slice();
+  const previousSourceKind = state.source.kind;
+  const descriptors = Object.fromEntries(["location", "history", "navigator"].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const location = { pathname: "/", search: "", hash: "", href: "https://example.test/" };
+  const clipboard = { copied: "", async writeText(url) { this.copied = url; } };
+  const globals = {
+    location,
+    history: { replaceState(_state, _title, url) { location.hash = url.slice(url.indexOf("#")); location.href = `https://example.test${url}`; } },
+    navigator: { clipboard },
+  };
+  try {
+    for (const [name, value] of Object.entries(globals)) Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
+    replacePreferences(structuredClone(CONFIG.defaults));
+    resolveSettings();
+    BandBankController.syncFromSettings();
+    BandBankController.rebuildNow();
+    initOrbs();
+    UI.wireControls();
+    UI.applyPrefs(null);
+    const statusWrites = {};
+    for (const [id, initial] of Object.entries({
+      visualizerEditStatus: "Choose a visualizer to shape its response.",
+      sceneStatus: "Shared scene settings and preset controls.",
+      analysisStatus: "Analysis controls ready.",
+      audioStatus: state.ui.audioStatus.textContent,
+    })) {
+      let status = initial;
+      statusWrites[id] = [];
+      Object.defineProperty(state.ui[id], "textContent", {
+        configurable: true,
+        get: () => status,
+        set: (message) => { statusWrites[id].push(message); status = message; },
+      });
+    }
+    await run({ ...harness, location, clipboard, statusWrites });
+    const editWrites = statusWrites.visualizerEditStatus;
+    assert.ok(editWrites.every((message) => !/share link|preset|settings reset|Updated: scene/i.test(message)), `Unexpected Settings message in Visualizers: ${editWrites.join("; ")}`);
+  } finally {
+    // Drain the coordinator's pending toast handles before restoring its DOM.
+    t.mock.timers.tick(10000);
+    harness.restore();
+    for (const [name, descriptor] of Object.entries(descriptors)) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+    replacePreferences(previousPrefs);
+    runtime.settings = previousSettings;
+    BandBankController.syncFromSettings();
+    Object.assign(state.bands, previousBands);
+    state.orbs.splice(0, state.orbs.length, ...previousOrbs);
+    state.source.kind = previousSourceKind;
+    VisualizerRuntime.rebuild(state.orbs);
+  }
+}
+
+function settingsPresetHash(prefs) {
+  return `#p=${Buffer.from(JSON.stringify({ schema: PRESET_SCHEMA_VERSION, prefs }), "utf8").toString("base64url")}`;
+}
+
+test("Copy Share Link writes the canonical schema-10 hash and reports only in Settings", async (t) => {
+  await withSettingsActionHarness(t, async ({ clipboard, location }) => {
+    const writeHash = t.mock.method(UrlPreset, "writeHashFromPrefs");
+    state.ui.btnShare.click();
+    await Promise.resolve();
+    assert.equal(writeHash.mock.calls.length, 1);
+    assert.equal(decodePresetHash(location.hash).schema, 10);
+    assert.equal(clipboard.copied, location.href);
+    assert.equal(state.ui.sceneStatus.textContent, "Share link copied to clipboard.");
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+  });
+});
+
+test("Share clipboard fallback retains the URL and reports only in Settings", async (t) => {
+  await withSettingsActionHarness(t, async ({ location }) => {
+    delete globalThis.navigator.clipboard;
+    state.ui.btnShare.click();
+    await Promise.resolve();
+    assert.equal(decodePresetHash(location.hash).schema, 10);
+    assert.equal(state.ui.sceneStatus.textContent, "Share link written to URL — copy from address bar.");
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+  });
+});
+
+test("Apply URL Preset uses canonical apply, conditional BandBank rebuild and Settings feedback", async (t) => {
+  await withSettingsActionHarness(t, ({ location }) => {
+    const next = structuredClone(CONFIG.defaults);
+    next.bands.floorHz = 55;
+    next.bands.distributionMode = "bark";
+    next.visuals.backgroundColor = "#123456";
+    next.orbs[0].startAngleRad = 1;
+    location.hash = settingsPresetHash(next);
+    const rebuild = t.mock.method(BandBankController, "rebuildNow");
+    const oldLowHz = state.bands.lowHz;
+    state.ui.btnApplyUrl.click();
+    assert.equal(preferences.visuals.backgroundColor, "#123456");
+    assert.equal(runtime.settings.bands.floorHz, 55);
+    assert.equal(runtime.settings.bands.distributionMode, "bark");
+    assert.notEqual(state.bands.lowHz, oldLowHz);
+    assert.equal(rebuild.mock.calls.length, 1);
+    assert.equal(state.orbs[0].angleRad, 1);
+    assert.equal(state.ui.sceneStatus.textContent, "Preset applied from URL.");
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+    state.ui.btnApplyUrl.click();
+    assert.equal(rebuild.mock.calls.length, 1, "unchanged band definition must not rebuild");
+  });
+});
+
+test("missing and invalid URL presets report only in Settings and retain preferences", async (t) => {
+  await withSettingsActionHarness(t, ({ location }) => {
+    const previous = structuredClone(preferences);
+    for (const hash of ["", "#p=invalid"]) {
+      location.hash = hash;
+      state.ui.btnApplyUrl.click();
+      assert.equal(state.ui.sceneStatus.textContent, "No valid preset in URL.");
+      assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+      assert.deepEqual(preferences, previous);
+    }
+  });
+});
+
+test("Reset All Settings restores complete CONFIG defaults and reports only in Settings", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    preferences.audio.volume = 0.25;
+    preferences.visuals.backgroundColor = "#123456";
+    preferences.bands.floorHz = 55;
+    preferences.orbs[0].motion.angularSpeedRadPerSec = 2;
+    UI.applyPrefs(null);
+    const rebuild = t.mock.method(BandBankController, "rebuildNow");
+    state.ui.btnResetPrefs.click();
+    assert.deepEqual(preferences, CONFIG.defaults);
+    assert.deepEqual(runtime.settings, CONFIG.defaults);
+    assert.equal(rebuild.mock.calls.length, 1);
+    assert.equal(state.orbs[0].angleRad, CONFIG.defaults.orbs[0].startAngleRad);
+    assert.equal(state.ui.sceneStatus.textContent, "All settings reset.");
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+  });
+});
+
+test("Scene control commits use Settings feedback while Bulk Orb commits use Visualizers feedback", async (t) => {
+  await withSettingsActionHarness(t, ({ statusWrites }) => {
+    const controls = [["clrBg", "input", "#123456"], ["clrParticle", "input", "#abcdef"], ["selParticleColorSrc", "change", "angle"], ["rngHueOff", "input", "120"], ["rngSat", "input", "0.5"], ["rngVal", "input", "0.75"]];
+    for (const [id, event, value] of controls) {
+      state.ui[id].value = value;
+      state.ui[id].dispatch(event);
+      assert.match(state.ui.sceneStatus.textContent, /^Updated: scene /);
+      assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+    }
+    assert.equal(runtime.settings.visuals.backgroundColor, "#123456");
+    assert.equal(runtime.settings.visuals.particleColor, "#abcdef");
+    assert.equal(runtime.settings.bands.particleColorSource, "angle");
+    assert.deepEqual(runtime.settings.bands.rainbow, { hueOffsetDeg: 120, saturation: 0.5, value: 0.75 });
+    assert.equal(statusWrites.sceneStatus.length, controls.length);
+    assert.deepEqual(statusWrites.visualizerEditStatus, []);
+    assert.deepEqual(statusWrites.analysisStatus, []);
+    assert.deepEqual(statusWrites.audioStatus, []);
+    const settingsMessage = state.ui.sceneStatus.textContent;
+    state.ui.rngOmega.value = "2";
+    state.ui.rngOmega.dispatch("input");
+    assert.match(state.ui.visualizerEditStatus.textContent, /^Updated:/);
+    assert.equal(state.ui.sceneStatus.textContent, settingsMessage);
+    assert.equal(statusWrites.visualizerEditStatus.length, 1);
+    assert.equal(statusWrites.sceneStatus.length, controls.length, "bulk edit emits no Scene feedback");
+  });
+});
+
+test("M.H Analysis edits report only through Analysis, including validation and band rebuild options", async (t) => {
+  await withSettingsActionHarness(t, ({ statusWrites }) => {
+    const rebuild = t.mock.method(BandBankController, "rebuildNow");
+    const controls = [
+      ["rngRmsGain", "input", "2", "Updated: rms gain (analysis)"],
+      ["rngSmooth", "input", "0.5", "Updated: smoothing"],
+      ["selFFT", "change", "4096", "Updated: fft size"],
+      ["selDistMode", "change", "bark", "Updated: band distribution mode"],
+      ["inpBandFloorHz", "change", "30", "Band floor updated."],
+      ["inpBandCeilingHz", "change", "23000", "Configured ceiling updated."],
+    ];
+    for (const [id, event, value, message] of controls) {
+      state.ui[id].value = value;
+      const before = statusWrites.analysisStatus.length;
+      state.ui[id].dispatch(event);
+      assert.ok(statusWrites.analysisStatus.length > before, id);
+      assert.equal(state.ui.analysisStatus.textContent, message, id);
+      assert.deepEqual(statusWrites.visualizerEditStatus, [], `${id} must never write to Visualizers`);
+      assert.deepEqual(statusWrites.sceneStatus, [], `${id} must never write to Scene`);
+      assert.deepEqual(statusWrites.audioStatus, [], `${id} must never write to Audio`);
+    }
+    assert.equal(rebuild.mock.callCount(), 3, "distribution, floor and ceiling retain explicit rebuilds");
+    const beforeInvalid = runtime.settings;
+    state.ui.inpBandFloorHz.value = "0";
+    state.ui.inpBandFloorHz.dispatch("change");
+    assert.equal(state.ui.analysisStatus.textContent, "Band floor must be a positive finite number.");
+    state.ui.inpBandCeilingHz.value = "10";
+    state.ui.inpBandCeilingHz.dispatch("change");
+    assert.equal(state.ui.analysisStatus.textContent, "Configured ceiling cannot be below band floor.");
+    assert.equal(runtime.settings, beforeInvalid, "invalid input still does not commit");
+    assert.deepEqual(statusWrites.visualizerEditStatus, []);
+    assert.deepEqual(statusWrites.sceneStatus, []);
+    assert.deepEqual(statusWrites.audioStatus, []);
+  });
+});
+
+test("M.H repeat, mute and volume use the existing Audio toast and restore source status after expiry", async (t) => {
+  await withSettingsActionHarness(t, ({ statusWrites }) => {
+    let now = 100000;
+    t.mock.method(performance, "now", () => now);
+    state.source.kind = "file";
+    UI.refreshAllUiText();
+    const sourceStatus = state.ui.audioStatus.textContent;
+    // Expired test toasts stay expired when the real performance clock resumes.
+    now = -100000;
+    const controls = [
+      ["btnRepeat", "click", null, "Updated: repeat"],
+      ["chkMute", "change", true, "Updated: mute"],
+      ["rngVol", "input", "0.4", "Updated: volume (playback only)"],
+    ];
+    for (const [id, event, value, message] of controls) {
+      if (typeof value === "boolean") state.ui[id].checked = value;
+      else if (value !== null) state.ui[id].value = value;
+      state.ui[id].dispatch(event);
+      UI.refreshAllUiText();
+      assert.equal(state.ui.audioStatus.textContent, message, id);
+      now += 2499;
+      UI.refreshAllUiText();
+      assert.equal(state.ui.audioStatus.textContent, message, "existing toast duration is retained");
+      now += 1;
+      UI.refreshAllUiText();
+      assert.equal(state.ui.audioStatus.textContent, sourceStatus, "normal source status resumes after expiry");
+      assert.deepEqual(statusWrites.visualizerEditStatus, [], `${id} must never write to Visualizers`);
+      assert.deepEqual(statusWrites.sceneStatus, [], `${id} must never write to Scene`);
+      assert.deepEqual(statusWrites.analysisStatus, [], `${id} must never write to Analysis`);
+    }
+  });
+});
+
+test("M.H individual Orb and Spectral Ring edits emit only Visualizer feedback", async (t) => {
+  await withSettingsActionHarness(t, ({ statusWrites }) => {
+    const control = state.ui.orbEditorList.children[0].querySelectorAll("input").find((node) => node.id?.endsWith("angular-speed"));
+    control.value = "2";
+    control.dispatch("input");
+    assert.equal(runtime.settings.orbs[0].motion.angularSpeedRadPerSec, 2);
+    assert.equal(statusWrites.visualizerEditStatus.length, 1);
+    assert.match(state.ui.visualizerEditStatus.textContent, /^Updated: .* angular speed$/);
+    state.ui.rngBandAlpha.value = "0.4";
+    state.ui.rngBandAlpha.dispatch("input");
+    assert.equal(runtime.settings.bands.overlay.alpha, 0.4);
+    assert.equal(statusWrites.visualizerEditStatus.length, 2);
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Updated: spectral ring alpha");
+    assert.deepEqual(statusWrites.sceneStatus, []);
+    assert.deepEqual(statusWrites.analysisStatus, []);
+    assert.deepEqual(statusWrites.audioStatus, []);
+    t.mock.timers.tick(2500);
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+  });
+});
+
+test("M.H generic preference application is status-neutral and internal synchronization stays silent", async (t) => {
+  await withSettingsActionHarness(t, ({ statusWrites }) => {
+    const explicitStatus = t.mock.fn();
+    UI.applyPrefs("generic synchronization");
+    UI.applyPrefs("non-callable callback", { showStatus: true });
+    UI.applyPrefs(null);
+    UI.applyPrefs(null, { showStatus: explicitStatus });
+    assert.equal(explicitStatus.mock.callCount(), 0);
+    for (const [id, writes] of Object.entries(statusWrites)) assert.deepEqual(writes, [], id);
+  });
+});
+
+test("Settings toasts survive applyPrefs, replace prior timers, and restore the default lane", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    state.ui.btnApplyUrl.click();
+    UI.applyPrefs(null);
+    assert.equal(state.ui.sceneStatus.textContent, "No valid preset in URL.");
+    t.mock.timers.tick(1000);
+    state.ui.btnResetPrefs.click();
+    t.mock.timers.tick(3000);
+    assert.equal(state.ui.sceneStatus.textContent, "All settings reset.", "old Apply timer must be cancelled");
+    t.mock.timers.tick(1000);
+    assert.equal(state.ui.sceneStatus.textContent, "Shared scene settings and preset controls.");
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+  });
+});
+
+test("hashchange preset application also reports through Settings without an Orb toast", async (t) => {
+  await withSettingsActionHarness(t, ({ location, dispatchWindow }) => {
+    const next = structuredClone(CONFIG.defaults);
+    next.visuals.backgroundColor = "#123456";
+    location.hash = settingsPresetHash(next);
+    dispatchWindow("hashchange");
+    assert.equal(runtime.settings.visuals.backgroundColor, "#123456");
+    assert.equal(state.ui.sceneStatus.textContent, "Preset applied from URL.");
+    assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
+  });
+});
+
+const MG_BULK_FIELDS = [
+  ["rngOmega", "valOmega", "motion", "angularSpeedRadPerSec", "input", 1, 2],
+  ["rngMinRad", "valMinRad", "response", "minRadiusFrac", "input", .02, .04],
+  ["rngMaxRad", "valMaxRad", "response", "maxRadiusFrac", "input", .7, .9],
+  ["rngWfDisp", "valWfDisp", "response", "waveformRadialDisplaceFrac", "input", .1, .2],
+  ["chkLines", "valLines", "trace", "lines", "change", false, true],
+  ["rngNumLines", "valNumLines", "trace", "numLines", "input", 20, 40],
+  ["selLineColorMode", "valLineColorMode", "trace", "lineColorMode", "change", "fixed", "lastParticle"],
+  ["rngEmit", "valEmit", "particles", "emitPerSecond", "input", 100, 200],
+  ["rngSizeMax", "valSizeMax", "particles", "sizeMaxPx", "input", 7, 9],
+  ["rngSizeMin", "valSizeMin", "particles", "sizeMinPx", "input", 1, 2],
+  ["rngSizeToMin", "valSizeToMin", "particles", "sizeToMinSec", "input", 2, 4],
+  ["rngTTL", "valTTL", "particles", "ttlSec", "input", 10, 12],
+  ["rngMinPlacementDistance", "valMinPlacementDistance", "particles", "minPlacementDistancePx", "input", 0, 2],
+];
+
+for (const [controlId, outputId, group, field, event, first, second] of MG_BULK_FIELDS) {
+  test(`Visualizers bulk ${group}.${field} reports mixed and applies canonically to every Orb`, async (t) => {
+    await withSettingsActionHarness(t, () => {
+      preferences.orbs.forEach((orb, i) => { orb[group][field] = i ? second : first; });
+      UI.applyPrefs(null);
+      assert.equal(state.ui[outputId].textContent, "mixed");
+      if (typeof first === "boolean") assert.equal(state.ui[controlId].indeterminate, true);
+      const settingsBefore = runtime.settings, runtimeOrbs = [...state.orbs];
+      const unrelatedBefore = preferences.orbs.map((orb) => orb.centerXFrac);
+      if (typeof first === "boolean") state.ui[controlId].checked = first;
+      else state.ui[controlId].value = String(first);
+      state.ui[controlId].dispatch(event);
+      assert.notEqual(runtime.settings, settingsBefore);
+      for (const source of [preferences.orbs, runtime.settings.orbs, state.orbs]) {
+        assert.equal(source.length, 2);
+        assert.ok(source.every((orb) => orb[group][field] === first), `${group}.${field}`);
+      }
+      assert.deepEqual(state.orbs, runtimeOrbs, "bulk editing retains live Orb objects");
+      assert.deepEqual(preferences.orbs.map((orb) => orb.centerXFrac), unrelatedBefore);
+      assert.notEqual(state.ui[outputId].textContent, "mixed");
+      assert.notEqual(state.ui[outputId].textContent, "—");
+      if (typeof first === "boolean") assert.equal(state.ui[controlId].indeterminate, false);
+      assert.match(state.ui.visualizerEditStatus.textContent, /^Updated:/);
+      UI.refreshAllUiText();
+      assert.match(state.ui.visualizerEditStatus.textContent, /^Updated:/, "refresh retains edit feedback");
+    });
+  });
+}
+
+function hostVisualizerEditors() {
+  const ui = state.ui;
+  ui.visualizersPanel.append(ui.visualizerList, ui.spectralRingEditor, ui.orbEditorList, ui.btnVisualizersAddOrb, ui.btnResetVisuals);
+  ui.spectralRingEditor.append(createStubUiElement("summary"), ui.chkBandOverlay);
+  ui.visualizersPanel.style.display = "block";
+}
+function visualizerAction(action, id) {
+  const row = state.ui.visualizerList.children.find((item) => action === "edit-ring"
+    ? item.children[0].children[0].textContent === "Spectral Ring"
+    : item.children[2]?.children.some((button) => button.dataset.orbId === id));
+  return row?.children[2]?.children.find((button) => button.dataset.action === action);
+}
+function clickVisualizerAction(action, id) {
+  const button = visualizerAction(action, id);
+  assert.ok(button, `${action} for ${id || "Spectral Ring"}`);
+  state.ui.visualizerList.dispatch("click", { target: button });
+}
+
+test("Ring and persistent-ID Orb Edit open existing editors inside Visualizers", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    clickVisualizerAction("edit-ring");
+    assert.equal(state.ui.spectralRingEditor.open, true);
+    assert.equal(document.activeElement, state.ui.spectralRingEditor.querySelector("summary"));
+    const root = state.ui.orbEditorList.children[1];
+    const nodes = [...state.ui.orbEditorList.children];
+    const settingsBefore = runtime.settings;
+    clickVisualizerAction("edit", root.dataset.orbId);
+    assert.equal(root.open, true);
+    assert.equal(document.activeElement, root.querySelector("summary"));
+    clickVisualizerAction("edit", root.dataset.orbId);
+    assert.deepEqual(state.ui.orbEditorList.children, nodes);
+    assert.equal(runtime.settings, settingsBefore, "Edit does not mutate settings");
+    assert.equal(state.ui.visualizersPanel.style.display, "block");
+    assert.ok(state.ui.visualizersPanel.contains(document.activeElement));
+    assert.equal(state.ui.simPanel, undefined);
+  });
+});
+
+test("collection actions create and remove local editors and recover focus through zero Orbs", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    const originalId = preferences.orbs[0].id;
+    const survivor = state.orbs[0]; survivor.angleRad = 3; survivor.emitAccum = .37;
+    state.ui.btnVisualizersAddOrb.click();
+    const added = preferences.orbs.at(-1);
+    assert.ok(state.ui.orbEditorList.children.some((node) => node.dataset.orbId === added.id));
+    assert.equal(document.activeElement, visualizerAction("edit", added.id));
+    clickVisualizerAction("edit", added.id);
+    assert.ok(state.ui.visualizersPanel.contains(document.activeElement));
+    clickVisualizerAction("duplicate", added.id);
+    const copy = preferences.orbs.find((orb) => orb.id !== added.id && orb.id !== originalId && !CONFIG.defaults.orbs.some((def) => def.id === orb.id));
+    assert.ok(copy); assert.notEqual(copy.id, added.id);
+    assert.ok(state.ui.orbEditorList.children.some((node) => node.dataset.orbId === copy.id));
+    assert.equal(document.activeElement, visualizerAction("edit", copy.id));
+    const order = preferences.orbs.map((orb) => orb.id);
+    window.confirm = () => false;
+    clickVisualizerAction("remove", order[1]);
+    assert.deepEqual(preferences.orbs.map((orb) => orb.id), order);
+    window.confirm = () => true;
+    clickVisualizerAction("remove", order[1]);
+    assert.equal(document.activeElement, visualizerAction("edit", order[2]));
+    assert.ok(!state.ui.orbEditorList.children.some((node) => node.dataset.orbId === order[1]));
+    assert.equal(state.orbs[0], survivor); assert.equal(survivor.angleRad, 3); assert.equal(survivor.emitAccum, .37);
+    while (preferences.orbs.length) clickVisualizerAction("remove", preferences.orbs.at(-1).id);
+    assert.equal(state.orbs.length, 0); assert.equal(state.ui.orbEditorList.children.length, 0);
+    assert.equal(document.activeElement, state.ui.btnVisualizersAddOrb);
+    assert.equal(state.ui.visualizerList.children.length, 1);
+    for (const [controlId, outputId] of MG_BULK_FIELDS) {
+      assert.equal(state.ui[controlId].disabled, true, controlId);
+      assert.equal(state.ui[outputId].textContent, "—", outputId);
+    }
+    state.ui.btnVisualizersAddOrb.click();
+    assert.equal(preferences.orbs.length, 1); assert.equal(state.ui.orbEditorList.children.length, 1);
+    assert.equal(document.activeElement, visualizerAction("edit", preferences.orbs[0].id));
+    for (const [controlId, outputId] of MG_BULK_FIELDS) {
+      assert.equal(state.ui[controlId].disabled, false, controlId);
+      assert.notEqual(state.ui[outputId].textContent, "mixed", outputId);
+      assert.notEqual(state.ui[outputId].textContent, "—", outputId);
+    }
+  });
+});
+
+test("M.C relocated Orb roots, disclosure, picker, focus and scroll survive normal commits", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    const host = state.ui.orbEditorList, root = host.children[0];
+    clickVisualizerAction("edit", root.dataset.orbId);
+    const motion = root.children[1].children[1]; motion.open = true;
+    const picker = root.children[1].children[0].children[1].children[1]; picker.open = true;
+    const control = root.querySelectorAll("input").find((node) => node.id?.endsWith("angular-speed"));
+    control.focus(); state.ui.visualizersPanel.scrollTop = 432;
+    const moves = t.mock.method(host, "insertBefore");
+    control.value = "2"; control.dispatch("input"); UI.refreshAllUiText();
+    assert.equal(moves.mock.callCount(), 0);
+    assert.equal(host.children[0], root); assert.equal(document.activeElement, control);
+    assert.equal(root.open, true); assert.equal(motion.open, true); assert.equal(picker.open, true);
+    assert.equal(state.ui.visualizersPanel.scrollTop, 432);
+  });
+});
+
+test("spacing individual live edit retains Orb phase, particles, editor focus, and survives unrelated collection changes", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    const orb=state.orbs[0],id=orb.id,root=state.ui.orbEditorList.children[0];
+    orb.angleRad=2.5; orb.trail.emitAt(3,4,0,{r:1,g:0,b:0}); orb.trail.emitAccumulator=.37;
+    const tail=orb.trail.particles.tail;
+    const control=root.querySelectorAll("input").find(node=>node.id?.endsWith("min-placement-distance"));
+    control.focus(); control.value="2.3"; control.dispatch("input");
+    for(const source of [preferences.orbs,runtime.settings.orbs,state.orbs])assert.equal(source.find(o=>o.id===id).particles.minPlacementDistancePx,2.3);
+    assert.equal(state.orbs.find(o=>o.id===id),orb); assert.equal(orb.angleRad,2.5);
+    assert.equal(orb.trail.particles.tail,tail); assert.equal(orb.trail.emitAccumulator,.37);
+    assert.equal(state.ui.orbEditorList.children[0],root); assert.equal(document.activeElement,control);
+    const commits=t.mock.method(UI,"refreshAllUiText");
+    control.value="0"; control.dispatch("input"); assert.equal(orb.particles.minPlacementDistancePx,0);
+    assert.ok(commits.mock.callCount()<=1,"a single input has one refresh path");
+    state.ui.btnVisualizersAddOrb.click();
+    assert.equal(state.ui.orbEditorList.children.find(node=>node.dataset.orbId===id),root);
+    assert.equal(orb.trail.particles.tail,tail); assert.equal(orb.angleRad,2.5);
+  });
+});
+
+test("Visualizers tooltip discovery includes Ring, bulk and newly added Orb controls exactly once", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors();
+    state.ui.chkBandOverlay.id = "chkBandOverlay";
+    state.ui.rngOmega.id = "rngOmega";
+    state.ui.visualizersPanel.append(state.ui.rngOmega);
+    const selectors = [];
+    document.querySelectorAll = (selector) => {
+      selectors.push(selector);
+      if (selector === "#visualizersPanel input") return [...state.ui.orbEditorList.querySelectorAll("input"), state.ui.chkBandOverlay, state.ui.rngOmega];
+      if (selector === "#visualizersPanel select") return state.ui.orbEditorList.querySelectorAll("select");
+      return [];
+    };
+    state.ui.btnVisualizersAddOrb.click(); UI.refreshAllUiText();
+    const controls = state.ui.configTooltipSpecs.map((spec) => spec.control);
+    const newRoot = state.ui.orbEditorList.children.at(-1);
+    const newControl = newRoot.querySelectorAll("input").find((node) => node.id?.endsWith("angular-speed"));
+    for (const control of [state.ui.chkBandOverlay, state.ui.rngOmega, newControl]) assert.equal(controls.filter((node) => node === control).length, 1);
+    assert.ok(selectors.includes("#visualizersPanel input")); assert.ok(!selectors.some((selector) => selector.includes("simPanel")));
+    const listener = t.mock.method(newControl, "addEventListener");
+    state.ui.btnVisualizersAddOrb.click();
+    assert.equal(listener.mock.callCount(), 0, "existing tooltip listeners are retained without duplication");
+    UI.refreshAllUiText(); assert.match(newControl.title, /Angular Speed/);
+  });
+});
+
+test("Visualizers focus round-trip and H/View restore the same layout with local editors", async (t) => {
+  await withSettingsActionHarness(t, ({ dispatchWindow }) => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    const roots = [...state.ui.orbEditorList.children];
+    roots[0].open = true; roots[0].querySelector("summary").focus();
+    state.ui.btnHideVisualizers.click();
+    assert.equal(document.activeElement, state.ui.btnOpenVisualizers);
+    assert.equal(state.ui.visualizersPanel.style.display, "none");
+    state.ui.btnOpenVisualizers.click();
+    assert.equal(document.activeElement, state.ui.btnHideVisualizers);
+    const panels = [state.ui.audioPanel, state.ui.analysisPanel, state.ui.visualizersPanel, state.ui.scenePanel, state.ui.queuePanel];
+    state.ui.analysisPanel.style.display = "none"; state.ui.queuePanel.style.display = "none";
+    state.ui.audioPanel.style.display = "grid";
+    const before = panels.map((panel) => panel.style.display);
+    dispatchWindow("keydown", { code: "KeyH", target: state.canvas });
+    assert.ok(panels.every((panel) => panel.style.display === "none"));
+    assert.equal("sim" in state.ui.panelRestoreSnapshot, false);
+    state.ui.btnTogglePanels.click();
+    assert.deepEqual(panels.map((panel) => panel.style.display), before);
+    assert.deepEqual(state.ui.orbEditorList.children, roots); assert.equal(roots[0].open, true);
+    assert.equal(state.ui.openVisualizers.hidden, false);
+  });
+});
+
+function rc02Deferred() {
+  let resolve, reject;
+  const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
+}
+
+async function withRc02FileWorkflow(t, options, run) {
+  const audio = createAudioEngineHarness(options);
+  const previousRequestGuard = AudioEngine._isLoadRequestCurrent;
+  const previousEnded = AudioEngine._onTrackEnded;
+  const mutations = [];
+  const scrubberLoads = [];
+  const activations = [];
+  const activationWaiters = [];
+  const completionWaiters = [];
+  const failureWaiters = [];
+  function waitForFailures(count) {
+    if (mutations.filter(x => x.kind === "track-change-failed").length >= count) return Promise.resolve();
+    return new Promise(resolve => failureWaiters.push({ count, resolve }));
+  }
+  function waitForCompletions(count) {
+    if (mutations.filter(x => x.kind === "track-change-complete").length >= count) return Promise.resolve();
+    return new Promise(resolve => completionWaiters.push({ count, resolve }));
+  }
+  function waitForActivations(count) {
+    if (activations.length >= count) return Promise.resolve();
+    return new Promise(resolve => activationWaiters.push({ count, resolve }));
+  }
+  t.mock.method(RecorderEngine, "onTransportMutation", (kind, details) => {
+    mutations.push({ kind, details });
+    for (const waiter of failureWaiters) {
+      if (mutations.filter(x => x.kind === "track-change-failed").length >= waiter.count) waiter.resolve();
+    }
+    for (const waiter of completionWaiters) {
+      if (mutations.filter(x => x.kind === "track-change-complete").length >= waiter.count) waiter.resolve();
+    }
+    return { ok: true };
+  });
+  t.mock.method(RecorderEngine, "getSupportStatus", () => ({ ok: true }));
+  t.mock.method(Scrubber, "loadFile", file => { scrubberLoads.push(file.name); });
+  const activateFile = InputSourceManager.activateFile;
+  t.mock.method(InputSourceManager, "activateFile", async (...args) => {
+    const result = await activateFile(...args);
+    activations.push(result);
+    for (const waiter of activationWaiters) if (activations.length >= waiter.count) waiter.resolve();
+    return result;
+  });
+  try {
+    await withUiWireHarnessState({
+      sourceState: { kind: "none", status: "idle", sessionActive: false, label: "", errorCode: "", errorMessage: "" },
+      audioState: { isLoaded: false, isPlaying: false, filename: "", transportError: "" },
+      recordingState: { phase: "idle" },
+      queueVisible: true,
+    }, async ({ getElement, harness }) => {
+      const dispatchWindow = harness.dispatchWindow;
+      const createElement = document.createElement;
+      document.createElement = tag => tag === "audio" ? audio.createMediaElement() : createElement(tag);
+      function ingest(names, entry = "picker") {
+        const files = names.map(name => typeof name === "string" ? createNamedAudioFile(name) : name);
+        if (entry === "drop") return state.canvas.dispatch("drop", { dataTransfer: { files } });
+        getElement("fileInput").files = files;
+        return getElement("fileInput").dispatch("change");
+      }
+      try {
+        await run({ audio, ingest, getElement, mutations, scrubberLoads, activations, waitForActivations, waitForCompletions, waitForFailures, dispatchWindow });
+      } finally {
+        await InputSourceManager.teardownActiveSource({ reason: "rc02-test-cleanup" });
+      }
+    });
+  } finally {
+    AudioEngine._isLoadRequestCurrent = previousRequestGuard;
+    AudioEngine._onTrackEnded = previousEnded;
+    audio.restore();
+  }
+}
+
+function assertRc02Empty() {
+  UI.refreshAllUiText();
+  assert.deepEqual(Queue.snapshot(), { items: [], cursor: -1, length: 0 });
+  assert.deepEqual(state.audio, { isLoaded: false, isPlaying: false, filename: "", transportError: "" });
+  assert.equal(state.source.kind, "none");
+  assert.equal(state.source.status, "idle");
+  assert.equal(state.source.label, "");
+  assert.equal(state.source.sessionActive, false);
+  assert.equal(state.source.errorCode, "");
+  assert.equal(state.source.errorMessage, "");
+  assert.equal(state.source.streamMeta.hasAudio, false);
+  assert.equal(AudioEngine.getMediaEl(), null);
+  assert.equal(AudioEngine.sample().ready, false);
+  assert.equal(state.ui.audioStatus.textContent, "File mode ready. Load audio files to begin analysis.");
+}
+
+test("RC-13: queue removal retains neighboring action focus and empty queue restores Hide", async t => {
+  await withRc02FileWorkflow(t, {}, async ({ ingest, getElement }) => {
+    await ingest(["A.wav", "B.wav", "C.wav"]);
+    const list = getElement("queueList");
+    list.children[1].children[2].focus();
+    await list.children[1].children[2].dispatch("click");
+    assert.deepEqual(Queue.snapshot().items.map(item => item.name), ["A.wav", "C.wav"]);
+    assert.equal(document.activeElement, list.children[1].children[2]);
+    await document.activeElement.dispatch("click");
+    assert.equal(document.activeElement, list.children[0].children[2]);
+    await document.activeElement.dispatch("click");
+    assert.equal(Queue.length, 0);
+    assert.equal(document.activeElement, getElement("btnHideQueue"));
+  });
+});
+
+test("RC-13: queue activation/refresh preserves row focus and never steals outside focus", async t => {
+  await withRc02FileWorkflow(t, {}, async ({ ingest, getElement }) => {
+    await ingest(["A.wav", "B.wav"]);
+    let list = getElement("queueList");
+    list.children[1].focus();
+    await list.children[1].dispatch("click");
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    UI.refreshAllUiText();
+    assert.equal(document.activeElement, list.children[1]);
+    getElement("btnLoad").focus();
+    await ingest(["C.wav"]);
+    assert.equal(document.activeElement, getElement("btnLoad"));
+    getElement("btnClearQueue").focus();
+    await getElement("btnClearQueue").dispatch("click");
+    assert.equal(document.activeElement, getElement("btnHideQueue"));
+    assert.equal(Queue.length, 0);
+  });
+});
+
+for (const entry of ["picker", "drop"]) {
+  for (const type of ["", "application/ogg", "application/octet-stream", "video/mp4", "audio/wav"]) {
+    test(`RC-12: ${entry} admits ${type || "empty MIME"} to canonical activation`, async t => {
+      await withRc02FileWorkflow(t, {}, async ({ getElement, scrubberLoads, activations }) => {
+        const file = { ...createNamedAudioFile("candidate"), type };
+        if (entry === "drop") await state.canvas.dispatch("drop", { dataTransfer: { files: [file] } });
+        else { getElement("fileInput").files = [file]; await getElement("fileInput").dispatch("change"); }
+        assert.equal(Queue.current(), file);
+        assert.equal(state.audio.isLoaded, true);
+        assert.equal(state.source.status, "active");
+        assert.deepEqual(scrubberLoads, ["candidate"]);
+        assert.equal(activations.length, 1);
+      });
+    });
+  }
+  test(`RC-12: ${entry} decoder failure remains truthful for admitted metadata`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ audio, getElement, activations }) => {
+      audio.audioEl.play = () => Promise.reject(Object.assign(new Error("Unsupported media"), { name: "NotSupportedError" }));
+      const file = { ...createNamedAudioFile("invalid.txt"), type: "text/plain" };
+      if (entry === "drop") await state.canvas.dispatch("drop", { dataTransfer: { files: [file] } });
+      else { getElement("fileInput").files = [file]; await getElement("fileInput").dispatch("change"); }
+      assert.equal(Queue.current(), file);
+      assert.equal(activations.length, 1);
+      assert.equal(activations[0].ok, false);
+      assert.equal(state.source.status, "error");
+      assert.equal(state.source.errorCode, "file-activation-failed");
+      assert.equal(state.audio.isLoaded, false);
+      UI.refreshAllUiText();
+      assert.match(state.ui.audioStatus.textContent, /unsupported|Playback/i);
+    });
+  });
+}
+
+for (const removal of ["clear", "final-remove"]) {
+  test(`RC-02: ${removal} during delayed context resume leaves an empty workflow`, async (t) => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    await withRc02FileWorkflow(t, {
+      contextState: "suspended",
+      onResume(ctx) {
+        entered.resolve();
+        return resume.promise.then(() => { ctx.state = "running"; });
+      },
+    }, async ({ ingest, getElement, scrubberLoads, mutations, activations }) => {
+      const pending = ingest(["A.wav"]);
+      await entered.promise;
+      assert.equal(Queue.length, 1);
+      if (removal === "clear") await getElement("btnClearQueue").dispatch("click");
+      else await getElement("queueList").children[0].children[2].dispatch("click");
+      assertRc02Empty();
+      const notifications = mutations.length;
+      resume.resolve();
+      await pending;
+      assertRc02Empty();
+      assert.deepEqual(activations, [false], "cancelled activation resolves quietly");
+      assert.deepEqual(scrubberLoads, []);
+      assert.equal(mutations.length, notifications, "no stale recorder transport notification");
+    });
+  });
+}
+
+for (const outcome of ["resolve", "reject"]) {
+  test(`RC-02: Clear during delayed load-time play ${outcome} ignores stale commits and callbacks`, async (t) => {
+    const entered = rc02Deferred(), play = rc02Deferred();
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, getElement, scrubberLoads, mutations, activations }) => {
+      audio.audioEl.play = () => {
+        audio.audioEl.paused = false;
+        audio.audioEl.dispatch("play");
+        entered.resolve();
+        return play.promise;
+      };
+      const pending = ingest(["A.wav"]);
+      await entered.promise;
+      assert.equal(AudioEngine.sample().ready, true);
+      await getElement("btnClearQueue").dispatch("click");
+      assertRc02Empty();
+      assert.equal(audio.audioEl.src, "");
+      assert.ok(audio.revokedUrls.includes("blob:test-audio"));
+      assert.ok(audio.audioEl.releaseCalls.pause > 0);
+      assert.ok(audio.audioEl.releaseCalls.load > 0);
+      const notifications = mutations.length;
+      // Teardown aborts every old listener, including late decode/error/EOF events.
+      for (const event of ["loadeddata", "error", "play", "pause", "ended"]) audio.audioEl.dispatch(event);
+      assertRc02Empty();
+      if (outcome === "reject") play.reject(Object.assign(new Error("old playback failed"), { name: "NotSupportedError" }));
+      else play.resolve();
+      await pending;
+      assertRc02Empty();
+      assert.deepEqual(activations, [false]);
+      assert.deepEqual(scrubberLoads, []);
+      assert.equal(mutations.length, notifications);
+    });
+  });
+}
+
+for (const entry of ["picker", "drop"]) {
+  test(`RC-02: two-file ${entry} batch cannot repopulate after Clear`, async (t) => {
+    const entered = rc02Deferred(), play = rc02Deferred();
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, getElement, scrubberLoads }) => {
+      let playCalls = 0;
+      audio.audioEl.play = () => { playCalls++; entered.resolve(); return play.promise; };
+      const pending = ingest(["A.wav", "B.wav"], entry);
+      await entered.promise;
+      await getElement("btnClearQueue").dispatch("click");
+      assertRc02Empty();
+      play.resolve();
+      await pending;
+      assertRc02Empty();
+      assert.equal(playCalls, 1, "B never begins an old activation");
+      assert.deepEqual(scrubberLoads, []);
+    });
+  });
+}
+
+test("RC-02: ordinary single file still loads, plays, and notifies recording", async (t) => {
+  await withRc02FileWorkflow(t, {}, async ({ ingest, scrubberLoads, mutations }) => {
+    await ingest(["A.wav"]);
+    assert.equal(state.source.kind, "file");
+    assert.equal(state.source.status, "active");
+    assert.equal(state.source.sessionActive, true);
+    assert.deepEqual(state.audio, { isLoaded: true, isPlaying: true, filename: "A.wav", transportError: "" });
+    assert.equal(AudioEngine.sample().ready, true);
+    assert.equal(Queue.currentIndex, 0);
+    assert.deepEqual(scrubberLoads, ["A.wav"]);
+    assert.deepEqual(mutations.map(item => item.kind), ["track-change-start", "track-change-complete"]);
+  });
+});
+
+for (const entry of ["picker", "drop"]) {
+  test(`RC-02: ordinary A/B/C ${entry} batch preserves order and first activation`, async (t) => {
+    await withRc02FileWorkflow(t, {}, async ({ ingest, scrubberLoads }) => {
+      await ingest(["A.wav", "B.wav", "C.wav"], entry);
+      assert.deepEqual(Queue.snapshot().items.map(item => item.name), ["A.wav", "B.wav", "C.wav"]);
+      assert.equal(Queue.currentIndex, 0);
+      assert.equal(state.audio.filename, "A.wav");
+      assert.equal(state.audio.isPlaying, true);
+      assert.deepEqual(scrubberLoads, ["A.wav"]);
+      assert.equal(Queue.next().name, "B.wav");
+      assert.equal(Queue.next().name, "C.wav");
+    });
+  });
+
+  test(`RC-02: ${entry} B/C appends once without replacing active A`, async (t) => {
+    await withRc02FileWorkflow(t, {}, async ({ ingest, scrubberLoads, mutations }) => {
+      await ingest(["A.wav"]);
+      await ingest(["B.wav", "C.wav"], entry);
+      assert.deepEqual(Queue.snapshot().items.map(item => item.name), ["A.wav", "B.wav", "C.wav"]);
+      assert.equal(Queue.currentIndex, 0);
+      assert.equal(state.audio.filename, "A.wav");
+      assert.equal(state.audio.isPlaying, true);
+      assert.deepEqual(scrubberLoads, ["A.wav"]);
+      assert.deepEqual(mutations.map(item => item.kind), ["track-change-start", "track-change-complete"]);
+    });
+  });
+}
+
+test("RC-02: a new user action can load normally after cancellation", async (t) => {
+  const entered = rc02Deferred(), play = rc02Deferred();
+  await withRc02FileWorkflow(t, {}, async ({ audio, ingest, getElement, scrubberLoads }) => {
+    const ordinaryPlay = audio.audioEl.play.bind(audio.audioEl);
+    audio.audioEl.play = () => { entered.resolve(); return play.promise; };
+    const pending = ingest(["A.wav"]);
+    await entered.promise;
+    await getElement("btnClearQueue").dispatch("click");
+    play.resolve();
+    await pending;
+    assertRc02Empty();
+    audio.audioEl.play = ordinaryPlay;
+    await ingest(["new.wav"]);
+    assert.equal(state.audio.filename, "new.wav");
+    assert.equal(state.audio.isPlaying, true);
+    assert.deepEqual(scrubberLoads, ["new.wav"]);
+    assert.equal(Queue.length, 1);
+  });
+});
+
+test("Ring commits retain the singleton editor and truthful inventory visibility", async (t) => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    const editor = state.ui.spectralRingEditor;
+    state.ui.chkBandOverlay.checked = false; state.ui.chkBandOverlay.dispatch("change"); UI.refreshAllUiText();
+    assert.equal(preferences.bands.overlay.enabled, false); assert.equal(runtime.settings.bands.overlay.enabled, false);
+    assert.equal(VisualizerRuntime.getVisualizers().filter((item) => item.type === "spectral-ring").length, 1);
+    assert.equal(state.ui.visualizerList.children[0].children[0].children[1].textContent, "Hidden");
+    assert.equal(state.ui.spectralRingEditor, editor);
+    clickVisualizerAction("edit-ring"); assert.equal(editor.open, true);
+    assert.equal(state.ui.visualizerList.children[0].children[2].children.length, 1);
+  });
+});
+
+// RC-05 exercises the registered production EOF hook, canonical recording state,
+// recurrent UI synchronization, and the existing File activation ownership path.
+function rc05End(audio) {
+  audio.audioEl.ended = true;
+  audio.audioEl.paused = true;
+  audio.audioEl.dispatch("ended");
+}
+const rc05Settle = () => new Promise(resolve => setImmediate(resolve));
+
+for (const [label, names, cursor, repeat, expected, nextCursor] of [
+  ["next track", ["A.wav", "B.wav", "C.wav"], 0, "none", "B.wav", 1],
+  ["Repeat One", ["A.wav"], 0, "one", "A.wav", 0],
+  ["Repeat All", ["A.wav", "B.wav"], 1, "all", "A.wav", 0],
+]) {
+  test(`RC-05: ${label} defers during finalization and loads/plays exactly once after completion`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, mutations, scrubberLoads }) => {
+      await ingest(names);
+      if (cursor) {
+        Queue.goTo(cursor);
+        await InputSourceManager.activateFile(Queue.current());
+      }
+      preferences.audio.repeatMode = repeat;
+      const owner = Queue.current();
+      state.recording.phase = "finalizing";
+      rc05End(audio);
+      for (let i = 0; i < 3; i++) UI.refreshRecordingUi();
+      assert.equal(Queue.current(), owner);
+      assert.equal(state.audio.isPlaying, false);
+      assert.deepEqual(scrubberLoads, ["A.wav"], "pending EOF cannot load while locked");
+      assert.equal(mutations.filter(m => m.kind === "track-change-start").length, 1);
+      Object.assign(state.recording, { phase: "complete", lastExportUrl: "blob:valid-export", lastExportByteSize: 123 });
+      if (repeat === "one") {
+        const current = Queue.current;
+        let reads = 0;
+        t.mock.method(Queue, "current", () => {
+          // Reenter after ownership validation, while the policy selects A.
+          if (++reads === 2) UI.refreshRecordingUi();
+          return current();
+        });
+      }
+      UI.refreshRecordingUi();
+      await rc05Settle();
+      assert.equal(Queue.currentIndex, nextCursor);
+      assert.equal(state.audio.filename, expected);
+      assert.equal(state.audio.isPlaying, true);
+      assert.deepEqual(scrubberLoads, ["A.wav", expected]);
+      for (let i = 0; i < 5; i++) { UI.refreshRecordingUi(); UI.refreshAllUiText(); }
+      await rc05Settle();
+      assert.equal(mutations.filter(m => m.kind === "track-change-start").length, 2);
+      assert.equal(Queue.currentIndex, nextCursor);
+      assert.equal(state.recording.lastExportUrl, "blob:valid-export");
+      assert.equal(state.recording.lastExportByteSize, 123);
+    });
+  });
+}
+
+test("RC-05: no-next/repeat-off clears pending ownership before reentrant and repeated refresh", async t => {
+  await withRc02FileWorkflow(t, {}, async ({ audio, ingest, mutations, scrubberLoads }) => {
+    await ingest(["A.wav"]);
+    preferences.audio.repeatMode = "none";
+    state.recording.phase = "finalizing";
+    rc05End(audio);
+    assert.equal(mutations.filter(m => m.kind === "audio-unloaded").length, 0);
+    state.recording.phase = "complete";
+    const current = Queue.current;
+    let nested = false;
+    t.mock.method(Queue, "current", () => {
+      if (!nested) { nested = true; UI.refreshRecordingUi(); }
+      return current();
+    });
+    for (let i = 0; i < 5; i++) { UI.refreshRecordingUi(); UI.refreshAllUiText(); }
+    assert.deepEqual(mutations.filter(m => m.kind === "audio-unloaded"), [
+      { kind: "audio-unloaded", details: { reason: "track-ended-no-next" } },
+    ]);
+    assert.deepEqual(scrubberLoads, ["A.wav"]);
+    assert.equal(Queue.currentIndex, 0);
+    assert.equal(state.audio.isPlaying, false);
+    assert.equal(audio.audioEl.ended, true);
+    // Changing repeat later cannot revive a consumed event.
+    preferences.audio.repeatMode = "one";
+    UI.refreshRecordingUi();
+    assert.deepEqual(scrubberLoads, ["A.wav"]);
+  });
+});
+
+test("RC-05: export failure still releases EOF without overwriting recording error", async t => {
+  await withRc02FileWorkflow(t, {}, async ({ audio, ingest, scrubberLoads }) => {
+    await ingest(["A.wav", "B.wav"]);
+    preferences.audio.repeatMode = "none";
+    state.recording.phase = "finalizing";
+    rc05End(audio);
+    Object.assign(state.recording, { phase: "error", lastCode: "finalize-failed", lastMessage: "export failure" });
+    const error = structuredClone(state.recording);
+    UI.refreshRecordingUi();
+    await rc05Settle();
+    assert.equal(state.audio.filename, "B.wav");
+    assert.equal(state.audio.isPlaying, true);
+    assert.deepEqual(scrubberLoads, ["A.wav", "B.wav"]);
+    assert.deepEqual(state.recording, error);
+  });
+});
+
+for (const change of ["queue-file", "media-element", "live-workflow", "teardown", "clear", "replacement"]) {
+  test(`RC-05: stale pending EOF is discarded after ${change}`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, getElement, scrubberLoads, mutations }) => {
+      await ingest(["A.wav", "B.wav", "C.wav"]);
+      preferences.audio.repeatMode = "none";
+      const file = Queue.current(), media = AudioEngine.getMediaEl();
+      state.recording.phase = "finalizing";
+      rc05End(audio);
+      if (change === "queue-file") Queue.goTo(1);
+      if (change === "media-element") t.mock.method(AudioEngine, "getMediaEl", () => ({}));
+      if (change === "live-workflow") state.source.kind = "stream";
+      if (change === "teardown") await InputSourceManager.teardownActiveSource({ reason: "test-owner-change" });
+      state.recording.phase = "complete";
+      if (change === "clear") await getElement("btnClearQueue").dispatch("click");
+      if (change === "replacement") await getElement("queueList").children[1].dispatch("click");
+      await rc05Settle();
+      const before = { cursor: Queue.currentIndex, audio: { ...state.audio }, loads: [...scrubberLoads], count: mutations.length };
+      UI.refreshRecordingUi();
+      await rc05Settle();
+      assert.deepEqual({ cursor: Queue.currentIndex, audio: { ...state.audio }, loads: [...scrubberLoads], count: mutations.length }, before);
+      // Restoring matching identities must not revive a discarded record.
+      if (["queue-file", "media-element", "live-workflow"].includes(change)) {
+        Queue.goTo(0); state.source.kind = "file";
+        if (change === "media-element") AudioEngine.getMediaEl.mock.restore();
+        assert.equal(Queue.current(), file);
+        UI.refreshRecordingUi();
+        await rc05Settle();
+        assert.deepEqual(scrubberLoads, before.loads);
+        assert.equal(mutations.length, before.count);
+      }
+    });
+  });
+}
+
+for (const [atEof, later, expected] of [["one", "none", "A.wav"], ["none", "one", "B.wav"], ["all", "none", "A.wav"]]) {
+  test(`RC-05: repeat ${atEof} is captured at EOF despite later preference ${later}`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, scrubberLoads }) => {
+      await ingest(["A.wav", "B.wav"]);
+      if (atEof === "all") { Queue.goTo(1); await InputSourceManager.activateFile(Queue.current()); }
+      preferences.audio.repeatMode = atEof;
+      state.recording.phase = "finalizing";
+      rc05End(audio);
+      preferences.audio.repeatMode = later;
+      state.recording.phase = "complete";
+      // Also covers EOF/finalization between frames without a finalizing UI refresh.
+      UI.refreshAllUiText();
+      await rc05Settle();
+      assert.deepEqual(scrubberLoads, ["A.wav", expected]);
+      assert.equal(preferences.audio.repeatMode, later);
+    });
+  });
+}
+
+for (const phase of ["idle", "recording", "complete", "error"]) {
+  test(`RC-05: ordinary EOF in ${phase} advances immediately through normal File ownership`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, scrubberLoads, mutations }) => {
+      await ingest(["A.wav", "B.wav"]);
+      preferences.audio.repeatMode = "none";
+      state.recording.phase = phase;
+      rc05End(audio);
+      assert.equal(Queue.currentIndex, 1, "queue advances synchronously without UI refresh");
+      assert.equal(mutations.filter(m => m.kind === "track-change-start").length, 2);
+      await rc05Settle();
+      assert.equal(state.audio.filename, "B.wav");
+      assert.equal(state.audio.isPlaying, true);
+      assert.deepEqual(scrubberLoads, ["A.wav", "B.wav"]);
+      assert.equal(state.recording.phase, phase);
+    });
+  });
+}
+
+test('RC-15 phase 3: tooltip discovery indexes labels once while preserving associations and listener identity',async(t)=>{
+  await withSettingsActionHarness(t,()=>{
+    hostVisualizerEditors();
+    let queries=0;
+    document.querySelectorAll=selector=>{
+      if(selector==='label[for]'){queries++;return state.ui.orbEditorList.querySelectorAll('label');}
+      if(selector==='#visualizersPanel input')return state.ui.orbEditorList.querySelectorAll('input');
+      if(selector==='#visualizersPanel select')return state.ui.orbEditorList.querySelectorAll('select');
+      return [];
+    };
+    state.ui.btnVisualizersAddOrb.click();
+    assert.equal(queries,1,'one label index per collection discovery');
+    const root=state.ui.orbEditorList.children.at(-1);
+    const control=root.querySelectorAll('input').find(node=>node.id?.endsWith('angular-speed'));
+    const spec=state.ui.configTooltipByControl.get(control);assert.equal(spec.label,'Angular Speed');
+    const listener=t.mock.method(control,'addEventListener');
+    state.ui.btnVisualizersAddOrb.click();
+    assert.equal(queries,2);assert.equal(state.ui.configTooltipByControl.get(control),spec);
+    assert.equal(listener.mock.callCount(),0);UI.refreshAllUiText();assert.equal(queries,2);
+    assert.match(control.title,/Angular Speed/);
+  });
+});
+
+test('RC-15 budgets: committed Settings edits synchronize without recreating governor, Orb history or focus',async(t)=>{
+  await withSettingsActionHarness(t,({location})=>{
+    const orb=state.orbs[0],g=orb.trail.governor;orb.trail.emitAt(0,0,0,{r:1,g:0,b:0});orb.trail.emitAccumulator=.75;
+    const tail=orb.trail.particles.tail,phase=orb.angleRad,control=state.ui.numMaxActiveParticles;
+    control.focus();control.value='65536';control.dispatch('change');
+    assert.equal(orb.trail.governor,g);assert.equal(orb.trail.particles.tail,tail);assert.equal(orb.trail.emitAccumulator,.75);assert.equal(orb.angleRad,phase);assert.equal(document.activeElement,control);
+    assert.equal(g.policy.maxActiveParticles,65536);assert.equal(preferences.particleSafety.maxActiveParticles,65536);assert.equal(runtime.settings.particleSafety.maxActiveParticles,65536);
+    control.value='';control.dispatch('change');assert.equal(preferences.particleSafety.maxActiveParticles,65536);assert.equal(control.getAttribute('aria-invalid'),'true');
+    state.ui.numMaxEmissionsPerFrame.value='4096';state.ui.numMaxEmissionsPerFrame.dispatch('change');assert.equal(g.policy.maxEmissionsPerFrame,4096);
+    state.ui.btnShare.click();const payload=JSON.parse(Buffer.from(location.hash.slice(3),'base64url').toString('utf8'));assert.deepEqual(payload.prefs.particleSafety,{maxEmissionsPerFrame:4096,maxActiveParticles:65536});
+    const imported=structuredClone(CONFIG.defaults);imported.particleSafety={maxEmissionsPerFrame:0,maxActiveParticles:0};location.hash=settingsPresetHash(imported);state.ui.btnApplyUrl.click();assert.deepEqual(g.policy,imported.particleSafety);assert.equal(g.activeParticles,0);assert.equal(state.ui.numMaxActiveParticles.value,'0');
+    state.ui.btnResetPrefs.click();assert.deepEqual(g.policy,CONFIG.defaults.particleSafety);assert.equal(state.ui.numMaxActiveParticles.value,'16384');assert.equal(state.ui.numMaxEmissionsPerFrame.value,'512');
+  });
+});
+
+for (const identity of ["distinct", "same-name", "same-file"]) {
+  test(`AUD-001: pending selected removal authorizes only successor (${identity})`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    let resumes = 0;
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true, contextState: "suspended",
+      onResume(ctx) {
+        if (++resumes === 1) { entered.resolve(); return resume.promise.then(() => { ctx.state = "running"; }); }
+        ctx.state = "running"; return Promise.resolve();
+      },
+    }, async ({ ingest, getElement, mutations, waitForActivations, waitForCompletions, audio }) => {
+      const a = createNamedAudioFile(identity === "distinct" ? "A.wav" : "same.wav");
+      const b = identity === "same-file" ? a : createNamedAudioFile(identity === "distinct" ? "B.wav" : "same.wav");
+      const pending = ingest([a, b]);
+      await entered.promise;
+      const oldEntry = Queue.currentEntry(), successor = Queue.entryAt(1);
+      assert.equal(AudioEngine.getMediaEl(), null, "A is genuinely pending before allocation");
+      assert.equal(state.audio.isLoaded, false);
+      await getElement("queueList").children[0].children[2].dispatch("click");
+      assert.equal(Queue.currentEntry(), successor);
+      assert.notEqual(Queue.currentEntry(), oldEntry);
+      assert.equal(mutations.filter(x => x.kind === "track-change-start").length, 2, "removal must synchronously authorize a successor request");
+      await waitForCompletions(1);
+      const winner = AudioEngine.getMediaEl();
+      assert.equal(winner, audio.mediaElements[0], "only the successor allocated media");
+      assert.equal(state.audio.isPlaying, true, "pending autoplay intent survives removal");
+      assert.equal(state.source.status, "active");
+      const notifications = mutations.length;
+      resume.resolve(); await pending;
+      assert.equal(AudioEngine.getMediaEl(), winner);
+      assert.equal(Queue.currentEntry(), successor);
+      assert.equal(mutations.length, notifications, "cancelled request emits no terminal notification");
+      assert.deepEqual(mutations.filter(x => x.kind === "track-change-complete").map(x => x.details.requestId), [mutations[1].details.requestId]);
+    });
+  });
+}
+
+for (const autoPlay of [true, false]) {
+  test(`AUD-001: pending replacement removal preserves requested autoplay ${autoPlay}`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    let hold = false;
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true,
+      onResume(ctx) {
+        if (hold) { hold = false; entered.resolve(); return resume.promise.then(() => { ctx.state = "running"; }); }
+        ctx.state = "running"; return Promise.resolve();
+      },
+    }, async ({ ingest, getElement, waitForActivations }) => {
+      await ingest(["A.wav", "B.wav", "C.wav"]);
+      if (!autoPlay) await AudioEngine.playPause();
+      audioEngineHarnessContext.state = "suspended"; hold = true;
+      // Loaded A removal gives B the actual intent. B removal must use that
+      // pending request's intent, even though teardown makes isPlaying false.
+      await getElement("queueList").children[0].children[2].dispatch("click");
+      await entered.promise;
+      assert.equal(Queue.current().name, "B.wav");
+      assert.equal(state.audio.isPlaying, false);
+      await getElement("queueList").children[0].children[2].dispatch("click");
+      await waitForActivations(2);
+      const winner = AudioEngine.getMediaEl();
+      assert.equal(Queue.current().name, "C.wav");
+      assert.equal(state.audio.isPlaying, autoPlay);
+      resume.resolve(); await waitForActivations(3);
+      assert.equal(AudioEngine.getMediaEl(), winner);
+      assert.equal(state.audio.isPlaying, autoPlay);
+    });
+  });
+}
+
+for (const removedIndex of [0, 2]) {
+  test(`AUD-001: unrelated removal at ${removedIndex} preserves pending B entry and intent`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    let hold = false;
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true,
+      onResume(ctx) {
+        if (hold) { hold = false; entered.resolve(); return resume.promise.then(() => { ctx.state = "running"; }); }
+        ctx.state = "running"; return Promise.resolve();
+      },
+    }, async ({ ingest, getElement, waitForActivations }) => {
+      await ingest(["A.wav", "B.wav", "C.wav"]);
+      audioEngineHarnessContext.state = "suspended"; hold = true;
+      await getElement("queueList").children[1].dispatch("click");
+      await entered.promise;
+      const selected = Queue.currentEntry();
+      await getElement("queueList").children[removedIndex].children[2].dispatch("click");
+      assert.equal(Queue.currentEntry(), selected);
+      resume.resolve(); await waitForActivations(2);
+      assert.equal(state.source.status, "active");
+      assert.equal(state.audio.filename, "B.wav");
+      assert.equal(state.audio.isPlaying, true);
+    });
+  });
+}
+
+test("AUD-001: A to B to C supersession authorizes only C", async t => {
+  const entered = rc02Deferred(), resume = rc02Deferred();
+  let resumes = 0;
+  await withRc02FileWorkflow(t, {
+    freshMediaElements: true, contextState: "suspended",
+    onResume(ctx) {
+      if (++resumes === 1) { entered.resolve(); return resume.promise.then(() => { ctx.state = "running"; }); }
+      ctx.state = "running"; return Promise.resolve();
+    },
+  }, async ({ ingest, getElement, waitForActivations, waitForCompletions, mutations }) => {
+    const pending = ingest(["A.wav", "B.wav", "C.wav"]);
+    await entered.promise;
+    await getElement("queueList").children[1].dispatch("click");
+    await getElement("queueList").children[2].dispatch("click");
+    await waitForCompletions(1);
+    assert.equal(state.audio.filename, "C.wav");
+    const winner = AudioEngine.getMediaEl(), notifications = mutations.length;
+    resume.resolve(); await pending;
+    assert.equal(AudioEngine.getMediaEl(), winner);
+    assert.equal(mutations.length, notifications);
+    assert.deepEqual(mutations.filter(x => x.kind === "track-change-complete").map(x => x.details.filename), ["C.wav"]);
+  });
+});
+
+for (const outcome of ["resolve", "reject"]) {
+  test(`AUD-001: removal during native media Play ${outcome} cannot complete removed A`, async t => {
+    const entered = rc02Deferred(), play = rc02Deferred();
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true,
+      onMediaElement(element, index) {
+        if (index === 0) element.play = () => {
+          element.paused = false; element.dispatch("play"); entered.resolve(); return play.promise;
+        };
+      },
+    }, async ({ ingest, getElement, waitForActivations, waitForCompletions, mutations, audio }) => {
+      const pending = ingest(["A.wav", "B.wav"]);
+      await entered.promise;
+      assert.equal(state.audio.isLoaded, false);
+      await getElement("queueList").children[0].children[2].dispatch("click");
+      await waitForCompletions(1);
+      const winner = AudioEngine.getMediaEl(), loser = audio.mediaElements[0];
+      assert.notEqual(winner, loser);
+      const notifications = mutations.length;
+      if (outcome === "resolve") play.resolve(); else play.reject(new Error("obsolete play"));
+      await pending;
+      assert.equal(AudioEngine.getMediaEl(), winner);
+      assert.equal(state.audio.filename, "B.wav");
+      assert.equal(state.audio.isPlaying, true);
+      assert.equal(mutations.length, notifications);
+      assert.equal(loser.src, "");
+      assert.equal(winner.src, "blob:test-audio-2");
+    });
+  });
+}
+
+test("AUD-001 / RC-05: deferred EOF cannot transfer to a duplicate File entry", async t => {
+  await withRc02FileWorkflow(t, { freshMediaElements: true }, async ({ ingest, mutations }) => {
+    const file = createNamedAudioFile("same.wav");
+    await ingest([file, file]);
+    const media = AudioEngine.getMediaEl(), first = Queue.currentEntry();
+    state.recording.phase = "finalizing";
+    AudioEngine._onTrackEnded();
+    Queue.goTo(1); // Internal cursor change: file, element and request ID unchanged.
+    assert.notEqual(Queue.currentEntry(), first);
+    assert.equal(Queue.current(), file);
+    assert.equal(AudioEngine.getMediaEl(), media);
+    const count = mutations.length;
+    state.recording.phase = "complete";
+    UI.refreshAllUiText(); UI.refreshAllUiText();
+    assert.equal(mutations.length, count, "entry mismatch discards the deferred event once");
+    assert.equal(AudioEngine.getMediaEl(), media);
+  });
+});
+
+for (const identity of ["same-name", "same-file"]) {
+  test(`AUD-001: request guard requires selected entry identity (${identity})`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    let resumes = 0;
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true, contextState: "suspended",
+      onResume(ctx) {
+        if (++resumes === 1) { entered.resolve(); return resume.promise.then(() => { ctx.state = "running"; }); }
+        ctx.state = "running"; return Promise.resolve();
+      },
+    }, async ({ ingest, getElement, waitForCompletions, mutations }) => {
+      const file = createNamedAudioFile("same.wav");
+      const pending = ingest([file, identity === "same-file" ? file : createNamedAudioFile("same.wav")]);
+      await entered.promise;
+      const id = mutations[0].details.requestId;
+      assert.equal(AudioEngine._isLoadRequestCurrent(id), true);
+      // Direct Queue API instrumentation isolates the entry part of the guard;
+      // normal row selection also supersedes the numerical request ID.
+      Queue.goTo(1);
+      assert.equal(AudioEngine._isLoadRequestCurrent(id), false, "File/name equality cannot authorize a different entry");
+      await getElement("queueList").children[1].dispatch("click");
+      await waitForCompletions(1);
+      const winner = AudioEngine.getMediaEl();
+      resume.resolve(); await pending;
+      assert.equal(AudioEngine.getMediaEl(), winner);
+    });
+  });
+}
+
+for (const path of ["picker", "drop", "next", "prev", "row", "shortcut-next", "shortcut-prev", "eof", "repeat-one", "remove-successor"]) {
+  test(`AUD-002: UI ${path} current startup failure settles and notifies exactly once`, async t => {
+    let fail = path === "picker" || path === "drop";
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true, contextState: fail ? "suspended" : "running",
+      onResume(ctx) { if (fail) return Promise.reject(new Error("UI startup refused")); ctx.state = "running"; return Promise.resolve(); },
+    }, async ({ ingest, getElement, dispatchWindow, mutations, waitForFailures, waitForCompletions, scrubberLoads }) => {
+      if (path === "picker" || path === "drop") await ingest(["A.wav", "B.wav"], path);
+      else {
+        await ingest(["A.wav", "B.wav"]);
+        if (path === "prev" || path === "shortcut-prev") await getElement("btnNext").dispatch("click");
+        fail = true; audioEngineHarnessContext.state = "suspended";
+        if (path === "next" || path === "prev") await getElement(path === "next" ? "btnNext" : "btnPrev").dispatch("click");
+        else if (path === "row") await getElement("queueList").children[1].dispatch("click");
+        else if (path === "shortcut-next" || path === "shortcut-prev") dispatchWindow("keydown", { code: path === "shortcut-next" ? "KeyN" : "KeyP", target: state.canvas });
+        else if (path === "remove-successor") await getElement("queueList").children[0].children[2].dispatch("click");
+        else {
+          const repeat = preferences.audio.repeatMode;
+          preferences.audio.repeatMode = path === "repeat-one" ? "one" : "none";
+          AudioEngine.getMediaEl().dispatch("ended");
+          preferences.audio.repeatMode = repeat;
+        }
+      }
+      await waitForFailures(1);
+      const failures = mutations.filter(x => x.kind === "track-change-failed");
+      assert.equal(failures.length, 1);
+      assert.equal(failures[0].details.filename, Queue.current().name);
+      assert.equal(state.source.status, "error"); assert.equal(state.source.sessionActive, false);
+      assert.equal(state.source.errorCode, "file-activation-failed"); assert.match(state.source.errorMessage, /UI startup refused/);
+      assert.equal(state.audio.isLoaded, false); assert.equal(state.audio.isPlaying, false);
+      assert.equal(AudioEngine.getMediaEl(), null);
+      assert.ok(!mutations.some(x => x.kind === "track-change-complete" && x.details.requestId === failures[0].details.requestId));
+      const loads = scrubberLoads.length;
+      UI.refreshAllUiText(); UI.refreshAllUiText();
+      assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
+      assert.equal(scrubberLoads.length, loads, "failure does not start a waveform decode");
+      assert.match(state.ui.audioStatus.textContent, /UI startup refused/);
+      fail = false;
+      const completions = mutations.filter(x => x.kind === "track-change-complete").length;
+      await getElement("queueList").children[Queue.currentIndex].dispatch("click");
+      await waitForCompletions(completions + 1);
+      assert.equal(state.source.status, "active");
+      assert.equal(state.audio.transportError, "");
+    });
+  });
+}
+
+for (const action of ["current", "clear", "replacement"]) {
+  test(`AUD-002: UI Play rejection boundary ${action} is owned and contained`, async t => {
+    await withRc02FileWorkflow(t, { freshMediaElements: true }, async ({ ingest, getElement, waitForCompletions, mutations }) => {
+      await ingest(["A.wav", "B.wav"]);
+      await AudioEngine.playPause(); // A is loaded/paused before the injected failure.
+      const target = AudioEngine.getMediaEl(), entered = rc02Deferred(), rejection = rc02Deferred();
+      t.mock.method(AudioEngine, "playPause", () => { entered.resolve(); return rejection.promise; });
+      const pending = getElement("btnPlay").dispatch("click"); await entered.promise;
+      if (action === "clear") await getElement("btnClearQueue").dispatch("click");
+      else if (action === "replacement") {
+        await getElement("queueList").children[1].dispatch("click"); await waitForCompletions(2);
+        state.audio.transportError = "winner-owned error";
+      }
+      const audioState = state.audio, writes = [];
+      state.audio = new Proxy(audioState, { set(object, key, value) { writes.push({ key, value }); object[key] = value; return true; } });
+      try {
+        rejection.reject(new Error("unexpected Play API rejection"));
+        await assert.doesNotReject(async () => { await pending; });
+        if (action === "current") {
+          assert.equal(AudioEngine.getMediaEl(), target); assert.equal(state.audio.isLoaded, true);
+          assert.equal(state.source.status, "active"); assert.equal(state.audio.isPlaying, false);
+          assert.match(state.audio.transportError, /unexpected Play API rejection/);
+          UI.refreshAllUiText();
+          assert.match(state.ui.audioStatus.textContent, /unexpected Play API rejection/);
+        } else assert.deepEqual(writes, []);
+        assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 0, "Play failure is not a track-change failure");
+      } finally { state.audio = audioState; }
+    });
+  });
+}
+
+test("AUD-002: synchronous load-time native Play throw reaches structured UI failure", async t => {
+  await withRc02FileWorkflow(t, {
+    freshMediaElements: true,
+    onMediaElement(element) { element.play = () => { throw new Error("load native Play threw"); }; },
+  }, async ({ ingest, mutations, audio }) => {
+    await assert.doesNotReject(() => ingest(["A.wav"]));
+    assert.equal(state.source.status, "error"); assert.match(state.source.errorMessage, /load native Play threw/);
+    assert.equal(state.audio.isLoaded, false); assert.equal(AudioEngine.getMediaEl(), null);
+    assert.equal(audio.mediaElements[0].src, "");
+    assert.ok(audio.mediaElements[0].listeners.get("play").every(x => x.signal.aborted));
+    assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
+  });
+});
+
+for (const path of ["picker", "drop"]) {
+  test(`F4-CLEANUP-01: UI ${path} hard decoder failure cleans resources and notifies exactly once`, async t => {
+    await withRc02FileWorkflow(t, {
+      freshMediaElements: true,
+      onMediaElement(element, index) {
+        if (index !== 0) return;
+        element.play = () => {
+          element.error = { code: 4 };
+          element.dispatch("error");
+          return Promise.reject(Object.assign(new Error("native decoder failure"), { name: "NotSupportedError" }));
+        };
+      },
+    }, async ({ ingest, mutations, audio, getElement, scrubberLoads, waitForCompletions }) => {
+      await ingest(["corrupt.wav"], path);
+      const failed = audio.mediaElements[0];
+      assert.equal(AudioEngine.getMediaEl(), null, "observe before Clear or retry");
+      assert.equal(AudioEngine.sample().ready, false);
+      assert.equal(failed.src, ""); assert.equal(failed.releaseCalls.pause, 1);
+      assert.equal(failed.releaseCalls.load, 1);
+      assert.ok([...failed.listeners.values()].flat().every(x => x.signal.aborted));
+      assert.equal(state.source.status, "error"); assert.equal(state.source.sessionActive, false);
+      assert.equal(state.source.errorMessage, state.audio.transportError);
+      assert.match(state.audio.transportError, /unsupported or unreadable/);
+      assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
+      assert.equal(mutations.filter(x => x.kind === "track-change-complete").length, 0);
+      assert.deepEqual(scrubberLoads, []); assert.equal(Queue.current().name, "corrupt.wav");
+      await getElement("queueList").children[0].dispatch("click");
+      await waitForCompletions(1);
+      assert.equal(state.source.status, "active"); assert.equal(state.audio.filename, "corrupt.wav");
+      assert.notEqual(AudioEngine.getMediaEl(), failed); assert.equal(state.audio.transportError, "");
+      assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
+      assert.equal(mutations.filter(x => x.kind === "track-change-complete").length, 1);
+    });
+  });
+}

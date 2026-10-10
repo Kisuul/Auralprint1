@@ -1,6 +1,38 @@
-# Auralprint Roadmap (Builds 110 → 120)
+# Auralprint
 
-This repo tracks **Auralprint** an offline-capable audio analysis suite.(“analyzer cosplaying as a visualizer”).
+**Auralprint is an offline-capable audio-analysis system whose visualization expresses its analysis.** It combines file playback and live input analysis with configurable spectral inspection, visualizers, and recording.
+
+**Release 3 / Build 113 (`v0.1.13`) remains the canonical public shipped release.** Build 114 (`v0.1.14`) is an internally shipped milestone. Current development is **Build 115, `v0.1.15m.i.e`**, preset schema **10**. RC-01 through RC-22 have completed corrective review and merge at the accepted baseline; **115N final acceptance remains WITHHELD**. Build 115 is unshipped and noncanonical.
+
+See [ROADMAP.md](ROADMAP.md) for current capabilities, dependencies, deferrals, and acceptance gates; [Build 115 development history](docs/development/build-115.md) for engineering decisions and the [current audit disposition index](docs/development/build-115.md#audit-disposition-index); and the [canonical changelog](docs/Canon/changelog.md) for shipped-build differences. The [release-delta draft](docs/development/build-115-release-delta.md) prepares both public and internal comparisons for human review without publishing release notes.
+
+To try development, build from the canonical root `version` using the bootstrap below. Start with **Load audio** in File mode, or choose Mic/Stream where the browser supports capture. **Audio** owns source/playback; **Queue** manages files independently of Audio panel visibility; **Analysis** owns analysis configuration and diagnostics; **Visualizers** owns the singleton Spectral Ring, Orb management/editing, and Bulk Edit All Orbs; **Settings** owns shared Scene appearance, particle resources, and presets; **Record** owns capture. Feedback appears in its owning panel. **View**, or **H** outside form controls, hides/restores the current panel layout; **Space** outside form controls pauses visual motion/emission while analysis and particle aging continue.
+
+## Developer and agent bootstrap
+
+Use Node **24** and Python **3.12**. From the repository root, run sequentially:
+
+```sh
+npm ci
+npm test
+npm run build
+python scripts/verify_distribution.py
+```
+
+The supported install/test/build sequence uses `package-lock.json`; the final Python command additionally verifies both generated distribution contracts. Tests and build must stay sequential because a test temporarily renames build directories.
+
+`npm run build` generates:
+
+- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (currently `dist/auralprint_0.1.15m.i.e.html`), with embedded application JavaScript, CSS, and SVG favicon. It needs no adjacent application assets.
+- **Hosted:** `dist/hosted/index.html`, six supplied icon files, and `site.webmanifest`. Deploy the complete `dist/hosted/` directory at a root or subdirectory, with correct server MIME types. All metadata URLs are package-relative; both editions use the same application bundles and version.
+
+The portable build is intended for offline execution. Actual direct `file://` boot/playback remains an independent acceptance gate: the automated Chromium environment blocked navigation with `ERR_BLOCKED_BY_ADMINISTRATOR`. Portable HTTP and hosted root/subdirectory behavior have [recorded Chromium evidence](docs/audits/remediations/115m-i-d-rc20/README.md#native-browser-and-request-evidence). Hosted metadata does not establish offline caching or installability; no service worker is provided.
+
+`npm ci` may require registry access; installation is not promised to work offline. No global esbuild or committed `node_modules` is needed. If the default npm cache is unwritable, use `npm ci --cache ./.npm-cache`, then remove that disposable cache. Native-executable/child-process EPERM requires an environment fix. The assembler tries `PYTHON`, `python`, `python3`, then `py -3` on Windows. Dependencies and generated `node_modules/`, `.build/`, `build/`, and `dist/` remain ignored and untracked.
+
+[GitHub Actions CI](.github/workflows/ci.yml) provisions Node 24/Python 3.12 and validates locked installation, tests, both distributions, packaging contracts, generated-output tracking, and whitespace on Linux and Windows. It caches npm packages, never `node_modules`. Browser tooling is optional and outside project dependencies; [historical diagnostic instructions](docs/development/build-115.md#diagnostics-and-evidence) link to the owning reports and scripts. `npm run watch` regenerates both editions for JS/CSS edits; branding, template, or version-only changes require a rebuild or restart.
+
+**CI success does not complete browser/device or release acceptance. 115N remains WITHHELD.**
 
 ## Versioning and what the numbers mean
 
@@ -30,10 +62,10 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 | 112 | v0.1.12 | — | ✅ Shipped (Internal) | Scrubber + Playlist/Queue |
 | 113 | v0.1.13 | R3 | ✅ Shipped (canonical) | Recording / Capture + band distribution modes |
 | 114 | v0.1.14 | — | ✅ Shipped (Internal) | Live input sources (mic/tab/stream) |
-| 115 | v0.1.15 | — | RC-1 (release gate) | Orbs overhaul v1 (per-orb spectral + color phase) |
+| 115 | v0.1.15 (`v0.1.15m.i.e` development revision) | — | Implemented; corrective audit review/merge complete; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
 | 116 | v0.1.16 | R4 | Planned | Camera controls (render ≠ sim) |
 | 117 | v0.1.17 | — | Planned | UX polish + performance hardening |
-| 118 | v0.1.18 | — | Planned | Per-orb band picker UI |
+| 118 | v0.1.18 | — | Planned | Richer spectral selection |
 | 119 | v0.1.19 | — | Planned | Workflow upgrades (preset export/import helpers) |
 | 120 | v0.1.20 | (candidate) | Planned | 3D orbs + perspective projection |
 
@@ -121,23 +153,29 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 
 ---
 
-## Build 115 — v0.1.15: Orbs Overhaul (v1)
+## Build 115 — v0.1.15: Visualizer Architecture + Orb Overhaul v1
 
-**Goal:** Build 115 makes orbs first-class Visualizers inside the scene/compositor architecture.
+**Goal:** establish an explicit analysis-consumer boundary and make Orbs and the Spectral Ring first-class, independently managed visualizers. This prepares the application for Build 116 Camera work without adding Camera functionality.
 
 **Scope**
-- Per-orb spectral targeting (band IDs / ranges)
-- Per-orb aggregation rules (avg now; weighted later)
-- Per-orb color phase space / palette modes
-- Backward-compatible preset migration for orb config
 
-**DoD**
-- Orbs can lock to different bands cleanly
-- Presets round-trip without corruption
+- AnalysisFrame exposes producer-owned L/R/C waveform, energy, spectrum, and metadata to consumers, separating analysis from visualization. Analysis has an Orb-independent workspace for FFT, gain, smoothing, band definition, and diagnostics.
+- VisualizerRuntime manages composition and update/render/reset/disposal through one lifecycle. The Spectral Ring is a singleton with its sole presentation editor in Visualizers; it consumes combined C data and retains configuration under `bands.overlay`.
+- A zero/one/N Orb collection uses stable IDs. Add/Edit/Duplicate/Remove preserve surviving runtime history. Each Orb owns its channel/targets, position, designed phase, motion, response, particles, trace, and local color overrides. All applicable fields have per-Orb controls; Bulk Edit applies shared behavior fields and reports mixed values.
+- Orb spectral targeting uses the selected L/R/C channel; empty targets use full-channel energy. Designed phase edits preserve live phase until Reset Visuals. Orb-locked Ring uses the current first Orb; free-run Ring resets independently. Visual pause freezes motion/emission while analysis and real particle age continue.
+- Settings owns shared Scene background, fixed color, default Orb color policy, and palette. Ring and Analysis consume the palette; no persisted Scene object or independent Ring palette is introduced.
+- Schema-10 configuration/presets support legacy schemas 2–9, including both schema-9 layouts. Presets exclude session state. Approved pre-release corrections strip obsolete overlap fields and persist placement distance and selected particle budgets.
+- Shared particle emission/retention budgets, oldest-first retirement, per-Orb placement distance, and Orb admission limits govern resource use. Defaults are operational safeguards; expert settings and the maximum Orb count are not performance guarantees.
+- Existing file/queue/scrubber, Mic/Stream, and recorder integration retain subsystem ownership. Builds produce both a portable versioned HTML and a relocatable hosted package.
 
-**Release-gate status**
-- Current candidate: `v0.1.15.RC-1`
-- Build 113 remains the canonical shipped baseline until the Build 115 release-gate audit in `docs/BUILD_115_RELEASE_GATE.md` is completed and accepted.
+**Definition of Done**
+
+- Preserve preset compatibility/schema discipline and stable analysis, visualizer, audio/source, and recorder ownership.
+- Verify browser/audio/visualizer regressions, accessible and recoverable interactions, real-media/device workflows, and resource limits with representative performance evidence.
+- Verify both distributions, including direct portable launch in a permitted browser environment and hosted root/subdirectory operation.
+- Complete independent [115N final acceptance and canonization gates](ROADMAP.md#build-115n-acceptance-gates). Implementation and passing CI alone do not satisfy this milestone.
+
+**Status:** implemented through release-preparation revisions; RC-01–RC-22 corrective review and merge are complete at the accepted baseline. **115N remains WITHHELD; Build 115 is unshipped and noncanonical.** See [development history and current audit dispositions](docs/development/build-115.md) for evidence and residual limitations.
 
 ---
 
@@ -171,16 +209,15 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 
 ---
 
-## Build 118 — v0.1.18: Per-Orb Band Picker UI
+## Build 118 — v0.1.18: Richer Spectral Selection
 
-**Goal:** configure orb targets without editing code.
+**Goal:** expand the spectral/band system beyond the existing chooser with richer frequency-oriented selection, inspection, feedback, and practical configurable band-table sizes.
 
 **Scope**
-- Band picker per orb:
-  - search by band name
-  - range select (start/end)
-  - optional named sets (“Air Shelf”, etc.)
-- Visual confirmation in HUD
+- Richer frequency-aware selection and inspection with visual confirmation
+- Configurable practical band-table sizes, with curated presets envisioned around 5, 64, 256, 1024, and 2048
+- Deterministic thematic naming across planetary/core, Earth/ocean/life/atmosphere, orbital/solar/stellar, and cosmic/quantum progressions
+- Sensible generated fallback names where curated names do not apply
 
 **DoD**
 - Usable orb targeting via UX

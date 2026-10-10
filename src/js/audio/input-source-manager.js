@@ -27,6 +27,7 @@ function createInputSourceManager(deps = {}) {
   function resetStreamMeta(sourceState) {
     sourceState.streamMeta.hasAudio = false;
     sourceState.streamMeta.hasVideo = false;
+    sourceState.streamMeta.audioChannelCount = null;
   }
 
   function clearError(sourceState) {
@@ -40,6 +41,31 @@ function createInputSourceManager(deps = {}) {
       mic: !!(mediaDevices && typeof mediaDevices.getUserMedia === "function"),
       stream: !!(mediaDevices && typeof mediaDevices.getDisplayMedia === "function"),
     };
+  }
+
+  function readDisplayCaptureConstraints(mediaDevices) {
+    let supported = {};
+    try { supported = mediaDevices.getSupportedConstraints?.() || {}; } catch {}
+    const audio = {};
+    if (supported.channelCount) audio.channelCount = { ideal: 2 };
+    if (supported.echoCancellation) audio.echoCancellation = { ideal: false };
+    if (supported.noiseSuppression) audio.noiseSuppression = { ideal: false };
+    if (supported.autoGainControl) audio.autoGainControl = { ideal: false };
+    return { video: true, audio: Object.keys(audio).length ? audio : true };
+  }
+
+  function readAudioChannelCount(audioTracks) {
+    // createMediaStreamSource selects the first audio track by Unicode ID order.
+    let selectedTrack = null;
+    for (const track of audioTracks) {
+      if (track && (!selectedTrack || track.id < selectedTrack.id)) selectedTrack = track;
+    }
+    try {
+      const channelCount = selectedTrack?.getSettings?.()?.channelCount;
+      return Number.isInteger(channelCount) && channelCount > 0 ? channelCount : null;
+    } catch {
+      return null;
+    }
   }
 
   function syncSupportState() {
@@ -377,6 +403,7 @@ function createInputSourceManager(deps = {}) {
     clearError(sourceState);
     sourceState.streamMeta.hasAudio = !!session.hasAudio;
     sourceState.streamMeta.hasVideo = !!session.hasVideo;
+    sourceState.streamMeta.audioChannelCount = session.audioChannelCount ?? null;
     return {
       ok: true,
       kind: sourceState.kind,
@@ -410,6 +437,8 @@ function createInputSourceManager(deps = {}) {
   }
 
   async function activateFile(file, options = {}) {
+    const requestId = Object.prototype.hasOwnProperty.call(options, "requestId") ? options.requestId : null;
+    if (!isLoadRequestCurrent(requestId)) return false;
     if (!file) {
       return commitFailure("file", {
         status: "error",
@@ -422,6 +451,10 @@ function createInputSourceManager(deps = {}) {
       await teardownActiveSource({ reason: "switch-to-file" });
     }
 
+    // The UI may have selected a successor or acquired a live source while
+    // teardown yielded. Obsolete File work cannot publish or start engine work.
+    if (!isLoadRequestCurrent(requestId)) return false;
+
     const sourceState = ensureSourceState();
     sourceState.kind = "file";
     sourceState.status = "requesting";
@@ -430,9 +463,23 @@ function createInputSourceManager(deps = {}) {
     clearError(sourceState);
     resetStreamMeta(sourceState);
 
-    const requestId = Object.prototype.hasOwnProperty.call(options, "requestId") ? options.requestId : null;
     const autoPlay = options && options.autoPlay === false ? false : true;
-    const ok = await audioEngine.loadFile(file, requestId, { autoPlay });
+    let ok;
+    try {
+      ok = await audioEngine.loadFile(file, requestId, { autoPlay });
+    } catch (err) {
+      // Native setup/Play can throw as well as return a controlled engine failure.
+      // This fallback owns only the still-current attempt, never a newer session.
+      if (!isLoadRequestCurrent(requestId)) return false;
+      audioEngine.unload();
+      if (stateRef.audio) {
+        stateRef.audio.isLoaded = false;
+        stateRef.audio.filename = "";
+        stateRef.audio.isPlaying = false;
+        stateRef.audio.transportError = `Playback failed: ${err?.message || err?.name || "unknown error"}`;
+      }
+      ok = false;
+    }
 
     if (!isLoadRequestCurrent(requestId)) return false;
 
@@ -516,14 +563,17 @@ function createInputSourceManager(deps = {}) {
       });
     }
 
+    let attached;
     try {
-      await audioEngine.attachMediaStreamSource(mediaStream, {
+      attached = await audioEngine.attachMediaStreamSource(mediaStream, {
         kind: "mic",
         label,
         monitorOutput: false,
+        isCurrent: () => isActivationTokenCurrent(activationToken),
       });
     } catch (err) {
       stopSessionStreamTracks({ mediaStream });
+      if (!isActivationTokenCurrent(activationToken)) return readCancelledActivation("mic");
       return commitFailure("mic", {
         status: "error",
         code: "mic-attach-failed",
@@ -534,9 +584,8 @@ function createInputSourceManager(deps = {}) {
       });
     }
 
-    if (!isActivationTokenCurrent(activationToken)) {
+    if (attached === false || !isActivationTokenCurrent(activationToken)) {
       stopSessionStreamTracks({ mediaStream });
-      if (audioEngine && typeof audioEngine.unload === "function") audioEngine.unload();
       return readCancelledActivation("mic");
     }
 
@@ -570,7 +619,7 @@ function createInputSourceManager(deps = {}) {
     let mediaStream = null;
 
     try {
-      mediaStream = await mediaDevices.getDisplayMedia({ video: true, audio: true });
+      mediaStream = await mediaDevices.getDisplayMedia(readDisplayCaptureConstraints(mediaDevices));
     } catch (err) {
       if (!isActivationTokenCurrent(activationToken)) return readCancelledActivation("stream");
       const failure = normalizeStreamFailure(err, sourceState.permission.stream);
@@ -587,6 +636,7 @@ function createInputSourceManager(deps = {}) {
       ? mediaStream.getAudioTracks()
       : [];
     const label = readStreamSessionLabel(mediaStream);
+    const audioChannelCount = readAudioChannelCount(audioTracks);
 
     if (!audioTracks.length) {
       stopSessionStreamTracks({ mediaStream });
@@ -599,14 +649,17 @@ function createInputSourceManager(deps = {}) {
       });
     }
 
+    let attached;
     try {
-      await audioEngine.attachMediaStreamSource(mediaStream, {
+      attached = await audioEngine.attachMediaStreamSource(mediaStream, {
         kind: "stream",
         label,
         monitorOutput: false,
+        isCurrent: () => isActivationTokenCurrent(activationToken),
       });
     } catch (err) {
       stopSessionStreamTracks({ mediaStream });
+      if (!isActivationTokenCurrent(activationToken)) return readCancelledActivation("stream");
       sourceState.permission.stream = "granted";
       return commitFailure("stream", {
         status: "error",
@@ -618,14 +671,13 @@ function createInputSourceManager(deps = {}) {
       });
     }
 
-    if (!isActivationTokenCurrent(activationToken)) {
+    if (attached === false || !isActivationTokenCurrent(activationToken)) {
       stopSessionStreamTracks({ mediaStream });
-      if (audioEngine && typeof audioEngine.unload === "function") audioEngine.unload();
       return readCancelledActivation("stream");
     }
 
     sourceState.permission.stream = "granted";
-    return registerFutureStreamSession("stream", mediaStream, { label });
+    return registerFutureStreamSession("stream", mediaStream, { label, audioChannelCount });
   }
 
   async function handleExternalStreamEnded() {
@@ -707,6 +759,7 @@ function createInputSourceManager(deps = {}) {
       cleanupFns,
       hasAudio: !!(mediaStream && typeof mediaStream.getAudioTracks === "function" && mediaStream.getAudioTracks().length),
       hasVideo: !!(mediaStream && typeof mediaStream.getVideoTracks === "function" && mediaStream.getVideoTracks().length),
+      audioChannelCount: kind === "stream" ? (options.audioChannelCount ?? null) : null,
     });
   }
 

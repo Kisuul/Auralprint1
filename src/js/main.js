@@ -1,5 +1,4 @@
-import { clamp } from "./core/utils.js";
-import { TAU } from "./core/constants.js";
+import { simulationDeltaSec, visualMotionDeltaSec } from "./core/timing.js";
 import { CONFIG } from "./core/config.js";
 import { runtime, resolveSettings } from "./core/preferences.js";
 import { state } from "./core/state.js";
@@ -7,57 +6,57 @@ import { resizeCanvasToDisplaySize } from "./core/spaces.js";
 import { UrlPreset } from "./presets/url-preset.js";
 import { BandBankController } from "./audio/band-bank-controller.js";
 import { AudioEngine } from "./audio/audio-engine.js";
+import { createAnalysisFrame, updateAnalysisFrame } from "./audio/analysis-frame.js";
 import { InputSourceManager } from "./audio/input-source-manager.js";
 import { Scrubber } from "./audio/scrubber.js";
 import { Renderer } from "./render/renderer.js";
 import { RecorderEngine } from "./recording/recorder-engine.js";
 import { UI } from "./ui/ui.js";
-import { getActiveOrbPrimaryAngleRad, initOrbs } from "./render/orb-runtime.js";
+import { initOrbs } from "./render/orb-runtime.js";
+import { VisualizerRuntime } from "./render/visualizer-runtime.js";
 
 /* =============================================================================
    Boot / loop
    ========================================================================== */
-let lastBandSnapshot = null;
+const analysisFrame = createAnalysisFrame();
+const visualizerFrameContext = {
+  dtSec: 0, // Existing bounded emission-work delta.
+  motionDtSec: 0, // Visible elapsed time, with discontinuities discarded.
+  nowSec: 0,
+  simPaused: false,
+  analysisFrame,
+};
 
 function onAnimationFrame(tsMs) {
   requestAnimationFrame(onAnimationFrame);
 
   resizeCanvasToDisplaySize();
 
-  if (state.time.lastTimestampMs === null) {
-    state.time.lastTimestampMs = tsMs;
-    return;
-  }
-
-  const dtSecRaw = (tsMs - state.time.lastTimestampMs) / 1000;
-  state.time.lastTimestampMs = tsMs;
-
-  // Integrate with real frame time, but cap to a single "slow frame" (~33 ms)
-  // so tab-switch or GC spikes can't cause huge jumps. Normal 60/120 Hz frames
-  // stay untouched, lower bound remains 0, and downstream emit overflow guards stay valid.
-  const dtSec = clamp(dtSecRaw, 0, runtime.settings.timing.maxDeltaTimeSec);
+  const validTimestamp = Number.isFinite(tsMs) && tsMs >= 0;
+  const elapsedSec = validTimestamp && state.time.lastTimestampMs !== null
+    ? (tsMs - state.time.lastTimestampMs) / 1000 : 0;
+  // Always rebase: no motion or emission debt survives suspension/invalid time.
+  state.time.lastTimestampMs = validTimestamp ? tsMs : null;
+  const hidden = typeof document !== "undefined" && document.hidden === true;
+  const motionDtSec = hidden ? 0 : visualMotionDeltaSec(elapsedSec);
+  const dtSec = motionDtSec > 0
+    ? simulationDeltaSec(elapsedSec, runtime.settings.timing?.maxDeltaTimeSec) : 0;
   const nowSec = performance.now() / 1000;
 
-  lastBandSnapshot = AudioEngine.sample();
+  updateAnalysisFrame(analysisFrame, AudioEngine.sample(), state.bands);
 
-  // Ring phase:
-  // - orb: lock to carrier orb angle (coherent)
-  // - free: integrate a ring angular velocity independent of the orb
-  const o = runtime.settings.bands.overlay;
-  if (o.phaseMode === "orb") {
-    const primaryOrbAngleRad = getActiveOrbPrimaryAngleRad();
-    state.bands.ringPhaseRad = Number.isFinite(primaryOrbAngleRad) ? primaryOrbAngleRad : state.bands.ringPhaseRad;
-  } else {
-    state.bands.ringPhaseRad = ((state.bands.ringPhaseRad + o.ringSpeedRadPerSec * dtSec) % TAU + TAU) % TAU;
-  }
-
-  Renderer.renderFrame({
-    bandSnapshot: lastBandSnapshot,
-    dtSec,
-    nowSec,
-  });
-  UI.refreshAllUiText(lastBandSnapshot);
+  visualizerFrameContext.dtSec = dtSec;
+  visualizerFrameContext.motionDtSec = motionDtSec;
+  visualizerFrameContext.nowSec = nowSec;
+  visualizerFrameContext.simPaused = state.time.simPaused;
+  VisualizerRuntime.update(visualizerFrameContext);
+  VisualizerRuntime.render(Renderer, visualizerFrameContext);
+  UI.refreshAllUiText(analysisFrame);
   Scrubber.draw(); // update playhead position every frame
+}
+
+function rebaseVisualFrameClock() {
+  state.time.lastTimestampMs = null;
 }
 
 function main() {
@@ -67,7 +66,7 @@ function main() {
   state.ctx = state.canvas.getContext("2d", { alpha: false });
 
   resolveSettings();
-  const bootPresetResult = UrlPreset.applyFromLocationHash();
+  UrlPreset.applyFromLocationHash();
   resolveSettings();
   InputSourceManager.init({
     onExternalLiveInputReset: UI.resetTrackVisualState,
@@ -93,14 +92,14 @@ function main() {
 
   UI.wireControls();
   UI.applyPrefs(null); // null = silent boot; no "Updated: boot" toast on first load
-  UI.ingestPresetApplyResult(bootPresetResult, { source: "boot" });
   UI.refreshRecordingUi();
 
   Scrubber.init(document.getElementById("scrubberCanvas"));
-  UI.refreshAllUiText(lastBandSnapshot);
+  UI.refreshAllUiText(analysisFrame);
 
   resizeCanvasToDisplaySize();
   window.addEventListener("resize", resizeCanvasToDisplaySize);
+  document.addEventListener("visibilitychange", rebaseVisualFrameClock);
 
   requestAnimationFrame(onAnimationFrame);
 }

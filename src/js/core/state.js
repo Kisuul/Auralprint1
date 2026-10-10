@@ -1,6 +1,4 @@
 import { CONFIG } from "./config.js";
-import { createPanelShellState } from "../ui/panel-state.js";
-import { IDENTITY_VIEW_TRANSFORM } from "../render/view-transform.js";
 
 /* =============================================================================
    App State
@@ -24,6 +22,7 @@ function createSourceState() {
     streamMeta: {
       hasAudio: false,
       hasVideo: false,
+      audioChannelCount: null,
     },
   };
 }
@@ -59,29 +58,7 @@ function createRecordingState() {
   };
 }
 
-function createRuntimeLogState() {
-  return {
-    entries: [],
-    nextId: 1,
-    hasUnread: false,
-    maxEntries: 64,
-  };
-}
-
-function createRuntimeLogObserverState() {
-  return {
-    sourceSnapshot: null,
-    recordingSnapshot: null,
-  };
-}
-
-function createSceneState() {
-  return {
-    nodes: [],
-    selectedNodeId: "",
-    viewTransform: IDENTITY_VIEW_TRANSFORM,
-  };
-}
+const initialBandEnergies = { L: [], R: [], C: [] };
 
 const state = {
   canvas: null,
@@ -100,15 +77,20 @@ const state = {
 
   recording: createRecordingState(),
 
-  scene: createSceneState(),
-
   bands: {
     lowHz: [],
     highHz: [],
-    energies01: [],
+    channels: {
+      L: { energies01: initialBandEnergies.L },
+      R: { energies01: initialBandEnergies.R },
+      C: { energies01: initialBandEnergies.C },
+    },
+    // Canonical global spectrum is the real combined Center analysis.
+    energies01: initialBandEnergies.C,
     meta: {
       sampleRateHz: null,
       nyquistHz: null,
+      effectiveFloorHz: null,
       configCeilingHz: null,
       effectiveCeilingHz: null,
     },
@@ -118,23 +100,17 @@ const state = {
   },
 
   ui: {
-    panelShell: createPanelShellState({
-      openTargets: {
-        recording: !!(CONFIG.recording && CONFIG.recording.defaultPanelVisible),
-      },
-    }),
+    workspaceLauncherCollapsed: false,
+    panelRestoreSnapshot: null,
+    audioDockHeight: null,
+    audioDockObserver: null,
+    orbBandPickers: null,
+    orbPickerSettings: null,
+    orbPickerEdges: null,
+    recordingPanelVisible: !!(CONFIG.recording && CONFIG.recording.defaultPanelVisible),
+    recordingPanelRestoreAfterGlobalHide: false,
     recordingUiSyncKey: "",
-    runtimeLog: createRuntimeLogState(),
-    runtimeLogUiSyncKey: "",
-    runtimeLogObserver: createRuntimeLogObserverState(),
   }
 };
 
-export {
-  createRecordingState,
-  createRuntimeLogObserverState,
-  createRuntimeLogState,
-  createSceneState,
-  createSourceState,
-  state,
-};
+export { createSourceState, createRecordingState, state };
