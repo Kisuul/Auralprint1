@@ -22,8 +22,8 @@ import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
 
 test("development version metadata and schema remain aligned", () => {
-  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.f");
-  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.f\s/);
+  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.g");
+  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.g\s/);
   assert.equal(PRESET_SCHEMA_VERSION, 10);
 });
 
@@ -641,6 +641,8 @@ function createStubUiElement(tagName = "div") {
     style: { display: "block" },
     dataset: {},
     children: [],
+    get firstElementChild() { return this.children[0] || null; },
+    get nextElementSibling() { return this.parentNode?.children[this.parentNode.children.indexOf(this) + 1] || null; },
     parentNode: null,
     options: [],
     hidden: false,
@@ -3455,6 +3457,8 @@ function visualizerAction(action, id) {
 function clickVisualizerAction(action, id) {
   const button = visualizerAction(action, id);
   assert.ok(button, `${action} for ${id || "Spectral Ring"}`);
+  // A user pointer/keyboard action focuses its button before delegated dispatch.
+  button.focus();
   state.ui.visualizerList.dispatch("click", { target: button });
 }
 
@@ -4461,6 +4465,50 @@ for (const path of ["picker", "drop"]) {
       assert.notEqual(AudioEngine.getMediaEl(), failed); assert.equal(state.audio.transportError, "");
       assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
       assert.equal(mutations.filter(x => x.kind === "track-change-complete").length, 1);
+    });
+  });
+}
+
+function assertInventoryActionSurvives(button, action, id, row) {
+  assert.equal(document.activeElement, button);
+  assert.equal(state.ui.visualizerList.contains(button), true, 'surviving action stays connected to inventory');
+  assert.equal(visualizerAction(action, id), button);
+  assert.equal(button.closest('.visualizer-item'), row);
+  assert.equal(button.dataset.action, action);
+  if (action !== 'edit-ring') assert.equal(button.dataset.orbId, id);
+}
+
+for (const [action, control, event] of [
+  ['edit', 'rngVol', 'input'], ['duplicate', 'chkMute', 'change'],
+  ['remove', 'chkMute', 'change'], ['edit-ring', 'rngVol', 'input'],
+]) {
+  test(`AUD-005 integration: production ${control} handler preserves focused ${action}`, async t => {
+    await withSettingsActionHarness(t, async ({ getElement }) => {
+      hostVisualizerEditors(); UI.refreshAllUiText();
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const beforeSettings = runtime.settings, beforeCollection = VisualizerRuntime.getVisualizers();
+      getElement(control).value = '0.37'; getElement(control).checked = true;
+      await getElement(control).dispatch(event); UI.refreshAllUiText();
+      assert.notEqual(runtime.settings, beforeSettings);
+      assert.equal(VisualizerRuntime.getVisualizers(), beforeCollection);
+      assertInventoryActionSurvives(button, action, id, row);
+      UI.applyPrefs(null); UI.refreshAllUiText(); assertInventoryActionSurvives(button, action, id, row);
+      assert.equal(runtime.settings.audio.volume, control === 'rngVol' ? 0.37 : CONFIG.defaults.audio.volume);
+      assert.equal(runtime.settings.audio.muted, control === 'chkMute' ? true : CONFIG.defaults.audio.muted);
+    });
+  });
+}
+
+for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
+  test(`AUD-005 integration: pending File completion retains focused ${action}`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    await withRc02FileWorkflow(t, { contextState: 'suspended', onResume: () => { entered.resolve(); return resume.promise; } }, async ({ ingest, waitForCompletions }) => {
+      initOrbs(); hostVisualizerEditors(); UI.refreshAllUiText();
+      const pending = ingest(['focus.wav']); await entered.promise;
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const settings = runtime.settings; resume.resolve(); await pending; await waitForCompletions(1); UI.refreshAllUiText();
+      assert.equal(state.audio.filename, 'focus.wav'); assert.equal(state.source.status, 'active');
+      assert.notEqual(runtime.settings, settings); assertInventoryActionSurvives(button, action, id, row);
     });
   });
 }

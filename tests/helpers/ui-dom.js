@@ -7,8 +7,11 @@ export function installUiDocument() {
     const listeners = new Map();
     const node = {
       tagName: tag.toUpperCase(), children: [], parentNode: null, dataset: {}, attributes: {},
-      value: "", className: "", open: false, checked: false, hidden: false, replacements: 0,
+      value: "", disabled: false, className: "", open: false, checked: false, hidden: false, replacements: 0,
       _text: "",
+      get firstElementChild() { return this.children[0] || null; },
+      get nextElementSibling() { return this.parentNode?.children[this.parentNode.children.indexOf(this) + 1] || null; },
+      get isConnected() { return doc.body?.contains(this) || false; },
       get textContent() { return this._text + this.children.map(child => child.textContent).join(""); },
       set textContent(value) { this._text = String(value); this.children = []; },
       set innerHTML(_value) { throw Error("Use safe textContent"); },
@@ -19,10 +22,24 @@ export function installUiDocument() {
         if (child.isFragment) { for (const entry of [...child.children]) this.appendChild(entry); return child; }
         child.remove(); child.parentNode = this; this.children.push(child); return child;
       },
-      remove() { if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(child => child !== this); this.parentNode = null; },
+      insertBefore(child, reference) {
+        if (child === reference) return child;
+        child.remove();
+        const index = reference ? this.children.indexOf(reference) : this.children.length;
+        if (index < 0) throw Error("Reference must be a child");
+        child.parentNode = this; this.children.splice(index, 0, child); return child;
+      },
+      remove() {
+        if (this.parentNode) {
+          if (this.contains(doc.activeElement)) doc.activeElement = doc.body;
+          this.parentNode.children = this.parentNode.children.filter(child => child !== this);
+        }
+        this.parentNode = null;
+      },
       replaceChildren(...nodes) { for (const child of [...this.children]) child.remove(); this.append(...nodes); this.replacements++; },
       contains(target) { return this === target || this.children.some(child => child.contains(target)); },
       matches(selector) {
+        if (selector.startsWith(".")) return this.className.split(" ").includes(selector.slice(1));
         if (selector === "button[data-action]") return this.tagName === "BUTTON" && !!this.dataset.action;
         const match = /^\[data-action="([a-z-]+)"\]$/.exec(selector);
         if (!match) throw Error(`Unsupported harness selector: ${selector}`);
@@ -45,6 +62,7 @@ export function installUiDocument() {
   }
   doc.createElement = element;
   doc.createDocumentFragment = () => Object.assign(element(), { isFragment: true });
+  doc.body = element("body"); doc.activeElement = doc.body;
   globalThis.document = doc;
   return { document: doc, element, restore() { globalThis.document = previous; } };
 }

@@ -1,0 +1,25 @@
+{
+  "acceptedBase": "230610bc33ab7e3a4842e53e5be48c9170222739",
+  "unchangedHistoricalFiles": 586,
+  "excludedProductionFilesUnchanged": [
+    "src/js/audio/band-bank.js",
+    "src/js/ui/orb-band-picker.js",
+    "src/js/ui/orb-editor.js",
+    "src/js/presets/preset-codec.js",
+    "src/js/recording/recorder-engine.js",
+    "src/js/audio/audio-engine.js",
+    "src/js/audio/input-source-manager.js",
+    "src/js/render/visualizer-runtime.js"
+  ],
+  "changedTrackedFiles": [
+    "src/js/core/constants.js",
+    "src/js/ui/visualizers-panel.js",
+    "tests/helpers/ui-dom.js",
+    "tests/rc20_packaging.py",
+    "tests/rc22-orb-removal.test.js",
+    "tests/targeted-audit.test.js",
+    "tests/visualizers-panel.test.js",
+    "version"
+  ],
+  "noTrackedGeneratedOutput": true
+}

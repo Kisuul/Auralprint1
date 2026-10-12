@@ -1,0 +1,119 @@
+{
+  "controls": [
+    {
+      "control": "original_replaceChildren",
+      "detected": true,
+      "exitCode": 1,
+      "relevantAssertions": [
+        {
+          "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused edit",
+          "code": "ERR_ASSERTION",
+          "message": "edit B: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused duplicate",
+          "code": "ERR_ASSERTION",
+          "message": "duplicate B: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused remove",
+          "code": "ERR_ASSERTION",
+          "message": "remove B: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused edit-ring",
+          "code": "ERR_ASSERTION",
+          "message": "edit-ring B: exact focused node\n\nfalse !== true\n"
+        }
+      ],
+      "failureCount": 4
+    },
+    {
+      "control": "id_without_type",
+      "detected": true,
+      "exitCode": 1,
+      "relevantAssertions": [
+        {
+          "name": "AUD-005: opaque Orb spectral-ring ID remains distinct from Ring across reconciliation and action dispatch",
+          "code": "ERR_ASSERTION",
+          "message": "both type-specific Edit actions exist"
+        }
+      ],
+      "failureCount": 1
+    },
+    {
+      "control": "rebuild_summary_row",
+      "detected": true,
+      "exitCode": 1,
+      "relevantAssertions": [
+        {
+          "name": "AUD-005: presentation and runtime visibility update in place with unchanged collection reference",
+          "code": "ERR_ASSERTION",
+          "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'B \u00b7 C \u00b7 full spectrum'\n- 'B \u00b7 R \u00b7 2 bands'\n       ^\n"
+        }
+      ],
+      "failureCount": 1
+    },
+    {
+      "control": "blur_reorder",
+      "detected": true,
+      "exitCode": 1,
+      "relevantAssertions": [
+        {
+          "name": "AUD-005: reorder retains edit identity/focus and updates numbering and accessible labels",
+          "code": "ERR_ASSERTION",
+          "message": "edit C: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: reorder retains duplicate identity/focus and updates numbering and accessible labels",
+          "code": "ERR_ASSERTION",
+          "message": "duplicate C: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: reorder retains remove identity/focus and updates numbering and accessible labels",
+          "code": "ERR_ASSERTION",
+          "message": "remove C: exact focused node\n\nfalse !== true\n"
+        }
+      ],
+      "failureCount": 3
+    },
+    {
+      "control": "no_nearest_fallback",
+      "detected": true,
+      "exitCode": 1,
+      "relevantAssertions": [
+        {
+          "name": "AUD-005: focused removal of A chooses nearest surviving Orb B",
+          "code": "ERR_ASSERTION",
+          "message": "edit B: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: focused removal of B chooses nearest surviving Orb C",
+          "code": "ERR_ASSERTION",
+          "message": "edit C: exact focused node\n\nfalse !== true\n"
+        },
+        {
+          "name": "AUD-005: focused removal of C chooses nearest surviving Orb B",
+          "code": "ERR_ASSERTION",
+          "message": "edit B: exact focused node\n\nfalse !== true\n"
+        }
+      ],
+      "failureCount": 3
+    },
+    {
+      "control": "duplicate_delegation",
+      "detected": true,
+      "exitCode": 1,
+      "relevantAssertions": [
+        {
+          "name": "AUD-005: repeated refresh/init registers one delegated listener and one Add handler",
+          "code": "ERR_ASSERTION",
+          "message": "Expected values to be strictly equal:\n\n32 !== 1\n"
+        }
+      ],
+      "failureCount": 1
+    }
+  ],
+  "detected": 6,
+  "harnessFailures": 0
+}

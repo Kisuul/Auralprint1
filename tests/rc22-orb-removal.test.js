@@ -51,6 +51,7 @@ test("RC-22: collision cancellation/acceptance through generated button delegati
   survivor.angleRad = 1.25; survivor.trail.emitAt(1, 2, 0, { r: 1, g: 0, b: 0 });
   const tail = survivor.trail.particles.tail, governor = survivor.trail.governor;
   const remove = h.button("remove", "spectral-ring");
+  const survivorEdit = h.button("edit", "ORB1");
   assert.equal(remove.dataset.action, "remove"); assert.equal(remove.dataset.orbId, "spectral-ring");
   assert.equal(remove.getAttribute("aria-label"), "Remove Orb 1, spectral-ring");
   remove.focus(); const settings = runtime.settings, collection = VisualizerRuntime.getVisualizers(), rebuilds = h.ui.visualizerList.replacements;
@@ -71,7 +72,8 @@ test("RC-22: collision cancellation/acceptance through generated button delegati
   assert.equal(survivor.trail.particles.tail, tail); assert.equal(survivor.trail.governor, governor);
   assert.deepEqual(h.disposed, [["orb", "spectral-ring"]]);
   assert.ok(document.activeElement === h.button("edit", "ORB1"), "focus must remain on the expected control");
-  assert.equal(h.ui.visualizerList.replacements, rebuilds + 1);
+  assert.equal(h.ui.visualizerList.replacements, rebuilds);
+  assert.equal(h.button("edit", "ORB1"), survivorEdit);
   t.diagnostic(JSON.stringify({ confirmation: confirmText(h.confirmations[0]), persisted: persistedIds(), ringSurvived: true, focus: document.activeElement.dataset }));
 }));
 
@@ -79,12 +81,13 @@ test("RC-22: reorder numbers and middle/end/empty nearest-survivor focus follow 
   const objects = new Map(state.orbs.map(orb => [orb.id, orb]));
   preferences.orbs.reverse(); resolveSettings(); reconcileOrbs(); h.panel.refresh();
   for (const orb of state.orbs) assert.equal(orb, objects.get(orb.id));
-  h.accept(); h.button("remove", "C").click();
+  const removeFocused = id => { const button = h.button("remove", id); button.focus(); button.click(); };
+  h.accept(); removeFocused("C");
   assert.deepEqual(h.confirmations[0], { id: "C", displayName: "Orb 2" });
   assert.deepEqual(idsNow(), ["D", "B", "A"]); assert.ok(document.activeElement === h.button("edit", "B"), "focus must remain on the expected control");
-  h.button("remove", "A").click(); assert.ok(document.activeElement === h.button("edit", "B"), "focus must remain on the expected control");
-  h.button("remove", "D").click(); assert.ok(document.activeElement === h.button("edit", "B"), "focus must remain on the expected control");
-  h.button("remove", "B").click();
+  removeFocused("A"); assert.ok(document.activeElement === h.button("edit", "B"), "focus must remain on the expected control");
+  removeFocused("D"); assert.ok(document.activeElement === h.button("edit", "B"), "focus must remain on the expected control");
+  removeFocused("B");
   assert.deepEqual(idsNow(), []); assert.deepEqual(persistedIds(), []);
   assert.ok(document.activeElement === h.ui.btnVisualizersAddOrb, "focus must remain on the expected control");
   assert.deepEqual(VisualizerRuntime.getVisualizers(), [h.ring]);
@@ -94,7 +97,7 @@ for (const id of ["spectral-ring", "ORB0", "ORB123", "custom string", 'custom![]
   test(`RC-22: accepted opaque ID ${JSON.stringify(id)} remains safe and removable`, () => scene([id], h => {
     assert.equal(isValidOrbId(id), true); assert.deepEqual(persistedIds(), [id]);
     const remove = h.button("remove", id); assert.equal(remove.dataset.orbId, id);
-    h.accept(); remove.click();
+    h.accept(); remove.focus(); remove.click();
     assert.deepEqual(h.confirmations, [{ id, displayName: "Orb 1" }]); assert.deepEqual(h.removed, [id]);
     assert.deepEqual(idsNow(), []); assert.deepEqual(persistedIds(), []);
     assert.deepEqual(VisualizerRuntime.getVisualizers(), [h.ring]);
