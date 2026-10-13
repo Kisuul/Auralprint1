@@ -1,0 +1,165 @@
+{
+  "version": "v0.1.15m.i.h",
+  "browser": "151.0.7922.173",
+  "environment": "Headless Linux Chromium, 1440x1000, localhost portable HTML. Native WAV playback and MediaRecorder; fake Chromium microphone device. Stream rejection and diagnostic/state fixtures are explicit. Native stop delivery can be held to expose finalization and EOF ordering.",
+  "cases": [
+    {
+      "name": "idle mutation absence, focused inventory identity, tooltip listeners and canonical state",
+      "pass": true,
+      "details": {
+        "iterations": 2000,
+        "mutations": 0,
+        "focusedNodePreserved": true,
+        "canonicalStatePreserved": true,
+        "listenersStable": true
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "tooltips, off-step values, new/removed controls, reorder, drafts and immediate feedback",
+      "pass": true,
+      "details": {
+        "offStep": "0.123456",
+        "title": "Angular Speed: 0.123456 rad/s (7.1°/s)",
+        "accessible": "0.123456 rad/s (7.1°/s)",
+        "invalidDraft": "bad target",
+        "newTooltip": "Angular Speed: 1.5707963267948966 rad/s (90.0°/s)",
+        "survivingListenerAdds": 5,
+        "removed": {
+          "indexed": false,
+          "connected": false,
+          "listeners": {
+            "adds": 5,
+            "removes": 3
+          }
+        }
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "hidden panel reveal refreshes canonical values, targets, tooltips and restores focus immediately",
+      "pass": true,
+      "details": {
+        "value": "0.234567",
+        "title": "Angular Speed: 0.234567 rad/s (13.4°/s)",
+        "targets": [
+          0,
+          255
+        ],
+        "bandCount": 3,
+        "focusRecovered": true
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "asynchronous source status and mono/stereo diagnostics stay truthful without preference edits",
+      "pass": true,
+      "details": {
+        "statuses": [
+          "Waiting for microphone permission.",
+          "Microphone permission denied.",
+          "Stream live: Fixture stream - Capture: mono (1ch) - Bands: mono-ish (L≈R)",
+          "Stream live: Fixture stream - Capture: mono (1ch) - Bands: stereo (L≠R)"
+        ],
+        "fixture": "canonical source projection and producer diagnostics, same settings reference"
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "native File play/pause/stop, toast expiry, repeat, previous/next, removal and Clear",
+      "pass": true,
+      "details": {
+        "verified": [
+          "pause",
+          "resume",
+          "stop",
+          "next",
+          "previous",
+          "repeat",
+          "toast appearance/expiration",
+          "queue removal",
+          "Clear"
+        ]
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "native pending File activation cancellation settles identity before delayed resume completion",
+      "pass": true,
+      "details": {
+        "queue": 0,
+        "source": "none",
+        "status": "idle",
+        "loaded": false,
+        "media": false,
+        "disabled": true
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "native File to fake-device Mic and rejected Stream settles source selector errors",
+      "pass": true,
+      "details": {
+        "fakeDeviceMicActive": true,
+        "streamStatus": "Stream share was cancelled or denied.",
+        "fileReturn": true
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    },
+    {
+      "name": "native recorder timer, held finalization, natural EOF settlement, download and transport unlock",
+      "pass": true,
+      "details": {
+        "held": {
+          "phase": "finalizing",
+          "file": "A.wav",
+          "index": 0,
+          "busy": "true",
+          "loadDisabled": true,
+          "sourceDisabled": true,
+          "status": "Finalizing export"
+        },
+        "complete": {
+          "phase": "complete",
+          "index": 1,
+          "bytes": 36200,
+          "busy": "false",
+          "url": true
+        },
+        "retainedExportOnError": true,
+        "errorFixture": "error event delivered to native MediaRecorder; RecorderEngine handles its normal callback and retains prior successful export"
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [
+        "[RecorderEngine] recorder-error Error: Injected native recorder failure\n    at eval (eval at evaluate (:290:30), <anonymous>:1:74)\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+      ],
+      "unhandledRejections": []
+    },
+    {
+      "name": "uninstrumented portable playback and recording smoke",
+      "pass": true,
+      "details": {
+        "nativePlayback": true,
+        "nativeRecording": true,
+        "exportAvailable": true
+      },
+      "pageErrors": [],
+      "expectedInjectedConsoleErrors": [],
+      "unhandledRejections": []
+    }
+  ]
+}

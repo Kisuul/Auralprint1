@@ -1,0 +1,76 @@
+{
+  "excludedAttempt": "Final counter additions initially exposed a harness focus assertion on hidden controls; a hidden input cannot acquire native focus. Focus selection corrected to visible Workspace launcher for hidden-panel scenarios.",
+  "observations": [
+    {
+      "revision": "v0.1.15m.i.g",
+      "scenario": "2-Orb idle, Visualizers hidden",
+      "focusPreserved": false,
+      "mutations": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 4,
+        "nodeRemoval": 4
+      }
+    },
+    {
+      "revision": "v0.1.15m.i.g",
+      "scenario": "64-Orb idle, Visualizers hidden",
+      "focusPreserved": false,
+      "mutations": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 21,
+        "nodeRemoval": 21
+      }
+    },
+    {
+      "revision": "v0.1.15m.i.h",
+      "scenario": "2-Orb idle, Visualizers hidden",
+      "focusPreserved": false,
+      "mutations": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      }
+    },
+    {
+      "revision": "v0.1.15m.i.h",
+      "scenario": "64-Orb idle, Visualizers hidden",
+      "focusPreserved": false,
+      "mutations": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      }
+    },
+    {
+      "revision": "v0.1.15m.i.h",
+      "scenario": "Active playback",
+      "focusPreserved": true,
+      "mutations": {
+        "text": 1,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      }
+    }
+  ],
+  "activeFixture": "One text mutation appeared in a playback batch during initial load/status warmup. Its target was not captured in that attempt, so no semantic attribution is claimed. Final unchanged playback measurement waits through the load-toast deadline, then primes presentation; separate native acceptance tests toast appearance/expiry."
+}

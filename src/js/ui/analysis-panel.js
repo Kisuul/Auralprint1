@@ -17,6 +17,7 @@ function createAnalysisPanelUi({
   let lastBandDefinitionRef = null;
   let rowCount = -1;
   let rows = [];
+  let dominantBadge = null;
   let lastHudUpdateMs = -Infinity;
 
   function addOptions(select, values) {
@@ -75,20 +76,38 @@ function createAnalysisPanelUi({
     const floorMetadata=effectiveFloor === configuredFloor
       ? `Configured floor: ${formatHz(configuredFloor)}`
       : `Configured floor: ${formatHz(configuredFloor)} • Effective floor: ${formatHz(effectiveFloor)}`;
-    ui.bandMeta.textContent=`${settings.bands.count} bands • ${floorMetadata} • Sample rate: ${sample} • Nyquist: ${formatHz(m.nyquistHz)} • Configured ceiling: ${formatHz(configured)} • Effective ceiling: ${formatHz(effective)}`;
+    const text=`${settings.bands.count} bands • ${floorMetadata} • Sample rate: ${sample} • Nyquist: ${formatHz(m.nyquistHz)} • Configured ceiling: ${formatHz(configured)} • Effective ceiling: ${formatHz(effective)}`;
+    if (ui.bandMeta.textContent !== text) ui.bandMeta.textContent=text;
   }
-  function refresh(frame=null) {
+  function refresh(frame=null, forceHud=false) {
     const settings=getSettings(); if(!settings) return;
     syncControls(settings); refreshMetadata(frame,settings);
     const definitionRef=frame?.spectrum?.lowHz || state.bands.lowHz;
+    // Keep metadata current; defer high-cardinality table work until reveal.
+    if(ui.analysisPanel && (ui.analysisPanel.hidden || ui.analysisPanel.style.display === "none")) return;
     if(rowCount!==settings.bands.count) buildRows(settings);
     if(definitionRef!==lastBandDefinitionRef) { lastBandDefinitionRef=definitionRef; for(let i=0;i<rows.length;i++) rows[i].range.textContent=BandBank.formatBandRangeText(i); }
     if(ui.analysisPanel && ui.analysisPanel.style.display === "none") return;
-    const time=now(); if(time-lastHudUpdateMs < CONFIG.ui.analysisHudIntervalMs) return; lastHudUpdateMs=time;
+    const time=now(); if(!forceHud && time-lastHudUpdateMs < CONFIG.ui.analysisHudIntervalMs) return; lastHudUpdateMs=time;
     const spectrum=frame?.spectrum || state.bands, energies=spectrum.energies01 || [];
-    for(let i=0;i<rows.length;i++) { const e=clamp(energies[i]||0,0,1), dominant=i===spectrum.dominantIndex, color=bandColor(i); rows[i].fill.style.width=`${Math.round(e*100)}%`; rows[i].fill.style.background=rgb01ToCss(color,.8); rows[i].name.style.opacity=dominant?"1.0":"0.75"; rows[i].idx.style.opacity=dominant?"1.0":"0.65"; rows[i].range.style.opacity=dominant?"0.96":"0.72"; }
+    for(let i=0;i<rows.length;i++) {
+      const row=rows[i], e=clamp(energies[i]||0,0,1), dominant=i===spectrum.dominantIndex;
+      const width=`${Math.round(e*100)}%`, color=rgb01ToCss(bandColor(i),.8);
+      if (row.fill.style.width !== width) row.fill.style.width=width;
+      // Native CSS serializes colors; retain only the last generated presentation.
+      if (row.color !== color) { row.color=color; row.fill.style.background=color; }
+      const nameOpacity=dominant?"1":"0.75", idxOpacity=dominant?"1":"0.65", rangeOpacity=dominant?"0.96":"0.72";
+      if (row.name.style.opacity !== nameOpacity) row.name.style.opacity=nameOpacity;
+      if (row.idx.style.opacity !== idxOpacity) row.idx.style.opacity=idxOpacity;
+      if (row.range.style.opacity !== rangeOpacity) row.range.style.opacity=rangeOpacity;
+    }
     const index=clamp(Number.isInteger(spectrum.dominantIndex)?spectrum.dominantIndex:0,0,Math.max(0,rows.length-1));
-    const badge=document.createElement("span"); badge.className="dominantBadge"; badge.textContent=`Dominant [${index}] ${spectrum.dominantName||BAND_NAMES[index]||`Band ${index}`} — ${BandBank.formatBandRangeText(index)}`; ui.bandDebug.textContent=""; ui.bandDebug.appendChild(badge);
+    const text=`Dominant [${index}] ${spectrum.dominantName||BAND_NAMES[index]||`Band ${index}`} — ${BandBank.formatBandRangeText(index)}`;
+    if (!dominantBadge) {
+      dominantBadge=document.createElement("span"); dominantBadge.className="dominantBadge";
+      ui.bandDebug.textContent=""; ui.bandDebug.appendChild(dominantBadge);
+    }
+    if (dominantBadge.textContent !== text) dominantBadge.textContent=text;
   }
   function init() {
     if(initializedOn===ui.analysisPanel) return false; initializedOn=ui.analysisPanel;
