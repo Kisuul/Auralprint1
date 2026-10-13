@@ -1,0 +1,31 @@
+{
+  "pass": true,
+  "baseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+  "branch": "codex/115m-i-i-aud007-policy",
+  "onlyNewInvestigationFiles": true,
+  "productionAndPermanentTestsUnchanged": true,
+  "version": "v0.1.15m.i.h",
+  "schema": 10,
+  "files": [
+    "docs/audits/remediations/115m-i-i-aud007/README.md",
+    "docs/audits/remediations/115m-i-i-aud007/acceptance-plan.md",
+    "docs/audits/remediations/115m-i-i-aud007/diagnostics/native.cjs",
+    "docs/audits/remediations/115m-i-i-aud007/diagnostics/recheck.cjs",
+    "docs/audits/remediations/115m-i-i-aud007/diagnostics/reproduce.mjs",
+    "docs/audits/remediations/115m-i-i-aud007/diagnostics/scope-check.py",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/attempts.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/baseline-and-environment.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/build.log",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/concurrency.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/distribution.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/focused-tests.log",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/full-tests.log",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/native.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/negative-control.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/packaging.log",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/protected-rechecks.json",
+    "docs/audits/remediations/115m-i-i-aud007/evidence/validation.json",
+    "docs/audits/remediations/115m-i-i-aud007/ownership-and-concurrency.md",
+    "docs/audits/remediations/115m-i-i-aud007/resource-policy-proposal.md"
+  ]
+}

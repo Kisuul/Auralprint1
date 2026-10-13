@@ -1,0 +1,37 @@
+[
+  {
+    "operation": "git fetch origin main",
+    "result": "proxy connection refused at configured proxy:8080",
+    "resolution": "GitHub connector verified remote main and merged PR; connector used for publishing, no proxy bypass"
+  },
+  {
+    "operation": "initial isolated build",
+    "result": "esbuild module missing from git archive",
+    "resolution": "linked provisioned Linux dependencies in disposable build; original package/lock unchanged"
+  },
+  {
+    "operation": "initial native server inside sandbox",
+    "result": "listen EPERM 127.0.0.1",
+    "resolution": "authorized localhost browser command succeeded outside sandbox"
+  },
+  {
+    "operation": "full suite inside sandbox (parallel and sequential)",
+    "result": "44/45 file-level passes; rc20-packaging child-process spawnSync python EPERM",
+    "resolution": "direct Python 23/23; full unsandboxed suite 803 passed, 0 failed, 1 established skip"
+  },
+  {
+    "operation": "initial AUD007 native run",
+    "result": "5 passed, Clear case clicked hidden Queue control",
+    "resolution": "open Queue via existing toggle before clicking Clear; final 6/6"
+  },
+  {
+    "operation": "initial H native recheck",
+    "result": "6 passed, source-error presentation assertion sampled prior Mic text immediately after canonical Stream error settlement",
+    "resolution": "read-only adapter awaits normal RAF presentation of permission/denied text; final 9/9; no forced UI refresh or production edits"
+  },
+  {
+    "operation": "initial F native recheck",
+    "result": "19/21 passed; 2 optional export evidence writes ENOENT because caller had not created export directory",
+    "resolution": "create scratch export directory; final 21/21"
+  }
+]
