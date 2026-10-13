@@ -1,0 +1,165 @@
+{
+  "phase": "G.2",
+  "baseline": true,
+  "version": "v0.1.15m.i.g",
+  "browser": "151.0.7922.173",
+  "htmlSha256": "b85775e14db2f53701e80502fe4defbf0eb378bab09cdb5bd926427b241a7cf7",
+  "cases": [
+    {
+      "name": "count 3, targets [255]: production picker and persistence",
+      "passed": true,
+      "data": {
+        "ui": {
+          "summary": "1 target: Eternal Resonance",
+          "bank": "ERB distribution · 256 bands · configured ranges; connect audio for the active frequency limit",
+          "activeChoices": {
+            "count": 256,
+            "first": 0,
+            "last": 255
+          },
+          "shown": 256,
+          "rangeMax": "255",
+          "exactHelp": null,
+          "band255": "n/a"
+        },
+        "persisted": [
+          255
+        ]
+      },
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "count 3, [255], C: real runtime energy/radius/color",
+      "passed": true,
+      "data": {
+        "count": 3,
+        "chanId": "C",
+        "bandIds": [
+          255
+        ],
+        "lengths": {
+          "L": 3,
+          "R": 3,
+          "C": 3
+        },
+        "energy": 0,
+        "dominant": 255,
+        "radius": 10,
+        "displacement": 0.25,
+        "minDim": 1000,
+        "response": {
+          "minRadiusFrac": 0.01,
+          "maxRadiusFrac": 0.8,
+          "waveformRadialDisplaceFrac": 0.1
+        },
+        "full": 0.6,
+        "waveform": 0.25,
+        "inheritedColor": {
+          "r": 1,
+          "g": 0.355,
+          "b": 0.09999999999999998
+        },
+        "expectedInherited": {
+          "r": 1,
+          "g": 0.355,
+          "b": 0.09999999999999998
+        },
+        "explicitColor": {
+          "r": 0.35499999999999987,
+          "g": 0.09999999999999998,
+          "b": 1
+        },
+        "expectedExplicit": {
+          "r": 0.35499999999999987,
+          "g": 0.09999999999999998,
+          "b": 1
+        }
+      },
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "count 3, targets [0,255]: production picker and persistence",
+      "passed": true,
+      "data": {
+        "ui": {
+          "summary": "2 targets: Eternal Core, Eternal Resonance",
+          "bank": "ERB distribution · 256 bands · configured ranges; connect audio for the active frequency limit",
+          "activeChoices": {
+            "count": 256,
+            "first": 0,
+            "last": 255
+          },
+          "shown": 256,
+          "rangeMax": "255",
+          "exactHelp": null,
+          "band255": "n/a"
+        },
+        "persisted": [
+          0,
+          255
+        ]
+      },
+      "pageErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "count 3, [0,255], C: real runtime energy/radius/color",
+      "passed": true,
+      "data": {
+        "count": 3,
+        "chanId": "C",
+        "bandIds": [
+          0,
+          255
+        ],
+        "lengths": {
+          "L": 3,
+          "R": 3,
+          "C": 3
+        },
+        "energy": 0.25,
+        "dominant": 0,
+        "radius": 207.5,
+        "displacement": 5.1875,
+        "minDim": 1000,
+        "response": {
+          "minRadiusFrac": 0.01,
+          "maxRadiusFrac": 0.8,
+          "waveformRadialDisplaceFrac": 0.1
+        },
+        "full": 0.6,
+        "waveform": 0.25,
+        "inheritedColor": {
+          "r": 1,
+          "g": 0.355,
+          "b": 0.09999999999999998
+        },
+        "expectedInherited": {
+          "r": 1,
+          "g": 0.355,
+          "b": 0.09999999999999998
+        },
+        "explicitColor": {
+          "r": 0.35499999999999987,
+          "g": 0.09999999999999998,
+          "b": 1
+        },
+        "expectedExplicit": {
+          "r": 0.35499999999999987,
+          "g": 0.09999999999999998,
+          "b": 1
+        }
+      },
+      "pageErrors": [],
+      "consoleErrors": []
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "infrastructureFailure": false
+  }
+}

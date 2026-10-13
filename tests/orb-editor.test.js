@@ -123,3 +123,39 @@ test("RC-15 phase 1: individual editor has no overlap controls and stale Bulk co
     assert.doesNotMatch(template, /rngOverlap|valOverlap|Overlap radius/i);
   } finally { h.restore(); }
 });
+
+for (const raw of ['255', '0,255', '0,2']) {
+  test(`AUD-003: exact authored entry ${raw} distinguishes active/inactive and preserves other Orb`, () => {
+    const h = harness(['A', 'B']);
+    try {
+      preferences.bands.count = 3; resolveSettings(); h.editor.init();
+      const a = h.editor.getController('A'), b = structuredClone(preferences.orbs[1]);
+      a.bands.focus(); a.bands.value = raw; a.bands.dispatch('change'); resolveSettings(); h.editor.refresh();
+      const selected = raw.split(',').map(Number);
+      assert.deepEqual(preferences.orbs[0].bandIds, selected); assert.deepEqual(preferences.orbs[1], b);
+      assert.equal(a.bands.getAttribute('aria-invalid'), 'false');
+      const active = selected.filter(index => index < 3).length;
+      assert.match(a.bandValue.textContent, new RegExp(`${active} active target`));
+      assert.match(a.bandValue.textContent, new RegExp(`${selected.length - active} inactive target`));
+      assert.match(a.bands.getAttribute('aria-description'), /Authored indices 0–255; active indices 0–2/);
+      assert.equal(document.activeElement === a.bands, true);
+    } finally { h.restore(); }
+  });
+}
+
+test('AUD-003: invalid exact draft stays visible through count/setting changes; deliberate correction replaces targets', () => {
+  const h = harness(['A', 'B']);
+  try {
+    preferences.bands.count = 3; preferences.orbs[0].bandIds = [255]; resolveSettings(); h.editor.init();
+    const a = h.editor.getController('A'), root = a.root; a.root.open = true; a.root.scrollTop = 321;
+    a.bands.value = '0, 256, nope'; a.bands.focus(); a.bands.dispatch('change');
+    assert.equal(a.bands.getAttribute('aria-invalid'), 'true'); assert.deepEqual(preferences.orbs[0].bandIds, [255]);
+    preferences.bands.count = 32; preferences.audio.muted = true; resolveSettings(); h.editor.refresh();
+    assert.equal(a.bands.value, '0, 256, nope'); assert.equal(a.bandValue.textContent, 'Invalid indices');
+    assert.equal(h.editor.getController('A').root === root, true); assert.equal(a.root.open, true); assert.equal(a.root.scrollTop, 321);
+    assert.equal(document.activeElement === a.bands, true); assert.match(a.bands.getAttribute('aria-description'), /active indices 0–31/);
+    a.bands.value = '0, 2'; a.bands.dispatch('change'); resolveSettings(); h.editor.refresh();
+    assert.deepEqual(preferences.orbs[0].bandIds, [0, 2]); assert.equal(a.bands.getAttribute('aria-invalid'), 'false');
+    assert.match(a.bandValue.textContent, /2 active targets · 0 inactive targets/);
+  } finally { h.restore(); }
+});

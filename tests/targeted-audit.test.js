@@ -4512,3 +4512,19 @@ for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
     });
   });
 }
+
+for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
+  test(`AUD-003 integration: bank-count preset changes retain G.1 ${action} identity/focus`, async t => {
+    await withSettingsActionHarness(t, ({ location, getElement }) => {
+      hostVisualizerEditors(); UI.refreshAllUiText();
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const authored = structuredClone(preferences); authored.orbs[0].bandIds = [5, 100, 255];
+      for (const count of [32, 3, 256]) {
+        authored.bands.count = count; location.hash = settingsPresetHash(authored); getElement('btnApplyUrl').click(); UI.refreshAllUiText();
+        assertInventoryActionSurvives(button, action, id, row);
+        assert.equal(state.bands.channels.C.energies01.length, count);
+        assert.deepEqual(preferences.orbs[0].bandIds, [5, 100, 255]);
+      }
+    });
+  });
+}

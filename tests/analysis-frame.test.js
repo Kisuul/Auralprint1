@@ -109,7 +109,8 @@ test("orb routing uses one channel for waveform, full energy, and targeted spect
   assert.equal(selectedC.selectedDominantBandIndex, 0);
   const safeInvalid = getBandForOrb({ chanId: "invalid", bandIds: [1, 999] }, frame);
   assert.equal(safeInvalid.band, frame.channels.C);
-  assert.equal(safeInvalid.energyOverride01, 0.2);
+  assert.equal(safeInvalid.energyOverride01, 0.4, "unavailable target 999 does not dilute active C band 1");
+  assert.equal(safeInvalid.selectedDominantBandIndex, 1);
 });
 
 test("a later AnalysisFrame update follows BandBank replacement arrays", () => {

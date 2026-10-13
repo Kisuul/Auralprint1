@@ -1,0 +1,161 @@
+{
+  "phase": "G.2",
+  "finding": "AUD-003",
+  "acceptedG1Head": "0b8ddc43c36c941c51b3dbce25a1d50e7fb8692d",
+  "pr": 48,
+  "branch": "codex/115m-i-g-aud005",
+  "startingTreeClean": true,
+  "prOpenDraftVerified": true,
+  "acceptedBuild115MainAncestor": true,
+  "version": "v0.1.15m.i.g",
+  "presetSchema": 10,
+  "build115N": "WITHHELD",
+  "integratedIgAcceptance": "pending",
+  "g1Implementation": "accepted and byte-identical",
+  "g3": "not begun",
+  "domains": {
+    "canonical": "integer indices 0 through CONFIG.bandNames.length - 1; unchanged sanitation",
+    "activeRuntime": "intersection of selected channel energy-array length, provided AnalysisFrame bank edge lengths and canonical domain",
+    "activePicker": "canonical runtime.settings.bands.count",
+    "empty": "selected channel full-spectrum override null",
+    "nonemptyAllInactive": "targeted energy 0, selected dominant null; authored indices retained",
+    "frequencyMeaning": "indices are current bank positions, not fixed frequency intervals"
+  },
+  "productionSha256": {
+    "src/js/render/visualizer-runtime.js": "79d948ec35c888b28e9237c33ef45d2918b42ba268c627fad248f72086e68938",
+    "src/js/ui/orb-band-picker.js": "a989819e40939f755d6e3a881fbdba563fbf48075736ac6d24fed7a2ad494852",
+    "src/js/ui/orb-editor.js": "3f02531988130735211b034f60fea447f450d863af5e33275aa42a8b0ae8b529"
+  },
+  "changedFiles": [
+    "docs/audits/remediations/115m-i-g-aud003/README.md",
+    "docs/audits/remediations/115m-i-g-aud003/diagnostics/native.cjs",
+    "docs/audits/remediations/115m-i-g-aud003/diagnostics/negative.py",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/baseline-native.json",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/baseline-runtime.json",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/distribution.json",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/fixed-native.json",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/g1-native.json",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/integrity.json",
+    "docs/audits/remediations/115m-i-g-aud003/evidence/negative-controls.json",
+    "docs/audits/remediations/115m-i-g-aud003/validation.json",
+    "src/js/render/visualizer-runtime.js",
+    "src/js/ui/orb-band-picker.js",
+    "src/js/ui/orb-editor.js",
+    "tests/analysis-frame.test.js",
+    "tests/band-count-coverage.test.js",
+    "tests/orb-band-picker.test.js",
+    "tests/orb-editor.test.js",
+    "tests/targeted-audit.test.js",
+    "tests/visualizer-runtime.test.js"
+  ],
+  "commands": [
+    {
+      "command": "npm ci --offline --cache /workspace/auralprint-environment/npm-cache --no-audit --no-fund",
+      "exitCode": 0,
+      "note": "previously authorized locked-cache fallback; no dependency/lock changes"
+    },
+    {
+      "command": "node --test tests/analysis-frame.test.js tests/visualizer-runtime.test.js tests/orb-band-picker.test.js tests/band-count-coverage.test.js tests/orb-editor.test.js tests/rc16-band-references.test.js tests/rc21-band-picker-help.test.js tests/visualizers-panel.test.js tests/targeted-audit.test.js",
+      "exitCode": 0,
+      "tests": 299,
+      "passed": 299
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": 750,
+      "passed": 749,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "portableAndHosted": true
+    },
+    {
+      "command": "python scripts/verify_distribution.py",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "nativeG2": {
+    "total": 31,
+    "passed": 31,
+    "failed": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "infrastructureFailures": 0,
+    "file": "evidence/fixed-native.json"
+  },
+  "nativeG1": {
+    "total": 38,
+    "passed": 38,
+    "failed": 0,
+    "file": "evidence/g1-native.json"
+  },
+  "negativeControls": {
+    "detected": 8,
+    "total": 8,
+    "harnessFailures": 0,
+    "file": "evidence/negative-controls.json"
+  },
+  "acceptanceObservations": {
+    "authoredIndicesPreserved": true,
+    "actualBankAndChannelLengthsVerified": true,
+    "inactiveExcludedFromAverageAndDominant": true,
+    "firstActiveTie": true,
+    "emptyAndInactiveDistinct": true,
+    "malformedRuntimeFiniteBounded": true,
+    "lrCAndExistingColorFallback": true,
+    "schema10AndLegacyNames": true,
+    "transitionSequences": [
+      [
+        256,
+        32,
+        256
+      ],
+      [
+        256,
+        3,
+        256
+      ],
+      [
+        3,
+        32,
+        3
+      ]
+    ],
+    "pickerActiveChoicesAndLimits": true,
+    "inactiveStatusAndAccessibleDescriptions": true,
+    "checkboxAndRangeKeepInactive": true,
+    "fullSpectrumExplicitClear": true,
+    "exactAuthoringAndInvalidDraftPreservation": true,
+    "multipleOrbsIndependent": true,
+    "nativeFocusAndShareReload": true,
+    "g1InventoryAndEvidenceUntouched": true,
+    "rc16Rc21UnchangedAndGreen": true,
+    "noUnrelatedProductionChanges": true,
+    "closedChooserCachedAvailability": true
+  },
+  "interimAttempts": [
+    {
+      "action": "initial full suite",
+      "outcome": "old AnalysisFrame safety test expected missing index 999 in divisor; expectation corrected from .2 to .4 and dominant=1 assertion added; final full suite passes"
+    }
+  ],
+  "ci": {
+    "requirement": "Linux/Windows exact final-head remote result",
+    "reportLocation": "verified PR description and final handoff",
+    "prepublicationSuccessClaim": false
+  },
+  "limits": [
+    "current indices are not anchored frequency ranges; Build 118 frequency targeting/taxonomy deferred",
+    "controlled native analysis fixtures validate downstream runtime consumption, not FFT extraction",
+    "headless Linux Chromium HTTP; no screen-reader/universal OS/browser acceptance claim",
+    "focused options that become inactive are unavailable; surviving control/action focus is tested"
+  ]
+}
