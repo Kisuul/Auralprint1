@@ -4528,3 +4528,32 @@ for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
     });
   });
 }
+
+for (const bulk of [false, true]) {
+  test(`AUD-009: real UI ${bulk ? 'Bulk' : 'individual'} commits share one numeric normalization boundary`, async (t) => {
+    await withSettingsActionHarness(t, () => {
+      preferences.orbs.forEach(orb => { orb.motion.angularSpeedRadPerSec = .123456; orb.trace.numLines = 15.5; orb.bandIds = [0, 255]; });
+      preferences.bands.count = 3; UI.applyPrefs(null); hostVisualizerEditors(); UI.refreshAllUiText();
+      assert.ok(preferences.orbs.every(orb => orb.trace.numLines === 16));
+      const root = state.ui.orbEditorList.children[0], controls = root.querySelectorAll('input');
+      const speed = bulk ? state.ui.rngOmega : controls.find(control => control.id?.endsWith('-angular-speed'));
+      const count = bulk ? state.ui.rngNumLines : controls.find(control => control.id?.endsWith('-line-count'));
+      const runtimeOrbs = [...state.orbs]; speed.focus(); root.open = true;
+      preferences.audio.playbackVolume = .4; UI.applyPrefs(null);
+      assert.ok(document.activeElement === speed); assert.ok(state.ui.orbEditorList.children[0] === root); assert.equal(root.open, true);
+      assert.equal(speed.value, '0.123456'); assert.ok(preferences.orbs.every(orb => orb.motion.angularSpeedRadPerSec === .123456));
+      speed.value = '.234567'; speed.dispatch('input');
+      assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec, .234567);
+      assert.equal(preferences.orbs[1].motion.angularSpeedRadPerSec, bulk ? .234567 : .123456);
+      // The Node mock intentionally allows fractional range input: the canonical
+      // consumer, not native snapping, must establish the integral contract.
+      count.value = '17.1'; count.dispatch('input');
+      for (const source of [preferences.orbs, runtime.settings.orbs, state.orbs]) {
+        assert.equal(source[0].trace.numLines, 18); assert.equal(source[1].trace.numLines, bulk ? 18 : 16);
+        assert.deepEqual(source.map(orb => orb.bandIds), [[0, 255], [0, 255]]);
+      }
+      assert.ok(state.orbs.every((orb, i) => orb === runtimeOrbs[i]));
+      UI.refreshAllUiText(); assert.equal(Number(count.value), 18);
+    });
+  });
+}

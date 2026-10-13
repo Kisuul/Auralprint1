@@ -130,9 +130,27 @@ function createOrbEditorUi({ ui = state.ui, commitOrbChangeById, commitPreferenc
     const picker = createBandPicker(pickerRoot, { orbLabel: `Orb ${id}`, onChange(ids) { bands.value = formatOrbBandIdsText(ids); bands.setAttribute("aria-invalid", "false"); error.textContent = ""; commit("bandIds", ids, `${id} bands`); }, formatRange: BandBank.formatBandRangeText, getActiveCount: () => runtime.settings.bands.count, describeBank: () => `${runtime.settings.bands.distributionMode.toUpperCase()} distribution · ${runtime.settings.bands.count} active bands · ${Number.isFinite(state.bands.meta.nyquistHz) ? "ranges limited to the active Nyquist frequency" : "configured ranges; connect audio for the active frequency limit"}` });
     return { id, root, summary, title, identity, chan: chanField.control, chanValue: chanField.output, bands, bandValue, error, chir: chirField.control, chirValue: chirField.output, phase: phaseField.control, phaseValue: phaseField.output, hue: hueField.control, hueValue: hueField.output, color: colorField.control, colorValue: colorField.output, x: xField.control, xValue: xField.output, y: yField.control, yValue: yField.output, speed: speedField.control, speedValue: speedField.output, minRadius: minRadiusField.control, minRadiusValue: minRadiusField.output, maxRadius: maxRadiusField.control, maxRadiusValue: maxRadiusField.output, waveform: waveformField.control, waveformValue: waveformField.output, emit: emitField.control, emitValue: emitField.output, sizeMin: sizeMinField.control, sizeMinValue: sizeMinField.output, sizeMax: sizeMaxField.control, sizeMaxValue: sizeMaxField.output, decay: decayField.control, decayValue: decayField.output, ttl: ttlField.control, ttlValue: ttlField.output, spacing: spacingField.control, spacingValue: spacingField.output, lines: linesField.control, linesValue: linesField.output, numLines: numLinesField.control, numLinesValue: numLinesField.output, lineAlpha: alphaField.control, lineAlphaValue: alphaField.output, lineWidth: widthField.control, lineWidthValue: widthField.output, lineColor: lineColorField.control, lineColorValue: lineColorField.output, picker };
   }
-  function bindRange(control, limit) { control.min = String(limit.min); control.max = String(limit.max); control.step = String(limit.step); }
+  function bindRange(control, limit) {
+    control.min = String(limit.min); control.max = String(limit.max);
+    // CONFIG.step defines editing intent, not the canonical precision lattice.
+    control.step = limit === CONFIG.limits.trace.numLines ? "1" : "any";
+    // Designed phase retains its canonical-radian handler below.
+    if (limit === CONFIG.limits.orbs.startAngleRad) return;
+    control.addEventListener("keydown", (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const direction = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[event.key];
+      if (!direction) return;
+      const value = Number(control.value);
+      if (!Number.isFinite(value) || control.disabled) return;
+      event.preventDefault();
+      const next = Math.max(limit.min, Math.min(limit.max, value + direction * limit.step));
+      if (next === value) return;
+      control.value = String(next);
+      control.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  }
   function syncController(c, orb, position) {
-    const set = (control, output, value, formatted) => { control.value = String(value); output.textContent = formatted; };
+    const set = (control, output, value, formatted) => { control.value = String(value); output.textContent = formatted; control.setAttribute("aria-valuetext", formatted); };
     const setSelect = (control, output, value) => {
       control.value = String(value);
       output.textContent = control.options?.[control.selectedIndex]?.textContent || String(value);
@@ -141,13 +159,13 @@ function createOrbEditorUi({ ui = state.ui, commitOrbChangeById, commitPreferenc
     setSelect(c.chan,c.chanValue,orb.chanId); setSelect(c.chir,c.chirValue,orb.chirality);
     const phaseDegrees = formatOrbPhaseDegrees(orb.startAngleRad);
     set(c.phase,c.phaseValue,orb.startAngleRad,`${phaseDegrees}°`); c.phase.setAttribute("aria-valuetext", `${phaseDegrees} degrees`); set(c.hue,c.hueValue,orb.hueOffsetDeg,`${orb.hueOffsetDeg}°`); setSelect(c.color,c.colorValue,orb.colorSource);
-    set(c.x,c.xValue,orb.centerXFrac,fmt(orb.centerXFrac,2)); set(c.y,c.yValue,orb.centerYFrac,fmt(orb.centerYFrac,2)); set(c.speed,c.speedValue,orb.motion.angularSpeedRadPerSec,`${fmt(orb.motion.angularSpeedRadPerSec,3)} rad/s (${fmt(orb.motion.angularSpeedRadPerSec*RAD_TO_DEG,1)}°/s)`);
-    set(c.minRadius,c.minRadiusValue,orb.response.minRadiusFrac,fmt(orb.response.minRadiusFrac,3)); set(c.maxRadius,c.maxRadiusValue,orb.response.maxRadiusFrac,fmt(orb.response.maxRadiusFrac,3)); set(c.waveform,c.waveformValue,orb.response.waveformRadialDisplaceFrac,fmt(orb.response.waveformRadialDisplaceFrac,3));
-    set(c.emit,c.emitValue,orb.particles.emitPerSecond,`${orb.particles.emitPerSecond}/s`); set(c.sizeMin,c.sizeMinValue,orb.particles.sizeMinPx,`${orb.particles.sizeMinPx}px`); set(c.sizeMax,c.sizeMaxValue,orb.particles.sizeMaxPx,`${orb.particles.sizeMaxPx}px`); set(c.decay,c.decayValue,orb.particles.sizeToMinSec,`${fmt(orb.particles.sizeToMinSec,1)}s`); set(c.ttl,c.ttlValue,orb.particles.ttlSec,`${fmt(orb.particles.ttlSec,1)}s`);
-    const spacingText = `${fmt(orb.particles.minPlacementDistancePx,1)} px`;
+    set(c.x,c.xValue,orb.centerXFrac,String(orb.centerXFrac)); set(c.y,c.yValue,orb.centerYFrac,String(orb.centerYFrac)); set(c.speed,c.speedValue,orb.motion.angularSpeedRadPerSec,`${orb.motion.angularSpeedRadPerSec} rad/s (${fmt(orb.motion.angularSpeedRadPerSec*RAD_TO_DEG,1)}°/s)`);
+    set(c.minRadius,c.minRadiusValue,orb.response.minRadiusFrac,String(orb.response.minRadiusFrac)); set(c.maxRadius,c.maxRadiusValue,orb.response.maxRadiusFrac,String(orb.response.maxRadiusFrac)); set(c.waveform,c.waveformValue,orb.response.waveformRadialDisplaceFrac,String(orb.response.waveformRadialDisplaceFrac));
+    set(c.emit,c.emitValue,orb.particles.emitPerSecond,`${orb.particles.emitPerSecond}/s`); set(c.sizeMin,c.sizeMinValue,orb.particles.sizeMinPx,`${orb.particles.sizeMinPx}px`); set(c.sizeMax,c.sizeMaxValue,orb.particles.sizeMaxPx,`${orb.particles.sizeMaxPx}px`); set(c.decay,c.decayValue,orb.particles.sizeToMinSec,`${orb.particles.sizeToMinSec}s`); set(c.ttl,c.ttlValue,orb.particles.ttlSec,`${orb.particles.ttlSec}s`);
+    const spacingText = `${orb.particles.minPlacementDistancePx} px`;
     set(c.spacing,c.spacingValue,orb.particles.minPlacementDistancePx,spacingText);
-    c.spacing.setAttribute("aria-valuetext", `${fmt(orb.particles.minPlacementDistancePx,1)} pixels`);
-    c.lines.checked = orb.trace.lines; c.lines.indeterminate = false; c.linesValue.textContent = orb.trace.lines ? "on" : "off"; set(c.numLines,c.numLinesValue,orb.trace.numLines,String(orb.trace.numLines)); set(c.lineAlpha,c.lineAlphaValue,orb.trace.lineAlpha,fmt(orb.trace.lineAlpha,2)); set(c.lineWidth,c.lineWidthValue,orb.trace.lineWidthPx,`${orb.trace.lineWidthPx}px`); setSelect(c.lineColor,c.lineColorValue,orb.trace.lineColorMode);
+    c.spacing.setAttribute("aria-valuetext", `${orb.particles.minPlacementDistancePx} pixels`);
+    c.lines.checked = orb.trace.lines; c.lines.indeterminate = false; c.linesValue.textContent = orb.trace.lines ? "on" : "off"; set(c.numLines,c.numLinesValue,orb.trace.numLines,String(orb.trace.numLines)); set(c.lineAlpha,c.lineAlphaValue,orb.trace.lineAlpha,String(orb.trace.lineAlpha)); set(c.lineWidth,c.lineWidthValue,orb.trace.lineWidthPx,`${orb.trace.lineWidthPx}px`); setSelect(c.lineColor,c.lineColorValue,orb.trace.lineColorMode);
     if (document.activeElement !== c.bands && c.bands.getAttribute("aria-invalid") !== "true") { c.bands.value = formatOrbBandIdsText(orb.bandIds); c.error.textContent = ""; }
     c.bandValue.textContent = c.bands.getAttribute("aria-invalid") === "true" ? "Invalid indices" : describeBandTargets(orb.bandIds, runtime.settings.bands.count);
     c.bands.setAttribute("aria-description", `Authored indices 0–${BAND_NAMES.length - 1}; active indices 0–${runtime.settings.bands.count - 1}. Higher authored indices stay inactive until the band count increases. Editing this field explicitly replaces all targets; blank uses full spectrum.`); c.picker?.sync(orb.bandIds);
@@ -169,11 +187,11 @@ function createOrbEditorUi({ ui = state.ui, commitOrbChangeById, commitPreferenc
     return controllers;
   }
   function refreshBulk(orbs) {
-    const bulk = (group, field, control, output, format) => { const model = readBulkOrbValue(orbs, group, field); control.disabled = !model.available; if (!model.available) { output.textContent = "—"; if (control.type === "checkbox") control.indeterminate = false; return; } if (!model.mixed) control.value = String(model.value); else if (control === ui.selLineColorMode) control.value = ""; output.textContent = model.mixed ? "mixed" : format(model.value); if (control.type === "checkbox") { control.indeterminate = model.mixed; if (!model.mixed) control.checked = !!model.value; } };
+    const bulk = (group, field, control, output, format) => { const model = readBulkOrbValue(orbs, group, field); control.disabled = !model.available; if (!model.available) { output.textContent = "—"; if (control.type === "checkbox") control.indeterminate = false; return; } if (!model.mixed) control.value = String(model.value); else if (control === ui.selLineColorMode) control.value = ""; output.textContent = model.mixed ? "mixed" : format(model.value); if (control.type === "range") control.setAttribute("aria-valuetext", output.textContent); if (control.type === "checkbox") { control.indeterminate = model.mixed; if (!model.mixed) control.checked = !!model.value; } };
     const spacingModel = readBulkOrbValue(orbs, "particles", "minPlacementDistancePx");
-    ui.rngMinPlacementDistance.setAttribute("aria-valuetext", !spacingModel.available ? "No Orbs" : spacingModel.mixed ? "mixed" : `${fmt(spacingModel.value,1)} pixels`);
     bulk("trace","lines",ui.chkLines,ui.valLines,v=>v?"on":"off"); bulk("trace","numLines",ui.rngNumLines,ui.valNumLines,String); bulk("trace","lineColorMode",ui.selLineColorMode,ui.valLineColorMode,String);
-    for (const [g,f,c,o,format] of [["particles","emitPerSecond",ui.rngEmit,ui.valEmit,v=>`${v}/s`],["particles","sizeMaxPx",ui.rngSizeMax,ui.valSizeMax,v=>`${v}px`],["particles","sizeMinPx",ui.rngSizeMin,ui.valSizeMin,v=>`${v}px`],["particles","sizeToMinSec",ui.rngSizeToMin,ui.valSizeToMin,v=>`${fmt(v,1)}s`],["particles","ttlSec",ui.rngTTL,ui.valTTL,v=>`${fmt(v,1)}s`],["particles","minPlacementDistancePx",ui.rngMinPlacementDistance,ui.valMinPlacementDistance,v=>`${fmt(v,1)} px`],["motion","angularSpeedRadPerSec",ui.rngOmega,ui.valOmega,v=>`${fmt(v,3)} rad/s (${fmt(v*RAD_TO_DEG,1)}°/s)`],["response","waveformRadialDisplaceFrac",ui.rngWfDisp,ui.valWfDisp,v=>fmt(v,3)],["response","minRadiusFrac",ui.rngMinRad,ui.valMinRad,v=>fmt(v,3)],["response","maxRadiusFrac",ui.rngMaxRad,ui.valMaxRad,v=>fmt(v,3)]]) bulk(g,f,c,o,format);
+    for (const [g,f,c,o,format] of [["particles","emitPerSecond",ui.rngEmit,ui.valEmit,v=>`${v}/s`],["particles","sizeMaxPx",ui.rngSizeMax,ui.valSizeMax,v=>`${v}px`],["particles","sizeMinPx",ui.rngSizeMin,ui.valSizeMin,v=>`${v}px`],["particles","sizeToMinSec",ui.rngSizeToMin,ui.valSizeToMin,v=>`${v}s`],["particles","ttlSec",ui.rngTTL,ui.valTTL,v=>`${v}s`],["particles","minPlacementDistancePx",ui.rngMinPlacementDistance,ui.valMinPlacementDistance,v=>`${v} px`],["motion","angularSpeedRadPerSec",ui.rngOmega,ui.valOmega,v=>`${v} rad/s (${fmt(v*RAD_TO_DEG,1)}°/s)`],["response","waveformRadialDisplaceFrac",ui.rngWfDisp,ui.valWfDisp,v=>String(v)],["response","minRadiusFrac",ui.rngMinRad,ui.valMinRad,v=>String(v)],["response","maxRadiusFrac",ui.rngMaxRad,ui.valMaxRad,v=>String(v)]]) bulk(g,f,c,o,format);
+    ui.rngMinPlacementDistance.setAttribute("aria-valuetext", !spacingModel.available ? "No Orbs" : spacingModel.mixed ? "mixed" : `${spacingModel.value} pixels`);
   }
   function init() {
     if (initializedOn === ui.orbEditorList) return false; initializedOn = ui.orbEditorList;
@@ -182,8 +200,12 @@ function createOrbEditorUi({ ui = state.ui, commitOrbChangeById, commitPreferenc
     mixedOption.disabled = true;
     ui.selLineColorMode.appendChild(mixedOption);
     const bulk = (control,event,group,field,read,reason) => control.addEventListener(event,()=>{ if (control === ui.selLineColorMode && control.value === "") return; if (applyBulkOrbValue(preferences.orbs,group,field,read(control))) commitPreferences(reason); });
+    bindRange(ui.rngNumLines, CONFIG.limits.trace.numLines);
     bulk(ui.chkLines,"change","trace","lines",c=>!!c.checked,"lines"); bulk(ui.rngNumLines,"input","trace","numLines",c=>Number(c.value),"num lines"); bulk(ui.selLineColorMode,"change","trace","lineColorMode",c=>c.value,"line color mode");
-    for (const [control,group,field,reason] of [[ui.rngEmit,"particles","emitPerSecond","emit rate"],[ui.rngSizeMax,"particles","sizeMaxPx","size max"],[ui.rngSizeMin,"particles","sizeMinPx","size min"],[ui.rngSizeToMin,"particles","sizeToMinSec","time to min"],[ui.rngTTL,"particles","ttlSec","ttl"],[ui.rngMinPlacementDistance,"particles","minPlacementDistancePx","minimum placement distance"],[ui.rngOmega,"motion","angularSpeedRadPerSec","angular speed"],[ui.rngWfDisp,"response","waveformRadialDisplaceFrac","orb waveform disp"],[ui.rngMinRad,"response","minRadiusFrac","min radius"],[ui.rngMaxRad,"response","maxRadiusFrac","max radius"]]) bulk(control,"input",group,field,c=>Number(c.value),reason);
+    for (const [control,group,field,reason] of [[ui.rngEmit,"particles","emitPerSecond","emit rate"],[ui.rngSizeMax,"particles","sizeMaxPx","size max"],[ui.rngSizeMin,"particles","sizeMinPx","size min"],[ui.rngSizeToMin,"particles","sizeToMinSec","time to min"],[ui.rngTTL,"particles","ttlSec","ttl"],[ui.rngMinPlacementDistance,"particles","minPlacementDistancePx","minimum placement distance"],[ui.rngOmega,"motion","angularSpeedRadPerSec","angular speed"],[ui.rngWfDisp,"response","waveformRadialDisplaceFrac","orb waveform disp"],[ui.rngMinRad,"response","minRadiusFrac","min radius"],[ui.rngMaxRad,"response","maxRadiusFrac","max radius"]]) {
+      bindRange(control, group === "response" ? CONFIG.limits.orbs.response[field] : CONFIG.limits[group][field]);
+      bulk(control,"input",group,field,c=>Number(c.value),reason);
+    }
     refresh(); return true;
   }
   function focusOrb(id) { const c = controllers.get(id); if (!c) return false; c.root.open = true; c.summary.focus(); c.root.scrollIntoView?.({ block: "nearest" }); return true; }

@@ -8,7 +8,7 @@ import { createOrbEditorUi, readBulkOrbValue } from "../src/js/ui/orb-editor.js"
 
 function element(tag="div") { const listeners=new Map(); return { tagName:tag.toUpperCase(), type:"", dataset:{}, children:[], parentNode:null, value:"", textContent:"", disabled:false, checked:false, indeterminate:false, attributes:{}, open:false,
  get options(){return this.tagName==="SELECT"?this.children:undefined}, get selectedIndex(){return this.tagName==="SELECT"?this.children.findIndex(option=>option.value===this.value):-1},
- addEventListener(n,f){const a=listeners.get(n)||[];a.push(f);listeners.set(n,a)}, dispatch(n){for(const f of listeners.get(n)||[])f({target:this})}, listenerCount(n){return (listeners.get(n)||[]).length}, append(...c){for(const x of c)this.appendChild(x)}, appendChild(c){return this.insertBefore(c,null)}, insertBefore(c,before){if(c.parentNode)c.parentNode.children=c.parentNode.children.filter(x=>x!==c);const index=before?this.children.indexOf(before):-1;if(index<0)this.children.push(c);else this.children.splice(index,0,c);c.parentNode=this;return c}, remove(){if(this.parentNode)this.parentNode.children=this.parentNode.children.filter(x=>x!==this);this.parentNode=null;this.removed=true}, focus(){document.activeElement=this}, scrollIntoView(){}, setAttribute(n,v){this.attributes[n]=String(v)}, getAttribute(n){return this.attributes[n]}, querySelector(){return null} }; }
+ addEventListener(n,f){const a=listeners.get(n)||[];a.push(f);listeners.set(n,a)}, dispatch(n,details={}){for(const f of listeners.get(n)||[])f({target:this,...details})}, dispatchEvent(event){this.dispatch(event.type,event);return true}, listenerCount(n){return (listeners.get(n)||[]).length}, append(...c){for(const x of c)this.appendChild(x)}, appendChild(c){return this.insertBefore(c,null)}, insertBefore(c,before){if(c.parentNode)c.parentNode.children=c.parentNode.children.filter(x=>x!==c);const index=before?this.children.indexOf(before):-1;if(index<0)this.children.push(c);else this.children.splice(index,0,c);c.parentNode=this;return c}, remove(){if(this.parentNode)this.parentNode.children=this.parentNode.children.filter(x=>x!==this);this.parentNode=null;this.removed=true}, focus(){document.activeElement=this}, scrollIntoView(){}, setAttribute(n,v){this.attributes[n]=String(v)}, getAttribute(n){return this.attributes[n]}, querySelector(){return null} }; }
 function ui() { const result={orbEditorList:element()}; for(const [n,t] of [["chkLines","checkbox"],["rngNumLines","range"],["selLineColorMode","select"],["rngEmit","range"],["rngSizeMax","range"],["rngSizeMin","range"],["rngSizeToMin","range"],["rngTTL","range"],["rngMinPlacementDistance","range"],["rngOmega","range"],["rngWfDisp","range"],["rngMinRad","range"],["rngMaxRad","range"]]) { result[n]=element(); result[n].type=t; result[`val${n.replace(/^(chk|rng|sel)/,"")}`]=element(); } return result; }
 function orb(id){return {...structuredClone(CONFIG.defaults.orbs[0]),id};}
 function harness(ids){ const old=structuredClone(preferences), oldDoc=globalThis.document; globalThis.document={activeElement:null,createElement:element}; replacePreferences({...structuredClone(CONFIG.defaults),orbs:ids.map(orb)});resolveSettings();const view=ui(),calls=[];const editor=createOrbEditorUi({ui:view,commitOrbChangeById:(...x)=>calls.push(x),commitPreferences:(...x)=>calls.push(x),showStatus:()=>{}});return {old,oldDoc,view,calls,editor,restore(){replacePreferences(old);resolveSettings();globalThis.document=oldDoc}}; }
@@ -25,7 +25,7 @@ test("minimum placement distance controls bind by ID, report pixels and mixed st
   const h = harness(["A","B"]);
   try {
     h.editor.init(); const a=h.editor.getController("A"), control=a.spacing, root=a.root;
-    assert.deepEqual([control.min,control.max,control.step],["0","10","0.1"]);
+    assert.deepEqual([control.min,control.max,control.step],["0","10","any"]);
     assert.equal(control.value,"0.5"); assert.equal(a.spacingValue.textContent,"0.5 px");
     assert.equal(control.getAttribute("aria-valuetext"),"0.5 pixels");
     const help=a.root.children[1].children.flatMap(group=>group.children).flatMap(node=>node.children).find(node=>node.id===control.getAttribute("aria-describedby"));
@@ -36,7 +36,7 @@ test("minimum placement distance controls bind by ID, report pixels and mixed st
     assert.equal(h.calls.at(-1)[0],"A");
     preferences.orbs.reverse(); resolveSettings(); h.editor.refresh();
     assert.equal(h.editor.getController("A").root,root); assert.equal(h.editor.getController("A").spacing,control);
-    assert.equal(document.activeElement,control); assert.equal(a.spacingValue.textContent,"0.0 px");
+    assert.equal(document.activeElement,control); assert.equal(a.spacingValue.textContent,"0 px");
     assert.equal(h.view.valMinPlacementDistance.textContent,"mixed");
     assert.equal(h.view.rngMinPlacementDistance.getAttribute("aria-valuetext"),"mixed");
     assert.equal(h.editor.init(),false); assert.equal(control.listenerCount("input"),1);
@@ -158,4 +158,56 @@ test('AUD-003: invalid exact draft stays visible through count/setting changes; 
     assert.deepEqual(preferences.orbs[0].bandIds, [0, 2]); assert.equal(a.bands.getAttribute('aria-invalid'), 'false');
     assert.match(a.bandValue.textContent, /2 active targets · 0 inactive targets/);
   } finally { h.restore(); }
+});
+
+const { continuousOrbCases, readNumeric, writeNumeric } = await import('./helpers/orb-numeric-cases.js');
+
+for (const [key,group,field,limit,value] of continuousOrbCases) {
+  test(`AUD-009: ${key} control/readout preserves canonical precision, focus and explicit individual edits`,()=>{
+    const h=harness(['A','B']);
+    try {
+      writeNumeric(preferences.orbs[0],group,field,value);resolveSettings();h.editor.init();
+      const c=h.editor.getController('A'),control=c[key],root=c.root,other=structuredClone(preferences.orbs[1]);
+      assert.equal(control.step,'any');assert.equal(control.min,String(limit.min));assert.equal(control.max,String(limit.max));
+      assert.equal(control.value,String(value));assert.equal(parseFloat(c[`${key}Value`].textContent),value);
+      control.focus();root.open=true;
+      preferences.audio.playbackVolume=.7;resolveSettings();h.editor.refresh();
+      assert.ok(document.activeElement===control);assert.ok(h.editor.getController('A').root===root);assert.equal(root.open,true);
+      assert.equal(control.value,String(value));assert.equal(readNumeric(preferences.orbs[0],group,field),value);assert.deepEqual(h.calls,[]);
+      control.value=String(value+limit.step/3);control.dispatch('input');
+      assert.equal(readNumeric(preferences.orbs[0],group,field),Number(control.value));assert.deepEqual(preferences.orbs[1],other);
+      assert.equal(h.calls.at(-1)[0],'A');assert.equal(control.listenerCount('input'),1);assert.equal(control.listenerCount('keydown'),1);
+    }finally{h.restore();}
+  });
+}
+
+test('AUD-009: continuous/integral keyboard increments use CONFIG without snapping imported values',()=>{
+  const h=harness(['A','B']);
+  try{
+    preferences.orbs.forEach(o=>{o.motion.angularSpeedRadPerSec=.123456;o.trace.numLines=16});resolveSettings();h.editor.init();
+    const c=h.editor.getController('A');let prevented=0;
+    c.speed.dispatch('keydown',{key:'ArrowRight',preventDefault(){prevented++}});
+    assert.ok(Math.abs(preferences.orbs[0].motion.angularSpeedRadPerSec-.133456)<1e-15);
+    assert.equal(preferences.orbs[1].motion.angularSpeedRadPerSec,.123456);
+    assert.equal(c.numLines.step,'1');c.numLines.dispatch('keydown',{key:'ArrowRight',preventDefault(){prevented++}});assert.equal(preferences.orbs[0].trace.numLines,26);
+    h.view.rngOmega.dispatch('keydown',{key:'ArrowRight',preventDefault(){prevented++}});assert.ok(preferences.orbs.every(o=>Math.abs(o.motion.angularSpeedRadPerSec-.133456)<1e-15));
+    h.view.rngNumLines.dispatch('keydown',{key:'ArrowRight',preventDefault(){prevented++}});assert.ok(preferences.orbs.every(o=>o.trace.numLines===26));
+    assert.equal(prevented,4);
+    c.speed.value=String(CONFIG.limits.motion.angularSpeedRadPerSec.max);const calls=h.calls.length;c.speed.dispatch('keydown',{key:'ArrowRight',preventDefault(){}});assert.equal(h.calls.length,calls);
+    c.speed.dispatch('keydown',{key:'ArrowLeft',ctrlKey:true,preventDefault(){assert.fail('modified shortcuts untouched')}});assert.equal(h.calls.length,calls);
+    h.editor.init();assert.equal(h.view.rngOmega.listenerCount('keydown'),1);
+  }finally{h.restore();}
+});
+
+test('AUD-009: Bulk uniform off-step/mixed values survive unrelated edits and explicit field changes',()=>{
+  const h=harness(['A','B']);
+  try{
+    preferences.orbs.forEach(o=>{o.motion.angularSpeedRadPerSec=.123456;o.trace.numLines=16;o.particles.sizeMaxPx=6.123456});resolveSettings();h.editor.init();
+    assert.equal(h.view.rngOmega.step,'any');assert.equal(h.view.rngOmega.value,'.123456'.replace(/^\./,'0.'));assert.equal(parseFloat(h.view.valOmega.textContent),.123456);assert.equal(h.view.rngNumLines.value,'16');
+    const speeds=preferences.orbs.map(o=>o.motion.angularSpeedRadPerSec);h.view.rngTTL.value='40.123456';h.view.rngTTL.dispatch('input');resolveSettings();h.editor.refresh();
+    assert.deepEqual(preferences.orbs.map(o=>o.motion.angularSpeedRadPerSec),speeds);assert.ok(preferences.orbs.every(o=>o.particles.sizeMaxPx===6.123456));
+    preferences.orbs[1].motion.angularSpeedRadPerSec=.234567;resolveSettings();h.editor.refresh();assert.equal(h.view.valOmega.textContent,'mixed');assert.equal(h.view.rngOmega.getAttribute('aria-valuetext'),'mixed');
+    const before=structuredClone(preferences.orbs);h.view.rngOmega.focus();preferences.audio.playbackVolume=.3;resolveSettings();h.editor.refresh();assert.deepEqual(preferences.orbs,before);assert.ok(document.activeElement===h.view.rngOmega);
+    h.view.rngOmega.value='.345678';h.view.rngOmega.dispatch('input');assert.deepEqual(preferences.orbs.map(o=>o.motion.angularSpeedRadPerSec),[.345678,.345678]);assert.ok(preferences.orbs.every(o=>o.trace.numLines===16));
+  }finally{h.restore();}
 });

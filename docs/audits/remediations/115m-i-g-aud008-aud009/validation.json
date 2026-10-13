@@ -1,11 +1,188 @@
 {
   "phase": "G.3",
+  "findings": [
+    "AUD-008",
+    "AUD-009"
+  ],
   "startingSha": "bf43c45137b1851d568a4d6644f59047bacabc76",
+  "aud008ImplementationSha": "6506ff588c7250dafaba5a4618f948dadd418fb0",
+  "aud009ImplementationSha": "commit containing this record; exact final-head SHA reported in PR and final handoff",
+  "acceptedG1": "0b8ddc43c36c941c51b3dbce25a1d50e7fb8692d",
+  "pr": 48,
+  "branch": "codex/115m-i-g-aud005",
+  "startingTreeClean": true,
+  "prOpenDraftVerified": true,
+  "acceptedMainAncestor": "230610bc33ab7e3a4842e53e5be48c9170222739",
+  "currentMainIdenticalTreeMerge": "c37e65116aa67ea837fa8468a71da4ad1ae5b5bd",
   "version": "v0.1.15m.i.g",
-  "schema": 10,
+  "presetSchema": 10,
   "build115N": "WITHHELD",
-  "aud008": {"focusedTests": {"pass": 20, "fail": 0}, "nativeMatrices": {"pass": 4, "fail": 0}, "semanticNegativeControlsDetected": 5, "status": "corrected; separately committed before AUD-009"},
-  "aud009": {"baselineNativeReproduced": true, "status": "policy recorded; implementation pending"},
-  "fullValidation": "pending final integrated changes",
-  "finalHeadCI": "pending"
+  "integratedIgAcceptance": "pending independent acceptance; not performed",
+  "toolchain": {
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "python": "3.12.14",
+    "chromium": "151.0.7922.173",
+    "playwright": "externally installed; opt-in; no dependency changes"
+  },
+  "changedFiles": [
+    "docs/audits/remediations/115m-i-g-aud008-aud009/README.md",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/diagnostics/geometry.mjs",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/diagnostics/mutations-numeric.py",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/diagnostics/mutations.py",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/diagnostics/native.cjs",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/aud008-native.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/baseline-geometry.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/baseline-native.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/distribution.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/fixed-geometry.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/fixed-native.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/g1-native-preservation.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/g2-native-preservation.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/integrity.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/mutations-aud008.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/mutations-aud009.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/evidence/rc17-native-preservation.json",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/numeric-contracts.md",
+    "docs/audits/remediations/115m-i-g-aud008-aud009/validation.json",
+    "src/js/audio/band-bank.js",
+    "src/js/core/preferences.js",
+    "src/js/ui/orb-editor.js",
+    "tests/band-bank.test.js",
+    "tests/helpers/orb-numeric-cases.js",
+    "tests/orb-editor.test.js",
+    "tests/orb-numeric-contract.test.js",
+    "tests/targeted-audit.test.js"
+  ],
+  "commands": [
+    {
+      "command": "node --test tests/band-bank.test.js tests/band-count-coverage.test.js",
+      "exitCode": 0,
+      "passed": 20,
+      "stage": "AUD-008 before separate commit"
+    },
+    {
+      "command": "node --test tests/orb-numeric-contract.test.js tests/orb-editor.test.js tests/preset-schema-10.test.js tests/rc17-phase-editor.test.js",
+      "exitCode": 0,
+      "passed": 120,
+      "stage": "AUD-009 focused"
+    },
+    {
+      "command": "node --test tests/band-bank.test.js tests/band-count-coverage.test.js tests/orb-numeric-contract.test.js tests/orb-editor.test.js tests/preset-schema-10.test.js tests/rc17-phase-editor.test.js tests/targeted-audit.test.js",
+      "exitCode": 0,
+      "passed": 326,
+      "stage": "final focused"
+    },
+    {
+      "command": "npm ci --offline --cache /workspace/auralprint-environment/npm-cache --no-audit --no-fund",
+      "exitCode": 0,
+      "note": "established locked-cache fallback for sandbox installation; dependencies and lock unchanged"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": 793,
+      "passed": 792,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "portableAndHosted": true
+    },
+    {
+      "command": "python scripts/verify_distribution.py",
+      "exitCode": 0,
+      "file": "evidence/distribution.json"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "newPermanentTests": 43,
+  "native": {
+    "g3": {
+      "pass": 27,
+      "fail": 0,
+      "file": "evidence/fixed-native.json",
+      "geometryMatricesIncluded": 4
+    },
+    "aud008BeforeCommit": {
+      "pass": 4,
+      "fail": 0,
+      "file": "evidence/aud008-native.json"
+    },
+    "g1Preservation": {
+      "pass": 38,
+      "fail": 0,
+      "file": "evidence/g1-native-preservation.json"
+    },
+    "g2Preservation": {
+      "pass": 31,
+      "fail": 0,
+      "file": "evidence/g2-native-preservation.json"
+    },
+    "rc17Preservation": {
+      "scenarios": 6,
+      "pageErrors": 0,
+      "file": "evidence/rc17-native-preservation.json"
+    },
+    "instrumentation": "README discloses observed module objects, controlled FFT/AnalysisFrame fixtures, counting canvas/trace points, uninstrumented portable share/reload and existing driver instrumentation"
+  },
+  "negativeControls": {
+    "aud008": {
+      "detected": 5,
+      "total": 5,
+      "file": "evidence/mutations-aud008.json"
+    },
+    "aud009": {
+      "detected": 7,
+      "total": 7,
+      "nativeChromium": 2,
+      "file": "evidence/mutations-aud009.json"
+    },
+    "syntaxOrHarnessFailuresCounted": 0
+  },
+  "acceptanceObservations": {
+    "extremeLogInteriorCoverage": true,
+    "finiteMonotoneBoundedEdges": true,
+    "exactLogEndpoints": true,
+    "legitimateCollapsedIntervalsPreserved": true,
+    "otherDistributionsUnchanged": true,
+    "nyquistCapIntact": true,
+    "sharedLRCGeometryAndEnergies": true,
+    "continuousPrecisionPersisted": true,
+    "allNativeNumericFieldsChecked": true,
+    "trace15Point5NormalizesTo16": true,
+    "rendererCountMatches": true,
+    "singleNormalizationBoundary": true,
+    "presetAndDirectUiChangesVerified": true,
+    "bulkUniformMixedAndFieldIsolation": true,
+    "nativeKeyboardConfigIncrements": true,
+    "nativePointerCommitOnlyTargetOrb": true,
+    "nativeFocusRootsDetailsScrollAndDrafts": true,
+    "inactiveTargetsRetained": true,
+    "bankSettingRefreshFocus": true,
+    "g1FileLoadAndActionFocus": true,
+    "g2TransitionsChannelColorAndTargets": true,
+    "rc07Rc08Rc11Rc16Rc17Rc21FullRegressions": true,
+    "protectedModulesAndPriorEvidenceUntouched": true,
+    "noNewDependencies": true
+  },
+  "ci": {
+    "requirement": "Linux/Windows exact final-head GitHub results",
+    "reportLocation": "verified PR description/checks and final handoff after publishing this commit",
+    "prepublicationSuccessClaim": false
+  },
+  "limitations": [
+    "binary64 may yield equal adjacent edges at representational extremes; no epsilon coverage",
+    "FFT bin resolution unchanged; low-frequency intervals may share bins",
+    "Chromium serializes native ranges at approximately 15 significant digits; canonical persisted precision is independently exact",
+    "fractional development schema-10 trace count saves its equivalent ceil-rendered integer count",
+    "headless Linux Chromium/localhost portable; not universal OS/browser/screen-reader acceptance",
+    "indices are current bank positions; Build 118 taxonomy/frequency-target architecture deferred",
+    "Build 115N remains withheld; integrated I.G acceptance and current-status documentation pass remain pending"
+  ]
 }

@@ -176,7 +176,8 @@ function normalizeOrbDef(incomingOrb, fallbackOrb) {
   const mode = typeof traceSource.lineColorMode === "string" ? traceSource.lineColorMode : traceFallback.lineColorMode;
   const trace = {
     lines: typeof traceSource.lines === "boolean" ? traceSource.lines : !!traceFallback.lines,
-    numLines: nestedNumber("trace", "numLines", CONFIG.limits.trace.numLines),
+    // Match the renderer's existing effective segment count; preserve all integers.
+    numLines: Math.ceil(nestedNumber("trace", "numLines", CONFIG.limits.trace.numLines)),
     lineAlpha: nestedNumber("trace", "lineAlpha", CONFIG.limits.trace.lineAlpha),
     lineWidthPx: nestedNumber("trace", "lineWidthPx", CONFIG.limits.trace.lineWidthPx),
     lineColorMode: ["fixed", "lastParticle", "dominantBand"].includes(mode) ? mode : "dominantBand",
