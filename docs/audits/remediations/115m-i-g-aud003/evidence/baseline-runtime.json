@@ -1,0 +1,42 @@
+{
+  "sha": "0b8ddc43c36c941c51b3dbce25a1d50e7fb8692d",
+  "cases": [
+    {
+      "bandIds": [
+        255
+      ],
+      "channelLengths": {
+        "L": 3,
+        "R": 3,
+        "C": 3
+      },
+      "energy": 0,
+      "dominant": 255,
+      "pickerChoices": 256,
+      "summary": "1 target: Eternal Resonance",
+      "band255Range": "n/a",
+      "text255Accepted": [
+        255
+      ]
+    },
+    {
+      "bandIds": [
+        0,
+        255
+      ],
+      "channelLengths": {
+        "L": 3,
+        "R": 3,
+        "C": 3
+      },
+      "energy": 0.25,
+      "dominant": 0,
+      "pickerChoices": 256,
+      "summary": "2 targets: Eternal Core, Eternal Resonance",
+      "band255Range": "n/a",
+      "text255Accepted": [
+        255
+      ]
+    }
+  ]
+}

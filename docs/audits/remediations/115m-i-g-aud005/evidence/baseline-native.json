@@ -1,0 +1,65 @@
+{
+  "baseline": true,
+  "version": "v0.1.15m.i.f",
+  "browser": "151.0.7922.173",
+  "htmlSha256": "c085effc684f3fb277fee21f2bb573a8f4b80b4864fc807444b2e068764a66e6",
+  "cases": [
+    {
+      "name": "edit: unrelated volume via production input handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BODY",
+          "action": null,
+          "id": null
+        },
+        "sameFocus": false,
+        "connected": false,
+        "sameRow": false,
+        "sameNode": false,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit: native H shortcut suppression",
+      "passed": true,
+      "visibleBefore": true,
+      "visibleAfter": false
+    },
+    {
+      "name": "delayed real File activation completion",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BODY",
+          "action": null,
+          "id": null
+        },
+        "sameFocus": false,
+        "connected": false,
+        "sameRow": false,
+        "sameNode": false,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  }
+}

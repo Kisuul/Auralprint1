@@ -1,0 +1,152 @@
+[
+  {
+    "mutation": "silent continuous rounding",
+    "kind": "Node behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-009: speed continuous precision, bounds, invalid input and schema-10 roundtrip (2.020996ms)"
+    ]
+  },
+  {
+    "mutation": "inconsistent integral floor",
+    "kind": "Node behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-009: trace count ceil normalization is shared by import, direct changes, encode and renderer (0.980913ms)"
+    ]
+  },
+  {
+    "mutation": "fractional count retained",
+    "kind": "Node behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-009: trace count ceil normalization is shared by import, direct changes, encode and renderer (0.980452ms)"
+    ]
+  },
+  {
+    "mutation": "renderer count disagrees",
+    "kind": "Node behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-009: trace count ceil normalization is shared by import, direct changes, encode and renderer (3.226116ms)"
+    ]
+  },
+  {
+    "mutation": "Bulk unrelated overwrite",
+    "kind": "Node behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-009: continuous/integral keyboard increments use CONFIG without snapping imported values (4.76701ms)",
+      "AUD-009: Bulk uniform off-step/mixed values survive unrelated edits and explicit field changes (1.466923ms)"
+    ]
+  },
+  {
+    "mutation": "coarse native step",
+    "kind": "native Chromium behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      {
+        "name": "original imported speed and trace: canonical/native/readout/renderer",
+        "failure": "Expected values to be strictly equal:\n\n0.12 !== 0.123456\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence angular-speed",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence center-x",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence center-y",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence min-radius",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence max-radius",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence waveform-displacement",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence emit-rate",
+        "failure": "Expected values to be strictly equal:\n\n'10' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence size-min",
+        "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence size-max",
+        "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence size-decay",
+        "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence lifetime",
+        "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence min-placement-distance",
+        "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence line-alpha",
+        "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence line-width",
+        "failure": "Expected values to be strictly equal:\n\n'1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native precision/boundaries/persistence hue",
+        "failure": "Expected values to be strictly equal:\n\n'1' !== 'any'\n"
+      },
+      {
+        "name": "AUD-009 native individual explicit edits, CONFIG arrows and stable editor focus/drafts/scroll",
+        "failure": "0.13 != 0.133456"
+      },
+      {
+        "name": "AUD-009 native Bulk uniform/mixed, unrelated field edits and CONFIG increments",
+        "failure": "Expected values to be strictly equal:\n\n0.12 !== 0.123456\n"
+      },
+      {
+        "name": "AUD-009 native all Bulk continuous fields display uniform imported precision",
+        "failure": "0.12 != 0.123456"
+      },
+      {
+        "name": "AUD-009 uninstrumented portable preset share/reload reflects native controls",
+        "failure": "Expected values to be strictly equal:\n\n0.12 !== 0.123456\n"
+      }
+    ]
+  },
+  {
+    "mutation": "focus lost during refresh",
+    "kind": "native Chromium behavioral",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      {
+        "name": "AUD-009 native individual explicit edits, CONFIG arrows and stable editor focus/drafts/scroll",
+        "failure": "The expression evaluated to a falsy value:\n\n  assert.ok(before.same&&before.connected&&before.root&&before.open)\n"
+      },
+      {
+        "name": "AUD-009 native bank-count refresh retains focused range, targets, exact draft and numeric values",
+        "failure": "The expression evaluated to a falsy value:\n\n  assert.ok(row.same&&row.connected)\n"
+      }
+    ]
+  }
+]

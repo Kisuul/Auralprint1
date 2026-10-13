@@ -145,3 +145,75 @@ test("a configured floor exactly at Nyquist leaves every higher band empty", () 
     runtime.settings = previous;
   }
 });
+
+const { computeInteriorEdges } = await import('../src/js/audio/band-bank.js');
+const { preferences, replacePreferences, resolveSettings } = await import('../src/js/core/preferences.js');
+const { sanitizePreset, encodePresetPayload } = await import('../src/js/presets/preset-codec.js');
+const { BandBankController } = await import('../src/js/audio/band-bank-controller.js');
+
+for (const count of [3, 4, 32, 256]) {
+  test(`AUD-008: log geometry/energy at count ${count} survives extreme and collapsed schema-10 intervals`, () => {
+    const previous = structuredClone(preferences);
+    try {
+      for (const floorHz of [Number.MIN_VALUE, 1e-307, 1e-200, 1e-100, 20, 22500 - 1e-10, 22500]) {
+        replacePreferences(sanitizePreset({ schema: 10, prefs: { bands: { count, floorHz, ceilingHz: 22500, distributionMode: 'log' } } })); resolveSettings();
+        assert.equal(preferences.bands.floorHz, floorHz);
+        assert.equal(encodePresetPayload(preferences).prefs.bands.floorHz, floorHz);
+        BandBank.rebuild(22500, 48000);
+        const edges = state.bands.lowHz.slice(1), interior = count - 2;
+        assert.equal(edges[0], floorHz); assert.equal(edges.at(-1), 22500);
+        for (let i = 0; i < edges.length; i++) {
+          assert.ok(Number.isFinite(edges[i]) && edges[i] >= floorHz && edges[i] <= 22500);
+          if (i) assert.ok(edges[i] >= edges[i - 1], 'monotone, including binary64 equalities');
+          if (i > 0 && i < interior && floorHz < 1e-100) {
+            const expectedLog = Math.log(floorHz) + (Math.log(22500) - Math.log(floorHz)) * i / interior;
+            const expected = Math.exp(expectedLog);
+            assert.ok(Math.abs(edges[i] - expected) <= Math.max(Number.MIN_VALUE, expected * 1e-12), 'actual interior coverage, allowing subnormal precision');
+            assert.ok(edges[i] < 22500);
+          }
+        }
+        for (const [id, db, expected] of [['L', -90, .1], ['R', -50, .5], ['C', -10, .9]]) {
+          const energies = state.bands.channels[id].energies01;
+          BandBank.computeEnergiesFromAnalyser({ analyser: { minDecibels: -100, maxDecibels: 0 }, freqDb: new Float32Array(4096).fill(db) }, 48000, energies);
+          for (let i = 0; i < count; i++) {
+            const zeroWidth = state.bands.highHz[i] <= state.bands.lowHz[i];
+            assert.ok(Math.abs(energies[i] - (zeroWidth ? 0 : expected)) < 1e-12, `${id} band ${i}: no spurious zero energy`);
+          }
+        }
+      }
+    } finally { replacePreferences(previous); resolveSettings(); }
+  });
+}
+
+test('AUD-008: default log geometry keeps its defined spacing and exact endpoints', () => {
+  for (const n of [1, 2, 30, 254]) {
+    const f0 = CONFIG.defaults.bands.floorHz, f1 = CONFIG.defaults.bands.ceilingHz;
+    const actual = computeInteriorEdges('log', n, f0, f1), oldRatio = Math.pow(f1 / f0, 1 / n);
+    assert.equal(actual[0], f0); assert.equal(actual[n], f1);
+    for (let i = 0; i <= n; i++) assert.ok(Math.abs(actual[i] - f0 * Math.pow(oldRatio, i)) <= actual[i] * 1e-12, 'ordinary spacing unchanged within floating-point precision');
+  }
+});
+
+test('AUD-008: other distributions retain their transformation and linear interpolation', () => {
+  const { hzToMel, melToHz, hzToBark, barkToHz, hzToErb, erbToHz } = transformations;
+  for (const [mode, to, from] of [['linear', x => x, x => x], ['mel', hzToMel, melToHz], ['bark', hzToBark, barkToHz], ['erb', hzToErb, erbToHz]]) {
+    for (const n of [1, 2, 30, 254]) {
+      const edges = computeInteriorEdges(mode, n, 20, 22500);
+      for (let i = 0; i <= n; i++) assert.equal(edges[i], from(to(20) + (to(22500) - to(20)) * (i / n)));
+    }
+  }
+});
+const transformations = await import('../src/js/audio/band-bank.js');
+
+test('AUD-008: production controller caps configured ceiling above Nyquist for extreme log floors', () => {
+  const previous = structuredClone(preferences);
+  try {
+    for (const count of [3, 4, 32, 256]) {
+      replacePreferences(sanitizePreset({ schema: 10, prefs: { bands: { count, floorHz: Number.MIN_VALUE, ceilingHz: 22500, distributionMode: 'log' } } })); resolveSettings();
+      BandBankController.syncFromSettings(runtime.settings); BandBankController.onAudioContextKnown(32000); BandBankController.rebuildNow();
+      assert.equal(state.bands.meta.effectiveCeilingHz, 16000); assert.equal(state.bands.lowHz.at(-1), 16000);
+      assert.ok(state.bands.lowHz.every(hz => hz <= 16000));
+      assert.equal(preferences.bands.ceilingHz, 22500);
+    }
+  } finally { replacePreferences(previous); resolveSettings(); BandBankController.syncFromSettings(runtime.settings); BandBankController.onAudioContextKnown(null); }
+});

@@ -1,0 +1,142 @@
+{
+  "phase": "G.1",
+  "finding": "AUD-005",
+  "acceptedBase": "230610bc33ab7e3a4842e53e5be48c9170222739",
+  "acceptedPr46Merged": true,
+  "cleanBaselineVerifiedBeforeEditing": true,
+  "branch": "codex/115m-i-g-aud005",
+  "version": "v0.1.15m.i.g",
+  "presetSchema": 10,
+  "build115N": "WITHHELD",
+  "upstreamAtPublication": {
+    "sha": "c37e65116aa67ea837fa8468a71da4ad1ae5b5bd",
+    "acceptedTree": "5be36be56fec4131cb3820f0b1ad78ac57641e62",
+    "treeIdenticalToAcceptedBase": true,
+    "note": "upstream identical-tree merge arrived during pause; branch remains based on accepted SHA"
+  },
+  "validatedPanelSha256": "ec9ec0e9a288ad8ba52064a34cfc00f53f5d8accfc21818d390095e268356e40",
+  "toolchain": {
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "python": "3.12.14",
+    "chromium": "151.0.7922.173"
+  },
+  "commands": [
+    {
+      "command": "npm ci --offline --cache /workspace/auralprint-environment/npm-cache --no-audit --no-fund",
+      "exitCode": 0,
+      "note": "locked cache installation; esbuild 0.25.12; no lockfile changes"
+    },
+    {
+      "command": "node --test tests/visualizers-panel.test.js tests/targeted-audit.test.js tests/rc22-orb-removal.test.js",
+      "exitCode": 0,
+      "tests": 219,
+      "passed": 219
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": 725,
+      "passed": 724,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "portableAndHosted": true
+    },
+    {
+      "command": "python scripts/verify_distribution.py",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "native": {
+    "total": 38,
+    "passed": 38,
+    "failed": 0
+  },
+  "negativeControls": {
+    "nodeDetected": 6,
+    "nodeTotal": 6,
+    "nativeReorderDetected": true,
+    "nativePrimaryFailures": 3,
+    "nativeDependentFailures": 3,
+    "harnessFailures": 0
+  },
+  "acceptanceObservations": {
+    "survivingExactNodesAndFocus": true,
+    "settingsSnapshotsAndEquivalentCollections": true,
+    "summaryVisibilityAndAria": true,
+    "reorder": true,
+    "addDuplicateNearestAndFinalRemoval": true,
+    "unrelatedRemovalAndExternalFocus": true,
+    "cancelledAndFailedRemoval": true,
+    "typeIdCollision": true,
+    "zeroOrbs": true,
+    "admissionCeilingUnchanged": 4096,
+    "refusedActionsAndNoDuplicateListeners": true,
+    "keyboardActivationAndShortcutSuppression": true,
+    "nativeRealFileCompletion": true,
+    "runtimeOwnershipAndExcludedFilesUnchanged": true,
+    "originalAud001Aud002AndWorkspaceTestsPass": true
+  },
+  "interimAttempts": [
+    {
+      "action": "default npm ci in sandbox",
+      "outcome": "proxy unavailable; stopped stalled attempt; offline locked-cache retry succeeded"
+    },
+    {
+      "action": "sandboxed npm ci --offline",
+      "outcome": "esbuild subprocess EPERM; authorized subprocess-enabled install succeeded"
+    },
+    {
+      "action": "initial File reproduction",
+      "outcome": "resume gate not reached under autoplay; disclosed native suspend on constructor made delay deterministic"
+    },
+    {
+      "action": "interim targeted suite",
+      "outcome": "cgroup OOM during failed circular-DOM assertion; existing Remove tests now explicitly focus target action; final full suite passes"
+    },
+    {
+      "action": "interim full suite",
+      "outcome": "7 existing removal assertions needed native focus setup and replacement-count expectation update; all fallback/ownership assertions retained and survivor node equality strengthened"
+    }
+  ],
+  "ci": {
+    "requirement": "Linux and Windows on exact final PR head",
+    "reportLocation": "verified PR description and final handoff",
+    "note": "no prepublication CI success claim"
+  },
+  "limits": [
+    "automated headless Chromium on Linux over HTTP; no screen-reader or universal browser/OS claim",
+    "4096 is operational admission ceiling; inventory smoothness at ceiling not claimed",
+    "in-place mutations without either invalidation reference changing are outside current production ownership contract",
+    "later G phases and release/documentation promotion not authorized"
+  ],
+  "changedFiles": [
+    "docs/audits/remediations/115m-i-g-aud005/README.md",
+    "docs/audits/remediations/115m-i-g-aud005/diagnostics/native-negative.py",
+    "docs/audits/remediations/115m-i-g-aud005/diagnostics/native.cjs",
+    "docs/audits/remediations/115m-i-g-aud005/diagnostics/negative.py",
+    "docs/audits/remediations/115m-i-g-aud005/evidence/baseline-native.json",
+    "docs/audits/remediations/115m-i-g-aud005/evidence/distribution.json",
+    "docs/audits/remediations/115m-i-g-aud005/evidence/fixed-native.json",
+    "docs/audits/remediations/115m-i-g-aud005/evidence/integrity.json",
+    "docs/audits/remediations/115m-i-g-aud005/evidence/native-reorder-control.json",
+    "docs/audits/remediations/115m-i-g-aud005/evidence/negative-controls.json",
+    "docs/audits/remediations/115m-i-g-aud005/validation.json",
+    "src/js/core/constants.js",
+    "src/js/ui/visualizers-panel.js",
+    "tests/helpers/ui-dom.js",
+    "tests/rc20_packaging.py",
+    "tests/rc22-orb-removal.test.js",
+    "tests/targeted-audit.test.js",
+    "tests/visualizers-panel.test.js",
+    "version"
+  ]
+}

@@ -27,8 +27,13 @@ function computeInteriorEdges(mode, n, f0, f1) {
     const s0 = hzToErb(f0), s1 = hzToErb(f1);
     for (let i = 0; i <= n; i++) edges[i] = erbToHz(s0 + (s1 - s0) * (i / n));
   } else if (mode === "log") {
-    const ratio = Math.pow(f1 / f0, 1 / n);
-    for (let i = 0; i <= n; i++) edges[i] = f0 * Math.pow(ratio, i);
+    // Forming f1 / f0 can overflow for accepted positive subnormal floors.
+    // Interpolate logarithms instead; retain exact endpoints (including a
+    // collapsed interval) rather than introducing round-trip endpoint error.
+    const log0 = Math.log(f0), log1 = Math.log(f1);
+    edges[0] = f0;
+    for (let i = 1; i < n; i++) edges[i] = f0 === f1 ? f0 : Math.exp(log0 + (log1 - log0) * (i / n));
+    edges[n] = f1;
   } else { // "linear" (default / fallback)
     for (let i = 0; i <= n; i++) edges[i] = lerp(f0, f1, i / n);
   }

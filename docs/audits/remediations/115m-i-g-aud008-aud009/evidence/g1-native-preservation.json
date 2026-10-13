@@ -1,0 +1,689 @@
+{
+  "baseline": false,
+  "version": "v0.1.15m.i.g",
+  "browser": "151.0.7922.173",
+  "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+  "cases": [
+    {
+      "name": "edit: unrelated volume via production input handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit: unrelated mute via production change handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit: native H shortcut suppression",
+      "passed": true,
+      "visibleBefore": true,
+      "visibleAfter": true
+    },
+    {
+      "name": "duplicate: unrelated volume via production input handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: unrelated mute via production change handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: native H shortcut suppression",
+      "passed": true,
+      "visibleBefore": true,
+      "visibleAfter": true
+    },
+    {
+      "name": "remove: unrelated volume via production input handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "remove",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "remove: unrelated mute via production change handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "remove",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "remove: native H shortcut suppression",
+      "passed": true,
+      "visibleBefore": true,
+      "visibleAfter": true
+    },
+    {
+      "name": "edit-ring: unrelated volume via production input handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit-ring",
+        "id": "spectral-ring"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit-ring",
+          "id": null
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "spectral-ring",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit-ring: unrelated mute via production change handler",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit-ring",
+        "id": "spectral-ring"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit-ring",
+          "id": null
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "spectral-ring",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit-ring: native H shortcut suppression",
+      "passed": true,
+      "visibleBefore": true,
+      "visibleAfter": true
+    },
+    {
+      "name": "edit: delayed real File activation completion",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit: native transport/launcher keys suppressed after File completion",
+      "passed": true,
+      "evidence": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: delayed real File activation completion",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: native transport/launcher keys suppressed after File completion",
+      "passed": true,
+      "evidence": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "remove: delayed real File activation completion",
+      "before": {
+        "tag": "BUTTON",
+        "action": "remove",
+        "id": "ORB0"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "remove: native transport/launcher keys suppressed after File completion",
+      "passed": true,
+      "evidence": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "edit-ring: delayed real File activation completion",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit-ring",
+        "id": "spectral-ring"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit-ring",
+          "id": null
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "spectral-ring",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit-ring: native transport/launcher keys suppressed after File completion",
+      "passed": true,
+      "evidence": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit-ring",
+          "id": null
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "spectral-ring",
+        "actionAvailable": true
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "edit: native focused Orb reorder via schema-10 preset",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "edit: reordered numbering and accessible name",
+      "passed": true,
+      "evidence": {
+        "rowIndex": 1,
+        "name": "Orb 1",
+        "label": "Edit Orb 1, ORB1"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "edit: summary-only update retains native node/focus",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: native focused Orb reorder via schema-10 preset",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: reordered numbering and accessible name",
+      "passed": true,
+      "evidence": {
+        "rowIndex": 1,
+        "name": "Orb 1",
+        "label": "Duplicate Orb 1, ORB1"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: summary-only update retains native node/focus",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "remove: native focused Orb reorder via schema-10 preset",
+      "before": {
+        "tag": "BUTTON",
+        "action": "remove",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "remove: reordered numbering and accessible name",
+      "passed": true,
+      "evidence": {
+        "rowIndex": 1,
+        "name": "Orb 1",
+        "label": "Remove Orb 1, ORB1"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "remove: summary-only update retains native node/focus",
+      "before": {
+        "tag": "BUTTON",
+        "action": "remove",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "Ring visibility updates without native focus loss",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit-ring",
+        "id": "spectral-ring"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit-ring",
+          "id": null
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "spectral-ring",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "Ring truthful hidden status and Enter edit activation",
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "native Enter Add then Space Duplicate focus the new Edit actions",
+      "passed": true,
+      "evidence": {
+        "added": {
+          "action": "edit",
+          "orbId": "ORB2"
+        },
+        "copy": {
+          "action": "edit",
+          "orbId": "ORB3"
+        },
+        "edited": {
+          "id": "ORB3",
+          "tag": "SUMMARY"
+        }
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "cancelled native Remove leaves exact focus and collection",
+      "passed": true,
+      "evidence": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "remove",
+          "id": "ORB0"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB0",
+        "actionAvailable": true
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "native focused Remove uses nearest Orb Edit then final removal Add fallback",
+      "passed": true,
+      "evidence": {
+        "nearest": {
+          "action": "edit",
+          "orbId": "ORB1"
+        },
+        "finalFocus": "btnVisualizersAddOrb"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "removing another Orb preserves native focused survivor Duplicate",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "duplicate",
+          "id": "ORB1"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "native external focus stays external during inventory updates",
+      "passed": true,
+      "evidence": {
+        "activeId": "rngVol"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "native Orb ID spectral-ring survives independently",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "spectral-ring"
+      },
+      "after": {
+        "active": {
+          "tag": "BUTTON",
+          "action": "edit",
+          "id": "spectral-ring"
+        },
+        "sameFocus": true,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "spectral-ring",
+        "actionAvailable": true
+      },
+      "passed": true,
+      "pageErrors": []
+    },
+    {
+      "name": "type-safe native collision Edit/Remove dispatch leaves Ring",
+      "passed": true,
+      "pageErrors": []
+    }
+  ],
+  "summary": {
+    "total": 38,
+    "passed": 38,
+    "failed": 0
+  }
+}

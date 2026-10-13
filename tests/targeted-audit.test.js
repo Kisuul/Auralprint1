@@ -22,8 +22,8 @@ import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
 
 test("development version metadata and schema remain aligned", () => {
-  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.f");
-  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.f\s/);
+  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.g");
+  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.g\s/);
   assert.equal(PRESET_SCHEMA_VERSION, 10);
 });
 
@@ -641,6 +641,8 @@ function createStubUiElement(tagName = "div") {
     style: { display: "block" },
     dataset: {},
     children: [],
+    get firstElementChild() { return this.children[0] || null; },
+    get nextElementSibling() { return this.parentNode?.children[this.parentNode.children.indexOf(this) + 1] || null; },
     parentNode: null,
     options: [],
     hidden: false,
@@ -3455,6 +3457,8 @@ function visualizerAction(action, id) {
 function clickVisualizerAction(action, id) {
   const button = visualizerAction(action, id);
   assert.ok(button, `${action} for ${id || "Spectral Ring"}`);
+  // A user pointer/keyboard action focuses its button before delegated dispatch.
+  button.focus();
   state.ui.visualizerList.dispatch("click", { target: button });
 }
 
@@ -4461,6 +4465,95 @@ for (const path of ["picker", "drop"]) {
       assert.notEqual(AudioEngine.getMediaEl(), failed); assert.equal(state.audio.transportError, "");
       assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
       assert.equal(mutations.filter(x => x.kind === "track-change-complete").length, 1);
+    });
+  });
+}
+
+function assertInventoryActionSurvives(button, action, id, row) {
+  assert.equal(document.activeElement, button);
+  assert.equal(state.ui.visualizerList.contains(button), true, 'surviving action stays connected to inventory');
+  assert.equal(visualizerAction(action, id), button);
+  assert.equal(button.closest('.visualizer-item'), row);
+  assert.equal(button.dataset.action, action);
+  if (action !== 'edit-ring') assert.equal(button.dataset.orbId, id);
+}
+
+for (const [action, control, event] of [
+  ['edit', 'rngVol', 'input'], ['duplicate', 'chkMute', 'change'],
+  ['remove', 'chkMute', 'change'], ['edit-ring', 'rngVol', 'input'],
+]) {
+  test(`AUD-005 integration: production ${control} handler preserves focused ${action}`, async t => {
+    await withSettingsActionHarness(t, async ({ getElement }) => {
+      hostVisualizerEditors(); UI.refreshAllUiText();
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const beforeSettings = runtime.settings, beforeCollection = VisualizerRuntime.getVisualizers();
+      getElement(control).value = '0.37'; getElement(control).checked = true;
+      await getElement(control).dispatch(event); UI.refreshAllUiText();
+      assert.notEqual(runtime.settings, beforeSettings);
+      assert.equal(VisualizerRuntime.getVisualizers(), beforeCollection);
+      assertInventoryActionSurvives(button, action, id, row);
+      UI.applyPrefs(null); UI.refreshAllUiText(); assertInventoryActionSurvives(button, action, id, row);
+      assert.equal(runtime.settings.audio.volume, control === 'rngVol' ? 0.37 : CONFIG.defaults.audio.volume);
+      assert.equal(runtime.settings.audio.muted, control === 'chkMute' ? true : CONFIG.defaults.audio.muted);
+    });
+  });
+}
+
+for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
+  test(`AUD-005 integration: pending File completion retains focused ${action}`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    await withRc02FileWorkflow(t, { contextState: 'suspended', onResume: () => { entered.resolve(); return resume.promise; } }, async ({ ingest, waitForCompletions }) => {
+      initOrbs(); hostVisualizerEditors(); UI.refreshAllUiText();
+      const pending = ingest(['focus.wav']); await entered.promise;
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const settings = runtime.settings; resume.resolve(); await pending; await waitForCompletions(1); UI.refreshAllUiText();
+      assert.equal(state.audio.filename, 'focus.wav'); assert.equal(state.source.status, 'active');
+      assert.notEqual(runtime.settings, settings); assertInventoryActionSurvives(button, action, id, row);
+    });
+  });
+}
+
+for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
+  test(`AUD-003 integration: bank-count preset changes retain G.1 ${action} identity/focus`, async t => {
+    await withSettingsActionHarness(t, ({ location, getElement }) => {
+      hostVisualizerEditors(); UI.refreshAllUiText();
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const authored = structuredClone(preferences); authored.orbs[0].bandIds = [5, 100, 255];
+      for (const count of [32, 3, 256]) {
+        authored.bands.count = count; location.hash = settingsPresetHash(authored); getElement('btnApplyUrl').click(); UI.refreshAllUiText();
+        assertInventoryActionSurvives(button, action, id, row);
+        assert.equal(state.bands.channels.C.energies01.length, count);
+        assert.deepEqual(preferences.orbs[0].bandIds, [5, 100, 255]);
+      }
+    });
+  });
+}
+
+for (const bulk of [false, true]) {
+  test(`AUD-009: real UI ${bulk ? 'Bulk' : 'individual'} commits share one numeric normalization boundary`, async (t) => {
+    await withSettingsActionHarness(t, () => {
+      preferences.orbs.forEach(orb => { orb.motion.angularSpeedRadPerSec = .123456; orb.trace.numLines = 15.5; orb.bandIds = [0, 255]; });
+      preferences.bands.count = 3; UI.applyPrefs(null); hostVisualizerEditors(); UI.refreshAllUiText();
+      assert.ok(preferences.orbs.every(orb => orb.trace.numLines === 16));
+      const root = state.ui.orbEditorList.children[0], controls = root.querySelectorAll('input');
+      const speed = bulk ? state.ui.rngOmega : controls.find(control => control.id?.endsWith('-angular-speed'));
+      const count = bulk ? state.ui.rngNumLines : controls.find(control => control.id?.endsWith('-line-count'));
+      const runtimeOrbs = [...state.orbs]; speed.focus(); root.open = true;
+      preferences.audio.playbackVolume = .4; UI.applyPrefs(null);
+      assert.ok(document.activeElement === speed); assert.ok(state.ui.orbEditorList.children[0] === root); assert.equal(root.open, true);
+      assert.equal(speed.value, '0.123456'); assert.ok(preferences.orbs.every(orb => orb.motion.angularSpeedRadPerSec === .123456));
+      speed.value = '.234567'; speed.dispatch('input');
+      assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec, .234567);
+      assert.equal(preferences.orbs[1].motion.angularSpeedRadPerSec, bulk ? .234567 : .123456);
+      // The Node mock intentionally allows fractional range input: the canonical
+      // consumer, not native snapping, must establish the integral contract.
+      count.value = '17.1'; count.dispatch('input');
+      for (const source of [preferences.orbs, runtime.settings.orbs, state.orbs]) {
+        assert.equal(source[0].trace.numLines, 18); assert.equal(source[1].trace.numLines, bulk ? 18 : 16);
+        assert.deepEqual(source.map(orb => orb.bandIds), [[0, 255], [0, 255]]);
+      }
+      assert.ok(state.orbs.every((orb, i) => orb === runtimeOrbs[i]));
+      UI.refreshAllUiText(); assert.equal(Number(count.value), 18);
     });
   });
 }

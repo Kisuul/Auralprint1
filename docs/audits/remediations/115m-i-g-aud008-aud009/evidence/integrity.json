@@ -1,0 +1,180 @@
+{
+  "acceptedG2": "bf43c45137b1851d568a4d6644f59047bacabc76",
+  "protectedFiles": [
+    {
+      "file": "src/js/ui/visualizers-panel.js",
+      "unchangedFromG2": true,
+      "sha256": "ec9ec0e9a288ad8ba52064a34cfc00f53f5d8accfc21818d390095e268356e40"
+    },
+    {
+      "file": "src/js/render/visualizer-runtime.js",
+      "unchangedFromG2": true,
+      "sha256": "79d948ec35c888b28e9237c33ef45d2918b42ba268c627fad248f72086e68938"
+    },
+    {
+      "file": "src/js/ui/orb-band-picker.js",
+      "unchangedFromG2": true,
+      "sha256": "a989819e40939f755d6e3a881fbdba563fbf48075736ac6d24fed7a2ad494852"
+    },
+    {
+      "file": "src/js/core/config.js",
+      "unchangedFromG2": true,
+      "sha256": "279ce9f7916eeb45ba198afab4f3adbbfed4a505ec429864ecd9d24daf0b9d40"
+    },
+    {
+      "file": "src/js/presets/preset-codec.js",
+      "unchangedFromG2": true,
+      "sha256": "4dade084f13a6c2c53e13c36083cec380a7d8c7390b4a3fc7c828ea1fabb63b6"
+    },
+    {
+      "file": "src/js/render/renderer.js",
+      "unchangedFromG2": true,
+      "sha256": "abb4d5a7eaad8622aef3a5eee41801a2bd8a109d1cc5429bf991566ea453f1f0"
+    },
+    {
+      "file": "src/js/render/orb.js",
+      "unchangedFromG2": true,
+      "sha256": "90ea67d4d04f66cfa5e3530c6c0c865545f096fb3b2d7b253e596fdc779005ab"
+    },
+    {
+      "file": "src/js/render/trail-system.js",
+      "unchangedFromG2": true,
+      "sha256": "7cbaf5ec46840024cab1159f5376a8ee167ae3c4173141ab44a53bad7d9b235e"
+    },
+    {
+      "file": "src/js/audio/audio-engine.js",
+      "unchangedFromG2": true,
+      "sha256": "f8332d81269aea78a0afa4dacbe35b5fb911bbd8a8e9d9602183e5c809faf3e9"
+    },
+    {
+      "file": "src/js/audio/input-source-manager.js",
+      "unchangedFromG2": true,
+      "sha256": "e8606ab8d9d01ab5b4ab2a8fc495778c2be6b09f221b5c316c4efec25da75003"
+    },
+    {
+      "file": "src/js/recording/recorder-engine.js",
+      "unchangedFromG2": true,
+      "sha256": "5fd4236cdb3a08962eb11e84e3abf184da72a18afc37d7974d3de936f27fe445"
+    },
+    {
+      "file": "version",
+      "unchangedFromG2": true,
+      "sha256": "82a6a69e0acb23211630142192530b1605a33185086f7324de9116ec376b67ea"
+    },
+    {
+      "file": "docs/20261009-004238_project-audit.md",
+      "unchangedFromG2": true,
+      "sha256": "f703d85e56d49268200fde779cf95a61493f2f105fc0789a921ca60a74ce2a5d"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/README.md",
+      "unchangedFromG2": true,
+      "sha256": "598a96dd06714779b678b10eb2c246781ec909e9911972e461b28c66b568458d"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/validation.json",
+      "unchangedFromG2": true,
+      "sha256": "a4cb448055e9c2016d61816578f77460d3a9a40ab997fd3fde2a1ec1a883573c"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/diagnostics/negative.py",
+      "unchangedFromG2": true,
+      "sha256": "dff887ab1a0244a747ca255960f16ad480e1c9cf5d940dca89d65d55006a5a21"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/diagnostics/native.cjs",
+      "unchangedFromG2": true,
+      "sha256": "e9904efde2e3868391ced2efc507a09b02361c569ef563bce60fb308efad770f"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/diagnostics/native-negative.py",
+      "unchangedFromG2": true,
+      "sha256": "74a5ed51f7849cce53cc6f84575ec88dd4a62b25a65e89f130a828a7fb5bf3a6"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/evidence/native-reorder-control.json",
+      "unchangedFromG2": true,
+      "sha256": "ba1aacad0a1b2aa51b23adc465f65919b3710d6c40e7af046e8acdc81ab03be4"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/evidence/integrity.json",
+      "unchangedFromG2": true,
+      "sha256": "30566434adc9f41025ee51fe9957854b92a02027805067d97c5798b9547bcb6a"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/evidence/baseline-native.json",
+      "unchangedFromG2": true,
+      "sha256": "6024012123df132d8384b13e5d1d7f7cb7c5d98d7bdc755899ee75ac97587e8f"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/evidence/fixed-native.json",
+      "unchangedFromG2": true,
+      "sha256": "37e73cd76c57c6f69f2fb7bca2f0d0187c6efd7ccdf3cec9e5a270c201f9a6b2"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/evidence/negative-controls.json",
+      "unchangedFromG2": true,
+      "sha256": "3161c13178dd01a5292a185bee1fb299ffe6648d81619fe077a1552284eb4a37"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud005/evidence/distribution.json",
+      "unchangedFromG2": true,
+      "sha256": "0ab89ddc8bc2a4ed174ab869e0f7a0b7c03bde2e10ca576ab25d97a3d360fe51"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/README.md",
+      "unchangedFromG2": true,
+      "sha256": "174cf8f14eb4e37b5edcfeac06c860000e414957764b5075d2198bd616861f8e"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/validation.json",
+      "unchangedFromG2": true,
+      "sha256": "16df5c03b925e9b0366c7f93b8ea2fb12455d62ea13ee97e8e390fed5c87f762"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/diagnostics/negative.py",
+      "unchangedFromG2": true,
+      "sha256": "d138f87a3c0d0fe8b4854da07d3c87ec9d8ed365cbe14bd456a080dffa938633"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/diagnostics/native.cjs",
+      "unchangedFromG2": true,
+      "sha256": "ca862a7b6d15fb994dc777c71b6e37c02040866a59c3f508a414893c84933cc8"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/integrity.json",
+      "unchangedFromG2": true,
+      "sha256": "a4809e451a53e1e974b3f54d525d3872716226b09007f1331a99c970608e2631"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/baseline-native.json",
+      "unchangedFromG2": true,
+      "sha256": "230745b56e923e1ba36c7e36b791e82176a8c6ec1c87c6326d99ce72ace2cf25"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/fixed-native.json",
+      "unchangedFromG2": true,
+      "sha256": "59645001b3b1b0ff085ec4255d77dd9f9b1cf76915066bd7dbec681e8f673391"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/negative-controls.json",
+      "unchangedFromG2": true,
+      "sha256": "d298bd55e53418381a268d7c4a3d160bff30d63f5e7c4d6182cd74c6b618b9e8"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/distribution.json",
+      "unchangedFromG2": true,
+      "sha256": "4467dce154f6c83ac736fa31d5b24c578e210d7fb47e6b53540f0518dbd31774"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/g1-native.json",
+      "unchangedFromG2": true,
+      "sha256": "fbf4cc7cc2e8083b93849301ac76feae60dc24c32beb749cdc28d136de9d6863"
+    },
+    {
+      "file": "docs/audits/remediations/115m-i-g-aud003/evidence/baseline-runtime.json",
+      "unchangedFromG2": true,
+      "sha256": "fe095325df4527975ea049f6b3874c7affee7003933f9e6405a958299b313357"
+    }
+  ]
+}

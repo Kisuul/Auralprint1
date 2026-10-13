@@ -1,0 +1,43 @@
+{
+  "auditedSha": "18d47e32e40d79d48f48409d0efa1bacce0f53fe",
+  "acceptedTrackedFilesVerified": 788,
+  "allAcceptedBlobsUnchanged": true,
+  "acceptedGitBlobInventorySha256": "ad3cd666869c1422e5732784be9145283888aa3a9d80e6aba1479e3dfc5edfc3",
+  "modules": {
+    "src/js/ui/visualizers-panel.js": "ec9ec0e9a288ad8ba52064a34cfc00f53f5d8accfc21818d390095e268356e40",
+    "src/js/ui/orb-editor.js": "768a54a0d397b830be05a8e487bab30149cc9c05e3801ed6d8f3ba0fb7dbb53d",
+    "src/js/ui/orb-band-picker.js": "a989819e40939f755d6e3a881fbdba563fbf48075736ac6d24fed7a2ad494852",
+    "src/js/render/visualizer-runtime.js": "79d948ec35c888b28e9237c33ef45d2918b42ba268c627fad248f72086e68938",
+    "src/js/audio/band-bank.js": "f68ab012eba97567528c9cc6c05f4c19c9e4c0b9e3b9808610668b88a20e99e4",
+    "src/js/audio/band-bank-controller.js": "e6ad770990445d3573657153230675da682f0af755a7bb215510fef6c10a502c",
+    "src/js/audio/analysis-frame.js": "6d7a08c1342031ad47a6238017b9a384eafb3067896e5269083b548a9aa82ea2",
+    "src/js/core/preferences.js": "0569df4ba7cd987b237531760bfb8db82869ea1e0be2180f3c640811872cf066",
+    "src/js/core/config.js": "279ce9f7916eeb45ba198afab4f3adbbfed4a505ec429864ecd9d24daf0b9d40",
+    "src/js/presets/preset-codec.js": "4dade084f13a6c2c53e13c36083cec380a7d8c7390b4a3fc7c828ea1fabb63b6",
+    "src/js/render/renderer.js": "abb4d5a7eaad8622aef3a5eee41801a2bd8a109d1cc5429bf991566ea453f1f0",
+    "src/js/ui/ui.js": "34a567be733fb0b1fd8679c5be85e8cacee33c4f0aec2db37df3496ad20c1659"
+  },
+  "priorEvidence": [
+    {
+      "record": "115m-i-g-aud005",
+      "files": 11,
+      "unchanged": true,
+      "gitBlobInventorySha256": "308bfdc9354f0d2cb413c7863548f79125cb830066dcbe9c0397ace9b47d42a0"
+    },
+    {
+      "record": "115m-i-g-aud003",
+      "files": 11,
+      "unchanged": true,
+      "gitBlobInventorySha256": "9e1d7730f2a88bde77670bc989d1ccc72db5ae305b3b0e38f2c9fc383035ce47"
+    },
+    {
+      "record": "115m-i-g-aud008-aud009",
+      "files": 19,
+      "unchanged": true,
+      "gitBlobInventorySha256": "f12f0c20ce10c4db4b268bcd30284564fa9caa9b9118506f1a257402f6e92975"
+    }
+  ],
+  "version": "v0.1.15m.i.g",
+  "presetSchema": 10,
+  "build115N": "WITHHELD"
+}

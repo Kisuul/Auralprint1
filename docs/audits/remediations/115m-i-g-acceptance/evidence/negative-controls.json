@@ -1,0 +1,568 @@
+{
+  "auditedSha": "18d47e32e40d79d48f48409d0efa1bacce0f53fe",
+  "harnessFailuresCounted": 0,
+  "suites": [
+    {
+      "suite": "115m-i-g-aud005",
+      "driver": "negative.py",
+      "driverSha256": "dff887ab1a0244a747ca255960f16ad480e1c9cf5d940dca89d65d55006a5a21",
+      "detected": 6,
+      "controls": [
+        {
+          "control": "original_replaceChildren",
+          "detected": true,
+          "exitCode": 1,
+          "relevantAssertions": [
+            {
+              "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused edit",
+              "code": "ERR_ASSERTION",
+              "message": "edit B: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused duplicate",
+              "code": "ERR_ASSERTION",
+              "message": "duplicate B: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused remove",
+              "code": "ERR_ASSERTION",
+              "message": "remove B: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: new settings snapshot and new equivalent collection preserve focused edit-ring",
+              "code": "ERR_ASSERTION",
+              "message": "edit-ring B: exact focused node\n\nfalse !== true\n"
+            }
+          ],
+          "failureCount": 4
+        },
+        {
+          "control": "id_without_type",
+          "detected": true,
+          "exitCode": 1,
+          "relevantAssertions": [
+            {
+              "name": "AUD-005: opaque Orb spectral-ring ID remains distinct from Ring across reconciliation and action dispatch",
+              "code": "ERR_ASSERTION",
+              "message": "both type-specific Edit actions exist"
+            }
+          ],
+          "failureCount": 1
+        },
+        {
+          "control": "rebuild_summary_row",
+          "detected": true,
+          "exitCode": 1,
+          "relevantAssertions": [
+            {
+              "name": "AUD-005: presentation and runtime visibility update in place with unchanged collection reference",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'B \u00b7 C \u00b7 full spectrum'\n- 'B \u00b7 R \u00b7 2 bands'\n       ^\n"
+            }
+          ],
+          "failureCount": 1
+        },
+        {
+          "control": "blur_reorder",
+          "detected": true,
+          "exitCode": 1,
+          "relevantAssertions": [
+            {
+              "name": "AUD-005: reorder retains edit identity/focus and updates numbering and accessible labels",
+              "code": "ERR_ASSERTION",
+              "message": "edit C: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: reorder retains duplicate identity/focus and updates numbering and accessible labels",
+              "code": "ERR_ASSERTION",
+              "message": "duplicate C: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: reorder retains remove identity/focus and updates numbering and accessible labels",
+              "code": "ERR_ASSERTION",
+              "message": "remove C: exact focused node\n\nfalse !== true\n"
+            }
+          ],
+          "failureCount": 3
+        },
+        {
+          "control": "no_nearest_fallback",
+          "detected": true,
+          "exitCode": 1,
+          "relevantAssertions": [
+            {
+              "name": "AUD-005: focused removal of A chooses nearest surviving Orb B",
+              "code": "ERR_ASSERTION",
+              "message": "edit B: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: focused removal of B chooses nearest surviving Orb C",
+              "code": "ERR_ASSERTION",
+              "message": "edit C: exact focused node\n\nfalse !== true\n"
+            },
+            {
+              "name": "AUD-005: focused removal of C chooses nearest surviving Orb B",
+              "code": "ERR_ASSERTION",
+              "message": "edit B: exact focused node\n\nfalse !== true\n"
+            }
+          ],
+          "failureCount": 3
+        },
+        {
+          "control": "duplicate_delegation",
+          "detected": true,
+          "exitCode": 1,
+          "relevantAssertions": [
+            {
+              "name": "AUD-005: repeated refresh/init registers one delegated listener and one Add handler",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n32 !== 1\n"
+            }
+          ],
+          "failureCount": 1
+        }
+      ]
+    },
+    {
+      "suite": "115m-i-g-aud005",
+      "driver": "native-negative.py",
+      "driverSha256": "74a5ed51f7849cce53cc6f84575ec88dd4a62b25a65e89f130a828a7fb5bf3a6",
+      "detected": 1,
+      "controls": [
+        {
+          "control": "native reorder without focus restoration",
+          "detected": true,
+          "browser": "151.0.7922.173",
+          "alteredHtmlSha256": "40f01bc9d14e192d8cd6fffdc95df6d68d6a19d82d08d0633d4c0120a547b99c",
+          "summary": {
+            "total": 38,
+            "passed": 32,
+            "failed": 6
+          },
+          "relevantFailures": [
+            {
+              "name": "edit: native focused Orb reorder via schema-10 preset",
+              "before": {
+                "tag": "BUTTON",
+                "action": "edit",
+                "id": "ORB1"
+              },
+              "after": {
+                "active": {
+                  "tag": "BODY",
+                  "action": null,
+                  "id": null
+                },
+                "sameFocus": false,
+                "connected": true,
+                "sameRow": true,
+                "sameNode": true,
+                "stableId": "ORB1",
+                "actionAvailable": true
+              },
+              "passed": false,
+              "failure": "Expected values to be strictly equal:\n\nfalse !== true\n",
+              "pageErrors": []
+            },
+            {
+              "name": "duplicate: native focused Orb reorder via schema-10 preset",
+              "before": {
+                "tag": "BUTTON",
+                "action": "duplicate",
+                "id": "ORB1"
+              },
+              "after": {
+                "active": {
+                  "tag": "BODY",
+                  "action": null,
+                  "id": null
+                },
+                "sameFocus": false,
+                "connected": true,
+                "sameRow": true,
+                "sameNode": true,
+                "stableId": "ORB1",
+                "actionAvailable": true
+              },
+              "passed": false,
+              "failure": "Expected values to be strictly equal:\n\nfalse !== true\n",
+              "pageErrors": []
+            },
+            {
+              "name": "remove: native focused Orb reorder via schema-10 preset",
+              "before": {
+                "tag": "BUTTON",
+                "action": "remove",
+                "id": "ORB1"
+              },
+              "after": {
+                "active": {
+                  "tag": "BODY",
+                  "action": null,
+                  "id": null
+                },
+                "sameFocus": false,
+                "connected": true,
+                "sameRow": true,
+                "sameNode": true,
+                "stableId": "ORB1",
+                "actionAvailable": true
+              },
+              "passed": false,
+              "failure": "Expected values to be strictly equal:\n\nfalse !== true\n",
+              "pageErrors": []
+            }
+          ],
+          "dependentFailures": [
+            "edit: summary-only update retains native node/focus",
+            "duplicate: summary-only update retains native node/focus",
+            "remove: summary-only update retains native node/focus"
+          ],
+          "harnessFailures": 0
+        }
+      ]
+    },
+    {
+      "suite": "115m-i-g-aud003",
+      "driver": "negative.py",
+      "driverSha256": "d138f87a3c0d0fe8b4854da07d3c87ec9d8ed365cbe14bd456a080dffa938633",
+      "detected": 8,
+      "controls": [
+        {
+          "control": "missing_targets_in_divisor",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: mixed targets analyze only active L bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n0.45 !== 0.9\n"
+            },
+            {
+              "name": "AUD-003: mixed targets analyze only active R bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n0.05 !== 0.1\n"
+            },
+            {
+              "name": "AUD-003: mixed targets analyze only active C bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n0.25 !== 0.5\n"
+            }
+          ]
+        },
+        {
+          "control": "inactive_dominant",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: selected dominant excludes inactive indices and preserves first active tie",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n255 !== null\n"
+            }
+          ]
+        },
+        {
+          "control": "all_inactive_becomes_full_spectrum",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: mixed targets analyze only active L bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\nnull !== 0\n"
+            },
+            {
+              "name": "AUD-003: mixed targets analyze only active R bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\nnull !== 0\n"
+            },
+            {
+              "name": "AUD-003: mixed targets analyze only active C bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\nnull !== 0\n"
+            }
+          ]
+        },
+        {
+          "control": "preset_prunes_authored_inactive",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: original schema-10 count-3 scene persists inactive 255; legacy name migration stays canonical",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   255\n- ]\n"
+            }
+          ]
+        },
+        {
+          "control": "picker_ordinary_choices_ignore_count",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: picker choices, searches and numeric limits use active count; inactive targets are described",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n256 !== 3\n"
+            }
+          ]
+        },
+        {
+          "control": "checkbox_drops_inactive_targets",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: active checkbox edits preserve inactive authored ordering; Full Spectrum clears all",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n-   255,\n    0,\n    1\n  ]\n"
+            }
+          ]
+        },
+        {
+          "control": "runtime_does_not_reactivate",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: 3 \u2192 32 \u2192 3 retains and reactivates authored targets through bank rebuild/share",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n0 !== 0.5\n"
+            }
+          ]
+        },
+        {
+          "control": "left_right_use_combined_c",
+          "detected": true,
+          "exitCode": 1,
+          "relevantFailures": [
+            {
+              "name": "AUD-003: mixed targets analyze only active L bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n0.5 !== 0.9\n"
+            },
+            {
+              "name": "AUD-003: mixed targets analyze only active R bands",
+              "code": "ERR_ASSERTION",
+              "message": "Expected values to be strictly equal:\n\n0.5 !== 0.1\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "suite": "115m-i-g-aud008-aud009",
+      "driver": "mutations.py",
+      "driverSha256": "8a6b9d85fdacb0f00291dafe908d200a4b297f26d78205049268f52435f0957c",
+      "detected": 5,
+      "controls": [
+        {
+          "mutation": "unsafe ratio",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-008: log geometry/energy at count 4 survives extreme and collapsed schema-10 intervals (0.742285ms)",
+            "AUD-008: log geometry/energy at count 32 survives extreme and collapsed schema-10 intervals (0.914513ms)",
+            "AUD-008: log geometry/energy at count 256 survives extreme and collapsed schema-10 intervals (0.411999ms)"
+          ]
+        },
+        {
+          "mutation": "wrong endpoint",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-008: default log geometry keeps its defined spacing and exact endpoints (0.826862ms)"
+          ]
+        },
+        {
+          "mutation": "reversed interior",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-008: log geometry/energy at count 32 survives extreme and collapsed schema-10 intervals (0.803787ms)",
+            "AUD-008: log geometry/energy at count 256 survives extreme and collapsed schema-10 intervals (0.831909ms)",
+            "AUD-008: default log geometry keeps its defined spacing and exact endpoints (0.229255ms)"
+          ]
+        },
+        {
+          "mutation": "broken Nyquist cap",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-008: production controller caps configured ceiling above Nyquist for extreme log floors (1.041645ms)"
+          ]
+        },
+        {
+          "mutation": "changed default spacing",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-008: log geometry/energy at count 4 survives extreme and collapsed schema-10 intervals (0.724838ms)",
+            "AUD-008: log geometry/energy at count 32 survives extreme and collapsed schema-10 intervals (0.36639ms)",
+            "AUD-008: log geometry/energy at count 256 survives extreme and collapsed schema-10 intervals (0.377037ms)",
+            "AUD-008: default log geometry keeps its defined spacing and exact endpoints (0.19983ms)"
+          ]
+        }
+      ]
+    },
+    {
+      "suite": "115m-i-g-aud008-aud009",
+      "driver": "mutations-numeric.py",
+      "driverSha256": "b0781c2de6c2111cf2bfde9da12b070cfcda8bf004cc4b07e07e24d75469c9d3",
+      "detected": 7,
+      "controls": [
+        {
+          "mutation": "silent continuous rounding",
+          "kind": "Node behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-009: speed continuous precision, bounds, invalid input and schema-10 roundtrip (2.08389ms)"
+          ]
+        },
+        {
+          "mutation": "inconsistent integral floor",
+          "kind": "Node behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-009: trace count ceil normalization is shared by import, direct changes, encode and renderer (0.987303ms)"
+          ]
+        },
+        {
+          "mutation": "fractional count retained",
+          "kind": "Node behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-009: trace count ceil normalization is shared by import, direct changes, encode and renderer (1.089326ms)"
+          ]
+        },
+        {
+          "mutation": "renderer count disagrees",
+          "kind": "Node behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-009: trace count ceil normalization is shared by import, direct changes, encode and renderer (3.596181ms)"
+          ]
+        },
+        {
+          "mutation": "Bulk unrelated overwrite",
+          "kind": "Node behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            "AUD-009: continuous/integral keyboard increments use CONFIG without snapping imported values (5.130346ms)",
+            "AUD-009: Bulk uniform off-step/mixed values survive unrelated edits and explicit field changes (1.636027ms)"
+          ]
+        },
+        {
+          "mutation": "coarse native step",
+          "kind": "native Chromium behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            {
+              "name": "original imported speed and trace: canonical/native/readout/renderer",
+              "failure": "Expected values to be strictly equal:\n\n0.12 !== 0.123456\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence angular-speed",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence center-x",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence center-y",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence min-radius",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence max-radius",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence waveform-displacement",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence emit-rate",
+              "failure": "Expected values to be strictly equal:\n\n'10' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence size-min",
+              "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence size-max",
+              "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence size-decay",
+              "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence lifetime",
+              "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence min-placement-distance",
+              "failure": "Expected values to be strictly equal:\n\n'0.1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence line-alpha",
+              "failure": "Expected values to be strictly equal:\n\n'0.01' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence line-width",
+              "failure": "Expected values to be strictly equal:\n\n'1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native precision/boundaries/persistence hue",
+              "failure": "Expected values to be strictly equal:\n\n'1' !== 'any'\n"
+            },
+            {
+              "name": "AUD-009 native individual explicit edits, CONFIG arrows and stable editor focus/drafts/scroll",
+              "failure": "0.13 != 0.133456"
+            },
+            {
+              "name": "AUD-009 native Bulk uniform/mixed, unrelated field edits and CONFIG increments",
+              "failure": "Expected values to be strictly equal:\n\n0.12 !== 0.123456\n"
+            },
+            {
+              "name": "AUD-009 native all Bulk continuous fields display uniform imported precision",
+              "failure": "0.12 != 0.123456"
+            },
+            {
+              "name": "AUD-009 uninstrumented portable preset share/reload reflects native controls",
+              "failure": "Expected values to be strictly equal:\n\n0.12 !== 0.123456\n"
+            }
+          ]
+        },
+        {
+          "mutation": "focus lost during refresh",
+          "kind": "native Chromium behavioral",
+          "detected": true,
+          "exitCode": 1,
+          "behavioralFailures": [
+            {
+              "name": "AUD-009 native individual explicit edits, CONFIG arrows and stable editor focus/drafts/scroll",
+              "failure": "The expression evaluated to a falsy value:\n\n  assert.ok(before.same&&before.connected&&before.root&&before.open)\n"
+            },
+            {
+              "name": "AUD-009 native bank-count refresh retains focused range, targets, exact draft and numeric values",
+              "failure": "The expression evaluated to a falsy value:\n\n  assert.ok(row.same&&row.connected)\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

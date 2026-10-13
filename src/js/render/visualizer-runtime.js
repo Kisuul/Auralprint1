@@ -2,7 +2,7 @@ import { ParticleGovernor } from "./particle-governor.js";
 import { normalizeParticleSafety } from "../core/particle-safety.js";
 import { assertRuntimeOrbAdmission } from "../core/orb-admission.js";
 import { TAU } from "../core/constants.js";
-import { runtime, normalizeOrbChannelId } from "../core/preferences.js";
+import { runtime, normalizeOrbChannelId, BAND_NAMES } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { clamp } from "../core/utils.js";
 
@@ -11,21 +11,29 @@ const SPECTRAL_RING_VISUALIZER_ID = "spectral-ring";
 function selectOrbAnalysis(orb, analysisFrame) {
   const channel = normalizeOrbChannelId(orb && orb.chanId, orb && orb.bandId);
   const sourceBand = channel === "L"
-    ? analysisFrame.channels.L
-    : (channel === "R" ? analysisFrame.channels.R : analysisFrame.channels.C);
+    ? analysisFrame?.channels?.L
+    : (channel === "R" ? analysisFrame?.channels?.R : analysisFrame?.channels?.C);
   const bandIds = Array.isArray(orb && orb.bandIds) ? orb.bandIds : [];
   if (!bandIds.length) return { band: sourceBand, energyOverride01: null, selectedDominantBandIndex: null };
 
   const energies = sourceBand && sourceBand.bandEnergies01;
-  if (!energies || !energies.length) {
-    return { band: sourceBand, energyOverride01: null, selectedDominantBandIndex: null };
+  if (!energies || !Number.isInteger(energies.length) || energies.length <= 0) {
+    return { band: sourceBand, energyOverride01: 0, selectedDominantBandIndex: null };
   }
+  // Authored indices remain canonical; this consumer uses only the current
+  // channel's actual array and bank boundaries, never the fixed name count alone.
+  const activeCount = Math.min(energies.length, BAND_NAMES.length,
+    analysisFrame?.spectrum?.lowHz?.length ?? energies.length,
+    analysisFrame?.spectrum?.highHz?.length ?? energies.length);
   let sum = 0;
+  let count = 0;
   let selectedDominantBandIndex = null;
   let strongestEnergy = -Infinity;
   for (const idx of bandIds) {
-    const energy = energies[idx] || 0;
+    if (!Number.isInteger(idx) || idx < 0 || idx >= activeCount) continue;
+    const energy = Number.isFinite(energies[idx]) ? clamp(energies[idx], 0, 1) : 0;
     sum += energy;
+    count += 1;
     if (energy > strongestEnergy) {
       strongestEnergy = energy;
       selectedDominantBandIndex = idx;
@@ -33,7 +41,7 @@ function selectOrbAnalysis(orb, analysisFrame) {
   }
   return {
     band: sourceBand,
-    energyOverride01: clamp(sum / bandIds.length, 0, 1),
+    energyOverride01: count ? clamp(sum / count, 0, 1) : 0,
     selectedDominantBandIndex,
   };
 }

@@ -130,7 +130,7 @@ test("selected Orb analysis routes L/R/C spectra and preserves first-band tie se
     selectedDominantBandIndex: null,
   });
   context.analysisFrame.channels.L.bandEnergies01 = null;
-  assert.equal(selectOrbAnalysis(fakeOrb("missing", { chanId: "L", bandIds: [0] }), context.analysisFrame).energyOverride01, null);
+  assert.equal(selectOrbAnalysis(fakeOrb("missing", { chanId: "L", bandIds: [0] }), context.analysisFrame).energyOverride01, 0);
 });
 
 test("ColorPolicy scopes only inherited dominant color to a selected target", () => {
@@ -293,4 +293,70 @@ test("zero-Orb orb-locked Spectral Ring remains stable and resets safely", () =>
   assert.equal(harness.stateRef.bands.ringPhaseRad, 1);
   visualizer.reset("visuals");
   assert.equal(harness.stateRef.bands.ringPhaseRad, 0);
+});
+
+for (const [chanId, expected] of [['L', .9], ['R', .1], ['C', .5]]) {
+  test(`AUD-003: mixed targets analyze only active ${chanId} bands`, () => {
+    const analysis = frame().analysisFrame; analysis.channels.C.bandEnergies01[0] = .5;
+    const before = structuredClone(analysis);
+    const mixed = selectOrbAnalysis({ chanId, bandIds: [0, 255] }, analysis);
+    assert.equal(mixed.energyOverride01, expected); assert.equal(mixed.selectedDominantBandIndex, 0);
+    assert.equal(mixed.band, analysis.channels[chanId]); assert.deepEqual(analysis, before);
+    const inactive = selectOrbAnalysis({ chanId, bandIds: [255] }, analysis);
+    assert.equal(inactive.energyOverride01, 0); assert.equal(inactive.selectedDominantBandIndex, null);
+    const empty = selectOrbAnalysis({ chanId, bandIds: [] }, analysis);
+    assert.equal(empty.energyOverride01, null); assert.equal(empty.selectedDominantBandIndex, null);
+    assert.equal(empty.band.energy01, analysis.channels[chanId].energy01);
+  });
+}
+
+test('AUD-003: selected dominant excludes inactive indices and preserves first active tie', () => {
+  const analysis = frame().analysisFrame; analysis.channels.C.bandEnergies01 = [.5, .5, .5];
+  for (const [targets, dominant] of [[[255], null], [[255, 2, 0], 2], [[255, 0, 2], 0], [[100, 255], null]]) {
+    const selection = selectOrbAnalysis({ chanId: 'C', bandIds: targets }, analysis);
+    assert.equal(selection.selectedDominantBandIndex, dominant);
+    assert.equal(selection.energyOverride01, dominant === null ? 0 : .5);
+  }
+});
+
+test('AUD-003: active bank edges and each actual channel array bound targeting independently', () => {
+  const analysis = frame().analysisFrame;
+  analysis.spectrum.lowHz = [0, 10]; analysis.spectrum.highHz = [10, 20];
+  assert.equal(selectOrbAnalysis({ bandIds: [2], chanId: 'C' }, analysis).energyOverride01, 0);
+  assert.equal(selectOrbAnalysis({ bandIds: [2], chanId: 'C' }, analysis).selectedDominantBandIndex, null);
+  analysis.channels.L.bandEnergies01 = [.9];
+  assert.equal(selectOrbAnalysis({ bandIds: [0, 1], chanId: 'L' }, analysis).energyOverride01, .9);
+  assert.equal(selectOrbAnalysis({ bandIds: [0, 1], chanId: 'R' }, analysis).energyOverride01, .45);
+});
+
+test('AUD-003: malformed targets, missing arrays and nonfinite energies yield finite bounded analysis', () => {
+  const analysis = frame().analysisFrame;
+  analysis.channels.C.bandEnergies01 = [NaN, Infinity, -Infinity, -2, 3, '0.5'];
+  for (const [ids, expected, dominant] of [
+    [[null, false, '0', 1.5, -1, 256, NaN, Infinity], 0, null],
+    [[0, 1, 2], 0, 0], [[3, 4, 5], 1 / 3, 4],
+  ]) {
+    const selected = selectOrbAnalysis({ chanId: 'C', bandIds: ids }, analysis);
+    assert.equal(selected.energyOverride01, expected); assert.equal(selected.selectedDominantBandIndex, dominant);
+  }
+  for (const energies of [null, undefined, [], { length: NaN }]) {
+    analysis.channels.C.bandEnergies01 = energies;
+    assert.equal(selectOrbAnalysis({ chanId: 'C', bandIds: [0] }, analysis).energyOverride01, 0);
+    assert.equal(selectOrbAnalysis({ chanId: 'C', bandIds: [0] }, analysis).selectedDominantBandIndex, null);
+  }
+  assert.equal(selectOrbAnalysis({ bandIds: [0] }, null).energyOverride01, 0);
+});
+
+test('AUD-003: inherited target color uses active dominant; all-inactive keeps established global fallback', () => {
+  const previous = runtime.settings; runtime.settings = structuredClone(CONFIG.defaults); runtime.settings.bands.count = 3;
+  runtime.settings.bands.particleColorSource = 'dominant';
+  try {
+    const analysis = frame().analysisFrame, inherited = { chanId: 'L', bandIds: [0, 255], colorSource: 'inherit', hueOffsetDeg: 17 };
+    const active = selectOrbAnalysis(inherited, analysis);
+    assert.deepEqual(ColorPolicy.pickParticleColorRgb01(0, inherited, 2, active.selectedDominantBandIndex), ColorPolicy.bandRgb01(0, 17));
+    assert.deepEqual(ColorPolicy.pickParticleColorRgb01(0, { ...inherited, colorSource: 'dominant' }, 2, active.selectedDominantBandIndex), ColorPolicy.bandRgb01(2, 17));
+    inherited.bandIds = [255]; const inactive = selectOrbAnalysis(inherited, analysis);
+    assert.equal(inactive.selectedDominantBandIndex, null);
+    assert.deepEqual(ColorPolicy.pickParticleColorRgb01(0, inherited, 2, inactive.selectedDominantBandIndex), ColorPolicy.bandRgb01(2, 17));
+  } finally { runtime.settings = previous; }
 });
