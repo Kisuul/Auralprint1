@@ -76,3 +76,41 @@ test("template gives migrated controls one Analysis owner",()=>{
   for(const id of ["rngRmsGain","rngSmooth","selFFT","selDistMode","bandDebug","bandMeta","bandTable"]) {assert.match(analysis,new RegExp(`id="${id}"`));assert.equal((html.match(new RegExp(`id="${id}"`,"g"))||[]).length,1)}
   assert.doesNotMatch(analysis,/bandOverlaySection/);
 });
+
+test('AUD-004 unchanged analysis metadata and HUD do not rewrite text, styles or badge identity',()=>{
+  const restore=installDocument(),{ui,settings,prefs}=fixture(2);let time=1000;
+  try{
+    const panel=createAnalysisPanelUi({ui,getSettings:()=>settings,mutablePreferences:prefs,now:()=>time});panel.init();
+    const frame={spectrum:{energies01:[.25,.75],lowHz:[0,20],dominantIndex:1,dominantName:'Peak',metadata:{sampleRateHz:48000,nyquistHz:24000}}};
+    panel.refresh(frame);const badge=ui.bandDebug.children[0],rows=[...ui.bandTable.children];let writes=0;
+    for(const node of [ui.bandMeta,badge]){let text=node.textContent;Object.defineProperty(node,'textContent',{get:()=>text,set:v=>{writes++;text=v}})}
+    for(const row of rows){for(const key of ['width','background','opacity']){let value=row.style[key];Object.defineProperty(row.style,key,{get:()=>value,set:v=>{writes++;value=v}})}if(row.children[0]){const fill=row.children[0];for(const key of ['width','background']){let value=fill.style[key];Object.defineProperty(fill.style,key,{get:()=>value,set:v=>{writes++;value=v}})}}}
+    for(let i=0;i<30;i++){time+=200;panel.refresh(frame)}
+    assert.equal(writes,0);assert.equal(ui.bandDebug.children[0],badge);assert.deepEqual(ui.bandTable.children,rows);
+    frame.spectrum.metadata.sampleRateHz=44100;time+=200;panel.refresh(frame);assert.match(ui.bandMeta.textContent,/44\.10 kHz/);assert.ok(writes>0);
+    frame.spectrum.dominantName='Changed';time+=200;panel.refresh(frame);assert.match(badge.textContent,/Changed/);
+  }finally{restore()}
+});
+
+test('AUD-004 hidden Analysis defers table construction and reveals current metadata and energies',()=>{
+  const restore=installDocument(),{ui,settings,prefs}=fixture(2);let time=1000;
+  try{
+    ui.analysisPanel.style.display='none';
+    const panel=createAnalysisPanelUi({ui,getSettings:()=>settings,mutablePreferences:prefs,now:()=>time});panel.init();
+    const frame={spectrum:{energies01:[.25,.75],lowHz:[0,20],dominantIndex:1,dominantName:'Current',metadata:{sampleRateHz:48000,nyquistHz:24000}}};
+    for(let i=0;i<30;i++){time+=200;panel.refresh(frame)}
+    assert.equal(ui.bandTable.children.length,0);assert.match(ui.bandMeta.textContent,/48\.00 kHz/);
+    ui.analysisPanel.style.display='block';panel.refresh(frame);assert.equal(ui.bandTable.children.length,8);assert.match(ui.bandDebug.children[0].textContent,/Current/);
+    assert.equal(ui.bandTable.children[7].children[0].style.width,'75%');
+  }finally{restore()}
+});
+
+test('AUD-004 explicit reveal refresh bypasses only the existing HUD interval guard',()=>{
+  const restore=installDocument(),{ui,settings,prefs}=fixture(2);
+  try{
+    const panel=createAnalysisPanelUi({ui,getSettings:()=>settings,mutablePreferences:prefs,now:()=>1000});panel.init();
+    const frame={spectrum:{energies01:[.25,.75],lowHz:[0,20],dominantIndex:1,dominantName:'Before',metadata:{}}};panel.refresh(frame);
+    frame.spectrum.dominantName='On reveal';frame.spectrum.energies01[0]=.9;
+    panel.refresh(frame,true);assert.match(ui.bandDebug.children[0].textContent,/On reveal/);assert.equal(ui.bandTable.children[3].children[0].style.width,'90%');
+  }finally{restore()}
+});

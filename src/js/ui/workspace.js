@@ -1,6 +1,6 @@
 import { state } from "../core/state.js";
 
-function createWorkspaceUi({ ui = state.ui, readRecordLauncherLabel = () => "Recording" } = {}) {
+function createWorkspaceUi({ ui = state.ui, readRecordLauncherLabel = () => "Recording", onPanelShown = () => {} } = {}) {
   let initializedOn = null;
   let refreshQueuePanel = () => {};
 
@@ -8,14 +8,22 @@ function createWorkspaceUi({ ui = state.ui, readRecordLauncherLabel = () => "Rec
     return !!(panel && !panel.hidden && panel.style.display !== "none");
   }
 
+  function syncAttribute(el, key, value) {
+    if (el.getAttribute(key) !== value) el.setAttribute(key, value);
+  }
+  function syncClass(el, key, enabled) {
+    if (el.classList.contains(key) !== enabled) el.classList.toggle(key, enabled);
+  }
+
   function syncLauncherControl(launcher, button, { visible = true, active = false, label = "" } = {}) {
     if (!launcher) return;
-    launcher.hidden = !visible;
-    launcher.setAttribute("aria-hidden", visible ? "false" : "true");
-    launcher.style.display = visible ? "grid" : "none";
-    launcher.classList.toggle("is-active", !!active);
+    if (launcher.hidden !== !visible) launcher.hidden = !visible;
+    syncAttribute(launcher, "aria-hidden", visible ? "false" : "true");
+    const display = visible ? "grid" : "none";
+    if (launcher.style.display !== display) launcher.style.display = display;
+    syncClass(launcher, "is-active", !!active);
     if (!button) return;
-    button.setAttribute("aria-pressed", active ? "true" : "false");
+    syncAttribute(button, "aria-pressed", active ? "true" : "false");
     if (label) {
       if (button.title !== label) button.title = label;
       if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label", label);
@@ -48,7 +56,7 @@ function createWorkspaceUi({ ui = state.ui, readRecordLauncherLabel = () => "Rec
   function toggleLauncherCollapsed() { setLauncherCollapsed(!ui.workspaceLauncherCollapsed); }
   function bringPanelForward(panel) {
     for (const candidate of [ui.visualizersPanel, ui.analysisPanel, ui.scenePanel, ui.queuePanel, ui.recordPanel]) {
-      if (candidate) candidate.classList.toggle("panel-front", candidate === panel);
+      if (candidate) syncClass(candidate, "panel-front", candidate === panel);
     }
   }
   function restoreLauncherFocus(button) { setLauncherCollapsed(false); if (button) button.focus(); }
@@ -76,13 +84,13 @@ function createWorkspaceUi({ ui = state.ui, readRecordLauncherLabel = () => "Rec
   }
   function showQueuePanel() { if (!ui.queuePanel) return; ui.queuePanel.style.display = "block"; refreshQueuePanel(); bringPanelForward(ui.queuePanel); syncLauncherState(); if (document.activeElement === ui.btnToggleQueue && ui.btnHideQueue) ui.btnHideQueue.focus(); }
   function hideAudioPanel() { ui.audioPanel.style.display = "none"; syncAudioDockHeight(); syncLauncherState(); if (document.activeElement && ui.audioPanel.contains(document.activeElement)) restoreLauncherFocus(ui.btnOpenAudio); }
-  function showAudioPanel() { ui.audioPanel.style.display = "grid"; syncAudioDockHeight(); syncLauncherState(); if (document.activeElement === ui.btnOpenAudio) ui.btnHideAudio.focus(); }
+  function showAudioPanel() { ui.audioPanel.style.display = "grid"; syncAudioDockHeight(); syncLauncherState(); onPanelShown(ui.audioPanel); if (document.activeElement === ui.btnOpenAudio) ui.btnHideAudio.focus(); }
   function hideAnalysisPanel() { if (!ui.analysisPanel) return; ui.analysisPanel.style.display = "none"; syncLauncherState(); if (document.activeElement && ui.analysisPanel.contains(document.activeElement)) restoreLauncherFocus(ui.btnOpenAnalysis); }
-  function showAnalysisPanel() { if (!ui.analysisPanel) return; ui.analysisPanel.style.display = "block"; bringPanelForward(ui.analysisPanel); syncLauncherState(); if (document.activeElement === ui.btnOpenAnalysis) ui.btnHideAnalysis.focus(); }
+  function showAnalysisPanel() { if (!ui.analysisPanel) return; ui.analysisPanel.style.display = "block"; bringPanelForward(ui.analysisPanel); syncLauncherState(); onPanelShown(ui.analysisPanel); if (document.activeElement === ui.btnOpenAnalysis) ui.btnHideAnalysis.focus(); }
   function hideScenePanel() { ui.scenePanel.style.display = "none"; syncLauncherState(); if (document.activeElement && ui.scenePanel.contains(document.activeElement)) restoreLauncherFocus(ui.btnOpenScene); }
-  function showScenePanel() { ui.scenePanel.style.display = "block"; bringPanelForward(ui.scenePanel); syncLauncherState(); if (document.activeElement === ui.btnOpenScene) ui.btnHideScene.focus(); }
+  function showScenePanel() { ui.scenePanel.style.display = "block"; bringPanelForward(ui.scenePanel); syncLauncherState(); onPanelShown(ui.scenePanel); if (document.activeElement === ui.btnOpenScene) ui.btnHideScene.focus(); }
   function hideVisualizersPanel() { if (!ui.visualizersPanel) return; ui.visualizersPanel.style.display = "none"; syncLauncherState(); if (document.activeElement && ui.visualizersPanel.contains(document.activeElement)) restoreLauncherFocus(ui.btnOpenVisualizers); }
-  function showVisualizersPanel() { if (!ui.visualizersPanel) return; ui.visualizersPanel.style.display = "block"; bringPanelForward(ui.visualizersPanel); syncLauncherState(); if (document.activeElement === ui.btnOpenVisualizers && ui.btnHideVisualizers) ui.btnHideVisualizers.focus(); }
+  function showVisualizersPanel() { if (!ui.visualizersPanel) return; ui.visualizersPanel.style.display = "block"; bringPanelForward(ui.visualizersPanel); syncLauncherState(); onPanelShown(ui.visualizersPanel); if (document.activeElement === ui.btnOpenVisualizers && ui.btnHideVisualizers) ui.btnHideVisualizers.focus(); }
 
   function setRecordPanelVisibility(visible) {
     if (!ui.recordPanel || !ui.openRecord) return;
@@ -94,7 +102,7 @@ function createWorkspaceUi({ ui = state.ui, readRecordLauncherLabel = () => "Rec
     syncLauncherState();
   }
   function hideRecordPanel(options = {}) { if (!ui.recordPanel || !ui.openRecord) return; if (!options.preserveRestoreFlag) ui.recordingPanelRestoreAfterGlobalHide = false; setRecordPanelVisibility(false); if (document.activeElement && ui.recordPanel.contains(document.activeElement) && ui.btnOpenRecord) restoreLauncherFocus(ui.btnOpenRecord); }
-  function showRecordPanel() { if (!ui.recordPanel || !ui.openRecord || !state.recording.hooksEnabled) return; ui.recordingPanelRestoreAfterGlobalHide = false; setRecordPanelVisibility(true); bringPanelForward(ui.recordPanel); if (document.activeElement === ui.btnOpenRecord && ui.btnHideRecord) ui.btnHideRecord.focus(); }
+  function showRecordPanel() { if (!ui.recordPanel || !ui.openRecord || !state.recording.hooksEnabled) return; ui.recordingPanelRestoreAfterGlobalHide = false; setRecordPanelVisibility(true); bringPanelForward(ui.recordPanel); onPanelShown(ui.recordPanel); if (document.activeElement === ui.btnOpenRecord && ui.btnHideRecord) ui.btnHideRecord.focus(); }
   function primeRecordUi() { if (!ui.recordPanel || !ui.openRecord) return; if (!state.recording.hooksEnabled) ui.recordingPanelRestoreAfterGlobalHide = false; setRecordPanelVisibility(!!state.recording.hooksEnabled && !!ui.recordingPanelVisible); }
 
   function togglePanels() {
