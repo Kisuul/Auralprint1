@@ -1,0 +1,49 @@
+[
+  {
+    "mutation": "unsafe ratio",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-008: log geometry/energy at count 4 survives extreme and collapsed schema-10 intervals (0.754403ms)",
+      "AUD-008: log geometry/energy at count 32 survives extreme and collapsed schema-10 intervals (0.338438ms)",
+      "AUD-008: log geometry/energy at count 256 survives extreme and collapsed schema-10 intervals (0.440361ms)"
+    ]
+  },
+  {
+    "mutation": "wrong endpoint",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-008: default log geometry keeps its defined spacing and exact endpoints (0.861564ms)"
+    ]
+  },
+  {
+    "mutation": "reversed interior",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-008: log geometry/energy at count 32 survives extreme and collapsed schema-10 intervals (0.955505ms)",
+      "AUD-008: log geometry/energy at count 256 survives extreme and collapsed schema-10 intervals (0.577177ms)",
+      "AUD-008: default log geometry keeps its defined spacing and exact endpoints (0.269154ms)"
+    ]
+  },
+  {
+    "mutation": "broken Nyquist cap",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-008: production controller caps configured ceiling above Nyquist for extreme log floors (1.013512ms)"
+    ]
+  },
+  {
+    "mutation": "changed default spacing",
+    "detected": true,
+    "exitCode": 1,
+    "behavioralFailures": [
+      "AUD-008: log geometry/energy at count 4 survives extreme and collapsed schema-10 intervals (0.788434ms)",
+      "AUD-008: log geometry/energy at count 32 survives extreme and collapsed schema-10 intervals (0.369635ms)",
+      "AUD-008: log geometry/energy at count 256 survives extreme and collapsed schema-10 intervals (0.391287ms)",
+      "AUD-008: default log geometry keeps its defined spacing and exact endpoints (0.205318ms)"
+    ]
+  }
+]

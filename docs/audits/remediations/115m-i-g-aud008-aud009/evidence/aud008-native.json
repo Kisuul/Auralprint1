@@ -1,0 +1,278 @@
+{
+  "baseline": false,
+  "browser": "151.0.7922.173",
+  "htmlSha256": "3207b6276e82e956126e063450edbbbaae806343d5221600b551a9164cdefcb1",
+  "cases": [
+    {
+      "name": "AUD-008 native built geometry/energy count 3",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 1
+        }
+      ]
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 4",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            3.3341381242276124e-160,
+            22500
+          ],
+          "midpoint": 3.3341381242276124e-160,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            4.743416490252404e-152,
+            22500
+          ],
+          "midpoint": 4.743416490252404e-152,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            1.4999999999999912e-98,
+            22500
+          ],
+          "midpoint": 1.4999999999999912e-98,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            670.8203932499366,
+            22500
+          ],
+          "midpoint": 670.8203932499366,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22499.99999999995,
+            22500
+          ],
+          "midpoint": 22499.99999999995,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 2
+        }
+      ]
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 32",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            4.1279198126e-313,
+            3.4488781242798653e-302,
+            2.8815386093297697e-291
+          ],
+          "midpoint": 3.3341381242276124e-160,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            2.3900450328716928e-297,
+            5.712315259155432e-287,
+            1.3652690711341934e-276
+          ],
+          "midpoint": 4.743416490252404e-152,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            6.482453606026713e-194,
+            4.202220475429205e-187,
+            2.724069927426594e-180
+          ],
+          "midpoint": 1.4999999999999912e-98,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            25.2775559153712,
+            31.947741652735864,
+            40.37804129984322
+          ],
+          "midpoint": 670.8203932499366,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22499.99999999991,
+            22499.99999999991,
+            22499.99999999991
+          ],
+          "midpoint": 22499.99999999995,
+          "zeroBands": 26
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500,
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 30
+        }
+      ]
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 256",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            9.4e-323,
+            1.877e-321,
+            3.6625e-320
+          ],
+          "midpoint": 3.3341381242276124e-160,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            1.681883826040502e-306,
+            2.8287332042963815e-305,
+            4.757600624489917e-304
+          ],
+          "midpoint": 4.743416490252404e-152,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            6.375821525934474e-200,
+            4.065110013056799e-199,
+            2.5918415926539882e-198
+          ],
+          "midpoint": 1.4999999999999912e-98,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            20.560913555188172,
+            21.137558311196038,
+            21.730375460212546
+          ],
+          "midpoint": 670.8203932499366,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22499.99999999991,
+            22499.99999999991,
+            22499.99999999991
+          ],
+          "midpoint": 22499.99999999995,
+          "zeroBands": 250
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500,
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 254
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

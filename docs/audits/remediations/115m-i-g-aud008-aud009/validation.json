@@ -1,0 +1,11 @@
+{
+  "phase": "G.3",
+  "startingSha": "bf43c45137b1851d568a4d6644f59047bacabc76",
+  "version": "v0.1.15m.i.g",
+  "schema": 10,
+  "build115N": "WITHHELD",
+  "aud008": {"focusedTests": {"pass": 20, "fail": 0}, "nativeMatrices": {"pass": 4, "fail": 0}, "semanticNegativeControlsDetected": 5, "status": "corrected; separately committed before AUD-009"},
+  "aud009": {"baselineNativeReproduced": true, "status": "policy recorded; implementation pending"},
+  "fullValidation": "pending final integrated changes",
+  "finalHeadCI": "pending"
+}

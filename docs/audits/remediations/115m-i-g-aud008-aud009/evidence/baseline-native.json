@@ -1,0 +1,24 @@
+{
+  "baseline": true,
+  "browser": "151.0.7922.173",
+  "htmlSha256": "cd0fbcce458d22b8c052bafc5d06c7009677e70ac66634dc37adbad4c51cbb09",
+  "cases": [
+    {
+      "name": "original imported speed and trace: canonical/native/readout/renderer",
+      "passed": true,
+      "data": {
+        "canonicalSpeed": 0.123456,
+        "nativeSpeed": 0.12,
+        "speedStep": "0.01",
+        "speedReadout": "0.123 rad/s (7.1°/s)",
+        "canonicalLines": 15.5,
+        "nativeLines": 20,
+        "lineStep": "10",
+        "renderedLines": 16,
+        "bulkSpeed": 0.12,
+        "bulkLines": 20
+      }
+    }
+  ],
+  "errors": []
+}
