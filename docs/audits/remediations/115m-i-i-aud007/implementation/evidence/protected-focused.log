@@ -1,4 +1,4 @@
-✔ AUD-007 coordinator rejects stale extractor success independently of extractor checks (0.170681ms)
+✔ AUD-007 coordinator rejects stale extractor success independently of extractor checks (0.153025ms)
 ℹ tests 442
 ℹ suites 0
 ℹ pass 442
@@ -6,4 +6,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 7845.247479
+ℹ duration_ms 1216.050465

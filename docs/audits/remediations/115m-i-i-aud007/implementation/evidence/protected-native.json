@@ -1,11 +1,11 @@
 {
   "f": {
     "actualArtifactVersion": "v0.1.15m.i.i",
-    "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+    "actualArtifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
     "browser": "151.0.7922.173",
     "passed": 21,
     "total": 21,
-    "rawResultSha256": "f712d8c6c43da42667f92cd51d75184950ce1fcf8a8db4f414a8647559bfdc3b",
+    "rawResultSha256": "58e316153f84c8f2c219dd9b940719fe81e185f304f91c6637c05d330888ff39",
     "cases": [
       {
         "name": "terminal cleanup at corrupt",
@@ -14,7 +14,7 @@
         "primaryFaultInjected": false,
         "terminal": {
           "serializedBytes": 5378,
-          "sha256OfCanonicalJson": "7182ebec615c219fa5f3816df690bc3447df23816e1180f11de7136e1a9200b4",
+          "sha256OfCanonicalJson": "d7caa6f37235a6213b30819cfc74266b0c32c759bf90f3dc50d9a72698843ac3",
           "keys": [
             "audio",
             "source",
@@ -65,8 +65,8 @@
         "retry": {
           "media": {
             "id": 22,
-            "src": "blob:http://127.0.0.1:41495/688cf00c-f5c8-4ae1-8383-278bb96ba0bd",
-            "time": 0.110295,
+            "src": "blob:http://127.0.0.1:33221/bcd9b761-7d88-439a-b52f-4f3a880d01cf",
+            "time": 0.138406,
             "paused": false
           },
           "source": {
@@ -102,7 +102,7 @@
         "primaryFaultInjected": true,
         "terminal": {
           "serializedBytes": 3826,
-          "sha256OfCanonicalJson": "c48640455d0369c32ca319fa2fc20ebab1ad53d117b0e5f6981edd36c441064c",
+          "sha256OfCanonicalJson": "2dd7ddbfe19c282690844af1bad08cf7964323b262afd44df0320b31616ebb38",
           "keys": [
             "audio",
             "source",
@@ -154,7 +154,7 @@
         "retry": {
           "media": {
             "id": 13,
-            "src": "blob:http://127.0.0.1:41495/7f40ae0e-7feb-48f9-b5d4-95d1742e9a2a",
+            "src": "blob:http://127.0.0.1:33221/966b9de2-71e6-4fdc-a350-564dd42db657",
             "time": 0.089977,
             "paused": false
           },
@@ -190,8 +190,8 @@
         "boundary": "gain-first",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 3894,
-          "sha256OfCanonicalJson": "52afa56874821e686a1715ae02074113d59dde4cb9a091ce4e89c8d24fa3aa3f",
+          "serializedBytes": 3882,
+          "sha256OfCanonicalJson": "82b59fee78011f24fdb5e7fe4350a1fb86b3b41b083731027647bcbdf7d9eded",
           "keys": [
             "audio",
             "source",
@@ -243,8 +243,8 @@
         "retry": {
           "media": {
             "id": 14,
-            "src": "blob:http://127.0.0.1:41495/9b5a890a-6b8d-4b85-9fbe-76347ee98474",
-            "time": 0.089511,
+            "src": "blob:http://127.0.0.1:33221/80a3861b-edaf-4461-a650-18a7a5aa355a",
+            "time": 0.075905,
             "paused": false
           },
           "source": {
@@ -279,8 +279,8 @@
         "boundary": "splitter",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 3986,
-          "sha256OfCanonicalJson": "06b67182b59bf97c31611d39db1fb2bf9302f50a2ad54f69ba0a1be8cdafc52c",
+          "serializedBytes": 3987,
+          "sha256OfCanonicalJson": "47a7fc24b4275b0088fcfb45be90638e032b1757f72ae4236e2fb38491f3ae0b",
           "keys": [
             "audio",
             "source",
@@ -332,8 +332,8 @@
         "retry": {
           "media": {
             "id": 15,
-            "src": "blob:http://127.0.0.1:41495/7e296d65-f70c-44ea-ab4e-2b98267c9d4d",
-            "time": 0.06966,
+            "src": "blob:http://127.0.0.1:33221/6465c83f-0a6c-490a-a9ae-bb4d5cb81683",
+            "time": 0.101587,
             "paused": false
           },
           "source": {
@@ -368,8 +368,8 @@
         "boundary": "gain-partial",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 4345,
-          "sha256OfCanonicalJson": "4bcc0fe46b3196d0ae79c8aa70359ec82a75e00528a04a3483421fcefa52b768",
+          "serializedBytes": 4331,
+          "sha256OfCanonicalJson": "e07b25847edfb29cee992388883228794d57ae7ecdf5e35a1687eaa052f138b2",
           "keys": [
             "audio",
             "source",
@@ -421,8 +421,8 @@
         "retry": {
           "media": {
             "id": 18,
-            "src": "blob:http://127.0.0.1:41495/41b946bd-d29a-44b1-bfeb-e097098cfe5d",
-            "time": 0.13932,
+            "src": "blob:http://127.0.0.1:33221/5a5e9544-3501-45f9-87e0-2715c0352d50",
+            "time": 0.098685,
             "paused": false
           },
           "source": {
@@ -457,8 +457,8 @@
         "boundary": "analyser-first",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 4468,
-          "sha256OfCanonicalJson": "2187620093617205245cf889757d5c9a8d9237fe7c220bd8435609780e37c953",
+          "serializedBytes": 4469,
+          "sha256OfCanonicalJson": "48c92cf42772288feaddcabd02ee320b6efb84ab2184461f4f58f9bfc0add739",
           "keys": [
             "audio",
             "source",
@@ -510,8 +510,8 @@
         "retry": {
           "media": {
             "id": 19,
-            "src": "blob:http://127.0.0.1:41495/e594b73d-e57e-4804-89d9-8aa851aa0f8f",
-            "time": 0.097531,
+            "src": "blob:http://127.0.0.1:33221/ca260df8-5db5-4f13-a50d-a78fec5a87a4",
+            "time": 0.060952,
             "paused": false
           },
           "source": {
@@ -546,8 +546,8 @@
         "boundary": "analyser-partial",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 4710,
-          "sha256OfCanonicalJson": "ece8aaba2cc65f6b40f8256d866b78fa3e33c4e2ffc1c06b494224c5b285b836",
+          "serializedBytes": 4698,
+          "sha256OfCanonicalJson": "87348652778962ee7e24283fe20d9a892b08c4f0054ce98376fbc21a85943afd",
           "keys": [
             "audio",
             "source",
@@ -599,8 +599,8 @@
         "retry": {
           "media": {
             "id": 21,
-            "src": "blob:http://127.0.0.1:41495/ec093986-7d5b-426d-a546-30165de0e1e3",
-            "time": 0.089977,
+            "src": "blob:http://127.0.0.1:33221/dd6c0b07-deac-4b53-bded-275f601b7d56",
+            "time": 0.040635,
             "paused": false
           },
           "source": {
@@ -635,8 +635,8 @@
         "boundary": "analyser-config",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 4588,
-          "sha256OfCanonicalJson": "31f8af38920485f88cbf9822150d798d6a12a61b8976f86251da47a34ed86cbd",
+          "serializedBytes": 4589,
+          "sha256OfCanonicalJson": "5982f721741da2294a8a353d396d85b89aa3f8146768cbd22b9533e4671b21ea",
           "keys": [
             "audio",
             "source",
@@ -688,8 +688,8 @@
         "retry": {
           "media": {
             "id": 20,
-            "src": "blob:http://127.0.0.1:41495/c694883f-ad4e-4c2c-b63d-dd591b2c240e",
-            "time": 0.056715,
+            "src": "blob:http://127.0.0.1:33221/63e27ac0-0c6c-46eb-89d9-807241cacc3d",
+            "time": 0.040635,
             "paused": false
           },
           "source": {
@@ -724,8 +724,8 @@
         "boundary": "partial-connect",
         "primaryFaultInjected": true,
         "terminal": {
-          "serializedBytes": 4951,
-          "sha256OfCanonicalJson": "a97a77d93a09e6c5c6e495b5f08cff3ab0d84c9ac9e2f771e38664aed8b20d6f",
+          "serializedBytes": 4950,
+          "sha256OfCanonicalJson": "e06b1fe2f3255e70f61e42063a4451e69f28b32ab6af071a4249565367cefc1c",
           "keys": [
             "audio",
             "source",
@@ -777,8 +777,8 @@
         "retry": {
           "media": {
             "id": 22,
-            "src": "blob:http://127.0.0.1:41495/b0501b2e-c287-4349-be9f-aacba4a4b133",
-            "time": 0.049342,
+            "src": "blob:http://127.0.0.1:33221/488bc342-fa1e-4162-aca3-0e001a600e8e",
+            "time": 0.130612,
             "paused": false
           },
           "source": {
@@ -814,7 +814,7 @@
         "primaryFaultInjected": true,
         "terminal": {
           "serializedBytes": 5219,
-          "sha256OfCanonicalJson": "6ca251b314c44ff6fe3af25fa17815a4fbc1160122b985d3a53a34833bc5a3a8",
+          "sha256OfCanonicalJson": "1981005162963390edc9e1bc09e1e576a4485c0df54a6dfde0d2e323aae968ca",
           "keys": [
             "audio",
             "source",
@@ -866,8 +866,8 @@
         "retry": {
           "media": {
             "id": 22,
-            "src": "blob:http://127.0.0.1:41495/6e8fa30e-22dc-4097-8c2d-07a3bf15ec3f",
-            "time": 0.06966,
+            "src": "blob:http://127.0.0.1:33221/593e33b8-976e-451a-988e-71f9f0f99969",
+            "time": 0.060952,
             "paused": false
           },
           "source": {
@@ -902,8 +902,8 @@
         "before": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/c4fd264e-2370-40f3-a66f-b2b5f8002eec",
-            "time": 0.068572,
+            "src": "blob:http://127.0.0.1:33221/374aa4ea-ea10-411e-849a-84306872c339",
+            "time": 0.040635,
             "paused": false
           },
           "source": {
@@ -929,8 +929,8 @@
           }
         },
         "terminal": {
-          "serializedBytes": 5860,
-          "sha256OfCanonicalJson": "aad73bb326ed0b77704a0acd4235b61171da67bf7c0f3217dba71466849ed18e",
+          "serializedBytes": 5859,
+          "sha256OfCanonicalJson": "b26bc823f7de322d1137ea380bd1757146550fa2e997ddf4898a806311b64b80",
           "keys": [
             "audio",
             "source",
@@ -976,14 +976,14 @@
           },
           "media": {
             "id": 21,
-            "src": "blob:http://127.0.0.1:41495/e4614cbc-e84c-4eaf-aaff-f84e5a9d12f5",
-            "time": 0.020317,
+            "src": "blob:http://127.0.0.1:33221/d27c5c9a-f7a8-4d65-adf5-72d6f377d3b5",
+            "time": 0.049342,
             "paused": false
           }
         },
         "before": {
-          "serializedBytes": 10906,
-          "sha256OfCanonicalJson": "e4b67e48af116be0ce1b000ea035f881e36a73227ff043e63cc6bc75a05022da",
+          "serializedBytes": 10893,
+          "sha256OfCanonicalJson": "10b942886691351f9d9b718efaaba084a50ac792d632651ec5f40b21751bd6b0",
           "keys": [
             "audio",
             "source",
@@ -1011,8 +1011,8 @@
           ]
         },
         "after": {
-          "serializedBytes": 4472,
-          "sha256OfCanonicalJson": "a3f2a0def83d91870837c114eae351f3b054fcf35d798b22a56e8b8e5bb7c2fe",
+          "serializedBytes": 4458,
+          "sha256OfCanonicalJson": "9a958a066634329d3e72acdd0e7a499df19339abdc9a9f46b167f5082c9aad35",
           "keys": [
             "audio",
             "source",
@@ -1056,14 +1056,14 @@
           },
           "media": {
             "id": 21,
-            "src": "blob:http://127.0.0.1:41495/eeb1b94c-206c-46dd-8fcf-bba9e14165b2",
-            "time": 0.008707,
+            "src": "blob:http://127.0.0.1:33221/84f27a97-916c-4e67-8393-85b35b9a0963",
+            "time": 0.029025,
             "paused": false
           }
         },
         "before": {
           "serializedBytes": 10333,
-          "sha256OfCanonicalJson": "da04e723d344e0c1963ea56f24a7dc86edb4a77c9dba2742255dfb0c40699ed0",
+          "sha256OfCanonicalJson": "55bfe47be18f45c64de6adf902abd8d81750daa56d3d56622b82ed387b2739ef",
           "keys": [
             "audio",
             "source",
@@ -1093,7 +1093,7 @@
         },
         "after": {
           "serializedBytes": 4137,
-          "sha256OfCanonicalJson": "d708c421f5ecab54a325847d02d43e1f975855921e2040ee84ecfb133c24cc59",
+          "sha256OfCanonicalJson": "59e69c1249499fc55b3947c11c7779dc7e1d2bc506231d94b54773e779f8d544",
           "keys": [
             "audio",
             "source",
@@ -1138,14 +1138,14 @@
           },
           "media": {
             "id": 21,
-            "src": "blob:http://127.0.0.1:41495/ce0781fe-d46a-4f1b-b57f-ba7b7f2ce074",
-            "time": 0.040635,
+            "src": "blob:http://127.0.0.1:33221/30d9279c-67c7-4c93-af40-ca4fb6ad9863",
+            "time": 0.017415,
             "paused": false
           }
         },
         "before": {
           "serializedBytes": 8243,
-          "sha256OfCanonicalJson": "2a27390a4e0e5951889d168afa2a71beb803f2cb9054f6e46555d618107d2309",
+          "sha256OfCanonicalJson": "8e75ae36970d2b5870407e3e6b8b1af6f144f050bc51d144411c13c06acd0f1a",
           "keys": [
             "audio",
             "source",
@@ -1174,7 +1174,7 @@
         },
         "after": {
           "serializedBytes": 3360,
-          "sha256OfCanonicalJson": "96645318f8b1ba875e5482fdaca9d1f8fe08517a2af776ba9dd87859333e7e82",
+          "sha256OfCanonicalJson": "f26ec3a625894a824e7cbf574479044b1f98ba73cdc4991d30386128861cd0d9",
           "keys": [
             "audio",
             "source",
@@ -1218,14 +1218,14 @@
           },
           "media": {
             "id": 21,
-            "src": "blob:http://127.0.0.1:41495/dcdbfb3c-3b71-49b2-9584-419f7db0ae73",
-            "time": 0.020317,
+            "src": "blob:http://127.0.0.1:33221/bdd50ebe-1a08-4fe6-b76e-174fe0fdc594",
+            "time": 0.029025,
             "paused": false
           }
         },
         "before": {
-          "serializedBytes": 10048,
-          "sha256OfCanonicalJson": "072459ff76e5c0cd6f1324cd63373fa4d92b73e96661319700ddaa7c261c130d",
+          "serializedBytes": 10095,
+          "sha256OfCanonicalJson": "699f0726ef5cfa62312ebd0700450649ec9596122fea079148b23e204c661abd",
           "keys": [
             "audio",
             "source",
@@ -1253,8 +1253,8 @@
           ]
         },
         "after": {
-          "serializedBytes": 4131,
-          "sha256OfCanonicalJson": "25b0129b0e1ac92e4d2d3fb84107bc7da96adc339a1022b5070e9ecb642b1247",
+          "serializedBytes": 4118,
+          "sha256OfCanonicalJson": "384830bc41eeeea5d31de6a0ddf5ca0baf3497b6886eed7f1ce9335174017300",
           "keys": [
             "audio",
             "source",
@@ -1298,14 +1298,14 @@
           },
           "media": {
             "id": 21,
-            "src": "blob:http://127.0.0.1:41495/e8f49c68-2dd8-44c3-92e7-2eb847126ab9",
-            "time": 0.029025,
+            "src": "blob:http://127.0.0.1:33221/6383d651-1736-4beb-ab4d-7b82d7206938",
+            "time": 0.019405,
             "paused": false
           }
         },
         "before": {
-          "serializedBytes": 10130,
-          "sha256OfCanonicalJson": "03a8f6f761ff332d5d175a2a92b5469c9f5b3e63e78e273391753c59947a3ee6",
+          "serializedBytes": 10131,
+          "sha256OfCanonicalJson": "57891432aea0bd1a05b5cc2f0821b771efbf81aed92cf84fbf4cb9f1c25f4893",
           "keys": [
             "audio",
             "source",
@@ -1333,8 +1333,8 @@
           ]
         },
         "after": {
-          "serializedBytes": 4141,
-          "sha256OfCanonicalJson": "7b83d999ca46608dcbce0140300876a99f9f8005141f3449d50e9f6b5c9fead4",
+          "serializedBytes": 4142,
+          "sha256OfCanonicalJson": "ae4be6c07388185e510bd3cfc810a03b297b2a8189a928b0f2821efa7af8a206",
           "keys": [
             "audio",
             "source",
@@ -1371,7 +1371,7 @@
         "before": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/fde78947-0ab5-491b-83e3-a81c9fd4f716",
+            "src": "blob:http://127.0.0.1:33221/c168f2f0-81d6-43ef-97e1-8ad2478d1413",
             "time": 0.4,
             "paused": true
           },
@@ -1412,7 +1412,7 @@
         },
         "failure": {
           "serializedBytes": 4807,
-          "sha256OfCanonicalJson": "2344f785010f97136756388b883fa3964de647f51560b66304c86c2aa50bdead",
+          "sha256OfCanonicalJson": "9647fe4d07586ddee74bc798ce94085af6822d4aef608515a9a327ae9a9966c1",
           "keys": [
             "audio",
             "source",
@@ -1442,8 +1442,8 @@
         "retry": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/fde78947-0ab5-491b-83e3-a81c9fd4f716",
-            "time": 0.440635,
+            "src": "blob:http://127.0.0.1:33221/c168f2f0-81d6-43ef-97e1-8ad2478d1413",
+            "time": 0.416743,
             "paused": false
           },
           "audio": {
@@ -1463,7 +1463,7 @@
         "before": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/45992fcf-c3c2-40ca-be6f-ff2b647e3d95",
+            "src": "blob:http://127.0.0.1:33221/794f3657-5441-44a6-91d4-2f9820aae6b7",
             "time": 0.4,
             "paused": true
           },
@@ -1503,8 +1503,8 @@
           }
         },
         "failure": {
-          "serializedBytes": 4744,
-          "sha256OfCanonicalJson": "bfe40b6932f6a20914841eed8c17857e65e6e35819912d87cde3386b24f8ed69",
+          "serializedBytes": 4759,
+          "sha256OfCanonicalJson": "29a7008307315915e9d144ac50cea9fdd57081af026f6579d9775511493a0bbf",
           "keys": [
             "audio",
             "source",
@@ -1534,8 +1534,8 @@
         "retry": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/45992fcf-c3c2-40ca-be6f-ff2b647e3d95",
-            "time": 0.431927,
+            "src": "blob:http://127.0.0.1:33221/794f3657-5441-44a6-91d4-2f9820aae6b7",
+            "time": 0.45805,
             "paused": false
           },
           "audio": {
@@ -1555,7 +1555,7 @@
         "before": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/e749e6df-17cb-4ade-b853-9102962ef81e",
+            "src": "blob:http://127.0.0.1:33221/fa2f0c5d-49c1-473a-b100-eae23baf8f5a",
             "time": 0.4,
             "paused": true
           },
@@ -1595,8 +1595,8 @@
           }
         },
         "failure": {
-          "serializedBytes": 4780,
-          "sha256OfCanonicalJson": "d5a4ff75e52b3f4581d533fe0ddff528642d2d07f8f7552e8389044285f8de33",
+          "serializedBytes": 4795,
+          "sha256OfCanonicalJson": "f3b8e3e872903986a5ea366ae5586c932bc07b2197a06aee61a96bf202b6256a",
           "keys": [
             "audio",
             "source",
@@ -1626,8 +1626,8 @@
         "retry": {
           "media": {
             "id": 11,
-            "src": "blob:http://127.0.0.1:41495/e749e6df-17cb-4ade-b853-9102962ef81e",
-            "time": 0.449342,
+            "src": "blob:http://127.0.0.1:33221/fa2f0c5d-49c1-473a-b100-eae23baf8f5a",
+            "time": 0.408707,
             "paused": false
           },
           "audio": {
@@ -1645,8 +1645,8 @@
         "passed": true,
         "fault": "corrupt",
         "start": {
-          "serializedBytes": 4670,
-          "sha256OfCanonicalJson": "30e1f69065e43f661c658386afb65e288ab698716b61314ba9473d8de26d4164",
+          "serializedBytes": 4655,
+          "sha256OfCanonicalJson": "259300a26f9ba9a4e75f6f923eb0b40ef4c4a6236d112ed3b129412b0a142655",
           "keys": [
             "audio",
             "source",
@@ -1674,8 +1674,8 @@
           ]
         },
         "terminal": {
-          "serializedBytes": 9320,
-          "sha256OfCanonicalJson": "5fdee99d862d4c60b8c00ebd47b1f5cce27f1afa4a44bbcf1c0ca255b77468f5",
+          "serializedBytes": 9318,
+          "sha256OfCanonicalJson": "00ad04e3be15faa874ebba5c0cbaaec36894af09ec0288a8e9324dea2a75981f",
           "keys": [
             "audio",
             "source",
@@ -1706,8 +1706,8 @@
         "recovered": {
           "media": {
             "id": 39,
-            "src": "blob:http://127.0.0.1:41495/a121ee1b-bbdc-4a61-b8ac-e2c256b255ab",
-            "time": 0.037732,
+            "src": "blob:http://127.0.0.1:33221/88790c57-d47b-4867-b36e-29557b6902ca",
+            "time": 0.049342,
             "paused": false
           },
           "graph": {
@@ -1730,8 +1730,8 @@
           }
         },
         "complete": {
-          "serializedBytes": 12648,
-          "sha256OfCanonicalJson": "356578b64c6ba136228dacf0ad4f2c01edaeeff221bed93a79d53addcf50e488",
+          "serializedBytes": 12636,
+          "sha256OfCanonicalJson": "244ba39d9914832431ee2d1866bef5c36b53565ba95246b1316620fad4515699",
           "keys": [
             "audio",
             "source",
@@ -1774,17 +1774,17 @@
             ],
             "selectedMimeType": "video/webm;codecs=vp9,opus",
             "resolvedMimeType": "video/webm;codecs=vp9,opus",
-            "startedAtMs": 2538.900000002235,
-            "stoppedAtMs": 4598.60000000149,
-            "elapsedMs": 2060,
+            "startedAtMs": 1613,
+            "stoppedAtMs": 3347.10000000149,
+            "elapsedMs": 1734,
             "chunkCount": 3,
-            "lastExportUrl": "blob:http://127.0.0.1:41495/043de0fa-3c07-478c-b253-fd5fed29bb41",
-            "lastExportFileName": "auralprint-capture-20261014-013817.webm",
-            "lastExportByteSize": 71598,
+            "lastExportUrl": "blob:http://127.0.0.1:33221/8ec18a14-69df-4074-ac4f-776f61fd1940",
+            "lastExportFileName": "auralprint-capture-20261014-014920.webm",
+            "lastExportByteSize": 71755,
             "lastAction": "finalize",
             "lastCode": "complete",
             "lastMessage": "Recording export ready.",
-            "lastUpdatedAtMs": 4612.20000000298
+            "lastUpdatedAtMs": 3370.10000000149
           },
           "audio": {
             "isLoaded": false,
@@ -1794,9 +1794,9 @@
           }
         },
         "exported": {
-          "bytes": 71598,
+          "bytes": 71755,
           "type": "video/webm",
-          "sha256": "891225eca1e9ad5ba9be8a0cc85863b0a39558e4b4e7f7748d6119beaea9afe5"
+          "sha256": "033688aaa5a16e34bb04fbf2246514cbc2bfd17f59746bfa91dbf2e4eeb085b5"
         },
         "exceptions": [],
         "consoleErrors": []
@@ -1807,7 +1807,7 @@
         "fault": "after-tap",
         "start": {
           "serializedBytes": 4668,
-          "sha256OfCanonicalJson": "ceaf3747f0b741179b8fc4891e42167b4a669fee3479a832a1736a0f7acec769",
+          "sha256OfCanonicalJson": "8bb85b7e195aee3e617e8117d77c69a6f0385b8f00c06593d0da2c83189187dc",
           "keys": [
             "audio",
             "source",
@@ -1835,8 +1835,8 @@
           ]
         },
         "terminal": {
-          "serializedBytes": 9178,
-          "sha256OfCanonicalJson": "5c14cd35eb15536a1ee7d2b712d8998668bba9e2b59ad32604b33a718c145ebc",
+          "serializedBytes": 9165,
+          "sha256OfCanonicalJson": "34fe0a1868d9319b669f6d0ca98fa481dcd9903456d995831bc5ec6a8a1c3226",
           "keys": [
             "audio",
             "source",
@@ -1868,8 +1868,8 @@
         "recovered": {
           "media": {
             "id": 39,
-            "src": "blob:http://127.0.0.1:41495/758fadb6-58c3-4ebd-b089-966b7195a31b",
-            "time": 0.06048,
+            "src": "blob:http://127.0.0.1:33221/c284b609-dd15-474c-885f-42c001b53e4a",
+            "time": 0.040149,
             "paused": false
           },
           "graph": {
@@ -1892,8 +1892,8 @@
           }
         },
         "complete": {
-          "serializedBytes": 12409,
-          "sha256OfCanonicalJson": "aa3a312f93e357b10cd67eb4b93f07452bd51895a174b7b03b903b7509c4d5d1",
+          "serializedBytes": 12411,
+          "sha256OfCanonicalJson": "3b5fff25d5a98834fece1b7eed32cc1fd0f2b4a314e0a7cc6a79087b76acd3d4",
           "keys": [
             "audio",
             "source",
@@ -1937,17 +1937,17 @@
             ],
             "selectedMimeType": "video/webm;codecs=vp9,opus",
             "resolvedMimeType": "video/webm;codecs=vp9,opus",
-            "startedAtMs": 3274.400000002235,
-            "stoppedAtMs": 5164,
-            "elapsedMs": 1890,
+            "startedAtMs": 1980.800000000745,
+            "stoppedAtMs": 3571.5,
+            "elapsedMs": 1591,
             "chunkCount": 3,
-            "lastExportUrl": "blob:http://127.0.0.1:41495/26df685e-6f01-4b85-94fb-ab4b175faac7",
-            "lastExportFileName": "auralprint-capture-20261014-013823.webm",
-            "lastExportByteSize": 62712,
+            "lastExportUrl": "blob:http://127.0.0.1:33221/26341f94-adc3-4122-bf67-e6fca06c679c",
+            "lastExportFileName": "auralprint-capture-20261014-014924.webm",
+            "lastExportByteSize": 69629,
             "lastAction": "finalize",
             "lastCode": "complete",
             "lastMessage": "Recording export ready.",
-            "lastUpdatedAtMs": 5195.900000002235
+            "lastUpdatedAtMs": 3582.300000000745
           },
           "audio": {
             "isLoaded": false,
@@ -1957,9 +1957,9 @@
           }
         },
         "exported": {
-          "bytes": 62712,
+          "bytes": 69629,
           "type": "video/webm",
-          "sha256": "000034c5e1bac7928e04cc1ce6c8048b1f9da76c51281b786bb8154108a2ce42"
+          "sha256": "72c199e305db7a4a7bb6eee982a090d5aeeb24c3e950ba442a2dbf1e9384b977"
         },
         "exceptions": [],
         "consoleErrors": []
@@ -1969,11 +1969,11 @@
   },
   "g": {
     "actualArtifactVersion": "v0.1.15m.i.i",
-    "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+    "actualArtifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
     "browser": "151.0.7922.173",
     "passed": 13,
     "total": 13,
-    "rawResultSha256": "4a41c040062987039c38edfde974a323d465e1a0f781d7826159b849bcea06aa",
+    "rawResultSha256": "d6ec85c1ac3be4fbe05d3c1f0290b076eb7549524971ecb4cbf461b077ba2aed",
     "cases": [
       {
         "name": "A: extreme-log 3-band mixed inactive targets, actual FFT extraction and Orb response",
@@ -2126,7 +2126,7 @@
         "passed": true,
         "data": {
           "iterations": 2000,
-          "elapsedMs": 142.70000000298023,
+          "elapsedMs": 31.300000000745058,
           "presentationMutationRecords": 0,
           "detachedStructural": 0,
           "allIdentitiesConnected": true,
@@ -2478,7 +2478,7 @@
           "native": "0.123456",
           "resources": {
             "manifest": 200,
-            "url": "http://127.0.0.1:45279/hosted/site.webmanifest",
+            "url": "http://127.0.0.1:44199/hosted/site.webmanifest",
             "icons": [
               {
                 "url": "/hosted/web-app-manifest-192x192.png",
@@ -2503,7 +2503,7 @@
           "native": "0.123456",
           "resources": {
             "manifest": 200,
-            "url": "http://127.0.0.1:45279/nested/auralprint/site.webmanifest",
+            "url": "http://127.0.0.1:44199/nested/auralprint/site.webmanifest",
             "icons": [
               {
                 "url": "/nested/auralprint/web-app-manifest-192x192.png",
@@ -2526,11 +2526,11 @@
   },
   "g1": {
     "actualArtifactVersion": "v0.1.15m.i.i",
-    "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+    "actualArtifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
     "browser": "151.0.7922.173",
     "passed": 38,
     "total": 38,
-    "rawResultSha256": "ba36da8512e74dd7290393a124044aee3875854289bb3f161e7b7f17099f0448",
+    "rawResultSha256": "3f3e4b36e3be9f9c010dfc453c594f5d2c67183cfc3a5fba38edd625b98f2f3a",
     "cases": [
       {
         "name": "edit: unrelated volume via production input handler",
@@ -3213,11 +3213,11 @@
   },
   "g2": {
     "actualArtifactVersion": "v0.1.15m.i.i",
-    "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+    "actualArtifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
     "browser": "151.0.7922.173",
     "passed": 31,
     "total": 31,
-    "rawResultSha256": "13077d0cc3898151d9a7bbc5b74d4d0864d4a76e46a9df088486c6f7e76473d6",
+    "rawResultSha256": "ba108fb8167abc462dea604a329eb0f65211cdf7345f6c5ea820d809639841be",
     "cases": [
       {
         "name": "count 3, targets [255]: production picker and persistence",
@@ -4383,11 +4383,11 @@
   },
   "g3": {
     "actualArtifactVersion": "v0.1.15m.i.i",
-    "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+    "actualArtifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
     "browser": "151.0.7922.173",
     "passed": 27,
     "total": 27,
-    "rawResultSha256": "d76de2b61f96d8037c24a9a224cd7cd1197a92cfd61496dac418c1f2a23e1e99",
+    "rawResultSha256": "e17c1c8016db5f3101033effa66001bebf95c940370951dd52e295e966cee334",
     "cases": [
       {
         "name": "original imported speed and trace: canonical/native/readout/renderer",
@@ -5349,11 +5349,11 @@
   },
   "h": {
     "actualArtifactVersion": "v0.1.15m.i.i",
-    "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+    "actualArtifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
     "browser": "151.0.7922.173",
     "passed": 9,
     "total": 9,
-    "rawResultSha256": "6bdba741642c3142b23680b2b5d098a985e8138570521155c7a33ea7afb05796",
+    "rawResultSha256": "9af5ea6ea967b41fc624861d6c5fb463ba21c9751ddb2bd8fe400d3268231c92",
     "cases": [
       {
         "name": "idle mutation absence, focused inventory identity, tooltip listeners and canonical state",
@@ -5488,7 +5488,7 @@
           "complete": {
             "phase": "complete",
             "index": 1,
-            "bytes": 26358,
+            "bytes": 17568,
             "busy": "false",
             "url": true
           },

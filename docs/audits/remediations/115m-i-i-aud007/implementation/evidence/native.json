@@ -1,7 +1,7 @@
 {
   "version": "v0.1.15m.i.i",
   "browser": "151.0.7922.173",
-  "artifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+  "artifactSha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd",
   "environment": "headless Linux Chromium, localhost portable/root/nested. File read and native decoder output delivery can be held by test wrappers. Native completion and delivery settlement are tracked separately. No physical reclamation or whole-browser memory cap claim.",
   "cases": [
     {
@@ -345,12 +345,14 @@
           "loaded": true,
           "playing": true,
           "error": "",
-          "time": 0.671391
+          "time": 5.999509,
+          "duration": 8,
+          "seekFraction": 0.75
         },
         "stableUnavailable": {
           "iterations": 1000,
           "mutations": 0,
-          "text": "0:00 / 0:08 • waveform unavailable"
+          "text": "0:06 / 0:08 • waveform unavailable"
         },
         "recovered": {
           "reads": [
@@ -609,7 +611,7 @@
           "peakCount": 0,
           "filename": "",
           "playing": false,
-          "text": "Stream share was cancelled or denied."
+          "text": "--:-- / --:-- • no track loaded"
         },
         "settled": {
           "reads": [
@@ -667,7 +669,7 @@
           "decodeCount": 1
         },
         "exported": {
-          "bytes": 9042,
+          "bytes": 11451,
           "url": true
         },
         "settled": {

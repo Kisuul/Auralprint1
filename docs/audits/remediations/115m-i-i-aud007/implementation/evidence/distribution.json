@@ -1,7 +1,7 @@
 {
   "auralprint_0.1.15m.i.i.html": {
-    "bytes": 416937,
-    "sha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    "bytes": 416950,
+    "sha256": "4a2dd902e4038cfc2e54a5e6580b7781b93c338ed2842f235c5b355f9ed073bd"
   },
   "hosted/apple-touch-icon.png": {
     "bytes": 21085,
@@ -20,8 +20,8 @@
     "sha256": "f3e95bf3acd93122339066956ec52a048b36f176864255f84f4c45fefc22dd16"
   },
   "hosted/index.html": {
-    "bytes": 415768,
-    "sha256": "d8c9319e990d71f21f2b4ef0a0008d327e4d3c4b6be7e985a976e443b4de74b2"
+    "bytes": 415781,
+    "sha256": "96fc5dcc40971aa8486a57ec533d592d96df4fc201b42a8ecae4584f6cf0023f"
   },
   "hosted/site.webmanifest": {
     "bytes": 517,

@@ -1,4 +1,4 @@
-✔ Record restore remains eligible only while hooks are enabled (0.340562ms)
+✔ Record restore remains eligible only while hooks are enabled (0.320552ms)
 ℹ tests 826
 ℹ suites 0
 ℹ pass 825
@@ -6,4 +6,4 @@
 ℹ cancelled 0
 ℹ skipped 1
 ℹ todo 0
-ℹ duration_ms 6818.4424
+ℹ duration_ms 6735.870139

@@ -47,7 +47,7 @@ const Scrubber = (() => {
   async function loadFile(file) {
     _dragging = false;
     _waveform = null;
-    await waveformCoordinator.request(file);
+    return waveformCoordinator.request(file);
   }
 
   function reset() {

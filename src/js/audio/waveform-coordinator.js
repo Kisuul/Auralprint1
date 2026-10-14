@@ -29,9 +29,9 @@ function createWaveformCoordinator({ extract, onUpdate }) {
       if (!isCurrent(job)) return;
       onUpdate("decoding", null);
       if (!isCurrent(job)) return;
-      const file = job.file;
+      const extraction = extract(job.file, { isCurrent: () => isCurrent(job) });
       job.file = null;
-      const peaks = await extract(file, { isCurrent: () => isCurrent(job) });
+      const peaks = await extraction;
       if (isCurrent(job) && peaks) onUpdate("ready", peaks);
     } catch {
       if (isCurrent(job)) onUpdate("unavailable", null);
