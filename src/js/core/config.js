@@ -304,6 +304,24 @@ const CONFIG = deepFreeze({
     volume: { min: 0, max: 1, step: 0.01 },
   },
 
+  // Application-only waveform policy. Not scene/preset defaults. I.2B supplies
+  // decisions; restrictive production activation belongs to I.2C.
+  waveform: {
+    decodeSampleRateHz: 44100,
+    peakBucketCount: 512,
+    automaticProfiles: [
+      { id: "4m", approximateMinutes: 4 },
+      { id: "8m", approximateMinutes: 8 },
+      { id: "15m", approximateMinutes: 15 },
+    ],
+    defaultProfileId: "8m",
+    // Provisional source defaults, not a total browser-memory guarantee.
+    maxEncodedBytes: 64 * 1024 * 1024,
+    maxEstimatedDecodedPcmBytes: 512 * 1024 * 1024,
+    fallbackEstimatedChannels: 2,
+    metadataProbe: { maxBytes: 64 * 1024, maxChunks: 128 },
+  },
+
   recording: {
     // Build 113 recording feature gate.
     hooksEnabled: true,
