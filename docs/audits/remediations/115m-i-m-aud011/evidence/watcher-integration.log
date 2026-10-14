@@ -1,34 +1,35 @@
 ▶ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle
-  ✔ initial startup builds both editions (402.169255ms)
-  ✔ JS dependency-only edit (355.362254ms)
-  ✔ CSS dependency-only edit (233.221429ms)
-  ✔ template-only edit updates both distributions (243.216836ms)
-  ✔ version-only save replaces filename/title while retaining older portable (239.042822ms)
-  ✔ rapid template/version/JS/CSS edits and A to B to C converge (389.830708ms)
-  ✔ refuses invalid version "" and recovers (320.016822ms)
-  ✔ refuses invalid version "not/a/version" and recovers (316.618066ms)
-  ✔ refuses invalid version "v1<script>" and recovers (322.79898ms)
-  ✔ temporarily unreadable version and atomic restore (317.682283ms)
-  ✔ version path temporarily cannot be read as a file (317.232994ms)
-  ✔ src/js/core/constants.js build error and atomic source replacement recovery (437.687979ms)
-  ✔ src/css/panels.css build error and atomic source replacement recovery (357.148649ms)
-  ✔ invalid template retains valid outputs and recovers via replacement (357.41879ms)
-  ✔ branding-only save updates portable favicon and hosted bytes (230.217005ms)
-  ✔ branding removal fails without damaging output and replacement recovers (350.086461ms)
-  ✔ manifest-only edit retains package-relative hosted metadata (226.805352ms)
-  ✔ assembler process failure preserves output and a later save recovers (362.676369ms)
-  ✔ edits during active assembly are retained and obsolete transaction is discarded (550.55379ms)
-  ✔ duplicate saves do not assemble again and Python assemblers never overlap (676.232139ms)
-  ✔ repeated atomic template and version saves keep producing current editions (1030.794493ms)
-  ✔ termination joins active Python work and releases watcher resources (225.906961ms)
-✔ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle (8281.887089ms)
+  ✔ initial startup builds both editions (354.509626ms)
+  ✔ JS dependency-only edit (271.770054ms)
+  ✔ CSS dependency-only edit (274.610442ms)
+  ✔ template-only edit updates both distributions (236.177711ms)
+  ✔ version-only save replaces filename/title while retaining older portable (234.349551ms)
+  ✔ rapid template/version/JS/CSS edits and A to B to C converge (389.86356ms)
+  ✔ refuses invalid version "" and recovers (335.981932ms)
+  ✔ refuses invalid version "not/a/version" and recovers (320.070812ms)
+  ✔ refuses invalid version "v1<script>" and recovers (320.24864ms)
+  ✔ temporarily unreadable version and atomic restore (317.321558ms)
+  ✔ version path temporarily cannot be read as a file (316.421674ms)
+  ✔ src/js/core/constants.js build error and atomic source replacement recovery (400.479839ms)
+  ✔ src/css/panels.css build error and atomic source replacement recovery (357.857461ms)
+  ✔ invalid template retains valid outputs and recovers via replacement (358.839966ms)
+  ✔ branding-only save updates portable favicon and hosted bytes (234.020768ms)
+  ✔ branding removal fails without damaging output and replacement recovers (353.38055ms)
+  ✔ manifest-only edit retains package-relative hosted metadata (307.603536ms)
+  ✔ assembler process failure preserves output and a later save recovers (360.717145ms)
+  ✔ edits during active assembly are retained and obsolete transaction is discarded (446.240574ms)
+  ✔ duplicate saves do not assemble again and Python assemblers never overlap (672.285896ms)
+  ✔ repeated atomic template and version saves keep producing current editions (1003.356143ms)
+  ✔ termination joins active Python work and releases watcher resources (232.291201ms)
+✔ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle (8117.050279ms)
 ℹ Watcher completion events: 23; native platform: linux
-✔ AUD-011 watcher starts with an invalid version and recovers without restart (490.159054ms)
-ℹ tests 24
+✔ AUD-011 watcher starts with an invalid version and recovers without restart (476.330962ms)
+✔ AUD-011 parent-lifetime pipe stops Python on EOF; native Windows forced termination releases children (586.583855ms)
+ℹ tests 25
 ℹ suites 0
-ℹ pass 24
+ℹ pass 25
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 8853.699079
+ℹ duration_ms 9258.233139

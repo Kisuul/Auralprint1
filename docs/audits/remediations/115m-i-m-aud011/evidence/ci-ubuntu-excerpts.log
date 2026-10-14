@@ -1,0 +1,9 @@
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:34.7835095Z ▶ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:42.7961954Z ✔ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle (8588.926128ms)
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:43.3680799Z ✔ AUD-011 watcher starts with an invalid version and recovers without restart (571.818257ms)
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:43.9361776Z ✔ AUD-011 parent-lifetime pipe stops Python on EOF; native Windows forced termination releases children (575.985274ms)
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:43.9618529Z ℹ tests 973
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:43.9618967Z ℹ pass 972
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:43.9619179Z ℹ fail 0
+Test and build (ubuntu-latest)	Test	2026-10-14T17:57:43.9619615Z ℹ skipped 1
+Test and build (ubuntu-latest)	Verify versioned artifact and untracked generated output	2026-10-14T17:57:44.3974018Z Verified exact head 69306353c6e64635b57969a69cabd172eab94b32

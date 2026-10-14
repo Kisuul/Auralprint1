@@ -8,7 +8,7 @@
   "presetSchema": 10,
   "branch": "codex/115m-i-m-aud011-watch-correctness",
   "draftPR": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/56",
-  "status": "local validation passed; final exact-head Ubuntu/Windows CI required at handoff",
+  "status": "local and exact implementation-head Ubuntu/Windows validation passed; final evidence-head CI linked in draft PR #56",
   "findingDisposition": "corrective PR awaiting independent human review; open until review and merge",
   "build115N": "WITHHELD",
   "local": {
@@ -40,19 +40,20 @@
       }
     ],
     "fullTests": {
-      "total": 972,
-      "passed": 971,
+      "total": 973,
+      "passed": 972,
       "failed": 0,
       "skipped": 1,
       "skipReason": "established opt-in RC-15 million-particle stress test"
     },
     "focusedTests": {
-      "total": 24,
-      "passed": 24,
+      "total": 25,
+      "passed": 25,
       "failed": 0,
       "integrationSubcases": 22,
       "containingTest": 1,
-      "separateStartupRecovery": 1
+      "separateStartupRecovery": 1,
+      "parentLifetimeTest": 1
     },
     "postWatchBuildAndVerification": {
       "passed": true,
@@ -69,7 +70,27 @@
     "python": "3.12",
     "checkout": "PR head SHA explicitly selected and actual Git HEAD asserted",
     "finalHeadEvidence": "Draft PR #56 body records SHA, workflow and both job links after final push; earlier commits do not substitute",
-    "implementationHeadRun": null
+    "implementationHeadRun": {
+      "headSha": "69306353c6e64635b57969a69cabd172eab94b32",
+      "runId": 38611034832,
+      "url": "https://github.com/cosmicdance-4-2-0/Auralprint1/actions/runs/38611034832",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Test and build (windows-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/cosmicdance-4-2-0/Auralprint1/actions/runs/38611034832/job/116014110195"
+        },
+        {
+          "name": "Test and build (ubuntu-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/cosmicdance-4-2-0/Auralprint1/actions/runs/38611034832/job/116014110702"
+        }
+      ],
+      "nativeWindowsForcedSIGTERM": "passed",
+      "ubuntuActualHeadVerified": true,
+      "windowsActualHeadVerified": true
+    }
   },
   "interfaces": {
     "readVersionMetadata": "new exported fresh immutable selection",
@@ -77,7 +98,8 @@
     "paths.distHtml": "compatible named path now uses fresh getter",
     "assembleSingleFile": "no-argument API preserved; optional snapshot paths/metadata/AbortSignal and resolved metadata are additive",
     "watcherMain": "existing entry retained; close() handle additive",
-    "windowsGracefulShutdown": "Node-parent IPC request; terminal SIGINT uses same cleanup path"
+    "windowsGracefulShutdown": "Node-parent IPC request; terminal SIGINT uses same cleanup path",
+    "watchOwnedPython": "Parent-lifetime pipe EOF exits watch-owned Python, including forced parent termination on Windows; no polling"
   },
   "retention": "Older versioned portable HTML retained; same-version, hosted, bundles and metafile replaced only after valid current staged assembly",
   "limits": [
@@ -137,5 +159,6 @@
     "generatedTracked": [],
     "version": "v0.1.15m.i.m",
     "schema": 10
-  }
+  },
+  "recommendation": "115M.I.M PASS \u2014 AUD-011 CLOSURE RECOMMENDED FOR HUMAN REVIEW."
 }
