@@ -4,6 +4,7 @@ import { state } from "../core/state.js";
 import { AudioEngine } from "./audio-engine.js";
 import { createWaveformAdmission } from "./waveform-admission.js";
 import { buildWaveformPeaks } from "./waveform-extractor.js";
+import { createWaveformControls } from "../ui/waveform-options.js";
 
 /* =============================================================================
    Scrubber
@@ -21,16 +22,20 @@ const Scrubber = (() => {
   let _dragging = false;
   let _waveformStatus = "empty"; // empty | waiting | decoding | ready | unavailable
   let _waveformDetail = null;
+  let _controls = null;
+  let _interactionCleanup = null;
   const waveformAdmission = createWaveformAdmission({
     onUpdate(status, peaks, detail) {
       _waveformStatus = status;
       _waveform = peaks;
       _waveformDetail = detail;
+      _controls?.update(status, detail);
       draw();
     },
   });
 
   function init(canvasEl) {
+    _interactionCleanup?.();
     _dragging = false;
     _canvas = canvasEl;
     _ctx2d = _canvas.getContext("2d");
@@ -41,6 +46,15 @@ const Scrubber = (() => {
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("touchcancel", onTouchEnd);
+    const interactionWindow = window;
+    _interactionCleanup = () => {
+      canvasEl.removeEventListener("mousedown", onMouseDown);
+      canvasEl.removeEventListener("touchstart", onTouchStart);
+      for (const [type,handler] of [["mousemove",onMouseMove],["mouseup",onMouseUp],["touchmove",onTouchMove],["touchend",onTouchEnd],["touchcancel",onTouchEnd]]) interactionWindow.removeEventListener(type,handler);
+    };
+    _controls?.dispose();
+    _controls = createWaveformControls({generate:waveformAdmission.generate});
+    _controls.update(_waveformStatus, _waveformDetail);
   }
 
   // Playback never awaits optional extraction. The coordinator alone owns work
@@ -178,18 +192,20 @@ const Scrubber = (() => {
       // Time display
       const timeEl = document.getElementById("scrubberTime");
       if (timeEl) {
-        const statusText = _waveformStatus === "waiting" ? " • waiting for waveform"
+        const statusText = _waveformStatus === "metadata" ? " • waiting for metadata"
+          : _waveformStatus === "waiting" ? " • waiting for waveform"
           : (_waveformStatus === "decoding" ? " • decoding waveform"
-          : (_waveformStatus === "unavailable" ? " • waveform unavailable" : ""));
+          : (_waveformStatus === "unavailable" ? (_waveformDetail?.manualEligible ? " • waveform optional" : " • waveform unavailable") : ""));
         const text = `${formatTime(el.currentTime)} / ${formatTime(el.duration)}${statusText}`;
         if (timeEl.textContent !== text) timeEl.textContent = text;
       }
     } else if (hasLoadedTrack) {
       const timeEl = document.getElementById("scrubberTime");
       if (timeEl) {
-        const statusText = _waveformStatus === "waiting" ? " • waiting for waveform"
+        const statusText = _waveformStatus === "metadata" ? " • waiting for metadata"
+          : _waveformStatus === "waiting" ? " • waiting for waveform"
           : (_waveformStatus === "decoding" ? " • decoding waveform"
-          : (_waveformStatus === "unavailable" ? " • waveform unavailable" : ""));
+          : (_waveformStatus === "unavailable" ? (_waveformDetail?.manualEligible ? " • waveform optional" : " • waveform unavailable") : ""));
         const text = `--:-- / --:--${statusText}`;
         if (timeEl.textContent !== text) timeEl.textContent = text;
       }

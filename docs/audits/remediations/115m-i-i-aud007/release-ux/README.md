@@ -69,3 +69,43 @@ is invented. An error with missing duration becomes unavailable. A decoder/read
 failure is terminal for that intent; later File requests can recover after actual
 settlement. Native decoding has no per-call cancellation. Indefinitely unsettled
 work can indefinitely delay optional waveforms; playback stays independent.
+
+## Release controls and manual generation
+
+Audio's existing Scrubber row gains a compact Waveforms options button and a
+contextual Generate button. A small non-modal auto popover holds the application
+settings, current status and full Generate waveform action; no new Audio row or
+Scene/preset control. CONFIG profiles supply IDs and approximate-minute labels;
+CONFIG supplies exactly Ask / Generate automatically if permitted / Skip labels.
+Stock default is 8m / Ask. Profiles measure stereo-equivalent PCM workload;
+9-minute mono may fit 8m, while multichannel work can exceed a shorter profile.
+Skip is the accepted above-profile behavior, not a hard resource override.
+
+Native popover provides mouse/touch dismissal, Escape and keyboard navigation;
+a small non-modal fallback handles browsers without popover support. Labels,
+focus transfer when an action disappears, a separate polite live announcement
+(outside the closed popover), current status and launcher tooltip make state
+observable. Repeated unchanged refreshes compare text/properties before writes.
+Controls dispose old listeners on reinitialization. Scrubber interaction listener
+replacement is idempotent; seeking, time display and peak styling are preserved.
+
+Generate revalidates current UI request/Queue/source/media identity and fresh
+metadata/hard ceilings, sets manual intent only after an admit decision, and
+requests the same coordinator. Repeated clicks during queued/probing/decoding work
+do nothing. The action disappears immediately during work or track change. A busy
+slot states that the previous operation must actually settle. Hard refusals show
+a concise reason and no Generate action. Manual skips only the automatic workload
+profile, never maxEncodedBytes or maxEstimatedDecodedPcmBytes. No ordinary UI
+control disables these limits.
+
+CONFIG source customization is intentional expert control: rebuild after changing
+profiles/defaults, decode output rate, metadata probe bounds, fallback channels,
+or either hard ceiling. Valid source ceilings take precedence without a hidden
+factory cap. Application storage selects choices only. Default ceilings are
+67,108,864 encoded bytes and 536,870,912 estimated PCM bytes. These bound admission,
+not total browser memory. Native scratch, source-rate resampling, playback,
+recordings, metadata inaccuracies and delayed GC remain outside that estimate.
+Compressed media can hide multichannel content behind a stereo estimate; six-
+channel Opus coverage cannot be called verified. Unsupported/ambiguous headers
+use the documented estimate only with known valid duration. Contradictory
+supported WAV metadata cannot silently shrink to stereo.

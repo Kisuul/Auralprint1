@@ -29,6 +29,9 @@
   <div id="scrubberRow">
     <canvas id="scrubberCanvas" width="1" height="36"></canvas>
     <span id="scrubberTime" class="muted">--:-- / --:--</span>
+    <button id="btnGenerateWaveform" type="button" aria-label="Generate waveform for current track" hidden>Generate</button>
+    <button id="btnWaveformOptions" type="button" popovertarget="waveformOptions" aria-controls="waveformOptions" aria-expanded="false" aria-label="Waveform options">Waveforms</button>
+    <span id="waveformAnnouncement" class="waveform-announcement" role="status" aria-live="polite" aria-atomic="true"></span>
   </div>
 
   <div class="transport-controls">
@@ -69,6 +72,20 @@
   </div>
   <div id="audioStatus" class="muted track">No audio loaded.</div>
 </div>
+
+  <div id="waveformOptions" popover="auto" role="region" aria-labelledby="waveformOptionsTitle">
+    <div class="panel-header">
+      <h2 id="waveformOptionsTitle" class="panel-title">Large-file waveforms</h2>
+      <button id="btnCloseWaveformOptions" type="button" aria-label="Close waveform options">Close</button>
+    </div>
+    <p class="panel-description">Application settings · saved on this device, independent of scene presets.</p>
+    <div class="row"><label for="selWaveformProfile">Automatic waveform limit</label><select id="selWaveformProfile" aria-describedby="waveformProfileHelp"></select></div>
+    <p id="waveformProfileHelp" class="panel-description">Approximate stereo PCM workload, not a track-duration cutoff. Channel estimates can be incomplete for compressed audio.</p>
+    <div class="row"><label for="selWaveformBehavior">For tracks above the selected profile</label><select id="selWaveformBehavior"></select></div>
+    <p class="panel-description">Generation always respects the configured resource limits. Playback and seeking remain available without a waveform.</p>
+    <p id="waveformStatus" class="panel-status">Load a File to generate its waveform.</p>
+    <button id="btnGenerateWaveformOptions" type="button" hidden>Generate waveform</button>
+  </div>
 
   <!-- Queue panel — floats above the audio panel with extra scrubber clearance. Hidden by default.
        Populated dynamically by refreshQueuePanel() inside UI.wireControls(). -->
