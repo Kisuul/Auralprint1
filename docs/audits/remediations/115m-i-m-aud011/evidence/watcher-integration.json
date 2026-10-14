@@ -1,0 +1,411 @@
+{
+  "platform": "linux",
+  "node": "v24.19.0",
+  "version": "v0.1.15-aud011-repeat-3",
+  "finalArtifacts": {
+    "auralprint_0.1.15-aud011-repeat-3.html": {
+      "bytes": 449009,
+      "sha256": "a4d9574928a2952d47cd38b0423ca1f8eeafc140f1e3b7db018f366962fe4465"
+    },
+    "hosted/apple-touch-icon.png": {
+      "bytes": 21085,
+      "sha256": "d81a6025dd4b21484bcbe975c0bd2e6db2fdb61a1437e1112849ef58ab016bfc"
+    },
+    "hosted/favicon-96x96.png": {
+      "bytes": 9034,
+      "sha256": "63c77536989a01479a37f41930989232d589710e83a3e706b9b1fe7b02301817"
+    },
+    "hosted/favicon.ico": {
+      "bytes": 15086,
+      "sha256": "9800272423a8511e334311af34c9ca6e55aa4fa6051d6f4bf355af8189d7e92f"
+    },
+    "hosted/favicon.svg": {
+      "bytes": 1169,
+      "sha256": "f1ec5e5e058207f8f692aa16b2e8c53d70995eaaaf5ca77a8e16e40b30ec23e4"
+    },
+    "hosted/index.html": {
+      "bytes": 447776,
+      "sha256": "556c8b356f40dc0e41e2efd4f3c4598593f90000f4e620062221cadd4d83dae7"
+    },
+    "hosted/site.webmanifest": {
+      "bytes": 517,
+      "sha256": "a32810c42a35033e4f7851d362b56a7e9595d3fee2577959df1bbc271c60d3a8"
+    },
+    "hosted/web-app-manifest-192x192.png": {
+      "bytes": 22773,
+      "sha256": "b73872f891fdb6cb32eb57c67beb9ea3e940b1722cf5912c60bcb9185a537991"
+    },
+    "hosted/web-app-manifest-512x512.png": {
+      "bytes": 105356,
+      "sha256": "451750c8f7eebabce053802ebf3e17e447f84daf339f09fa0d43288d7f773568"
+    }
+  },
+  "successes": 23,
+  "events": [
+    {
+      "at": "2026-10-14T17:51:57.759Z",
+      "text": "[watch] watching JS/CSS dependencies, template, version and flat branding inputs\n"
+    },
+    {
+      "at": "2026-10-14T17:51:57.793Z",
+      "text": "[watch] build finished, watching for changes...\n"
+    },
+    {
+      "at": "2026-10-14T17:51:57.815Z",
+      "text": "[watch] build finished, watching for changes...\n"
+    },
+    {
+      "at": "2026-10-14T17:51:57.881Z",
+      "text": "[watch] assembling v0.1.15m.i.m\n"
+    },
+    {
+      "at": "2026-10-14T17:51:57.975Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15m.i.m.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15m.i.m; inputs 07fc882689fa6fd12ef0699e5938b8fe3a2d175e03333e6b23a08fdc83420732)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.160Z",
+      "text": "[watch] build started (change: \"src/js/core/constants.js\")\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.205Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.257Z",
+      "text": "[watch] assembling v0.1.15m.i.m\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.341Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15m.i.m.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15m.i.m; inputs 68411368342dbb7829c300982f2ba5dd63cc6bbe56ef25a9d413391348f9c459)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.461Z",
+      "text": "[watch] build started (change: \"src/css/panels.css\")\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.465Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.519Z",
+      "text": "[watch] assembling v0.1.15m.i.m\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.601Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15m.i.m.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15m.i.m; inputs 9f00fd8ec4342c7f314e505a21221c31006482754e9690c3dcd55df6983b1cd0)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.734Z",
+      "text": "[watch] assembling v0.1.15m.i.m\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.815Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15m.i.m.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15m.i.m; inputs d0c21e3af58948c9d9e9a3e475ec876057f0c1800b3057111628883854d58bf8)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:58.975Z",
+      "text": "[watch] assembling v0.1.15-aud011-B\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.058Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-B.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-B; inputs cf7bd3e217a594f91945ada3bdaef3c7ba46e5fcaf69467694f8f87f745d66aa)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.171Z",
+      "text": "[watch] build started (change: \"src/css/base.css\")\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.176Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.218Z",
+      "text": "[watch] build started (change: \"src/js/main.js\")\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.253Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.308Z",
+      "text": "[watch] assembling v0.1.15-aud011-C\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.387Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C; inputs 41368b207351759102f8480c7e7444c3064484e5ebcec4a44a31099bb69599ad)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.604Z",
+      "text": "[watch] assembly failed: Version file is empty: /tmp/auralprint-watch-5RQpff/version\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.689Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.767Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored; inputs 275dd5ed3f423109bcd451fe437f1f75629c6d93ac0d6f41445dbcf5ac6ec730)\n"
+    },
+    {
+      "at": "2026-10-14T17:51:59.923Z",
+      "text": "[watch] assembly failed: Version file must contain a safe version tag starting with \"v\": /tmp/auralprint-watch-5RQpff/version\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.009Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.089Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored; inputs 0b51400540a09edfd679dbfbaf87df1bebe89cb83d11f4ebd93caab4a3436228)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.240Z",
+      "text": "[watch] assembly failed: Version file must contain a safe version tag starting with \"v\": /tmp/auralprint-watch-5RQpff/version\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.327Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.406Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored; inputs 0b4e054aea29a94b79d57b7c7b1d4dc09070328603f928ce9c55b3dbbaef7119)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.563Z",
+      "text": "[watch] assembly failed: Missing version file: /tmp/auralprint-watch-5RQpff/version\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.648Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.728Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement; inputs 3c2920602d513d4b635009f51c305dce73d8540dd2b1eec2b18f04f9adcbb3c2)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.882Z",
+      "text": "[watch] assembly failed: Missing version file: /tmp/auralprint-watch-5RQpff/version\n"
+    },
+    {
+      "at": "2026-10-14T17:52:00.968Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.045Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs f140c57e7f18d4c604326faa3618d303a2a718b4df1761039f2359fd6f73a3b5)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.182Z",
+      "text": "[watch] build started (change: \"src/js/core/constants.js\")\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.189Z",
+      "text": "✘ [ERROR] Expected identifier but found \"=\"\n\n    src/js/core/constants.js:28:6:\n      28 │ const = ;\n         ╵       ^\n\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.208Z",
+      "text": "[watch] js bundle failed; skipping assembly.\n\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.208Z",
+      "text": "1 error\n[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.309Z",
+      "text": "[watch] build started (change: \"src/js/core/constants.js\")\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.347Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.400Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.479Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs a570a200b8496504999f4931eadc556d156bcbc050a5abcc28fc64c06b855cdd)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.592Z",
+      "text": "[watch] build started (change: \"src/css/panels.css\")\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.595Z",
+      "text": "▲ [WARNING] Expected \"}\" to go with \"{\" [css-syntax-error]\n\n    src/css/panels.css:267:38:\n      267 │ .aud011-invalid { color: \"unterminated\n          │                                       ^\n          ╵                                       }\n\n  The unbalanced \"{\" is here:\n\n    src/css/panels.css:267:16:\n      267 │ .aud011-invalid { color: \"unterminated\n          ╵                 ^\n\n▲ [WARNING] Unterminated string token [css-syntax-error]\n\n    src/css/panels.css:267:38:\n      267 │ .aud011-invalid { color: \"unterminated\n          ╵                                       ^\n\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.596Z",
+      "text": "[watch] css bundle failed; skipping assembly.\nsrc/css/panels.css:267:38 Expected \"}\" to go with \"{\"\nsrc/css/panels.css:267:38 Unterminated string token\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.596Z",
+      "text": "2 warnings\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.596Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.696Z",
+      "text": "[watch] build started (change: \"src/css/panels.css\")\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.700Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.754Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.833Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 1e112924eb21893020c5bb43c937b7658e1627c23f6c46199092866e8303e682)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:01.997Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.047Z",
+      "text": "Distribution packaging failed: Missing or duplicate JS marker in template\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.054Z",
+      "text": "[watch] assembly failed: python /tmp/auralprint-watch-5RQpff/scripts/assemble_single_file.py /tmp/auralprint-watch-5RQpff/.build/watch-l12Kdh/template.html /tmp/auralprint-watch-5RQpff/.build/watch-l12Kdh/auralprint.css /tmp/auralprint-watch-5RQpff/.build/watch-l12Kdh/auralprint.js v0.1.15-aud011-C-restored-restored-restored-replacement-readable /tmp/auralprint-watch-5RQpff/.build/watch-l12Kdh/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html --branding /tmp/auralprint-watch-5RQpff/.build/watch-l12Kdh/branding --hosted-dir /tmp/auralprint-watch-5RQpff/.build/watch-l12Kdh/hosted exited with code 1\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.119Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.200Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 1f3bbea6705a1f10efc6e5ca6d4eef00933ea95f9a40a33b53d9612e25883878)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.354Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.430Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs e26888cf685dfd7adb098a0d1a6a778f5796a6e7aca788e16eb450ff964eb07b)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.585Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.632Z",
+      "text": "Distribution packaging failed: Missing required branding asset: /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/branding/favicon.svg\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.637Z",
+      "text": "[watch] assembly failed: python /tmp/auralprint-watch-5RQpff/scripts/assemble_single_file.py /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/template.html /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/auralprint.css /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/auralprint.js v0.1.15-aud011-C-restored-restored-restored-replacement-readable /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html --branding /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/branding --hosted-dir /tmp/auralprint-watch-5RQpff/.build/watch-SDDERD/hosted exited with code 1\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.708Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.785Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 71b67f0b10127a549b0d159f056d1b656f64f5532a7529a8f73ac619c830bd05)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:02.936Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.018Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 16f44015a2b1cebb505bbfa06b1297319bbeed6179f6db867443be1ef92995f0)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.165Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.209Z",
+      "text": "[watch] assembly failed: python /tmp/auralprint-watch-5RQpff/scripts/assemble_single_file.py /tmp/auralprint-watch-5RQpff/.build/watch-t5E7gt/template.html /tmp/auralprint-watch-5RQpff/.build/watch-t5E7gt/auralprint.css /tmp/auralprint-watch-5RQpff/.build/watch-t5E7gt/auralprint.js v0.1.15-aud011-C-restored-restored-restored-replacement-readable /tmp/auralprint-watch-5RQpff/.build/watch-t5E7gt/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html --branding /tmp/auralprint-watch-5RQpff/.build/watch-t5E7gt/branding --hosted-dir /tmp/auralprint-watch-5RQpff/.build/watch-t5E7gt/hosted exited with code 23\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.288Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.370Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 0ba243d4346883a870225a2f0d9316d0c6bdec857c1f4b0760f4ac3ab036f2c7)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.526Z",
+      "text": "[watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.625Z",
+      "text": "[watch] build started (change: \"src/css/base.css\")\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.630Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.639Z",
+      "text": "[watch] superseded v0.1.15-aud011-C-restored-restored-restored-replacement-readable; awaiting current inputs\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.669Z",
+      "text": "[watch] build started (change: \"src/js/main.js\")\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.704Z",
+      "text": "[watch] build finished\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.758Z",
+      "text": "[watch] assembling v0.1.15-aud011-final\n"
+    },
+    {
+      "at": "2026-10-14T17:52:03.838Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-final.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-final; inputs 97c1978d70e891fdf707073d6a8d01bbeed4e50dd1b4a8ddf205840e7b073dde)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:04.752Z",
+      "text": "[watch] assembling v0.1.15-aud011-repeat-0\n"
+    },
+    {
+      "at": "2026-10-14T17:52:04.834Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-repeat-0.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-repeat-0; inputs 4e73e391fc4a7b9ad1c26e9a428dda4713bd247e08d11ad5f188a72d171e6b58)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:04.992Z",
+      "text": "[watch] assembling v0.1.15-aud011-repeat-1\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.075Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-repeat-1.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-repeat-1; inputs 641ac1a122b564df4442aa5113d25efa355df16b25019ba763d5af515f4dd87e)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.224Z",
+      "text": "[watch] assembling v0.1.15-aud011-repeat-2\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.320Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-repeat-2.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-repeat-2; inputs 2e7f2f176766267c73b2d56c9c08438714e6b6cf3b783a03f076f23519b4f82d)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.481Z",
+      "text": "[watch] assembling v0.1.15-aud011-repeat-3\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.560Z",
+      "text": "[watch] assembled /tmp/auralprint-watch-5RQpff/dist/auralprint_0.1.15-aud011-repeat-3.html and /tmp/auralprint-watch-5RQpff/dist/hosted (v0.1.15-aud011-repeat-3; inputs 576e35f89f53ad5de4b4255ffe04dc5fadea79893d20c422057d99146d1d3157)\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.782Z",
+      "text": "[watch] assembling v0.1.15-aud011-repeat-3\n"
+    },
+    {
+      "at": "2026-10-14T17:52:05.946Z",
+      "text": "[watch] stopped; filesystem watchers, esbuild and assembler released\n"
+    }
+  ],
+  "assemblerTrace": "start 4986\nend 4986\nstart 4990\nend 4990\nstart 4993\nend 4993\nstart 4996\nend 4996\nstart 5004\nend 5004\nstart 5008\nend 5008\nstart 5013\nend 5013\nstart 5015\nend 5015\nstart 5017\nend 5017\nstart 5019\nend 5019\nstart 5025\nend 5025\nstart 5027\nend 5027\nstart 5030\nend 5030\nstart 5035\nend 5035\nstart 5036\nend 5036\nstart 5039\nend 5039\nstart 5041\nend 5041\nstart 5043\nend 5043\nstart 5045\nend 5045\nstart 5049\nend 5049\nstart 5050\nend 5050\nstart 5054\nend 5054\nstart 5055\nend 5055\nstart 5062\nend 5062\nstart 5064\nend 5064\nstart 5066\nend 5066\nstart 5068\nend 5068\nstart 5071\n"
+}

@@ -1,0 +1,34 @@
+▶ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle
+  ✔ initial startup builds both editions (402.169255ms)
+  ✔ JS dependency-only edit (355.362254ms)
+  ✔ CSS dependency-only edit (233.221429ms)
+  ✔ template-only edit updates both distributions (243.216836ms)
+  ✔ version-only save replaces filename/title while retaining older portable (239.042822ms)
+  ✔ rapid template/version/JS/CSS edits and A to B to C converge (389.830708ms)
+  ✔ refuses invalid version "" and recovers (320.016822ms)
+  ✔ refuses invalid version "not/a/version" and recovers (316.618066ms)
+  ✔ refuses invalid version "v1<script>" and recovers (322.79898ms)
+  ✔ temporarily unreadable version and atomic restore (317.682283ms)
+  ✔ version path temporarily cannot be read as a file (317.232994ms)
+  ✔ src/js/core/constants.js build error and atomic source replacement recovery (437.687979ms)
+  ✔ src/css/panels.css build error and atomic source replacement recovery (357.148649ms)
+  ✔ invalid template retains valid outputs and recovers via replacement (357.41879ms)
+  ✔ branding-only save updates portable favicon and hosted bytes (230.217005ms)
+  ✔ branding removal fails without damaging output and replacement recovers (350.086461ms)
+  ✔ manifest-only edit retains package-relative hosted metadata (226.805352ms)
+  ✔ assembler process failure preserves output and a later save recovers (362.676369ms)
+  ✔ edits during active assembly are retained and obsolete transaction is discarded (550.55379ms)
+  ✔ duplicate saves do not assemble again and Python assemblers never overlap (676.232139ms)
+  ✔ repeated atomic template and version saves keep producing current editions (1030.794493ms)
+  ✔ termination joins active Python work and releases watcher resources (225.906961ms)
+✔ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle (8281.887089ms)
+ℹ Watcher completion events: 23; native platform: linux
+✔ AUD-011 watcher starts with an invalid version and recovers without restart (490.159054ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8853.699079

@@ -1,6 +1,6 @@
 # Auralprint development roadmap
 
-Updated: October 13, 2026. Development revision: **`v0.1.15m.i.l` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
+Updated: October 14, 2026. Development revision: **`v0.1.15m.i.m` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
 
 **RC-01 through RC-22 have completed corrective review and merge at accepted main `a198b14b087da6b855041c3a23acb550a156ff4e`. 115N final acceptance remains WITHHELD. Build 115 is unshipped and noncanonical.** Corrective closure does not establish complete browser, media, accessibility, artistic, or hardware acceptance. The [current audit disposition index](docs/development/build-115.md#audit-disposition-index) records accepted corrections and residual limitations; earlier audit snapshots remain immutable.
 
@@ -28,7 +28,7 @@ Camera, richer frequency/band tools, preset-file workflows, and 3D remain planne
 
 ## Build 115 staged delivery plan
 
-Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2C are accepted through main `45cbf558afa8b437e39af6e006b22d0db9d703c0` (PR #54). I.2D at v0.1.15m.i.l submits hostile acceptance and narrow corrections for human review; AUD-007 closure is not approved by this branch. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
+Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2D are accepted through main `a2f484b845df69e717ebd3998cabb7db640eb6c6` (merged PR #55, v0.1.15m.i.l). The v0.1.15m.i.m [AUD-011 watcher correction](docs/audits/remediations/115m-i-m-aud011/README.md) is submitted as a corrective PR awaiting human review; AUD-011 remains open until review and merge. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
 
 1. **Revised Build 115 canon** — real scope and state. *(115A complete)*
 2. **AnalysisFrame boundary** — data-only consumer seam. *(115B complete)*
@@ -42,7 +42,7 @@ Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2C 
 10. **Dedicated Analysis panel** — configuration/diagnostics separate from visualization; channel-complete spectra. *(115J/J.A complete)*
 11. **Spectral Ring promotion** — singleton lifecycle and sole presentation editor. *(115K complete)*
 12. **Explicit color ownership** — Scene policy and Orb overrides. *(115L complete)*
-13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M accepted through I.2C; I.2D hostile acceptance submitted for review)*
+13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M accepted through I.2D; I.M watcher correction awaiting review)*
 14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N WITHHELD)*
 15. **Canonization** — approved release comparison, artifacts and explicit human shipment approval. *(115N only after acceptance)*
 

@@ -78,13 +78,13 @@ test at tests/watch-integration.test.js:160:15
   [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs fe64300421f6d4322309b3e7f851d76ef87743d832fe70814e2c1c7a2d91db23)
   [watch] build started (change: "src/js/core/constants.js")
   ✘ [ERROR] Expected identifier but found "="
-  
+
       src/js/core/constants.js:28:6:
         28 │ const = ;
            ╵       ^
-  
+
   [watch] js bundle failed; skipping assembly.
-  
+
   1 error
   [watch] build finished
   [watch] build started (change: "src/js/core/constants.js")
@@ -93,24 +93,24 @@ test at tests/watch-integration.test.js:160:15
   [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 01bfc78fb5d5bd2a9491de5f94beab9705ca46c5b1cc95c5a5052c499c254c44)
   [watch] build started (change: "src/css/panels.css")
   ▲ [WARNING] Expected "}" to go with "{" [css-syntax-error]
-  
+
       src/css/panels.css:267:38:
         267 │ .aud011-invalid { color: "unterminated
             │                                       ^
             ╵                                       }
-  
+
     The unbalanced "{" is here:
-  
+
       src/css/panels.css:267:16:
         267 │ .aud011-invalid { color: "unterminated
             ╵                 ^
-  
+
   ▲ [WARNING] Unterminated string token [css-syntax-error]
-  
+
       src/css/panels.css:267:38:
         267 │ .aud011-invalid { color: "unterminated
             ╵                                       ^
-  
+
   [watch] css bundle failed; skipping assembly.
   src/css/panels.css:267:38 Expected "}" to go with "{"
   src/css/panels.css:267:38 Unterminated string token
@@ -120,7 +120,7 @@ test at tests/watch-integration.test.js:160:15
   [watch] build finished
   [watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable
   [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs e42c7d8535db5e2597692507ceb803b9bc7eca362900327227e83feb5341fd13)
-  
+
       at Object.wait (file:///workspace/Auralprint1/scripts/test-support/watch-harness.mjs:53:31)
       at async check (file:///workspace/Auralprint1/tests/watch-integration.test.js:73:5)
       ... 4 lines matching cause stack trace ...

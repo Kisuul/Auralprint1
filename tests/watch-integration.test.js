@@ -233,12 +233,14 @@ syncBuiltinESMExports();
     await t.test("duplicate saves do not assemble again and Python assemblers never overlap", async () => {
       const count = watch.successes;
       const content = readFileSync(templateFile);
+      const traceBefore = readFileSync(`${dir}/assembler-trace`, "utf8");
       for (let i = 0; i < 10; i++) writeFileSync(templateFile, content);
       const end = Date.now() + quietWindowMs;
       await until(() => {
         assert.equal(watch.successes, count);
         return Date.now() >= end;
       }, "duplicate-event observation");
+      assert.equal(readFileSync(`${dir}/assembler-trace`, "utf8"), traceBefore, "Duplicate saves launched an assembler");
       let active = 0;
       for (const line of readFileSync(`${dir}/assembler-trace`, "utf8").trim().split(/\r?\n/)) {
         active += line.startsWith("start") ? 1 : -1;

@@ -7,7 +7,7 @@ import { artifactPaths, discard, inventory, outputs, projectCopy, root, startWat
 const report = { baseline: "a2f484b845df69e717ebd3998cabb7db640eb6c6", platform: process.platform, node: process.version, cases: [] };
 for (const kind of ["template", "version"]) {
   const dir = projectCopy();
-  for (const file of ["scripts/build.mjs", "scripts/watch.mjs", "version"]) {
+  for (const file of ["scripts/build.mjs", "scripts/watch.mjs", "version", "src/js/core/constants.js"]) {
     writeFileSync(`${dir}/${file}`, execFileSync("git", ["show", `${report.baseline}:${file}`], { cwd: root }));
   }
   const watch = startWatch(dir);
