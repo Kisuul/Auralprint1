@@ -1,0 +1,388 @@
+{
+  "version": "v0.1.15m.i.j",
+  "browser": "151.0.7922.173",
+  "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431",
+  "environment": "headless Linux Chromium, localhost. Pure modules exposed via a diagnostic-only bundle. Native media duration, offline decode and production playback use real small files. No production policy activation, native RSS or physical reclamation claim.",
+  "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "cases": [
+    {
+      "name": "native metadata/estimate/output stereo.wav",
+      "pass": true,
+      "data": {
+        "fileSizeBytes": 176444,
+        "durationInitial": null,
+        "initialReadyState": 0,
+        "initialDecision": {
+          "decision": "defer",
+          "reason": "metadata-pending",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "unknown",
+            "reason": "metadata-pending",
+            "detail": "duration-missing"
+          }
+        },
+        "mediaDuration": 1,
+        "header": {
+          "confidence": "verified",
+          "reason": "pcm-wav-header",
+          "channelCount": 2,
+          "sourceSampleRateHz": 44100,
+          "durationSeconds": 1,
+          "sourceFrames": 44100
+        },
+        "decision": {
+          "decision": "admit",
+          "reason": "within-budget",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "verified",
+            "durationSeconds": 1,
+            "channelCount": 2,
+            "sourceSampleRateHz": 44100,
+            "assumption": null,
+            "estimatedPcmBytes": 352800,
+            "estimatedOutputFrames": 44100
+          },
+          "estimatedPcmBytes": 352800
+        },
+        "probeReads": 1,
+        "probeBytes": 65536,
+        "before": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "afterPolicy": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "actual": {
+          "frames": 44100,
+          "channels": 2,
+          "sampleRate": 44100,
+          "pcmBytes": 352800
+        },
+        "estimateDifferenceBytes": 0,
+        "confidenceRemains": "verified",
+        "fixtureSha256": "9e76e9ccc0863f27d80303f82946d267adc1f72a1a9c8213e8f8b027a282bcc0"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "native metadata/estimate/output surround-96k.wav",
+      "pass": true,
+      "data": {
+        "fileSizeBytes": 1152044,
+        "durationInitial": null,
+        "initialReadyState": 0,
+        "initialDecision": {
+          "decision": "defer",
+          "reason": "metadata-pending",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "unknown",
+            "reason": "metadata-pending",
+            "detail": "duration-missing"
+          }
+        },
+        "mediaDuration": 1,
+        "header": {
+          "confidence": "verified",
+          "reason": "pcm-wav-header",
+          "channelCount": 6,
+          "sourceSampleRateHz": 96000,
+          "durationSeconds": 1,
+          "sourceFrames": 96000
+        },
+        "decision": {
+          "decision": "admit",
+          "reason": "within-budget",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "verified",
+            "durationSeconds": 1,
+            "channelCount": 6,
+            "sourceSampleRateHz": 96000,
+            "assumption": null,
+            "estimatedPcmBytes": 1058400,
+            "estimatedOutputFrames": 44100
+          },
+          "estimatedPcmBytes": 1058400
+        },
+        "probeReads": 1,
+        "probeBytes": 65536,
+        "before": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "afterPolicy": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "actual": {
+          "frames": 44099,
+          "channels": 6,
+          "sampleRate": 44100,
+          "pcmBytes": 1058376
+        },
+        "estimateDifferenceBytes": 24,
+        "confidenceRemains": "verified",
+        "fixtureSha256": "20e79158811e0bd52114d132b0f3f3763af8c13435e0da594f553df535d30437"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "native metadata/estimate/output stereo.mp3",
+      "pass": true,
+      "data": {
+        "fileSizeBytes": 13100,
+        "durationInitial": null,
+        "initialReadyState": 0,
+        "initialDecision": {
+          "decision": "defer",
+          "reason": "metadata-pending",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "unknown",
+            "reason": "metadata-pending",
+            "detail": "duration-missing"
+          }
+        },
+        "mediaDuration": 0.75,
+        "header": {
+          "confidence": "unknown",
+          "reason": "metadata-unavailable",
+          "detail": "unsupported-container"
+        },
+        "decision": {
+          "decision": "admit",
+          "reason": "within-budget",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "estimated",
+            "durationSeconds": 0.75,
+            "channelCount": 2,
+            "sourceSampleRateHz": null,
+            "assumption": "configured-channel-fallback",
+            "estimatedPcmBytes": 264600,
+            "estimatedOutputFrames": 33075
+          },
+          "estimatedPcmBytes": 264600
+        },
+        "probeReads": 1,
+        "probeBytes": 13100,
+        "before": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "afterPolicy": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "actual": {
+          "frames": 33075,
+          "channels": 2,
+          "sampleRate": 44100,
+          "pcmBytes": 264600
+        },
+        "estimateDifferenceBytes": 0,
+        "confidenceRemains": "estimated",
+        "fixtureSha256": "15158596d3f6ecfffeeac4603b9cddcfd270a69a259ef38c3b27e9192c23d720"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "native metadata/estimate/output stereo.ogg",
+      "pass": true,
+      "data": {
+        "fileSizeBytes": 12310,
+        "durationInitial": null,
+        "initialReadyState": 0,
+        "initialDecision": {
+          "decision": "defer",
+          "reason": "metadata-pending",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "unknown",
+            "reason": "metadata-pending",
+            "detail": "duration-missing"
+          }
+        },
+        "mediaDuration": 0.7565,
+        "header": {
+          "confidence": "unknown",
+          "reason": "metadata-unavailable",
+          "detail": "unsupported-container"
+        },
+        "decision": {
+          "decision": "admit",
+          "reason": "within-budget",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "estimated",
+            "durationSeconds": 0.7565,
+            "channelCount": 2,
+            "sourceSampleRateHz": null,
+            "assumption": "configured-channel-fallback",
+            "estimatedPcmBytes": 266896,
+            "estimatedOutputFrames": 33362
+          },
+          "estimatedPcmBytes": 266896
+        },
+        "probeReads": 1,
+        "probeBytes": 12310,
+        "before": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "afterPolicy": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "actual": {
+          "frames": 33075,
+          "channels": 2,
+          "sampleRate": 44100,
+          "pcmBytes": 264600
+        },
+        "estimateDifferenceBytes": 2296,
+        "confidenceRemains": "estimated",
+        "fixtureSha256": "953deb1cc3bdb5a86ca4d27a14d4e2fb9d1a7da8cb9c48e7adf7141149741db2"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "native metadata/estimate/output surround.ogg",
+      "pass": true,
+      "data": {
+        "fileSizeBytes": 779,
+        "durationInitial": null,
+        "initialReadyState": 0,
+        "initialDecision": {
+          "decision": "defer",
+          "reason": "metadata-pending",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "unknown",
+            "reason": "metadata-pending",
+            "detail": "duration-missing"
+          }
+        },
+        "mediaDuration": 0.7565,
+        "header": {
+          "confidence": "unknown",
+          "reason": "metadata-unavailable",
+          "detail": "unsupported-container"
+        },
+        "decision": {
+          "decision": "admit",
+          "reason": "within-budget",
+          "profileId": "8m",
+          "profilePcmBytes": 169344000,
+          "metadata": {
+            "confidence": "estimated",
+            "durationSeconds": 0.7565,
+            "channelCount": 2,
+            "sourceSampleRateHz": null,
+            "assumption": "configured-channel-fallback",
+            "estimatedPcmBytes": 266896,
+            "estimatedOutputFrames": 33362
+          },
+          "estimatedPcmBytes": 266896
+        },
+        "probeReads": 1,
+        "probeBytes": 779,
+        "before": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "afterPolicy": {
+          "fullReads": 0,
+          "decodes": 0
+        },
+        "actual": {
+          "frames": 33075,
+          "channels": 6,
+          "sampleRate": 44100,
+          "pcmBytes": 793800
+        },
+        "estimateDifferenceBytes": -526904,
+        "confidenceRemains": "estimated",
+        "fixtureSha256": "6303e71dccfe39f3fa2e2c04d6b9011985aad2d0eda698b9c3dac7fc6f6771a8"
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "unconnected policy preserves automatic waveform portable",
+      "pass": true,
+      "data": {
+        "refusal": {
+          "decision": "refuse",
+          "reason": "encoded-budget"
+        },
+        "production": {
+          "counts": {
+            "fullReads": 1,
+            "decodes": 1
+          },
+          "playing": true,
+          "loaded": true,
+          "peaks": 512
+        },
+        "policyIntegrated": false
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "unconnected policy preserves automatic waveform hosted-root",
+      "pass": true,
+      "data": {
+        "refusal": {
+          "decision": "refuse",
+          "reason": "encoded-budget"
+        },
+        "production": {
+          "counts": {
+            "fullReads": 1,
+            "decodes": 1
+          },
+          "playing": true,
+          "loaded": true,
+          "peaks": 512
+        },
+        "policyIntegrated": false
+      },
+      "pageErrors": []
+    },
+    {
+      "name": "unconnected policy preserves automatic waveform hosted-nested",
+      "pass": true,
+      "data": {
+        "refusal": {
+          "decision": "refuse",
+          "reason": "encoded-budget"
+        },
+        "production": {
+          "counts": {
+            "fullReads": 1,
+            "decodes": 1
+          },
+          "playing": true,
+          "loaded": true,
+          "peaks": 512
+        },
+        "policyIntegrated": false
+      },
+      "pageErrors": []
+    }
+  ]
+}

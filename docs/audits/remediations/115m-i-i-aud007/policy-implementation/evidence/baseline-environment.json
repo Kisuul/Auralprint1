@@ -1,0 +1,22 @@
+{
+  "startingSHA": "b237857a3ec21e4ba7a0cd13f8e0bcff3e58122d",
+  "pr50": "open, accepted b2d84e9122991affea5c8525a07c5f755a52a3ce",
+  "pr51": "open, exact accepted head",
+  "remoteMain": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+  "startingTreeClean": true,
+  "branch": "codex/115m-i-i-aud007-admission-policy",
+  "draftPR": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/52",
+  "baseBranch": "codex/115m-i-i-aud007-coordinator",
+  "node": "v24.19.0",
+  "python": "Python 3.12.14",
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431",
+  "buildSourceSha256": {
+    "src/js/audio/waveform-policy.js": "f8773aa3a8e57a01c397f74448ba2241637f6a7b55a67a070f23dbe812ace486",
+    "src/js/audio/waveform-metadata.js": "9e9c1219ba85b169224fa6e2a1c3959c0258e4b5dcf0d93c4c95e70a61145983",
+    "src/js/core/config.js": "c29af8cac7619f618b8732f188cefad8015f1d3b306154a01b616af765f5cb11",
+    "src/js/core/constants.js": "3e37aebde3b0123bc836faaf82c512148fba36be5f452ef3f7b8e6fa70677459",
+    "version": "c2a045d84b5911a3bd6102b1b5445c51f1868ca8c72ad1245141f30a4473b9e0"
+  },
+  "sourceProvenance": "Source digests pin measured working files; final-head matches are verified after commit. Exact-head Linux/Windows CI recorded in PR handoff."
+}
