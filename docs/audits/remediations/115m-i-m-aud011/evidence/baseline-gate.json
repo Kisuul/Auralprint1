@@ -1,0 +1,20 @@
+{
+  "remoteMain": "a2f484b845df69e717ebd3998cabb7db640eb6c6",
+  "expectedAcceptedBaseline": "a2f484b845df69e717ebd3998cabb7db640eb6c6",
+  "mergedPR": {
+    "number": 55,
+    "merged": true,
+    "merge_commit_sha": "a2f484b845df69e717ebd3998cabb7db640eb6c6",
+    "url": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/55"
+  },
+  "initialBranch": "work",
+  "initialTrackedOrUntrackedChanges": [],
+  "startingVersion": "v0.1.15m.i.l",
+  "presetSchema": 10,
+  "branch": "codex/115m-i-m-aud011-watch-correctness",
+  "discrepancies": [],
+  "node": "v24.19.0",
+  "python": "Python 3.12.14",
+  "classification": "developer-tooling bug fix; no runtime/config/preferences/schema behavior change",
+  "risk": "watch scheduling, file observation and subprocess lifecycle; protected by isolated actual-path integration and existing packaging tests"
+}

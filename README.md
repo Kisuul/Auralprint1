@@ -2,7 +2,7 @@
 
 **Auralprint is an offline-capable audio-analysis system whose visualization expresses its analysis.** It combines file playback and live input analysis with configurable spectral inspection, visualizers, and recording.
 
-**Release 3 / Build 113 (`v0.1.13`) remains the canonical public shipped release.** Build 114 (`v0.1.14`) is an internally shipped milestone. Current development is **Build 115, `v0.1.15m.i.l`**, preset schema **10**. RC-01 through RC-22 have completed corrective review and merge at the accepted baseline; **115N final acceptance remains WITHHELD**. Build 115 is unshipped and noncanonical.
+**Release 3 / Build 113 (`v0.1.13`) remains the canonical public shipped release.** Build 114 (`v0.1.14`) is an internally shipped milestone. Current development is **Build 115, `v0.1.15m.i.m`**, preset schema **10**. RC-01 through RC-22 have completed corrective review and merge at the accepted baseline; **115N final acceptance remains WITHHELD**. Build 115 is unshipped and noncanonical.
 
 See [ROADMAP.md](ROADMAP.md) for current capabilities, dependencies, deferrals, and acceptance gates; [Build 115 development history](docs/development/build-115.md) for engineering decisions and the [current audit disposition index](docs/development/build-115.md#audit-disposition-index); and the [canonical changelog](docs/Canon/changelog.md) for shipped-build differences. The [release-delta draft](docs/development/build-115-release-delta.md) prepares both public and internal comparisons for human review without publishing release notes.
 
@@ -32,7 +32,7 @@ The portable build is intended for offline execution. The project owner reports 
 
 `npm ci` may require registry access; installation is not promised to work offline. No global esbuild or committed `node_modules` is needed. If the default npm cache is unwritable, use `npm ci --cache ./.npm-cache`, then remove that disposable cache. Native-executable/child-process EPERM requires an environment fix. The assembler tries `PYTHON`, `python`, `python3`, then `py -3` on Windows. Dependencies and generated `node_modules/`, `.build/`, `build/`, and `dist/` remain ignored and untracked.
 
-[GitHub Actions CI](.github/workflows/ci.yml) provisions Node 24/Python 3.12 and validates locked installation, tests, both distributions, packaging contracts, generated-output tracking, and whitespace on Linux and Windows. It caches npm packages, never `node_modules`. Browser tooling is optional and outside project dependencies; [historical diagnostic instructions](docs/development/build-115.md#diagnostics-and-evidence) link to the owning reports and scripts. `npm run watch` regenerates both editions for JS/CSS edits; branding, template, or version-only changes require a rebuild or restart.
+[GitHub Actions CI](.github/workflows/ci.yml) provisions Node 24/Python 3.12 and validates locked installation, tests, both distributions, packaging contracts, generated-output tracking, and whitespace on Linux and Windows. It caches npm packages, never `node_modules`. Browser tooling is optional and outside project dependencies; [historical diagnostic instructions](docs/development/build-115.md#diagnostics-and-evidence) link to the owning reports and scripts. `npm run watch` observes JS/CSS dependencies, `src/index.template.html`, root `version`, and flat branding inputs. It assembles both editions from staged snapshots, refuses invalid inputs, and retains earlier versioned portable files. See the [AUD-011 corrective review](docs/audits/remediations/115m-i-m-aud011/README.md) for ordering, recovery and lifecycle limits; the corrective PR awaits human review.
 
 **CI success does not complete browser/device or release acceptance. 115N remains WITHHELD.**
 
@@ -64,7 +64,7 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 | 112 | v0.1.12 | — | ✅ Shipped (Internal) | Scrubber + Playlist/Queue |
 | 113 | v0.1.13 | R3 | ✅ Shipped (canonical) | Recording / Capture + band distribution modes |
 | 114 | v0.1.14 | — | ✅ Shipped (Internal) | Live input sources (mic/tab/stream) |
-| 115 | v0.1.15 (`v0.1.15m.i.l` development revision) | — | Implemented; RC corrections accepted; AUD-007 I.2D submitted for review; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
+| 115 | v0.1.15 (`v0.1.15m.i.m` development revision) | — | Implemented; RC corrections accepted; AUD-007 I.2D merged via PR #55; AUD-011 corrective PR awaiting review; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
 | 116 | v0.1.16 | R4 | Planned | Camera controls (render ≠ sim) |
 | 117 | v0.1.17 | — | Planned | UX polish + performance hardening |
 | 118 | v0.1.18 | — | Planned | Richer spectral selection |

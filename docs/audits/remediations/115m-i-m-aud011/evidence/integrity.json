@@ -1,0 +1,9 @@
+{
+  "baseline": "a2f484b845df69e717ebd3998cabb7db640eb6c6",
+  "protectedFilesCompared": 315,
+  "protectedChanges": [],
+  "runtimeDiff": "diff --git a/src/js/core/constants.js b/src/js/core/constants.js\nindex 84bb0aa..bc4305b 100644\n--- a/src/js/core/constants.js\n+++ b/src/js/core/constants.js\n@@ -1,6 +1,6 @@\n /* =============================================================================\n    Auralprint\n-   0.1.15m.i.l\n+   0.1.15m.i.m\n \n    Build 115 \u2014 Visualizer Architecture + Orb Overhaul v1\n    Per-Orb visual ownership; preset schema v10.\n",
+  "generatedTracked": [],
+  "version": "v0.1.15m.i.m",
+  "schema": 10
+}
