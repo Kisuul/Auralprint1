@@ -2,8 +2,9 @@ import { clamp, hexToRgb01, rgb01ToCss, lerpRgb01 } from "../core/utils.js";
 import { runtime } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { AudioEngine } from "./audio-engine.js";
-import { createWaveformCoordinator } from "./waveform-coordinator.js";
-import { extractWaveform, buildWaveformPeaks } from "./waveform-extractor.js";
+import { createWaveformAdmission } from "./waveform-admission.js";
+import { buildWaveformPeaks } from "./waveform-extractor.js";
+import { createWaveformControls } from "../ui/waveform-options.js";
 
 /* =============================================================================
    Scrubber
@@ -20,16 +21,21 @@ const Scrubber = (() => {
   let _waveform = null;    // Float32Array of normalised peak samples, or null
   let _dragging = false;
   let _waveformStatus = "empty"; // empty | waiting | decoding | ready | unavailable
-  const waveformCoordinator = createWaveformCoordinator({
-    extract: extractWaveform,
-    onUpdate(status, peaks) {
+  let _waveformDetail = null;
+  let _controls = null;
+  let _interactionCleanup = null;
+  const waveformAdmission = createWaveformAdmission({
+    onUpdate(status, peaks, detail) {
       _waveformStatus = status;
       _waveform = peaks;
+      _waveformDetail = detail;
+      _controls?.update(status, detail);
       draw();
     },
   });
 
   function init(canvasEl) {
+    _interactionCleanup?.();
     _dragging = false;
     _canvas = canvasEl;
     _ctx2d = _canvas.getContext("2d");
@@ -40,19 +46,28 @@ const Scrubber = (() => {
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("touchcancel", onTouchEnd);
+    const interactionWindow = window;
+    _interactionCleanup = () => {
+      canvasEl.removeEventListener("mousedown", onMouseDown);
+      canvasEl.removeEventListener("touchstart", onTouchStart);
+      for (const [type,handler] of [["mousemove",onMouseMove],["mouseup",onMouseUp],["touchmove",onTouchMove],["touchend",onTouchEnd],["touchcancel",onTouchEnd]]) interactionWindow.removeEventListener(type,handler);
+    };
+    _controls?.dispose();
+    _controls = createWaveformControls({generate:waveformAdmission.generate});
+    _controls.update(_waveformStatus, _waveformDetail);
   }
 
   // Playback never awaits optional extraction. The coordinator alone owns work
   // admission; this module only presents the current result and seek timeline.
-  async function loadFile(file) {
+  async function loadFile(file, identity = {}) {
     _dragging = false;
     _waveform = null;
-    return waveformCoordinator.request(file);
+    return waveformAdmission.loadFile(file, {media:getMediaEl(), ...identity});
   }
 
   function reset() {
     _dragging = false;
-    waveformCoordinator.reset();
+    waveformAdmission.reset();
   }
 
   // Get the <audio> element from AudioEngine internals. AudioEngine exposes
@@ -177,18 +192,20 @@ const Scrubber = (() => {
       // Time display
       const timeEl = document.getElementById("scrubberTime");
       if (timeEl) {
-        const statusText = _waveformStatus === "waiting" ? " • waiting for waveform"
+        const statusText = _waveformStatus === "metadata" ? " • waiting for metadata"
+          : _waveformStatus === "waiting" ? " • waiting for waveform"
           : (_waveformStatus === "decoding" ? " • decoding waveform"
-          : (_waveformStatus === "unavailable" ? " • waveform unavailable" : ""));
+          : (_waveformStatus === "unavailable" ? (_waveformDetail?.manualEligible ? " • waveform optional" : " • waveform unavailable") : ""));
         const text = `${formatTime(el.currentTime)} / ${formatTime(el.duration)}${statusText}`;
         if (timeEl.textContent !== text) timeEl.textContent = text;
       }
     } else if (hasLoadedTrack) {
       const timeEl = document.getElementById("scrubberTime");
       if (timeEl) {
-        const statusText = _waveformStatus === "waiting" ? " • waiting for waveform"
+        const statusText = _waveformStatus === "metadata" ? " • waiting for metadata"
+          : _waveformStatus === "waiting" ? " • waiting for waveform"
           : (_waveformStatus === "decoding" ? " • decoding waveform"
-          : (_waveformStatus === "unavailable" ? " • waveform unavailable" : ""));
+          : (_waveformStatus === "unavailable" ? (_waveformDetail?.manualEligible ? " • waveform optional" : " • waveform unavailable") : ""));
         const text = `--:-- / --:--${statusText}`;
         if (timeEl.textContent !== text) timeEl.textContent = text;
       }

@@ -304,8 +304,7 @@ const CONFIG = deepFreeze({
     volume: { min: 0, max: 1, step: 0.01 },
   },
 
-  // Application-only waveform policy. Not scene/preset defaults. I.2B supplies
-  // decisions; restrictive production activation belongs to I.2C.
+  // Application-only waveform policy and choices; never scene/preset defaults.
   waveform: {
     decodeSampleRateHz: 44100,
     peakBucketCount: 512,
@@ -316,6 +315,11 @@ const CONFIG = deepFreeze({
     ],
     defaultProfileId: "8m",
     defaultAboveProfileBehavior: "ask",
+    aboveProfileBehaviors: [
+      { id: "ask", label: "Ask before generating" },
+      { id: "generate-if-permitted", label: "Generate automatically if permitted" },
+      { id: "skip", label: "Skip automatic generation" },
+    ],
     // Provisional source defaults, not a total browser-memory guarantee.
     maxEncodedBytes: 64 * 1024 * 1024,
     maxEstimatedDecodedPcmBytes: 512 * 1024 * 1024,

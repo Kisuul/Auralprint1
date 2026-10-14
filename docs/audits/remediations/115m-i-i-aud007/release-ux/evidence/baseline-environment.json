@@ -1,0 +1,26 @@
+{
+  "startingAcceptedMain": "56f8f8e805d0a10ba7df7f155d153c7d25e00f9d",
+  "baselineVersion": "v0.1.15m.i.j",
+  "branch": "codex/115m-i-i-aud007-release-ux",
+  "draftPR": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/54",
+  "acceptedHeads": {
+    "50": "b2d84e9122991affea5c8525a07c5f755a52a3ce",
+    "51": "b237857a3ec21e4ba7a0cd13f8e0bcff3e58122d",
+    "52": "574cc85c33a973a4f8025eb0488f9bbd654b06b3"
+  },
+  "baselineTreeIdenticalToAcceptedI2B": true,
+  "requiredModules": [
+    "waveform-coordinator.js",
+    "waveform-extractor.js",
+    "waveform-policy.js",
+    "waveform-metadata.js",
+    "scrubber.js"
+  ],
+  "version": "v0.1.15m.i.k",
+  "schema": 10,
+  "node": "v24.19.0",
+  "npm": "11.9.0",
+  "python": "Python 3.12.14",
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "network": "Configured proxy retained. Fetch/install/push and browser/socket/subprocess checks use authorized unsandboxed execution. No dependency/lock changes."
+}

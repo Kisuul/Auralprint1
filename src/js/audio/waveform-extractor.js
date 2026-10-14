@@ -1,3 +1,5 @@
+import { CONFIG } from "../core/config.js";
+
 /* Full-file extractor, replaceable behind the coordinator's output contract.
  * It owns encoded reading, native decoding and synchronous all-channel reduction.
  * File.arrayBuffer is intentionally retained: no cancellation is claimed.
@@ -36,7 +38,7 @@ function buildWaveformPeaks(audioBuffer, bucketCount = 512) {
   return peaks;
 }
 
-async function extractWaveform(file, { isCurrent }) {
+async function extractWaveform(file, { isCurrent, canDecode = () => true }) {
   let encoded = null;
   let decoded = null;
   let context = null;
@@ -46,13 +48,13 @@ async function extractWaveform(file, { isCurrent }) {
     file = null;
     encoded = await reading;
     reading = null;
-    if (!isCurrent()) return null;
+    if (!isCurrent() || !canDecode()) return null;
     // Existing decode rate/render dimensions; these are not resource budgets.
-    context = new OfflineAudioContext(1, 1, 44100);
+    context = new OfflineAudioContext(1, 1, CONFIG.waveform.decodeSampleRateHz);
     decoded = await context.decodeAudioData(encoded);
     encoded = null;
     if (!isCurrent()) return null;
-    return buildWaveformPeaks(decoded, 512);
+    return buildWaveformPeaks(decoded, CONFIG.waveform.peakBucketCount);
   } finally {
     // Drop our local intermediates after settlement, not a physical-GC claim.
     file = reading = encoded = decoded = context = null;

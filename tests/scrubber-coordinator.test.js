@@ -18,14 +18,14 @@ function harness(t) {
     const add=target.addEventListener;
     target.addEventListener=function(type,...args){listeners.push(type);return add.call(this,type,...args)};
   }
-  globalThis.window=win;globalThis.document={getElementById:()=>time};
+  globalThis.window=win;globalThis.document={getElementById:id=>id==="scrubberTime"?time:null};
   globalThis.OfflineAudioContext=class {decodeAudioData(bytes){const f=files.find(f=>f.bytes===bytes);decodes.push(f.name);return f.decode.promise}};
   t.mock.method(AudioEngine,"getMediaEl",()=>media);
   Object.assign(state.audio,{isLoaded:true,isPlaying:true,transportError:""});
   Object.assign(state.source,{kind:"file",status:"active",sessionActive:true});
   Scrubber.init(surface);Scrubber.reset();
   t.after(()=>{Scrubber.reset();Object.assign(state.audio,oldAudio);Object.assign(state.source,oldSource);globalThis.window=oldWindow;globalThis.document=oldDocument;globalThis.OfflineAudioContext=oldOffline});
-  function file(name,amplitude=.25){const f={name,bytes:new ArrayBuffer(8),read:deferred(),decode:deferred()};f.arrayBuffer=()=>{reads.push(name);return f.read.promise};f.pcm={numberOfChannels:1,getChannelData:()=>new Float32Array(13).fill(amplitude)};files.push(f);return f}
+  function file(name,amplitude=.25){const f={name,size:16,slice:()=>({arrayBuffer:async()=>new ArrayBuffer(16)}),bytes:new ArrayBuffer(8),read:deferred(),decode:deferred()};f.arrayBuffer=()=>{reads.push(name);return f.read.promise};f.pcm={numberOfChannels:1,getChannelData:()=>new Float32Array(13).fill(amplitude)};files.push(f);return f}
   return {file,reads,decodes,media,surface,win,listeners,
     get text(){return text},get writes(){return writes},get rectCount(){return rects.length},
     async read(f){f.read.resolve(f.bytes);await flush()},async decode(f){f.decode.resolve(f.pcm);await flush()},
@@ -66,7 +66,7 @@ for(const transition of ["Clear","mic","stream"]) test(`AUD-007 ${transition} in
 
 test("AUD-007 fallback seeking/playback and unchanged time text remain independent of waveform failure",async t=>{
   const h=harness(t),a=h.file("A"),p=Scrubber.loadFile(a);
-  a.read.reject(new Error("waveform only"));await p;
+  await flush();a.read.reject(new Error("waveform only"));await p;
   assert.match(h.text,/waveform unavailable/);
   mouse(h.surface,"mousedown",75);mouse(h.win,"mouseup",75);
   assert.equal(h.media.currentTime,15);
@@ -84,4 +84,16 @@ test("AUD-007 repeated load/reset retains no pending File reads or new interacti
   await h.decode(a);await pa;
   assert.deepEqual(h.reads,["A"]);
   assert.equal(h.rectCount,1);
+});
+
+test("AUD-007 native waveform rejection preserves an active recorder and seekable playing media",async t=>{
+  const h=harness(t),a=h.file("native failure"),oldRecording=structuredClone(state.recording);
+  Object.assign(state.recording,{phase:"recording"});
+  const recording=structuredClone(state.recording);
+  t.after(()=>Object.assign(state.recording,oldRecording));
+  const p=Scrubber.loadFile(a);await h.read(a);a.decode.reject(new Error("native decoding rejected"));await p;
+  assert.match(h.text,/waveform unavailable/);
+  mouse(h.surface,"mousedown",75);mouse(h.win,"mouseup",75);
+  assert.equal(h.media.currentTime,15);assert.equal(state.audio.isPlaying,true);assert.equal(state.audio.transportError,"");
+  assert.deepEqual(state.recording,recording,"optional native failure must preserve recorder state");
 });
