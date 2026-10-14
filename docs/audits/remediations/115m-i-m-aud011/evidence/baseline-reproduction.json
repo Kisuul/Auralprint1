@@ -1,0 +1,175 @@
+{
+  "baseline": "a2f484b845df69e717ebd3998cabb7db640eb6c6",
+  "platform": "linux",
+  "node": "v24.19.0",
+  "cases": [
+    {
+      "kind": "template",
+      "version": "v0.1.15m.i.l",
+      "attemptedVersion": "v0.1.15m.i.l",
+      "initial": [
+        {
+          "path": "dist/auralprint_0.1.15m.i.l.html",
+          "exists": true,
+          "bytes": 448610,
+          "sha256": "84f9ebff3c1692cb24a516292d41bee0bedfb3ac1fee3d812418d752271f50c8"
+        },
+        {
+          "path": "dist/hosted/index.html",
+          "exists": true,
+          "bytes": 447441,
+          "sha256": "826f52e798b0dcee2fe4e31c53c648109c576689e333d25bffcf2ad634aff95d"
+        }
+      ],
+      "afterEdit": [
+        {
+          "path": "dist/auralprint_0.1.15m.i.l.html",
+          "exists": true,
+          "bytes": 448610,
+          "sha256": "84f9ebff3c1692cb24a516292d41bee0bedfb3ac1fee3d812418d752271f50c8"
+        },
+        {
+          "path": "dist/hosted/index.html",
+          "exists": true,
+          "bytes": 447441,
+          "sha256": "826f52e798b0dcee2fe4e31c53c648109c576689e333d25bffcf2ad634aff95d"
+        }
+      ],
+      "afterJsControl": [
+        {
+          "path": "dist/auralprint_0.1.15m.i.l.html",
+          "exists": true,
+          "bytes": 448687,
+          "sha256": "fa08bddac15c962d5e2aeabd387848ab4f3dcf64d0a9e697d16c72617409302c"
+        },
+        {
+          "path": "dist/hosted/index.html",
+          "exists": true,
+          "bytes": 447518,
+          "sha256": "1b92db83d4ecf636858d66ae5733615d3f3bd5c3bc77b9c3dbb476870b33ff64"
+        }
+      ],
+      "newVersionPath": "auralprint_0.1.15-aud011-diagnostic.html",
+      "newVersionExists": false,
+      "samples": 69,
+      "successesBefore": 1,
+      "successesAfterControl": 2,
+      "templateUsedAfterJs": true,
+      "oldVersionRetained": true,
+      "events": [
+        {
+          "at": "2026-10-14T17:40:04.303Z",
+          "text": "[watch] watching src/js and src/css for changes...\n"
+        },
+        {
+          "at": "2026-10-14T17:40:04.334Z",
+          "text": "[watch] build finished, watching for changes...\n"
+        },
+        {
+          "at": "2026-10-14T17:40:04.344Z",
+          "text": "[watch] build finished, watching for changes...\n"
+        },
+        {
+          "at": "2026-10-14T17:40:04.475Z",
+          "text": "[watch] assembled /tmp/auralprint-watch-ghL3w9/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-ghL3w9/dist/hosted\n"
+        },
+        {
+          "at": "2026-10-14T17:40:07.549Z",
+          "text": "[watch] build started (change: \"src/js/main.js\")\n"
+        },
+        {
+          "at": "2026-10-14T17:40:07.579Z",
+          "text": "[watch] build finished\n"
+        },
+        {
+          "at": "2026-10-14T17:40:07.652Z",
+          "text": "[watch] assembled /tmp/auralprint-watch-ghL3w9/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-ghL3w9/dist/hosted\n"
+        }
+      ]
+    },
+    {
+      "kind": "version",
+      "version": "v0.1.15m.i.l",
+      "attemptedVersion": "v0.1.15-aud011-diagnostic",
+      "initial": [
+        {
+          "path": "dist/auralprint_0.1.15m.i.l.html",
+          "exists": true,
+          "bytes": 448610,
+          "sha256": "84f9ebff3c1692cb24a516292d41bee0bedfb3ac1fee3d812418d752271f50c8"
+        },
+        {
+          "path": "dist/hosted/index.html",
+          "exists": true,
+          "bytes": 447441,
+          "sha256": "826f52e798b0dcee2fe4e31c53c648109c576689e333d25bffcf2ad634aff95d"
+        }
+      ],
+      "afterEdit": [
+        {
+          "path": "dist/auralprint_0.1.15m.i.l.html",
+          "exists": true,
+          "bytes": 448610,
+          "sha256": "84f9ebff3c1692cb24a516292d41bee0bedfb3ac1fee3d812418d752271f50c8"
+        },
+        {
+          "path": "dist/hosted/index.html",
+          "exists": true,
+          "bytes": 447441,
+          "sha256": "826f52e798b0dcee2fe4e31c53c648109c576689e333d25bffcf2ad634aff95d"
+        }
+      ],
+      "afterJsControl": [
+        {
+          "path": "dist/auralprint_0.1.15m.i.l.html",
+          "exists": true,
+          "bytes": 448653,
+          "sha256": "7a118a2c58009ac648233839709854be69fa99f5f2fe4d42243e43b949500aa5"
+        },
+        {
+          "path": "dist/hosted/index.html",
+          "exists": true,
+          "bytes": 447484,
+          "sha256": "7fd0ef3051aac3b2f81b0a07ceafc199abc63211b3f4910bd7077a09bd105564"
+        }
+      ],
+      "newVersionPath": "auralprint_0.1.15-aud011-diagnostic.html",
+      "newVersionExists": false,
+      "samples": 70,
+      "successesBefore": 1,
+      "successesAfterControl": 2,
+      "templateUsedAfterJs": null,
+      "oldVersionRetained": true,
+      "events": [
+        {
+          "at": "2026-10-14T17:40:07.791Z",
+          "text": "[watch] watching src/js and src/css for changes...\n"
+        },
+        {
+          "at": "2026-10-14T17:40:07.821Z",
+          "text": "[watch] build finished, watching for changes...\n"
+        },
+        {
+          "at": "2026-10-14T17:40:07.836Z",
+          "text": "[watch] build finished, watching for changes...\n"
+        },
+        {
+          "at": "2026-10-14T17:40:07.919Z",
+          "text": "[watch] assembled /tmp/auralprint-watch-0oI3Ss/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-0oI3Ss/dist/hosted\n"
+        },
+        {
+          "at": "2026-10-14T17:40:11.034Z",
+          "text": "[watch] build started (change: \"src/js/main.js\")\n"
+        },
+        {
+          "at": "2026-10-14T17:40:11.064Z",
+          "text": "[watch] build finished\n"
+        },
+        {
+          "at": "2026-10-14T17:40:11.133Z",
+          "text": "[watch] assembled /tmp/auralprint-watch-0oI3Ss/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-0oI3Ss/dist/hosted\n"
+        }
+      ]
+    }
+  ]
+}
