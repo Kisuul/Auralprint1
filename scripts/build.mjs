@@ -8,9 +8,17 @@ import { fileURLToPath } from "node:url";
 const scriptPath = fileURLToPath(import.meta.url);
 const scriptsDir = path.dirname(scriptPath);
 const projectRoot = path.resolve(scriptsDir, "..");
-const versionMetadata = readVersionMetadata(projectRoot);
+// Preserve the exported metadata shape while consulting the canonical file on access.
+const versionMetadata = Object.fromEntries(
+  ["versionFile", "versionTag", "distVersion", "distHtml"].map(key => [key, null]),
+);
+for (const key of Object.keys(versionMetadata)) {
+  Object.defineProperty(versionMetadata, key, {
+    enumerable: true, get: () => readVersionMetadata()[key],
+  });
+}
 
-function readVersionMetadata(rootDir) {
+function readVersionMetadata(rootDir = projectRoot) {
   const versionFile = path.join(rootDir, "version");
 
   let rawVersion = "";
@@ -41,7 +49,7 @@ function readVersionMetadata(rootDir) {
 
 const paths = {
   projectRoot,
-  versionFile: versionMetadata.versionFile,
+  versionFile: path.join(projectRoot, "version"),
   buildDir: path.join(projectRoot, ".build"),
   distDir: path.join(projectRoot, "dist"),
   template: path.join(projectRoot, "src", "index.template.html"),
@@ -50,7 +58,7 @@ const paths = {
   cssBundle: path.join(projectRoot, ".build", "auralprint.css"),
   jsBundle: path.join(projectRoot, ".build", "auralprint.js"),
   metafile: path.join(projectRoot, "dist", "esbuild-metafile.json"),
-  distHtml: versionMetadata.distHtml,
+  get distHtml() { return readVersionMetadata().distHtml; },
   branding: path.join(projectRoot, "src", "assets", "branding"),
   hostedDir: path.join(projectRoot, "dist", "hosted"),
   assembler: path.join(projectRoot, "scripts", "assemble_single_file.py"),
@@ -125,15 +133,19 @@ async function writeCombinedMetafile(jsMetafile, cssMetafile) {
   await writeFile(paths.metafile, JSON.stringify(merged, null, 2) + "\n", "utf8");
 }
 
-function runProcess(command, args) {
+function runProcess(command, args, signal) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: paths.projectRoot,
       stdio: "inherit",
+      signal,
     });
 
-    child.on("error", (error) => reject(error));
-    child.on("exit", (code) => {
+    let processError;
+    child.on("error", error => { processError = error; });
+    // close joins the owned subprocess, including cancellation, before settling.
+    child.on("close", (code) => {
+      if (processError) { reject(processError); return; }
       if (code === 0) {
         resolve();
         return;
@@ -143,16 +155,17 @@ function runProcess(command, args) {
   });
 }
 
-async function assembleSingleFile() {
+// Optional transaction paths keep the no-argument build API compatible.
+async function assembleSingleFile({
+  metadata = readVersionMetadata(), template = paths.template,
+  cssBundle = paths.cssBundle, jsBundle = paths.jsBundle,
+  distHtml = metadata.distHtml, branding = paths.branding,
+  hostedDir = paths.hostedDir, signal,
+} = {}) {
   const scriptArgs = [
     paths.assembler,
-    paths.template,
-    paths.cssBundle,
-    paths.jsBundle,
-    versionMetadata.versionTag,
-    paths.distHtml,
-    "--branding", paths.branding,
-    "--hosted-dir", paths.hostedDir,
+    template, cssBundle, jsBundle, metadata.versionTag, distHtml,
+    "--branding", branding, "--hosted-dir", hostedDir,
   ];
 
   const candidates = [];
@@ -163,8 +176,8 @@ async function assembleSingleFile() {
   let missingInterpreter = null;
   for (const [command, prefixArgs] of candidates) {
     try {
-      await runProcess(command, [...prefixArgs, ...scriptArgs]);
-      return;
+      await runProcess(command, [...prefixArgs, ...scriptArgs], signal);
+      return { ...metadata, distHtml };
     } catch (error) {
       if (error && error.code === "ENOENT") {
         missingInterpreter = error;
@@ -210,6 +223,7 @@ if (isDirectRun) {
 export {
   paths,
   versionMetadata,
+  readVersionMetadata,
   describeEsbuildWarning,
   collectFatalWarnings,
   assertNoFatalWarnings,

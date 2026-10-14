@@ -1,106 +1,257 @@
 import esbuild from "esbuild";
-import {
-  assembleSingleFile,
-  collectFatalWarnings,
-  describeEsbuildWarning,
-  createCssBuildOptions,
-  createJsBuildOptions,
-  ensureBuildDirs,
-  paths,
-  writeCombinedMetafile,
-} from "./build.mjs";
+import { createHash } from "node:crypto";
+import { readFileSync, readdirSync, watch, writeFileSync, renameSync, mkdirSync, rmSync } from "node:fs";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  assembleSingleFile, collectFatalWarnings, describeEsbuildWarning,
+  createCssBuildOptions, createJsBuildOptions, ensureBuildDirs, paths,
+  readVersionMetadata,
+} from "./build.mjs";
 
-let lastJsResult = null;
-let lastCssResult = null;
-let assemblyChain = Promise.resolve();
+// Coalesce the several directory notifications produced by one editor save.
+// This is a one-shot event debounce, not a filesystem polling interval.
+const SAVE_SETTLE_MS = 50;
+let activeSession;
 
-async function prepareWatchBuild() {
-  await ensureBuildDirs();
+async function prepareWatchBuild() { await ensureBuildDirs(); }
+
+function inputsMatch(inputs) {
+  try {
+    return [...inputs].every(([file, bytes]) => readFileSync(file).equals(bytes));
+  } catch { return false; }
 }
 
-function queueAssemble() {
-  if (!lastJsResult || !lastCssResult) return;
-  if (lastJsResult.errors.length || lastCssResult.errors.length) return;
-  if (collectFatalWarnings(lastJsResult).length || collectFatalWarnings(lastCssResult).length) return;
-
-  const jsMetafile = lastJsResult.metafile;
-  const cssMetafile = lastCssResult.metafile;
-
-  assemblyChain = assemblyChain
-    .then(async () => {
-      await prepareWatchBuild();
-      await writeCombinedMetafile(jsMetafile, cssMetafile);
-      await assembleSingleFile();
-      console.log(`[watch] assembled ${paths.distHtml} and ${paths.hostedDir}`);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+function fingerprint(inputs) {
+  const hash = createHash("sha256");
+  for (const [file, bytes] of [...inputs].sort(([a], [b]) => a.localeCompare(b))) {
+    hash.update(file).update("\0").update(String(bytes.length)).update("\0").update(bytes);
+  }
+  return hash.digest("hex");
 }
 
-function watchPlugin(kind) {
+function assemblyInputs() {
+  // The assembler owns flat branding files; the unused assets/OG subtree is not
+  // packaged. Directory observation also detects deletion/creation/rename.
+  const brandingFiles = readdirSync(paths.branding, { withFileTypes: true })
+    .filter(entry => entry.isFile()).map(entry => path.join(paths.branding, entry.name));
+  return new Map([paths.versionFile, paths.template, ...brandingFiles]
+    .map(file => [file, readFileSync(file)]));
+}
+
+function watchPlugin(kind, session = activeSession) {
+  let sources;
   return {
     name: `auralprint-watch-${kind}`,
     setup(build) {
-      build.onEnd((result) => {
-        if (kind === "js") lastJsResult = result;
-        else lastCssResult = result;
-
-        if (result.errors.length) {
-          console.error(`[watch] ${kind} bundle failed; skipping assembly.`);
-          return;
+      build.onStart(() => {
+        sources = new Map();
+        session.building.add(kind);
+      });
+      // Capture exact bytes esbuild consumes, including imported dependencies.
+      // write:false prevents a later build from mutating queued bundles.
+      build.onLoad({ filter: /\.(?:[cm]?js|css|json)$/, namespace: "file" }, args => {
+        const contents = readFileSync(args.path);
+        sources.set(args.path, contents);
+        const extension = path.extname(args.path).slice(1);
+        return { contents, loader: ["mjs", "cjs"].includes(extension) ? "js" : extension };
+      });
+      build.onEnd(result => {
+        session.building.delete(kind);
+        session.results[kind] = { result, sources };
+        const warnings = collectFatalWarnings(result);
+        if (result.errors.length || warnings.length) {
+          console.error(`[watch] ${kind} bundle failed; skipping assembly.\n${warnings.map(describeEsbuildWarning).join("\n")}`);
         }
-
-        const fatalWarnings = collectFatalWarnings(result);
-        if (fatalWarnings.length) {
-          const details = fatalWarnings.map(describeEsbuildWarning).join("\n");
-          console.error(`[watch] ${kind} bundle has fatal syntax warnings; skipping assembly.\n${details}`);
-          return;
-        }
-
-        queueAssemble();
+        session.queue();
       });
     },
   };
 }
 
+function queueAssemble() { activeSession?.queue(); }
+
 async function main() {
   await prepareWatchBuild();
-
-  const jsContext = await esbuild.context(
-    createJsBuildOptions({ plugins: [watchPlugin("js")] }),
-  );
-  const cssContext = await esbuild.context(
-    createCssBuildOptions({ plugins: [watchPlugin("css")] }),
-  );
-
-  const closeContexts = async () => {
-    await Promise.all([jsContext.dispose(), cssContext.dispose()]);
+  const contexts = [];
+  const watchers = [];
+  const abort = new AbortController();
+  let timer;
+  let assemblyChain = Promise.resolve();
+  let draining = false;
+  let dirty = false;
+  let stopping = false;
+  let shutdownPromise;
+  let lastSuccess;
+  const session = {
+    results: {}, building: new Set(),
+    queue() {
+      if (stopping) return;
+      dirty = true;
+      clearTimeout(timer);
+      timer = setTimeout(drain, SAVE_SETTLE_MS);
+    },
   };
+  activeSession = session;
 
-  process.on("SIGINT", async () => {
-    await closeContexts();
-    process.exit(0);
-  });
-  process.on("SIGTERM", async () => {
-    await closeContexts();
-    process.exit(0);
-  });
+  async function assembleTransaction() {
+    const { js, css } = session.results;
+    if (!js || !css || session.building.size) return;
+    if ([js, css].some(({ result }) => result.errors.length || collectFatalWarnings(result).length)) return;
 
-  await Promise.all([jsContext.watch(), cssContext.watch()]);
-  console.log("[watch] watching src/js and src/css for changes...");
+    // Validate version for every candidate, even before deduplication.
+    const metadata = readVersionMetadata();
+    const extra = assemblyInputs();
+    const sources = new Map([...js.sources, ...css.sources]);
+    const inputs = new Map([...sources, ...extra]);
+    if (metadata.versionTag !== extra.get(paths.versionFile).toString("utf8").trim()) {
+      session.queue();
+      return;
+    }
+    // A source save can precede esbuild's next notification. Never publish old
+    // bundles under a newly selected version while awaiting that rebuild.
+    if (!inputsMatch(inputs)) return;
+    const signature = fingerprint(inputs);
+    if (signature === lastSuccess) return;
+
+    const stage = await mkdtemp(path.join(paths.buildDir, "watch-"));
+    try {
+      const branding = path.join(stage, "branding");
+      const hostedDir = path.join(stage, "hosted");
+      const template = path.join(stage, "template.html");
+      const cssBundle = path.join(stage, "auralprint.css");
+      const jsBundle = path.join(stage, "auralprint.js");
+      const distHtml = path.join(stage, path.basename(metadata.distHtml));
+      await mkdir(branding);
+      await writeFile(template, extra.get(paths.template));
+      for (const [file, bytes] of extra) {
+        if (path.dirname(file) === paths.branding) await writeFile(path.join(branding, path.basename(file)), bytes);
+      }
+      await writeFile(jsBundle, js.result.outputFiles[0].contents);
+      await writeFile(cssBundle, css.result.outputFiles[0].contents);
+      console.log(`[watch] assembling ${metadata.versionTag}`);
+      await assembleSingleFile({ metadata, template, cssBundle, jsBundle, distHtml, branding, hostedDir, signal: abort.signal });
+
+      // Events during Python work stay dirty. Byte comparisons also fence saves
+      // whose native/esbuild notifications have not arrived yet.
+      if (stopping) return;
+      if (session.building.size || session.results.js !== js || session.results.css !== css ||
+          !inputsMatch(inputs) || fingerprint(assemblyInputs()) !== fingerprint(extra)) {
+        console.log(`[watch] superseded ${metadata.versionTag}; awaiting current inputs`);
+        session.queue();
+        return;
+      }
+
+      // Prepare every output before publication. Python never writes live dist.
+      // Per-file rename avoids exposing truncated files on Linux and Windows.
+      const files = new Map([
+        [metadata.distHtml, readFileSync(distHtml)],
+        [paths.jsBundle, readFileSync(jsBundle)],
+        [paths.cssBundle, readFileSync(cssBundle)],
+        [paths.metafile, Buffer.from(JSON.stringify({ generatedAt: new Date().toISOString(), js: js.result.metafile, css: css.result.metafile }, null, 2) + "\n")],
+        ...readdirSync(hostedDir).map(name => [path.join(paths.hostedDir, name), readFileSync(path.join(hostedDir, name))]),
+      ]);
+      publish(files);
+      lastSuccess = signature;
+      console.log(`[watch] assembled ${metadata.distHtml} and ${paths.hostedDir} (${metadata.versionTag}; inputs ${signature})`);
+    } finally { await rm(stage, { recursive: true, force: true }); }
+  }
+
+  function drain() {
+    if (draining || stopping) return;
+    draining = true;
+    assemblyChain = (async () => {
+      while (dirty && !stopping) {
+        dirty = false;
+        try { await assembleTransaction(); }
+        catch (error) { if (!stopping) console.error(`[watch] assembly failed: ${error.message}`); }
+      }
+    })().finally(() => { draining = false; });
+  }
+
+  function shutdown() {
+    if (shutdownPromise) return shutdownPromise;
+    stopping = true;
+    clearTimeout(timer);
+    for (const watcher of watchers) watcher.close();
+    abort.abort();
+    shutdownPromise = (async () => {
+      await Promise.all(contexts.map(context => context.dispose()));
+      await assemblyChain;
+      esbuild.stop();
+      process.removeListener("SIGINT", shutdown);
+      process.removeListener("SIGTERM", shutdown);
+      process.removeListener("message", onMessage);
+      if (process.connected) process.disconnect();
+      activeSession = undefined;
+      console.log("[watch] stopped; filesystem watchers, esbuild and assembler released");
+    })();
+    return shutdownPromise;
+  }
+  // Node parents can request graceful shutdown on Windows, where child.kill
+  // forcibly terminates instead of delivering a POSIX signal.
+  function onMessage(message) { if (message?.type === "shutdown") void shutdown(); }
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+  process.on("message", onMessage);
+
+  try {
+    for (const [directory, name] of [[paths.projectRoot, "version"], [path.dirname(paths.template), path.basename(paths.template)], [paths.branding, null]]) {
+      const watcher = watch(directory, (_event, filename) => {
+        if (filename == null || name === null || filename.toString() === name) session.queue();
+      });
+      watcher.on("error", error => {
+        console.error(`[watch] filesystem observation failed: ${error.message}`);
+        process.exitCode = 1;
+        void shutdown();
+      });
+      watchers.push(watcher);
+    }
+    for (const [kind, options] of [["js", createJsBuildOptions], ["css", createCssBuildOptions]]) {
+      const context = await esbuild.context(options({ write: false, plugins: [watchPlugin(kind, session)] }));
+      // A signal can arrive while context creation is still awaiting esbuild.
+      if (stopping) { await context.dispose(); return { close: shutdown }; }
+      contexts.push(context);
+    }
+    if (stopping) return { close: shutdown };
+    await Promise.all(contexts.map(context => context.watch()));
+    console.log("[watch] watching JS/CSS dependencies, template, version and flat branding inputs");
+  } catch (error) { await shutdown(); throw error; }
+  return { close: shutdown };
+}
+
+function publish(files) {
+  const pending = [];
+  const published = [];
+  try {
+    for (const [target, bytes] of files) {
+      mkdirSync(path.dirname(target), { recursive: true });
+      let previous;
+      try { previous = readFileSync(target); }
+      catch (error) { if (error.code !== "ENOENT") throw error; }
+      const temporary = `${target}.watch-tmp`;
+      pending.push(temporary);
+      writeFileSync(temporary, bytes);
+      published.push({ target, temporary, previous, done: false });
+    }
+    for (const entry of published) {
+      renameSync(entry.temporary, entry.target);
+      entry.done = true;
+    }
+  } catch (error) {
+    for (const entry of published.reverse()) {
+      if (!entry.done) continue;
+      if (entry.previous) writeFileSync(entry.target, entry.previous);
+      else rmSync(entry.target, { force: true });
+    }
+    throw error;
+  } finally { for (const temporary of pending) rmSync(temporary, { force: true }); }
 }
 
 const scriptPath = fileURLToPath(import.meta.url);
-const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === scriptPath;
-
-if (isDirectRun) {
-  main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+if (process.argv[1] && path.resolve(process.argv[1]) === scriptPath) {
+  main().catch(error => { console.error(error); process.exitCode = 1; });
 }
 
 export { prepareWatchBuild, watchPlugin, queueAssemble, main };
