@@ -14,7 +14,7 @@ function createWaveformAdmission({ onUpdate, policy = CONFIG.waveform, preferenc
   function input(intent) {
     const duration = intent.media?.duration;
     return { fileSizeBytes: intent.file.size, durationSeconds: duration,
-      durationState: intent.metadataFailed ? "unavailable" : (intent.media?.readyState === 0 || Number.isNaN(duration) || duration == null ? "pending" : "available"),
+      durationState: intent.metadataFailed ? "unavailable" : (intent.media?.readyState === 0 ? "pending" : "available"),
       metadataConfidence: "unknown", headerMetadata: intent.header,
       ...preferences.runtime.settings, requestKind: intent.manual ? "manual" : "automatic" };
   }

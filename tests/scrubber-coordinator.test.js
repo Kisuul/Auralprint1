@@ -85,3 +85,15 @@ test("AUD-007 repeated load/reset retains no pending File reads or new interacti
   assert.deepEqual(h.reads,["A"]);
   assert.equal(h.rectCount,1);
 });
+
+test("AUD-007 native waveform rejection preserves an active recorder and seekable playing media",async t=>{
+  const h=harness(t),a=h.file("native failure"),oldRecording=structuredClone(state.recording);
+  Object.assign(state.recording,{phase:"recording"});
+  const recording=structuredClone(state.recording);
+  t.after(()=>Object.assign(state.recording,oldRecording));
+  const p=Scrubber.loadFile(a);await h.read(a);a.decode.reject(new Error("native decoding rejected"));await p;
+  assert.match(h.text,/waveform unavailable/);
+  mouse(h.surface,"mousedown",75);mouse(h.win,"mouseup",75);
+  assert.equal(h.media.currentTime,15);assert.equal(state.audio.isPlaying,true);assert.equal(state.audio.transportError,"");
+  assert.deepEqual(state.recording,recording,"optional native failure must preserve recorder state");
+});

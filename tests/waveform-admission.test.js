@@ -52,7 +52,7 @@ test('AUD-007 hard encoded refusal performs neither prefix nor full read',async 
  const h=harness(t,20);await h.load(h.file('over',CONFIG.waveform.maxEncodedBytes+1));await h.admission.generate();
  assert.equal(h.last.detail.reason,'encoded-budget');assert.equal(h.probes.length,0);assert.equal(h.reads.length,0,'encoded admission must precede full read');assert.equal(h.decodes.length,0);
 });
-test('AUD-007 bounded WAV prefix establishes six channels and all-channel terminal peaks',async t=>{
+test('AUD-007 bounded WAV prefix establishes six-channel admission metadata',async t=>{
  const h=harness(t,1),fixture=pcmHeader({frames:96000,rate:96000,channels:6}),f=h.file('six',fixture.fileSize);
  f.slice=(start,end)=>{h.probes.push({start,end});return {arrayBuffer:async()=>{const b=new Uint8Array(end-start);b.set(new Uint8Array(fixture.bytes));return b.buffer}}};
  await h.load(f);assert.equal(h.probes[0].end,65536);assert.equal(h.last.detail.metadata.channelCount,6);assert.equal(h.last.detail.metadata.confidence,'verified');
@@ -67,6 +67,11 @@ test('AUD-007 pending duration waits once and metadata events do not repeat prob
 });
 for(const duration of [Infinity,-1,0])test(`AUD-007 invalid media duration ${duration} never extracts`,async t=>{
  const h=harness(t,duration);await h.load(h.file());assert.equal(h.last.detail.reason,'metadata-unavailable');assert.equal(h.reads.length,0);
+});
+test('AUD-007 NaN after media metadata readiness is unavailable, never zero or pending forever',async t=>{
+ const h=harness(t,NaN);h.media.readyState=1;await h.load(h.file());
+ assert.equal(h.last.detail.reason,'metadata-unavailable');assert.equal(h.reads.length,0);
+ h.metadata(20);await flush();assert.equal(h.reads.length,1);
 });
 test('AUD-007 metadata error without duration refuses truthfully, playback is not owned here',async t=>{
  const h=harness(t,NaN);await h.load(h.file());h.media.dispatchEvent(new Event('error'));await flush();
@@ -85,7 +90,7 @@ test('AUD-007 A→B→C shares one resource slot; stale metadata cannot activate
 });
 test('AUD-007 delayed duration and old media callbacks cannot activate stale File',async t=>{
  const h=harness(t,NaN),a=h.file('A');await h.load(a);h.admission.reset();h.metadata(20);await flush();
- assert.equal(h.listeners,0);assert.equal(h.reads.length,0,'stale duration must not activate old File');
+ assert.equal(h.reads.length,0,'stale duration must not activate old File');assert.equal(h.listeners,0);
 });
 test('AUD-007 wrong-source manual action revalidates UI identity before requesting coordinator',async t=>{
  const h=harness(t);let valid=true;await h.load(h.file(),{isCurrent:()=>valid});valid=false;

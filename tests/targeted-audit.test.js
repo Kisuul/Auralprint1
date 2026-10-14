@@ -76,6 +76,9 @@ function createScrubberHarness() {
     addEventListener(type, handler) {
       canvasListeners.set(type, handler);
     },
+    removeEventListener(type, handler) {
+      if (canvasListeners.get(type) === handler) canvasListeners.delete(type);
+    },
     getBoundingClientRect() {
       return { left: 10, width: 100 };
     },
@@ -87,6 +90,9 @@ function createScrubberHarness() {
   globalThis.window = {
     addEventListener(type, handler) {
       windowListeners.set(type, handler);
+    },
+    removeEventListener(type, handler) {
+      if (windowListeners.get(type) === handler) windowListeners.delete(type);
     },
   };
   globalThis.document = {

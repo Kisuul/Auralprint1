@@ -1,0 +1,110 @@
+{
+  "startingAcceptedMain": "56f8f8e805d0a10ba7df7f155d153c7d25e00f9d",
+  "developmentVersion": "v0.1.15m.i.k",
+  "schema": 10,
+  "commandsInOrder": [
+    "npm ci",
+    "npm test",
+    "npm run build",
+    "python scripts/verify_distribution.py",
+    "git diff --check"
+  ],
+  "observedFullSuite": {
+    "total": 937,
+    "passed": 936,
+    "failed": 0,
+    "skipped": 1,
+    "skipReason": "Existing opt-in AP_MILLION_STRESS not enabled"
+  },
+  "focusedWaveformAssertions": 144,
+  "newPermanentTests": 46,
+  "negativeControls": {
+    "I2C": 6,
+    "I2A": 7,
+    "I2B": 7,
+    "positiveAndIntendedNegativePass": true
+  },
+  "native": {
+    "i2c": {
+      "cases": 17,
+      "passed": 17,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "ac2e473dfa83b58f84fe94e7f086274ab108e6a6e1658c11004bb165fa5a0ce6"
+    },
+    "i2a": {
+      "cases": 12,
+      "passed": 12,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "00d6de299ba8dff3d60020bd0651652c02385c29043016817b0fe95e874d1be1"
+    },
+    "i2b": {
+      "cases": 8,
+      "passed": 8,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "06ef10f5426eeed5eeeffb2f2125891fd2f2f7396fb2a5706ba10b69f98e6be5"
+    },
+    "f": {
+      "cases": 21,
+      "passed": 21,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "d5917cf559b0a6dbcd4c7d9431dcf2b10b723b569460cd81a8dee47fef5f8a8b"
+    },
+    "g": {
+      "cases": 13,
+      "passed": 13,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "0b3d2507405ca6f5bdbe13ba84a1925969dedf2d39a87137ffbc9b71768374eb"
+    },
+    "g1": {
+      "cases": 38,
+      "passed": 38,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "d8e808651e936fa13fdea5fd3fdfd7c54bc817cae59884726ef6a9c6ad6e0b15"
+    },
+    "g2": {
+      "cases": 31,
+      "passed": 31,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "755524b09c04b70ca23a1c2fadd6ddabc883036c024ce33fce8a642a55dbb00f"
+    },
+    "g3": {
+      "cases": 27,
+      "passed": 27,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "faa0d57682c109d309cf2cb30ce5b1d62f5ffcbea6a86094b6eaf1309a6a1805"
+    },
+    "h": {
+      "cases": 9,
+      "passed": 9,
+      "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+      "rawEvidenceSha256": "a56a1e33d343f81e4523e5d7b9ea593c183e65b134738e4499dce96c6c5a1d91"
+    }
+  },
+  "sourceDigests": {
+    "src/css/audio-panel.css": "b68ae95d900eb3ecd0d98a33cb20a8743bd6708f1d7430390010ee09419ef77d",
+    "src/index.template.html": "bfa1eb3a93bcdf54aad513a4929add79d1d377b7b7d99b5fffa002164a848d01",
+    "src/js/audio/scrubber.js": "e13dad99784fed426c0fc3be37ac55bcbfbc4092a1c8195954278da58da3a1a6",
+    "src/js/audio/waveform-admission.js": "9a84903203e29864f4affe6db1657fd80ccf78cf7188088562a60c817274de35",
+    "src/js/audio/waveform-coordinator.js": "71de335ae1a82a292daf3cee80fe7ac65a811bbede46b6b06fd8f4c657d23304",
+    "src/js/audio/waveform-extractor.js": "c4e67cfa44b6bb6fb96e6629fee09ba886b955e9c314879de5d984ba551f9ff4",
+    "src/js/core/application-preferences.js": "7b37798a9bd1afd2fbbe9873e89dea2d61c8b90fdcbbcc6c0e20d244f2cd0aeb",
+    "src/js/core/config.js": "7b03f3bbcc9ad13c1527044b2bb4dda7ed7741c0b0df61aa7ecbc14135b314c7",
+    "src/js/core/constants.js": "aa94a95b74eeaf3e810d99e3dadf90bff911490221faefa1584a4e8237704420",
+    "src/js/ui/ui.js": "88d3c010bfd64141a910e581a9fedc78362df24c670bc58ddf2f145f87554fea",
+    "src/js/ui/waveform-options.js": "df2c110d19f9268f01d2cdee2a4b80ec1cc4de39ab3e4a33bd0ef4058020dee0",
+    "tests/application-preferences.test.js": "5c835dd699c2942be0b6d5ab7410506c8df98abb56e6842a4c437f808fee384d",
+    "tests/rc20_packaging.py": "04c8c39f78677e5254acae0c6bef4f75318f571ca02216aba44b43cefda8ec35",
+    "tests/scrubber-coordinator.test.js": "6aff1a760e9dd0f143a15d9e2d516b8aae64e15dd158e54f50de1decf3025f51",
+    "tests/targeted-audit.test.js": "d236bce49d03c33c633c57239058ee9770009dbf526eec4c0250e2a4d1ea8b86",
+    "tests/waveform-admission.test.js": "431a53ab8fc21d6f891bcb09bfce7d9163262e69ef90252f6d9474db2280400d",
+    "tests/waveform-controls.test.js": "17c22752a5e89a76d1131de92534a0c69feabb97058202a79113bc12f142fd30"
+  },
+  "limitations": [
+    {
+      "name": "original portable file:// offline native playback and waveform",
+      "blocked": true,
+      "error": "page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///workspace/Auralprint1/dist/auralprint_0.1.15m.i.k.html\nCall log:\n\u001b[2m  - navigating to \"file:///workspace/Auralprint1/dist/auralprint_0.1.15m.i.k.html\", waiting until \"load\"\u001b[22m\n"
+    }
+  ],
+  "ci": "Exact final-head Ubuntu/Windows status is checked after publishing; PR handoff is authoritative to avoid embedding a self-referential future SHA."
+}
