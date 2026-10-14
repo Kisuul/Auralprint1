@@ -1,0 +1,22 @@
+{
+  "pass": true,
+  "baseline": "b237857a3ec21e4ba7a0cd13f8e0bcff3e58122d",
+  "priorEvidenceFilesByteIdentical": 39,
+  "protectedFilesByteIdentical": [
+    "src/js/audio/waveform-coordinator.js",
+    "src/js/audio/waveform-extractor.js",
+    "src/js/audio/scrubber.js",
+    "src/js/audio/audio-engine.js",
+    "src/js/audio/input-source-manager.js",
+    "src/js/audio/queue.js",
+    "src/js/ui/ui.js",
+    "src/js/recording/recorder-engine.js",
+    "src/js/core/preferences.js",
+    "src/js/core/state.js",
+    "src/js/main.js",
+    "agents.md",
+    "ROADMAP.md"
+  ],
+  "policyNotActivated": true,
+  "schema": 10
+}
