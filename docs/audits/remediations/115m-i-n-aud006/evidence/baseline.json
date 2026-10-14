@@ -1,0 +1,18 @@
+{
+  "accepted_main": "a85ed8d7cf0d670a30b5763e8576d955f7c2d285",
+  "fetched_origin_main": "a85ed8d7cf0d670a30b5763e8576d955f7c2d285",
+  "root_version": "v0.1.15m.i.m",
+  "schema": 10,
+  "branch": "codex/115m-i-n-aud006-recorder-capacity",
+  "pr56": {
+    "url": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/56",
+    "merged": true,
+    "merge_commit_sha": "a85ed8d7cf0d670a30b5763e8576d955f7c2d285",
+    "merged_at": "2026-10-14T18:52:21Z",
+    "verification": "GitHub get_pr_info connector and fetched git ancestry"
+  },
+  "initial_worktree": "clean",
+  "scope": "diagnostics and evidence only",
+  "node": "v24.19.0",
+  "python": "Python 3.12.14"
+}

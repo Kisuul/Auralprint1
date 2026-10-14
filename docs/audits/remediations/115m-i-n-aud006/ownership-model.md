@@ -1,9 +1,9 @@
 # Resource lifecycle and ownership at accepted main
 
 Primary source: `src/js/recording/recorder-engine.js` (line references are baseline).
-`runtime` (17–49), `start` (1110–1263), `stop` (1265–1334),
-`finalizeStoppedRecorder` (1032–1094), `handleRecorderError` (1096–1124),
-`dispose` (1373–1418). Function names take precedence over approximate line labels.
+`runtime` (17–49), `start` (1108), `stop` (1261),
+`finalizeStoppedRecorder` (1019), `handleRecorderError` (1081),
+`dispose` (terminal public method). Function names take precedence over approximate line labels.
 
 ```text
 Start: support + active File/Mic/Stream source admission
