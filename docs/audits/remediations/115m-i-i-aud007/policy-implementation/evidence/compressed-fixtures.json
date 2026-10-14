@@ -1,0 +1,63 @@
+{
+  "generation": "ffmpeg system tooling only; no application dependency; 0.75 seconds, 48kHz. Stereo sine MP3/libmp3lame 128k and Ogg/libopus 96k; six-channel 5.1 silence Ogg/libopus 96k. Exact commands in README.",
+  "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "fixtures": [
+    {
+      "name": "stereo.mp3",
+      "sha256": "15158596d3f6ecfffeeac4603b9cddcfd270a69a259ef38c3b27e9192c23d720",
+      "properties": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "mp3",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "0.792000",
+          "size": "13100"
+        }
+      }
+    },
+    {
+      "name": "stereo.ogg",
+      "sha256": "953deb1cc3bdb5a86ca4d27a14d4e2fb9d1a7da8cb9c48e7adf7141149741db2",
+      "properties": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "opus",
+            "sample_rate": "48000",
+            "channels": 2
+          }
+        ],
+        "format": {
+          "duration": "0.756500",
+          "size": "12310"
+        }
+      }
+    },
+    {
+      "name": "surround.ogg",
+      "sha256": "6303e71dccfe39f3fa2e2c04d6b9011985aad2d0eda698b9c3dac7fc6f6771a8",
+      "properties": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "opus",
+            "sample_rate": "48000",
+            "channels": 6
+          }
+        ],
+        "format": {
+          "duration": "0.756500",
+          "size": "779"
+        }
+      }
+    }
+  ]
+}

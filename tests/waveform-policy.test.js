@@ -103,3 +103,15 @@ test('AUD-007 offer/defer/refuse never consume or alter coordinator occupancy',a
  assert.deepEqual(c.snapshot(),before);assert.equal(starts,1);
  settle(null);await job;
 });
+
+test('AUD-007 accepted above-profile behaviors are pure inputs with hard ceilings intact',()=>{
+ const i=input({durationSeconds:540});
+ assert.equal(evaluateWaveformPolicy(i).decision,'offer');
+ assert.equal(evaluateWaveformPolicy({...i,aboveProfileBehavior:'generate-if-permitted'}).decision,'admit');
+ const skip=evaluateWaveformPolicy({...i,aboveProfileBehavior:'skip'});assert.equal(skip.decision,'refuse');assert.equal(skip.manualEligible,true);
+ assert.equal(evaluateWaveformPolicy({...i,aboveProfileBehavior:'skip',requestKind:'manual'}).decision,'admit');
+ assert.equal(evaluateWaveformPolicy({...i,durationSeconds:3600,aboveProfileBehavior:'generate-if-permitted'}).reason,'pcm-budget');
+ assert.equal(evaluateWaveformPolicy({...i,aboveProfileBehavior:'unlimited'}).reason,'invalid-request');
+ const p=policy();p.defaultAboveProfileBehavior='generate-if-permitted';assert.equal(evaluateWaveformPolicy(i,p).decision,'admit');
+ p.defaultAboveProfileBehavior='unlimited';assert.equal(evaluateWaveformPolicy(i,p).reason,'invalid-policy');
+});

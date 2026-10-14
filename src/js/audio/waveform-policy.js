@@ -24,7 +24,7 @@ function validateWaveformPolicy(policy) {
       || !positiveWhole(profileBytes(policy, profile))) return bad;
     ids.add(profile.id);
   }
-  if (!ids.has(policy.defaultProfileId)) return bad;
+  if (!ids.has(policy.defaultProfileId) || !["ask", "generate-if-permitted", "skip"].includes(policy.defaultAboveProfileBehavior)) return bad;
   return { ok: true, reason: "valid-policy" };
 }
 function resolveWaveformProfile(policy, selectedProfileId) {
@@ -42,6 +42,8 @@ function evaluateWaveformPolicy(input, policy = CONFIG.waveform) {
   if (input.fileSizeBytes > policy.maxEncodedBytes) return refuse("encoded-budget");
   const requestKind = input.requestKind ?? "automatic";
   if (!["automatic", "manual"].includes(requestKind)) return refuse("invalid-request");
+  const aboveProfileBehavior = input.aboveProfileBehavior ?? policy.defaultAboveProfileBehavior;
+  if (!["ask", "generate-if-permitted", "skip"].includes(aboveProfileBehavior)) return refuse("invalid-request");
   const profile = resolveWaveformProfile(policy, input.selectedProfileId);
   const metadata = interpretWaveformMetadata(input, policy);
   const common = { profileId: profile.id, profilePcmBytes: profile.pcmBytes, metadata };
@@ -50,7 +52,10 @@ function evaluateWaveformPolicy(input, policy = CONFIG.waveform) {
   const estimatedPcmBytes = metadata.estimatedPcmBytes;
   const cost = { ...common, estimatedPcmBytes };
   if (estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes) return refuse("pcm-budget", cost);
-  if (requestKind === "automatic" && estimatedPcmBytes > profile.pcmBytes) return { decision: "offer", reason: "above-auto-profile", ...cost };
+  if (requestKind === "automatic" && estimatedPcmBytes > profile.pcmBytes) {
+    if (aboveProfileBehavior === "ask") return { decision: "offer", reason: "above-auto-profile", manualEligible: true, ...cost };
+    if (aboveProfileBehavior === "skip") return refuse("above-auto-profile", { manualEligible: true, ...cost });
+  }
   return { decision: "admit", reason: "within-budget", ...cost };
 }
 

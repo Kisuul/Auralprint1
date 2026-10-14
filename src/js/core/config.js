@@ -315,6 +315,7 @@ const CONFIG = deepFreeze({
       { id: "15m", approximateMinutes: 15 },
     ],
     defaultProfileId: "8m",
+    defaultAboveProfileBehavior: "ask",
     // Provisional source defaults, not a total browser-memory guarantee.
     maxEncodedBytes: 64 * 1024 * 1024,
     maxEstimatedDecodedPcmBytes: 512 * 1024 * 1024,
