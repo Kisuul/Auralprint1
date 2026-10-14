@@ -1,0 +1,104 @@
+{
+  "originalSourceModified": false,
+  "passed": 7,
+  "cases": [
+    {
+      "name": "read-before-encoded",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "encoded gate must precede any full read",
+      "mutation": [
+        [
+          "  if (input.fileSizeBytes > policy.maxEncodedBytes)",
+          "  input.file?.arrayBuffer();\n  if (input.fileSizeBytes > policy.maxEncodedBytes)"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 encoded equality admits; oversize refuses before metadata access or full read (2.488718ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 23.031905\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:20:1\n\u2716 AUD-007 encoded equality admits; oversize refuses before metadata access or full read (2.488718ms)\n  AssertionError [ERR_ASSERTION]: encoded gate must precede any full read\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/read-before-encoded/tests/waveform-policy.test.js:24:78)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "omit-pcm",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "PCM ceiling must be enforced before native work",
+      "mutation": [
+        [
+          "if (estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes)",
+          "if (false && estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes)"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 PCM equality admits and one output frame over refuses (2.363592ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 23.125415\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:26:1\n\u2716 AUD-007 PCM equality admits and one output frame over refuses (2.363592ms)\n  AssertionError [ERR_ASSERTION]: PCM ceiling must be enforced before native work\n  + actual - expected\n  \n  + 'within-budget'\n  - 'pcm-budget'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/omit-pcm/tests/waveform-policy.test.js:28:68)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'within-budget',\n    expected: 'pcm-budget',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "manual-hard-bypass",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "manual request must respect PCM ceiling",
+      "mutation": [
+        [
+          "if (estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes)",
+          "if (requestKind !== \"manual\" && estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes)"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 manual bypasses convenience only, never encoded or PCM hard ceilings (2.840031ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 26.732458\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:41:1\n\u2716 AUD-007 manual bypasses convenience only, never encoded or PCM hard ceilings (2.840031ms)\n  AssertionError [ERR_ASSERTION]: manual request must respect PCM ceiling\n  + actual - expected\n  \n  + 'within-budget'\n  - 'pcm-budget'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/manual-hard-bypass/tests/waveform-policy.test.js:43:9)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'within-budget',\n    expected: 'pcm-budget',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "false-verified",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "channel assumption must remain estimated",
+      "mutation": [
+        [
+          "    assumption = \"configured-channel-fallback\";\n    metadataConfidence = \"estimated\";",
+          "    assumption = \"configured-channel-fallback\";\n    metadataConfidence = \"verified\";"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 unknown channels use explicit configured estimated fallback, never verified (2.875334ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 23.644578\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:51:1\n\u2716 AUD-007 unknown channels use explicit configured estimated fallback, never verified (2.875334ms)\n  AssertionError [ERR_ASSERTION]: channel assumption must remain estimated\n  + actual - expected\n  \n  + 'verified'\n  - 'estimated'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/false-verified/tests/waveform-policy.test.js:53:49)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'verified',\n    expected: 'estimated',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "duration-gate",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "nine-minute mono fits eight-minute stereo workload",
+      "mutation": [
+        [
+          "requestKind === \"automatic\" && estimatedPcmBytes > profile.pcmBytes",
+          "requestKind === \"automatic\" && metadata.durationSeconds > profile.approximateMinutes * 60"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 profile is a PCM workload, not an absolute duration gate (2.278305ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 25.949883\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:37:1\n\u2716 AUD-007 profile is a PCM workload, not an absolute duration gate (2.278305ms)\n  AssertionError [ERR_ASSERTION]: nine-minute mono fits eight-minute stereo workload\n  \n  'offer' !== 'admit'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/duration-gate/tests/waveform-policy.test.js:38:88)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'offer',\n    expected: 'admit',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "ignore-overrides",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "source overrides must supersede factory ceilings",
+      "mutation": [
+        [
+          "function evaluateWaveformPolicy(input, policy = CONFIG.waveform) {",
+          "function evaluateWaveformPolicy(input, policy = CONFIG.waveform) {\n  policy = CONFIG.waveform;"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 valid source hard-ceiling overrides are honored without hidden factory cap (2.174559ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 26.181458\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:46:1\n\u2716 AUD-007 valid source hard-ceiling overrides are honored without hidden factory cap (2.174559ms)\n  AssertionError [ERR_ASSERTION]: source overrides must supersede factory ceilings\n  \n  'refuse' !== 'admit'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/ignore-overrides/tests/waveform-policy.test.js:49:9)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'refuse',\n    expected: 'admit',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "nan-admit",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "invalid numeric duration must never admit",
+      "mutation": [
+        [
+          "if (metadata.confidence === \"invalid\") return refuse(",
+          "if (metadata.confidence === \"invalid\" && !Number.isNaN(input.durationSeconds)) return refuse("
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 invalid available duration NaN never admits (2.124944ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 21.874585\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:73:55\n\u2716 AUD-007 invalid available duration NaN never admits (2.124944ms)\n  AssertionError [ERR_ASSERTION]: invalid numeric duration must never admit\n  \n  'admit' !== 'refuse'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2b-mutations-269yji1_/nan-admit/tests/waveform-policy.test.js:74:9)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'admit',\n    expected: 'refuse',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    }
+  ]
+}

@@ -1,0 +1,738 @@
+{
+  "scope": "Pure actual policy and parser; small synthetic metadata only, no represented long payload/PCM allocation.",
+  "sourceConfiguration": {
+    "decodeSampleRateHz": 44100,
+    "peakBucketCount": 512,
+    "automaticProfiles": [
+      {
+        "id": "4m",
+        "approximateMinutes": 4
+      },
+      {
+        "id": "8m",
+        "approximateMinutes": 8
+      },
+      {
+        "id": "15m",
+        "approximateMinutes": 15
+      }
+    ],
+    "defaultProfileId": "8m",
+    "defaultAboveProfileBehavior": "ask",
+    "aboveProfileBehaviors": [
+      {
+        "id": "ask",
+        "label": "Ask before generating"
+      },
+      {
+        "id": "generate-if-permitted",
+        "label": "Generate automatically if permitted"
+      },
+      {
+        "id": "skip",
+        "label": "Skip automatic generation"
+      }
+    ],
+    "maxEncodedBytes": 67108864,
+    "maxEstimatedDecodedPcmBytes": 536870912,
+    "fallbackEstimatedChannels": 2,
+    "metadataProbe": {
+      "maxBytes": 65536,
+      "maxChunks": 128
+    }
+  },
+  "rows": [
+    {
+      "name": "five-minute mono WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 26460044,
+      "seconds": 300,
+      "channels": 1,
+      "profile": "4m",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "4m",
+      "profilePcmBytes": 84672000,
+      "metadata": {
+        "confidence": "verified",
+        "durationSeconds": 300,
+        "channelCount": 1,
+        "sourceSampleRateHz": 44100,
+        "assumption": null,
+        "estimatedPcmBytes": 52920000,
+        "estimatedOutputFrames": 13230000
+      },
+      "estimatedPcmBytes": 52920000
+    },
+    {
+      "name": "five-minute mono WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 26460044,
+      "seconds": 300,
+      "channels": 1,
+      "profile": "8m",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "verified",
+        "durationSeconds": 300,
+        "channelCount": 1,
+        "sourceSampleRateHz": 44100,
+        "assumption": null,
+        "estimatedPcmBytes": 52920000,
+        "estimatedOutputFrames": 13230000
+      },
+      "estimatedPcmBytes": 52920000
+    },
+    {
+      "name": "five-minute mono WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 26460044,
+      "seconds": 300,
+      "channels": 1,
+      "profile": "15m",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "15m",
+      "profilePcmBytes": 317520000,
+      "metadata": {
+        "confidence": "verified",
+        "durationSeconds": 300,
+        "channelCount": 1,
+        "sourceSampleRateHz": 44100,
+        "assumption": null,
+        "estimatedPcmBytes": 52920000,
+        "estimatedOutputFrames": 13230000
+      },
+      "estimatedPcmBytes": 52920000
+    },
+    {
+      "name": "six-minute stereo WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 63504044,
+      "seconds": 360,
+      "channels": 2,
+      "profile": "4m",
+      "decision": "offer",
+      "reason": "above-auto-profile",
+      "manualEligible": true,
+      "profileId": "4m",
+      "profilePcmBytes": 84672000,
+      "metadata": {
+        "confidence": "verified",
+        "durationSeconds": 360,
+        "channelCount": 2,
+        "sourceSampleRateHz": 44100,
+        "assumption": null,
+        "estimatedPcmBytes": 127008000,
+        "estimatedOutputFrames": 15876000
+      },
+      "estimatedPcmBytes": 127008000
+    },
+    {
+      "name": "six-minute stereo WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 63504044,
+      "seconds": 360,
+      "channels": 2,
+      "profile": "8m",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "verified",
+        "durationSeconds": 360,
+        "channelCount": 2,
+        "sourceSampleRateHz": 44100,
+        "assumption": null,
+        "estimatedPcmBytes": 127008000,
+        "estimatedOutputFrames": 15876000
+      },
+      "estimatedPcmBytes": 127008000
+    },
+    {
+      "name": "six-minute stereo WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 63504044,
+      "seconds": 360,
+      "channels": 2,
+      "profile": "15m",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "15m",
+      "profilePcmBytes": 317520000,
+      "metadata": {
+        "confidence": "verified",
+        "durationSeconds": 360,
+        "channelCount": 2,
+        "sourceSampleRateHz": 44100,
+        "assumption": null,
+        "estimatedPcmBytes": 127008000,
+        "estimatedOutputFrames": 15876000
+      },
+      "estimatedPcmBytes": 127008000
+    },
+    {
+      "name": "nine-minute stereo WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 95256044,
+      "seconds": 540,
+      "channels": 2,
+      "profile": "4m",
+      "decision": "refuse",
+      "reason": "encoded-budget"
+    },
+    {
+      "name": "nine-minute stereo WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 95256044,
+      "seconds": 540,
+      "channels": 2,
+      "profile": "8m",
+      "decision": "refuse",
+      "reason": "encoded-budget"
+    },
+    {
+      "name": "nine-minute stereo WAV",
+      "synthetic": true,
+      "allocatedPrefixBytes": 44,
+      "declaredEncodedBytes": 95256044,
+      "seconds": 540,
+      "channels": 2,
+      "profile": "15m",
+      "decision": "refuse",
+      "reason": "encoded-budget"
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 540,
+      "profile": "4m",
+      "requestKind": "automatic",
+      "decision": "offer",
+      "reason": "above-auto-profile",
+      "manualEligible": true,
+      "profileId": "4m",
+      "profilePcmBytes": 84672000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 540,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 190512000,
+        "estimatedOutputFrames": 23814000
+      },
+      "estimatedPcmBytes": 190512000
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 540,
+      "profile": "4m",
+      "requestKind": "manual",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "4m",
+      "profilePcmBytes": 84672000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 540,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 190512000,
+        "estimatedOutputFrames": 23814000
+      },
+      "estimatedPcmBytes": 190512000
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 540,
+      "profile": "8m",
+      "requestKind": "automatic",
+      "decision": "offer",
+      "reason": "above-auto-profile",
+      "manualEligible": true,
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 540,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 190512000,
+        "estimatedOutputFrames": 23814000
+      },
+      "estimatedPcmBytes": 190512000
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 540,
+      "profile": "8m",
+      "requestKind": "manual",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 540,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 190512000,
+        "estimatedOutputFrames": 23814000
+      },
+      "estimatedPcmBytes": 190512000
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 540,
+      "profile": "15m",
+      "requestKind": "automatic",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "15m",
+      "profilePcmBytes": 317520000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 540,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 190512000,
+        "estimatedOutputFrames": 23814000
+      },
+      "estimatedPcmBytes": 190512000
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 540,
+      "profile": "15m",
+      "requestKind": "manual",
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "15m",
+      "profilePcmBytes": 317520000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 540,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 190512000,
+        "estimatedOutputFrames": 23814000
+      },
+      "estimatedPcmBytes": 190512000
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 4344,
+      "profile": "4m",
+      "requestKind": "automatic",
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "4m",
+      "profilePcmBytes": 84672000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 4344,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 1532563200,
+        "estimatedOutputFrames": 191570400
+      },
+      "estimatedPcmBytes": 1532563200
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 4344,
+      "profile": "4m",
+      "requestKind": "manual",
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "4m",
+      "profilePcmBytes": 84672000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 4344,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 1532563200,
+        "estimatedOutputFrames": 191570400
+      },
+      "estimatedPcmBytes": 1532563200
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 4344,
+      "profile": "8m",
+      "requestKind": "automatic",
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 4344,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 1532563200,
+        "estimatedOutputFrames": 191570400
+      },
+      "estimatedPcmBytes": 1532563200
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 4344,
+      "profile": "8m",
+      "requestKind": "manual",
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 4344,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 1532563200,
+        "estimatedOutputFrames": 191570400
+      },
+      "estimatedPcmBytes": 1532563200
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 4344,
+      "profile": "15m",
+      "requestKind": "automatic",
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "15m",
+      "profilePcmBytes": 317520000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 4344,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 1532563200,
+        "estimatedOutputFrames": 191570400
+      },
+      "estimatedPcmBytes": 1532563200
+    },
+    {
+      "name": "compressed synthetic duration",
+      "synthetic": true,
+      "actualSmallFixtureBytes": 128983,
+      "seconds": 4344,
+      "profile": "15m",
+      "requestKind": "manual",
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "15m",
+      "profilePcmBytes": 317520000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 4344,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 1532563200,
+        "estimatedOutputFrames": 191570400
+      },
+      "estimatedPcmBytes": 1532563200
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "encoded",
+      "bytes": 67108864,
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 1,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 352800,
+        "estimatedOutputFrames": 44100
+      },
+      "estimatedPcmBytes": 352800
+    },
+    {
+      "kind": "encoded",
+      "bytes": 67108865,
+      "decision": "refuse",
+      "reason": "encoded-budget"
+    },
+    {
+      "kind": "pcm",
+      "frames": 67108864,
+      "decision": "admit",
+      "reason": "within-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 1521.742947845805,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 536870912,
+        "estimatedOutputFrames": 67108864
+      },
+      "estimatedPcmBytes": 536870912
+    },
+    {
+      "kind": "pcm",
+      "frames": 67108865,
+      "decision": "refuse",
+      "reason": "pcm-budget",
+      "profileId": "8m",
+      "profilePcmBytes": 169344000,
+      "metadata": {
+        "confidence": "estimated",
+        "durationSeconds": 1521.742970521542,
+        "channelCount": 2,
+        "sourceSampleRateHz": null,
+        "assumption": "configured-channel-fallback",
+        "estimatedPcmBytes": 536870920,
+        "estimatedOutputFrames": 67108865
+      },
+      "estimatedPcmBytes": 536870920
+    }
+  ],
+  "invalidSourceInputs": [
+    {
+      "field": "maxEncodedBytes",
+      "value": "NaN",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEncodedBytes",
+      "value": "Infinity",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEncodedBytes",
+      "value": "-1",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEncodedBytes",
+      "value": "0",
+      "decision": "refuse",
+      "reason": "encoded-budget"
+    },
+    {
+      "field": "maxEncodedBytes",
+      "value": "9007199254740991",
+      "decision": "admit",
+      "reason": "within-budget"
+    },
+    {
+      "field": "maxEncodedBytes",
+      "value": "9007199254740992",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEstimatedDecodedPcmBytes",
+      "value": "NaN",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEstimatedDecodedPcmBytes",
+      "value": "Infinity",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEstimatedDecodedPcmBytes",
+      "value": "-1",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "maxEstimatedDecodedPcmBytes",
+      "value": "0",
+      "decision": "refuse",
+      "reason": "pcm-budget"
+    },
+    {
+      "field": "maxEstimatedDecodedPcmBytes",
+      "value": "9007199254740991",
+      "decision": "admit",
+      "reason": "within-budget"
+    },
+    {
+      "field": "maxEstimatedDecodedPcmBytes",
+      "value": "9007199254740992",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "decodeSampleRateHz",
+      "value": "NaN",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "decodeSampleRateHz",
+      "value": "Infinity",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "decodeSampleRateHz",
+      "value": "-1",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "decodeSampleRateHz",
+      "value": "0",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "decodeSampleRateHz",
+      "value": "9007199254740991",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "decodeSampleRateHz",
+      "value": "9007199254740992",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "fallbackEstimatedChannels",
+      "value": "NaN",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "fallbackEstimatedChannels",
+      "value": "Infinity",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "fallbackEstimatedChannels",
+      "value": "-1",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "fallbackEstimatedChannels",
+      "value": "0",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "fallbackEstimatedChannels",
+      "value": "9007199254740991",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "fallbackEstimatedChannels",
+      "value": "9007199254740992",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "metadataProbe.maxBytes",
+      "value": "NaN",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "metadataProbe.maxBytes",
+      "value": "Infinity",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "metadataProbe.maxBytes",
+      "value": "-1",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "metadataProbe.maxBytes",
+      "value": "0",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    },
+    {
+      "field": "metadataProbe.maxBytes",
+      "value": "9007199254740991",
+      "decision": "admit",
+      "reason": "within-budget"
+    },
+    {
+      "field": "metadataProbe.maxBytes",
+      "value": "9007199254740992",
+      "decision": "refuse",
+      "reason": "invalid-policy"
+    }
+  ],
+  "parser": {
+    "truncatedPrefixes": 44,
+    "verifiedTruncations": 0,
+    "chunkWorkExhaustion": {
+      "confidence": "unknown",
+      "reason": "metadata-unavailable",
+      "detail": "probe-work-exhausted"
+    }
+  },
+  "allocationMaxBytes": 65536
+}
