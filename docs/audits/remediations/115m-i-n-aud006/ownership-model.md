@@ -3,7 +3,7 @@
 Primary source: `src/js/recording/recorder-engine.js` (line references are baseline).
 `runtime` (17–49), `start` (1108), `stop` (1261),
 `finalizeStoppedRecorder` (1019), `handleRecorderError` (1081),
-`dispose` (terminal public method). Function names take precedence over approximate line labels.
+`dispose` (1361). Function names and baseline Git links remain authoritative.
 
 ```text
 Start: support + active File/Mic/Stream source admission
@@ -65,3 +65,16 @@ all exports: it is not a nondestructive recovery button. Ordinary finalization
 currently ignores `releaseActiveSession()`'s cleanup boolean; a throwing tap release
 can be logged while status is complete. That is an injected application contract
 weakness, not an observed browser failure.
+
+## Review navigation
+
+- [Recorder runtime, handlers, assembly and lifecycle](../../../../src/js/recording/recorder-engine.js#L1203): `start`, `stop`, `finalizeStoppedRecorder`, `handleRecorderError`, `releaseActiveSession`, `resetSessionRuntime`, `dispose`.
+- [CONFIG recording defaults](../../../../src/js/core/config.js#L330) and [recording state shape](../../../../src/js/core/state.js#L30).
+- [UI source/finalizing locks](../../../../src/js/ui/ui.js#L107), `getRecordingUiModel`, `refreshRecordingUi`, `downloadLastRecording`, `applyTrackEndedPolicy`, `maybeConsumePendingTrackEnd`.
+- [AudioEngine recorder tap](../../../../src/js/audio/audio-engine.js#L599): `readRecorderUpstreamStream`, `ensureRecorderTapStream`, `releaseRecorderTapStream`.
+- [InputSourceManager](../../../../src/js/audio/input-source-manager.js#L415): `teardownActiveSource`, `activateFile`, `activateMic`, `activateStream`.
+- [RC-06 regression tests](../../../../tests/recording-export.test.js), accepted [PR #29](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/29), [RC-19 evidence](../115m-i-b-rc19/README.md), [RC-19 regressions](../../../../tests/rc19-recorder-disposal.test.js), [EOF/source/transport regressions](../../../../tests/targeted-audit.test.js).
+
+All source above is byte-identical to accepted main in this investigative branch.
+Historical report statements such as “awaiting review” describe their own
+checkpoints; accepted current main/merged corrections establish this baseline.

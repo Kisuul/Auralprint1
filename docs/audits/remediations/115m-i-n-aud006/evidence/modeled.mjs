@@ -1,10 +1,11 @@
 // Optional characterization, not policy tests. No production logic changes.
 // Run from any cwd: node <this-file> <fresh-report.json>
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../../../../../', import.meta.url));
+mkdirSync(join(root, 'work'), {recursive:true});
 const scratch = mkdtempSync(join(root, 'work/aud006-model-'));
 const input = join(root, 'src/js/recording/recorder-engine.js');
 const raw = readFileSync(input, 'utf8');
