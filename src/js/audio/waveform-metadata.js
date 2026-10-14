@@ -11,6 +11,15 @@ function interpretWaveformMetadata(input, policy) {
   if (headerMetadata && !["verified", "estimated", "unknown", "invalid"].includes(headerMetadata.confidence)) return invalid("invalid-header-confidence");
   if (durationState === "available" && durationSeconds != null && (!Number.isFinite(durationSeconds) || durationSeconds <= 0)) return invalid("invalid-duration");
   if (metadataConfidence === "invalid" || headerMetadata?.confidence === "invalid") return invalid("contradictory-metadata");
+  if (headerMetadata?.confidence === "estimated" && headerMetadata.channelCount != null) {
+    if (!positiveWhole(headerMetadata.channelCount) || !positiveWhole(headerMetadata.sourceSampleRateHz)) return invalid("invalid-partial-header");
+    if (metadataConfidence === "verified" && channelCount != null && channelCount !== headerMetadata.channelCount) return invalid("channel-conflict");
+    if (metadataConfidence !== "verified") {
+      channelCount = headerMetadata.channelCount;
+      sourceSampleRateHz = headerMetadata.sourceSampleRateHz;
+      metadataConfidence = "estimated";
+    }
+  }
   if (headerMetadata?.confidence === "verified") {
     if (!positiveWhole(headerMetadata.channelCount) || !positiveWhole(headerMetadata.sourceSampleRateHz)
       || !Number.isFinite(headerMetadata.durationSeconds) || headerMetadata.durationSeconds <= 0) return invalid("invalid-header");
@@ -30,7 +39,7 @@ function interpretWaveformMetadata(input, policy) {
   }
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return invalid("invalid-duration");
   if (sourceSampleRateHz != null && !positiveWhole(sourceSampleRateHz)) return invalid("invalid-source-rate");
-  let assumption = null;
+  let assumption = headerMetadata?.confidence === "estimated" ? "partial-pcm-header" : null;
   if (channelCount == null) {
     if (metadataConfidence === "verified") return invalid("verified-channels-missing");
     if (!positiveWhole(policy.fallbackEstimatedChannels)) return invalid("invalid-channel-assumption");
@@ -53,14 +62,17 @@ function inspectPcmWavHeader(bytes, fileSizeBytes, { maxBytes, maxChunks }) {
   if (!(bytes instanceof ArrayBuffer) || !positiveWhole(fileSizeBytes)
     || !positiveWhole(maxBytes) || maxBytes < 12 || !positiveWhole(maxChunks)) return invalid("invalid-probe-input");
   if (bytes.byteLength > maxBytes || bytes.byteLength > fileSizeBytes) return invalid("probe-read-overrun");
-  const unknown = detail => ({ confidence: "unknown", reason: "metadata-unavailable", detail });
+  let format = null;
+  const unknown = detail => format
+    ? { confidence: "estimated", reason: "metadata-unavailable", detail, channelCount: format.channels, sourceSampleRateHz: format.rate }
+    : { confidence: "unknown", reason: "metadata-unavailable", detail };
   if (bytes.byteLength < 12) return unknown("short-prefix");
   const view = new DataView(bytes);
   const tag = at => String.fromCharCode(...new Uint8Array(bytes, at, 4));
   if (tag(0) !== "RIFF" || tag(8) !== "WAVE") return unknown("unsupported-container");
   const end = view.getUint32(4, true) + 8;
   if (end !== fileSizeBytes || end < 12) return invalid("riff-length-conflict");
-  let offset = 12, format = null;
+  let offset = 12;
   for (let chunks = 0; offset < end && chunks < maxChunks; chunks++) {
     if (offset + 8 > end) return invalid("truncated-chunk-header");
     if (offset + 8 > bytes.byteLength) return unknown("probe-prefix-exhausted");
@@ -74,6 +86,7 @@ function inspectPcmWavHeader(bytes, fileSizeBytes, { maxBytes, maxChunks }) {
       const code = view.getUint16(start, true), channels = view.getUint16(start + 2, true);
       const rate = view.getUint32(start + 4, true), byteRate = view.getUint32(start + 8, true);
       const align = view.getUint16(start + 12, true), bits = view.getUint16(start + 14, true);
+      if (code !== 1 && code !== 65534) return unknown("unsupported-wave-codec");
       if (!channels || !rate || !align || !bits) return invalid("invalid-format-dimensions");
       if (code === 65534) {
         if (size < 40 || view.getUint16(start + 16, true) < 22 || 18 + view.getUint16(start + 16, true) > size) return invalid("invalid-extensible-length");

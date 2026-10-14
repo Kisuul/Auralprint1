@@ -9,7 +9,9 @@ function profileBytes(policy, profile) {
 function validateWaveformPolicy(policy) {
   const bad = { ok: false, reason: "invalid-policy" };
   if (!policy || !positiveWhole(policy.decodeSampleRateHz) || !positiveWhole(policy.peakBucketCount)
+    || !positiveWhole(policy.peakBucketCount * Float32Array.BYTES_PER_ELEMENT)
     || !positiveWhole(policy.fallbackEstimatedChannels)
+    || !positiveWhole(policy.fallbackEstimatedChannels * Float32Array.BYTES_PER_ELEMENT)
     || !Number.isSafeInteger(policy.maxEncodedBytes) || policy.maxEncodedBytes < 0
     || !Number.isSafeInteger(policy.maxEstimatedDecodedPcmBytes) || policy.maxEstimatedDecodedPcmBytes < 0
     || !positiveWhole(policy.metadataProbe?.maxBytes) || policy.metadataProbe.maxBytes < 12
