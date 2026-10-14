@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 import { createHash } from "node:crypto";
+import { subscribe, unsubscribe } from "node:diagnostics_channel";
 import { readFileSync, readdirSync, watch, writeFileSync, renameSync, mkdirSync, rmSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -77,6 +78,20 @@ async function main() {
   const contexts = [];
   const watchers = [];
   const abort = new AbortController();
+  const services = new Map();
+  // esbuild.stop() kills an unref'ed child but does not join its close event.
+  // Node 24's child_process diagnostics expose the actual owned handle without
+  // patching esbuild or spawn. Join it so shutdown cannot orphan the service.
+  function observeChild({ process: child }) {
+    child.once("spawn", () => {
+      if (!child.spawnargs.some(arg => arg.startsWith("--service="))) return;
+      services.set(child, new Promise(resolve => child.once("close", () => {
+        services.delete(child);
+        resolve();
+      })));
+    });
+  }
+  subscribe("child_process", observeChild);
   let timer;
   let assemblyChain = Promise.resolve();
   let draining = false;
@@ -179,7 +194,10 @@ async function main() {
     shutdownPromise = (async () => {
       await Promise.all(contexts.map(context => context.dispose()));
       await assemblyChain;
-      esbuild.stop();
+      for (const child of services.keys()) child.ref();
+      await esbuild.stop();
+      await Promise.all(services.values());
+      unsubscribe("child_process", observeChild);
       process.removeListener("SIGINT", shutdown);
       process.removeListener("SIGTERM", shutdown);
       process.removeListener("message", onMessage);
@@ -217,7 +235,11 @@ async function main() {
     if (stopping) return { close: shutdown };
     await Promise.all(contexts.map(context => context.watch()));
     console.log("[watch] watching JS/CSS dependencies, template, version and flat branding inputs");
-  } catch (error) { await shutdown(); throw error; }
+  } catch (error) {
+    const cancelled = stopping;
+    await shutdown();
+    if (!cancelled) throw error;
+  }
   return { close: shutdown };
 }
 

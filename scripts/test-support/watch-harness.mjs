@@ -29,8 +29,8 @@ export function projectCopy() {
   return dir;
 }
 
-export function startWatch(dir, env = {}) {
-  const child = spawn(process.execPath, ["scripts/watch.mjs"], {
+export function startWatch(dir, env = {}, nodeArgs = []) {
+  const child = spawn(process.execPath, [...nodeArgs, "scripts/watch.mjs"], {
     cwd: dir, env: { ...process.env, ...env }, stdio: ["pipe", "pipe", "pipe", "ipc"],
   });
   let log = "";
@@ -52,11 +52,11 @@ export function startWatch(dir, env = {}) {
         }, label, timeout);
       } catch (error) { throw new Error(`${error.message}\n${log}`, { cause: error }); }
     },
-    async stop(graceful = false) {
+    async stop(graceful = false, signal = "SIGTERM") {
       if (child.exitCode === null && child.signalCode === null) {
         // Native Windows does not deliver POSIX SIGTERM handlers via child.kill.
         if (graceful && process.platform === "win32") child.send({ type: "shutdown" });
-        else child.kill("SIGTERM");
+        else child.kill(signal);
       }
       let timer;
       try {

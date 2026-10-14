@@ -1,0 +1,154 @@
+▶ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle
+  ✔ initial startup builds both editions (359.097629ms)
+  ✔ JS dependency-only edit (281.175457ms)
+  ✔ CSS dependency-only edit (274.878423ms)
+  ✔ template-only edit updates both distributions (232.228622ms)
+  ✔ version-only save replaces filename/title while retaining older portable (250.784052ms)
+  ✔ rapid template/version/JS/CSS edits and A to B to C converge (389.599359ms)
+  ✔ refuses invalid version "" and recovers (325.114893ms)
+  ✔ refuses invalid version "not/a/version" and recovers (318.235376ms)
+  ✔ refuses invalid version "v1<script>" and recovers (325.423898ms)
+  ✔ temporarily unreadable version and atomic restore (333.344955ms)
+  ✔ version path temporarily cannot be read as a file (319.455137ms)
+  ✔ src/js/core/constants.js build error and atomic source replacement recovery (477.910949ms)
+  ✖ src/css/panels.css build error and atomic source replacement recovery (20082.34127ms)
+  ✔ invalid template retains valid outputs and recovers via replacement (363.314706ms)
+  ✔ branding-only save updates portable favicon and hosted bytes (239.720303ms)
+  ✔ branding removal fails without damaging output and replacement recovers (352.801206ms)
+  ✔ manifest-only edit retains package-relative hosted metadata (230.505803ms)
+  ✔ assembler process failure preserves output and a later save recovers (364.215011ms)
+  ✔ edits during active assembly are retained and obsolete transaction is discarded (437.054062ms)
+  ✔ duplicate saves do not assemble again and Python assemblers never overlap (675.663731ms)
+  ✔ repeated atomic template and version saves keep producing current editions (1010.279911ms)
+  ✖ termination joins active Python work and releases watcher resources (189.814774ms)
+✖ AUD-011 actual watcher: current inputs, coherent packaging, failure recovery and lifecycle (27855.270112ms)
+ℹ Watcher completion events: 23; native platform: linux
+✔ AUD-011 watcher starts with an invalid version and recovers without restart (483.523208ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 21
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28414.550973
+
+✖ failing tests:
+
+test at tests/watch-integration.test.js:160:15
+✖ src/css/panels.css build error and atomic source replacement recovery (20082.34127ms)
+  Error: Deadline waiting for .aud011-css-recovered { --restored: 1; }
+  [watch] watching JS/CSS dependencies, template, version and flat branding inputs
+  [watch] build finished, watching for changes...
+  [watch] build finished, watching for changes...
+  [watch] assembling v0.1.15m.i.l
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15m.i.l; inputs da4cd80f1193df2ce8e4cb612c468947c18c63f80a6dabdee686d5c1d32ce1a2)
+  [watch] build started (change: "src/js/core/constants.js")
+  [watch] build finished
+  [watch] assembling v0.1.15m.i.l
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15m.i.l; inputs 4a02a515efb07613dc1541dcfe375f1612a77a0d51d2ce553c6cea3bf2c81d54)
+  [watch] build started (change: "src/css/panels.css")
+  [watch] build finished
+  [watch] assembling v0.1.15m.i.l
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15m.i.l; inputs a664a2e78a014479516483216834e565bcab9417ab7a642a9e19e7d9f9851482)
+  [watch] assembling v0.1.15m.i.l
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15m.i.l.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15m.i.l; inputs 5ef67e4ae5a63ec12e4095a57535e635053767319aa762433092352d8a4503f6)
+  [watch] assembling v0.1.15-aud011-B
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-B.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-B; inputs 5064932b2e18e1a0e9d04e4ad14f4aa85c5649c4850b2bc77a6b5f3fed454791)
+  [watch] build started (change: "src/js/main.js")
+  [watch] build finished
+  [watch] build started (change: "src/css/base.css")
+  [watch] build finished
+  [watch] assembling v0.1.15-aud011-C
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C; inputs 97101d5f0e5cff760dc1c00f4ca09832f9eee5e1fe5f913247a72e226f4aad67)
+  [watch] assembly failed: Version file is empty: /tmp/auralprint-watch-Y2Jxsf/version
+  [watch] assembling v0.1.15-aud011-C-restored
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored; inputs 20f35112ee839d207d4ebb98e0212f06d74d5c26d2549d3250eae47a342ea2a3)
+  [watch] assembly failed: Version file must contain a safe version tag starting with "v": /tmp/auralprint-watch-Y2Jxsf/version
+  [watch] assembling v0.1.15-aud011-C-restored-restored
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored; inputs 0929b3cf86e28d4060778eca8b568d8b965e6f66990c00ce951e7dc25eb123a4)
+  [watch] assembly failed: Version file must contain a safe version tag starting with "v": /tmp/auralprint-watch-Y2Jxsf/version
+  [watch] assembling v0.1.15-aud011-C-restored-restored-restored
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored; inputs cd96403f427fe88984757b1af43e123386f40124ac3f2e08fbe44f0b7b49d2f8)
+  [watch] assembly failed: Missing version file: /tmp/auralprint-watch-Y2Jxsf/version
+  [watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement; inputs 5bef01528d9d9f272b7641b55fa0c3302356625fe6d5f0606c27e53dc9f227ab)
+  [watch] assembly failed: Missing version file: /tmp/auralprint-watch-Y2Jxsf/version
+  [watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs fe64300421f6d4322309b3e7f851d76ef87743d832fe70814e2c1c7a2d91db23)
+  [watch] build started (change: "src/js/core/constants.js")
+  ✘ [ERROR] Expected identifier but found "="
+  
+      src/js/core/constants.js:28:6:
+        28 │ const = ;
+           ╵       ^
+  
+  [watch] js bundle failed; skipping assembly.
+  
+  1 error
+  [watch] build finished
+  [watch] build started (change: "src/js/core/constants.js")
+  [watch] build finished
+  [watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs 01bfc78fb5d5bd2a9491de5f94beab9705ca46c5b1cc95c5a5052c499c254c44)
+  [watch] build started (change: "src/css/panels.css")
+  ▲ [WARNING] Expected "}" to go with "{" [css-syntax-error]
+  
+      src/css/panels.css:267:38:
+        267 │ .aud011-invalid { color: "unterminated
+            │                                       ^
+            ╵                                       }
+  
+    The unbalanced "{" is here:
+  
+      src/css/panels.css:267:16:
+        267 │ .aud011-invalid { color: "unterminated
+            ╵                 ^
+  
+  ▲ [WARNING] Unterminated string token [css-syntax-error]
+  
+      src/css/panels.css:267:38:
+        267 │ .aud011-invalid { color: "unterminated
+            ╵                                       ^
+  
+  [watch] css bundle failed; skipping assembly.
+  src/css/panels.css:267:38 Expected "}" to go with "{"
+  src/css/panels.css:267:38 Unterminated string token
+  2 warnings
+  [watch] build finished
+  [watch] build started (change: "src/css/panels.css")
+  [watch] build finished
+  [watch] assembling v0.1.15-aud011-C-restored-restored-restored-replacement-readable
+  [watch] assembled /tmp/auralprint-watch-Y2Jxsf/dist/auralprint_0.1.15-aud011-C-restored-restored-restored-replacement-readable.html and /tmp/auralprint-watch-Y2Jxsf/dist/hosted (v0.1.15-aud011-C-restored-restored-restored-replacement-readable; inputs e42c7d8535db5e2597692507ceb803b9bc7eca362900327227e83feb5341fd13)
+  
+      at Object.wait (file:///workspace/Auralprint1/scripts/test-support/watch-harness.mjs:53:31)
+      at async check (file:///workspace/Auralprint1/tests/watch-integration.test.js:73:5)
+      ... 4 lines matching cause stack trace ...
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    [cause]: Error: Deadline waiting for .aud011-css-recovered { --restored: 1; }
+        at until (file:///workspace/Auralprint1/scripts/test-support/watch-harness.mjs:18:34)
+        at async Object.wait (file:///workspace/Auralprint1/scripts/test-support/watch-harness.mjs:49:9)
+        at async check (file:///workspace/Auralprint1/tests/watch-integration.test.js:73:5)
+        at async TestContext.<anonymous> (file:///workspace/Auralprint1/tests/watch-integration.test.js:167:9)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async TestContext.<anonymous> (file:///workspace/Auralprint1/tests/watch-integration.test.js:160:7)
+        at async Test.run (node:internal/test_runner/test:1389:7)
+        at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  }
+
+test at tests/watch-integration.test.js:263:13
+✖ termination joins active Python work and releases watcher resources (189.814774ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception: Owned child survived: /workspace/Auralprint1/node_modules/@esbuild/linux-x64/bin/esbuild
+      at TestContext.<anonymous> (file:///workspace/Auralprint1/tests/watch-integration.test.js:275:44)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async TestContext.<anonymous> (file:///workspace/Auralprint1/tests/watch-integration.test.js:263:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { code: 'ESRCH' },
+    operator: 'throws',
+    diff: 'simple'
+  }
