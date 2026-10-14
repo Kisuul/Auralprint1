@@ -1454,7 +1454,15 @@ const UI = (() => {
         refreshQueuePanel();
         return false;
       }
-      Scrubber.loadFile(file); // async — decode in background; playback may be play or paused by opts
+      // UI keeps Queue/request authority. Optional metadata/manual work must
+      // still target this activation and its exact media, even for the same File.
+      const waveformMedia = AudioEngine.getMediaEl();
+      Scrubber.loadFile(file, {
+        media: waveformMedia,
+        isCurrent: () => isCurrentFileRequest(requestId)
+          && state.source.kind === "file" && state.audio.isLoaded
+          && AudioEngine.getMediaEl() === waveformMedia,
+      });
       applyPrefs(null);
       RecorderEngine.onTransportMutation("track-change-complete", {
         requestId,

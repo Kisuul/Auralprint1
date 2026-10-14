@@ -4,12 +4,12 @@
  * A replacement must retain these admission guarantees and adversarial tests.
  * This module owns no playback, Queue, recorder, rendering or admission budgets.
  */
-function createWaveformCoordinator({ extract, onUpdate }) {
+function createWaveformCoordinator({ extract, onUpdate, prepare }) {
   let generation = 0;
   let active = null;
   let pending = null;
 
-  const isCurrent = job => job.generation === generation;
+  const isCurrent = job => job.generation === generation && (!job.options.isCurrent || job.options.isCurrent());
 
   function discardPending() {
     if (!pending) return;
@@ -27,9 +27,15 @@ function createWaveformCoordinator({ extract, onUpdate }) {
   async function run(job) {
     try {
       if (!isCurrent(job)) return;
+      if (prepare) {
+        onUpdate("metadata", null);
+        if (!isCurrent(job)) return;
+        const admitted = await prepare(job.file, { isCurrent: () => isCurrent(job) });
+        if (!isCurrent(job) || !admitted) return;
+      }
       onUpdate("decoding", null);
       if (!isCurrent(job)) return;
-      const extraction = extract(job.file, { isCurrent: () => isCurrent(job) });
+      const extraction = extract(job.file, { isCurrent: () => isCurrent(job), canDecode: job.options.canDecode });
       job.file = null;
       const peaks = await extraction;
       if (isCurrent(job) && peaks) onUpdate("ready", peaks);
@@ -50,11 +56,11 @@ function createWaveformCoordinator({ extract, onUpdate }) {
     }
   }
 
-  function request(file) {
+  function request(file, options = {}) {
     const requestGeneration = ++generation;
     discardPending();
     return new Promise(resolve => {
-      const job = { generation: requestGeneration, file, resolve };
+      const job = { generation: requestGeneration, file, resolve, options };
       if (active) {
         pending = job;
         onUpdate("waiting", null);
