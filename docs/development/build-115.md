@@ -1,8 +1,8 @@
 # Build 115 development history
 
-Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current development revision: **`v0.1.15m.i.e`**, preset schema **10**.
+Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current development revision: **`v0.1.15m.i.l`**, preset schema **10**.
 
-The accepted starting main for reconciliation is [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge are complete at that baseline. **115N final acceptance remains WITHHELD.** “Closed” below describes the accepted corrective disposition; it does not claim shipment, universal performance, or completion of independent artistic/device acceptance.
+The historical I.E documentation reconciliation started from [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge are complete at that baseline. **115N final acceptance remains WITHHELD.** “Closed” below describes the accepted corrective disposition; it does not claim shipment, universal performance, or completion of independent artistic/device acceptance.
 
 ## Intent and original architecture
 
@@ -89,6 +89,23 @@ I.C corrects channel-specific band-picker help and type-plus-ID Remove confirmat
 
 I.E advances development metadata only, restores product/plan/history separation, and creates an internal [release-delta preparation draft](build-115-release-delta.md). It does not change application behavior, schema, canonical artifacts, audit evidence, release numbering or acceptance.
 
+## Subsequent F/G/H and AUD-007 waveform governance
+
+F (`v0.1.15m.i.f`, PR #46) corrected demonstrated File/source identity and cleanup; G (`v0.1.15m.i.g`, PR #48) accepted focus/target/numeric corrections; H (`v0.1.15m.i.h`, PR #49) eliminated unchanged UI writes. Their evidence remains immutable. These October 9 AUD IDs are separate from the older October 6 RC index below.
+
+| AUD-007 phase | Revision / accepted checkpoint | Scope and disposition |
+| --- | --- | --- |
+| I.1 | v0.1.15m.i.h; PR #50 | Design/investigation: demonstrated overlapping whole-file optional work; no implementation authorization at that checkpoint |
+| I.2A | v0.1.15m.i.i; PR #51 | One unsettled whole pipeline and one replaceable latest intent; extractor/presentation split |
+| I.2B | v0.1.15m.i.j; PR #52 | Pure CONFIG encoded/estimated-PCM policy and bounded metadata adapter; production activation still deferred at that checkpoint |
+| Foundation integration | PR #53; main 56f8f8e | Accepted I.1/I.2A/I.2B work integrated into main |
+| I.2C | v0.1.15m.i.k; PR #54; accepted main 45cbf55 | Production admission, bounded probe ownership, application-only choices and contextual manual Generate; direct-file automation restriction explicitly reported |
+| I.2D | v0.1.15m.i.l; review branch / PR #55 | Independent hostile acceptance, two demonstrated admission callback-order corrections, permanent controls, native/resource calibration and current documentation reconciliation; closure recommendation requires human review/merge |
+
+[Final review package](../audits/remediations/115m-i-i-aud007/final-acceptance/README.md) owns the current recommendation and evidence. The owner supplies cross-browser functional acceptance in Chrome, Opera, Edge and Firefox using direct local files and Python hosting; exact codecs and a complete browser/mode/case matrix are not inferred. This supplements managed Chromium automation, whose file:// navigation remains administrator-blocked. Networking-disabled offline execution remains a narrower 115N portability gap.
+
+AUD-007 closure review is distinct from Build 115N acceptance and shipment. Waveforms remain optional; playback/seek/source/recording ownership is primary. Source ceilings govern encoded bytes and estimated PCM, not total native/browser memory. Prior phase statements remain accurate historical checkpoints and are not overwritten.
+
 ## Audit disposition index
 
 Original IDs/priorities/titles come from the immutable [October 6 audit](../audits/2026-10-06_214431_PDT-release-audit.md#confirmed-findings-index). Corrective commits were checked for ancestry in accepted `a198b14`; PR merge records were independently fetched from GitHub. Historical reports may say “awaiting review,” “open,” or “PR open” at their own checkpoints. The accepted merge sequence and this task's accepted baseline establish the current corrective disposition. They supply no separate artistic acceptance transcript or 115N approval.
@@ -114,9 +131,15 @@ Original IDs/priorities/titles come from the immutable [October 6 audit](../audi
 | RC-17 | P3 · Designed phase and control disagree | Closed corrective review/merge | M.I.A `fb0b8c0`; [#40](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/40) | [Report](../audits/remediations/115m-i-a-rc17/README.md); floating-point remainder limits disclosed, wider browsers/touch unverified. |
 | RC-18 | P3 · Free Ring ignores motion pause | Closed; correction independently verified | M.H.V `1987bed`; M.I `ad00367`, [#38](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/38), [#39](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/39) | [Verification](../audits/remediations/115m-i-rc16/README.md#rc-18-verification); no new pause fix in I. |
 | RC-19 | P3 · Public disposal leaves native recorder active | Closed corrective review/merge | M.I.B `1d160c6`; [#41](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/41) | [Report](../audits/remediations/115m-i-b-rc19/README.md); failed native shutdown is truthfully failed, not guaranteed recovery; upstream tracks remain owned by source. |
-| RC-20 | P3 · Missing root-relative distribution metadata | Closed corrective review/merge | M.I.D `8f94fc9`; [#43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43) | [Report](../audits/remediations/115m-i-d-rc20/README.md); direct file blocked/unverified, maskable artwork review and server MIME setup remain. |
+| RC-20 | P3 · Missing root-relative distribution metadata | Closed corrective review/merge | M.I.D `8f94fc9`; [#43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43) | [Report](../audits/remediations/115m-i-d-rc20/README.md); owner-reported direct-file functional coverage is in I.2D; managed file:// remains blocked and network-disabled execution, maskable artwork review and server MIME setup remain separate gates. |
 | RC-21 | P3 · Picker help describes wrong channel | Closed corrective review/merge | M.I.C `2d45956`; [#42](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/42) | [Report](../audits/remediations/115m-i-c-rc21-rc22/README.md); actual selected-channel response protected. |
 | RC-22 | P3 · ID collision misnames Remove target | Closed corrective review/merge | M.I.C `2d45956`; [#42](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/42) | [Report](../audits/remediations/115m-i-c-rc21-rc22/README.md); type-plus-ID lookup; native confirm intercepted for deterministic evidence, OS dialog presentation not accepted. |
+
+### October 9 AUD-007 disposition
+
+| Finding | Accepted implementation | Current review recommendation | Residual limits |
+| --- | --- | --- | --- |
+| AUD-007 · uncontrolled optional waveform reads/decodes | I.1–I.2C / PR #50–#54, accepted main 45cbf55 | I.2D / PR #55 recommends closure for human review after two narrow callback-order corrections; not yet closure approved | Estimated compressed channels can understate actual PCM; unresolved native work blocks optional availability; total browser memory is not bounded. Owner-reported direct-file functional coverage supplements managed automation; network-disabled portability remains a separate 115N gate. |
 
 ## Diagnostics and evidence
 
@@ -134,6 +157,6 @@ Version-specific counts, mutation outcomes, CI run IDs, native results and inter
 
 ## Remaining 115N acceptance work
 
-The [115N gates](../../ROADMAP.md#build-115n-acceptance-gates) require independent applicable browser/media/device/accessibility/performance/artistic evidence and explicit approval to ship. The human 16-Orb preset, real capture/suspension behavior, direct-file launch, external-player fidelity, constrained-hardware limits and maskable artwork remain review items. The final public changelog baseline must distinguish public Build 113 from internal Build 114; this record and the [release-delta draft](build-115-release-delta.md) decide no release number or published notes.
+The [115N gates](../../ROADMAP.md#build-115n-acceptance-gates) require independent applicable browser/media/device/accessibility/performance/artistic evidence and explicit approval to ship. The human 16-Orb preset, real capture/suspension behavior, demonstrably network-disabled direct-file operation, external-player fidelity, constrained-hardware limits and maskable artwork remain review items. The final public changelog baseline must distinguish public Build 113 from internal Build 114; this record and the [release-delta draft](build-115-release-delta.md) decide no release number or published notes.
 
 The [editorial integrity report](115m-i-e-documentation-review.md) records this pass's scope and validation. Canonical distributions, canonical changelog, original audit, remediation reports and evidence logs remain unchanged.

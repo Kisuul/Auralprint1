@@ -1,6 +1,8 @@
 # Build 115 release-delta preparation — internal draft
 
-**For human editorial review during 115N. Not a canonical changelog entry or shipment claim.** Prospective Build 115 is `v0.1.15m.i.e`, schema 10, based on accepted `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N remains WITHHELD. No release number, published notes, or final comparison baseline is assigned here.
+**For human editorial review during 115N. Not a canonical changelog entry or shipment claim.** Prospective Build 115 is `v0.1.15m.i.l`, schema 10. Accepted AUD-007 implementation is main `45cbf558afa8b437e39af6e006b22d0db9d703c0` (PR #54); I.2D review/corrections are submitted separately. The earlier I.E reconciliation checkpoint was `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N remains WITHHELD. No release number, published notes, or final comparison baseline is assigned here.
+
+Current development also provides resource-admitted optional waveforms: a single-flight pipeline, bounded metadata inspection, source-owned encoded/estimated-PCM ceilings, independent local 4/8/15m application choices and manual Generate. Playback and seeking remain primary. The [I.2D report](../audits/remediations/115m-i-i-aud007/final-acceptance/README.md) records corrections, owner-reported cross-browser/direct-file acceptance and residual estimate/offline uncertainty; it does not approve 115N or publish release notes.
 
 ## Baselines and method
 
@@ -49,7 +51,7 @@ These defects are present in inspected Build 113 control flow and absent from th
 
 ### Deliberately absent or deferred
 
-Camera/projection, 3D, richer frequency/band-table tooling, local preset-file import/export, broader constrained-hardware/long-panel optimization, hosted offline caching and service-worker installation remain absent. Real devices/permissions, exported fidelity, physical accessibility/touch and actual direct-file launch require [115N evidence](../../ROADMAP.md#build-115n-acceptance-gates). Recording and the five band distributions already exist in Build 113 and are not new Build 115 public capabilities.
+Camera/projection, 3D, richer frequency/band-table tooling, local preset-file import/export, broader constrained-hardware/long-panel optimization, hosted offline caching and service-worker installation remain absent. Real devices/permissions, exported fidelity, physical accessibility/touch and demonstrably network-disabled direct-file operation require [115N evidence](../../ROADMAP.md#build-115n-acceptance-gates). Recording and the five band distributions already exist in Build 113 and are not new Build 115 public capabilities.
 
 ## B · Internal Build 114 → prospective Build 115
 
