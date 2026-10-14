@@ -1,0 +1,2 @@
+{"case":"load during reset notification","observedReads":["older A"],"remainingListeners":{"A":0,"B":3},"expected":{"reads":["newer B"],"remainingListeners":0}}
+{"case":"preference edit during offer notification","settings":{"selectedProfileId":"15m","aboveProfileBehavior":"ask"},"observedReads":[],"expectedReads":["nine-minute"]}
