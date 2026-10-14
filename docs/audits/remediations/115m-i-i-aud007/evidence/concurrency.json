@@ -1,0 +1,388 @@
+{
+  "baseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+  "node": "v24.19.0",
+  "kind": "controlled promises around production loadFile; counters measure initiations, not native RSS or physical threads",
+  "negativeControl": false,
+  "cases": [
+    {
+      "name": "replacement during encoded read",
+      "steps": [
+        {
+          "stage": "A read started",
+          "readStarts": 1,
+          "activeReads": 1,
+          "decodeStarts": 0,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 0,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 0
+        },
+        {
+          "stage": "B replaces A before read resolves",
+          "readStarts": 2,
+          "activeReads": 2,
+          "decodeStarts": 0,
+          "activeDecodes": 0,
+          "maxReads": 2,
+          "maxDecodes": 0,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 0
+        },
+        {
+          "stage": "A read completed: no native decode",
+          "readStarts": 2,
+          "activeReads": 1,
+          "decodeStarts": 0,
+          "activeDecodes": 0,
+          "maxReads": 2,
+          "maxDecodes": 0,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 0
+        },
+        {
+          "stage": "B ready",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 0,
+          "maxReads": 2,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20",
+          "peakHeight": 16.560000000000002,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "replacement during native decode",
+      "steps": [
+        {
+          "stage": "A native decode started",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 1
+        },
+        {
+          "stage": "B native decode starts while A pending",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 2,
+          "maxReads": 1,
+          "maxDecodes": 2,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 2
+        },
+        {
+          "stage": "B ready",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 1,
+          "maxReads": 1,
+          "maxDecodes": 2,
+          "status": "0:00 / 0:20",
+          "peakHeight": 8.280000000000001,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 1
+        },
+        {
+          "stage": "A settles stale",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 2,
+          "status": "0:00 / 0:20",
+          "peakHeight": 8.280000000000001,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "rapid A/B/C switching",
+      "steps": [
+        {
+          "stage": "A starts decode",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 1
+        },
+        {
+          "stage": "B starts decode",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 2,
+          "maxReads": 1,
+          "maxDecodes": 2,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 2
+        },
+        {
+          "stage": "C starts decode",
+          "readStarts": 3,
+          "activeReads": 0,
+          "decodeStarts": 3,
+          "activeDecodes": 3,
+          "maxReads": 1,
+          "maxDecodes": 3,
+          "status": "0:00 / 0:20 • decoding waveform",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 1,
+          "nativeAwaitingSettlement": 3
+        },
+        {
+          "stage": "all settled",
+          "readStarts": 3,
+          "activeReads": 0,
+          "decodeStarts": 3,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 3,
+          "status": "0:00 / 0:20",
+          "peakHeight": 24.84,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "Clear invalidation",
+      "steps": [
+        {
+          "stage": "Clear/reset while decode pending",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 1
+        },
+        {
+          "stage": "stale settlement after Clear",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "read rejection and later recovery",
+      "steps": [
+        {
+          "stage": "read rejected",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 0,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 0,
+          "status": "0:00 / 0:20 • waveform unavailable",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        },
+        {
+          "stage": "B recovered",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20",
+          "peakHeight": 16.560000000000002,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "decode rejection and later recovery",
+      "steps": [
+        {
+          "stage": "decode rejected",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20 • waveform unavailable",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        },
+        {
+          "stage": "B recovered",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20",
+          "peakHeight": 16.560000000000002,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "stale read rejection",
+      "steps": [
+        {
+          "stage": "B unchanged",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 1,
+          "activeDecodes": 0,
+          "maxReads": 2,
+          "maxDecodes": 1,
+          "status": "0:00 / 0:20",
+          "peakHeight": 16.560000000000002,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "stale decode rejection",
+      "steps": [
+        {
+          "stage": "B unchanged",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 2,
+          "status": "0:00 / 0:20",
+          "peakHeight": 16.560000000000002,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "unsettled decode after Reset and replacement",
+      "steps": [
+        {
+          "stage": "B ready while A never settles during observation",
+          "readStarts": 2,
+          "activeReads": 0,
+          "decodeStarts": 2,
+          "activeDecodes": 1,
+          "maxReads": 1,
+          "maxDecodes": 2,
+          "status": "0:00 / 0:20",
+          "peakHeight": 16.560000000000002,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 1
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "waveform unavailable preserves media and seeking",
+      "steps": [
+        {
+          "stage": "seek on fallback",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 0,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 0,
+          "status": "0:15 / 0:20 • waveform unavailable",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0,
+          "mediaCurrentTime": 15,
+          "isLoaded": true,
+          "isPlaying": true,
+          "mediaIsMock": true
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    },
+    {
+      "name": "Reset during read skips decoder",
+      "steps": [
+        {
+          "stage": "read settled after Reset",
+          "readStarts": 1,
+          "activeReads": 0,
+          "decodeStarts": 0,
+          "activeDecodes": 0,
+          "maxReads": 1,
+          "maxDecodes": 0,
+          "status": "0:00 / 0:20",
+          "peakHeight": null,
+          "logicallyCurrentJobs": 0,
+          "nativeAwaitingSettlement": 0
+        }
+      ],
+      "fixtureEncodedBytes": 16,
+      "fixtureDecodedBytesPerCompletion": 104
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "baseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+  "branch": "codex/115m-i-i-aud007-policy",
+  "cleanStartingTree": true,
+  "pr49": {
+    "url": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/49",
+    "merged": true,
+    "mergeCommitSha": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+    "remoteMainSha": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+    "verification": "GitHub connector get_pr_info(49) and fetch_commit(main); local HEAD exact match. Local origin/main was a stale unrelated ref; failed git fetch did not change it, and it was not used as accepted baseline."
+  },
+  "version": "v0.1.15m.i.h",
+  "schema": 10,
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "node": "v24.19.0",
+  "python": "3.12.14",
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "esbuild": "0.25.12",
+  "build": "git archive accepted HEAD into disposable work/baseline; link provisioned esbuild dependencies; no original dist/source/artifact writes",
+  "sourceSha256": {
+    "agents.md": "41ef10a32b62dfdee988cd0b514d02276f6f1d3da0231c3cf9415875356abc43",
+    "version": "55a35be5ce3dd0b37a9c4fa5eba1b5cc28da6cb5f9e28878be5e24a529f86a93",
+    "src/js/audio/scrubber.js": "b558bdf0e27edec53a29afec647ff7e437210765cb3134bb32f1e2e880f78942",
+    "src/js/ui/ui.js": "4658b454c924d9b4ea5f137c182abe5df2cc3e94333ae35bff444762a5f5581d",
+    "src/js/audio/audio-engine.js": "f8332d81269aea78a0afa4dacbe35b5fb911bbd8a8e9d9602183e5c809faf3e9",
+    "src/js/audio/input-source-manager.js": "e8606ab8d9d01ab5b4ab2a8fc495778c2be6b09f221b5c316c4efec25da75003",
+    "src/js/audio/queue.js": "cf1f8986e9fab1760b20924d122b4c186a53c293773bca22ec12d21a4ec04d5f",
+    "src/js/core/config.js": "279ce9f7916eeb45ba198afab4f3adbbfed4a505ec429864ecd9d24daf0b9d40",
+    "src/js/core/state.js": "c48f728ea40e205ee5c62742fdbdb185ace7cba5b6f26e46e0b94314e2b6cb86",
+    "src/js/core/constants.js": "29583298a8b340a6a91cf4312451cae429b7304c4961e43b0c37dc93d54917ba",
+    "docs/20261009-004238_project-audit.md": "f703d85e56d49268200fde779cf95a61493f2f105fc0789a921ca60a74ce2a5d",
+    "tests/scrubber-waveform.test.js": "ffc16fd1cd51286cd50c54a04a0d2facadc1b320ce2c1673c57103de1524908c",
+    "tests/scrubber-drag-ownership.test.js": "ce38b80e9c35cdcc464771ed38bd747c9bce5960ff8955997862d7bc8feb3147",
+    "tests/queue-entry-ownership.test.js": "519446f47c2cb84f0fb95bc1c94c66f86106bf08705a04748ee899ff2f1b35f8",
+    "tests/file-activation-ownership.test.js": "f36d4c1ab3564d41cee8ffd45737dcd6db5747e8ed6017eaf67421f658e7354a"
+  }
+}

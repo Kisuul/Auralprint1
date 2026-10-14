@@ -1,0 +1,80 @@
+{
+  "baseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+  "scope": "new documents/diagnostics/evidence only",
+  "commands": [
+    {
+      "command": "node work/baseline/scripts/build.mjs (existing environment activation, provisioned dependencies)",
+      "pass": true,
+      "output": "evidence/build.log"
+    },
+    {
+      "command": "python3 work/baseline/scripts/verify_distribution.py",
+      "pass": true,
+      "output": "evidence/distribution.json"
+    },
+    {
+      "command": "node diagnostics/reproduce.mjs evidence/concurrency.json",
+      "pass": true,
+      "cases": 11
+    },
+    {
+      "command": "node diagnostics/reproduce.mjs --negative-control",
+      "expectedExit": 1,
+      "expectedAssertion": "stale decode must not overwrite newest waveform",
+      "pass": true
+    },
+    {
+      "command": "AUD007_BUILD_ROOT=<disposable baseline> node diagnostics/native.cjs evidence/native.json (unsandboxed localhost)",
+      "pass": true,
+      "cases": 6
+    },
+    {
+      "command": "node --test --test-isolation=none <four requested existing focused suites>",
+      "pass": true,
+      "tests": 54,
+      "output": "evidence/focused-tests.log"
+    },
+    {
+      "command": "source <existing environment activate.sh>; cd work/baseline; node --test --test-concurrency=1 (unsandboxed)",
+      "pass": true,
+      "tests": 804,
+      "passed": 803,
+      "failed": 0,
+      "skipped": 1,
+      "output": "evidence/full-tests.log",
+      "fullRawOutputSha256": "2d265a82a335e1fb153868ba1cf8ce293e1efee06e010901ece47224dd629c6e"
+    },
+    {
+      "command": "python3 work/baseline/tests/rc20_packaging.py",
+      "pass": true,
+      "tests": 23,
+      "output": "evidence/packaging.log"
+    },
+    {
+      "command": "AUD007_BUILD_ROOT=<disposable baseline> node diagnostics/recheck.cjs f --output <scratch> --export-dir <existing scratch exports>",
+      "pass": true,
+      "cases": 21
+    },
+    {
+      "command": "AUD007_BUILD_ROOT=<disposable baseline> node diagnostics/recheck.cjs g --output <scratch>",
+      "pass": true,
+      "cases": 13
+    },
+    {
+      "command": "AUD007_BUILD_ROOT=<disposable baseline> node diagnostics/recheck.cjs h <scratch output>",
+      "pass": true,
+      "cases": 9,
+      "adapter": "root/version selection and one wait for normal UI projection after canonical source error"
+    },
+    {
+      "command": "python3 diagnostics/scope-check.py (after staging)",
+      "pass": true,
+      "output": "evidence/scope.json"
+    },
+    {
+      "command": "git diff --cached --check",
+      "pass": true
+    }
+  ],
+  "limits": "No RSS/native scratch measurements; only small WAVs. Mock hostile concurrency, controlled waveform rejection, fake Mic and Stream refusal disclosed. Discussion budgets not applied."
+}
