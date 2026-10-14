@@ -1,0 +1,88 @@
+{
+  "phase": "I.2A",
+  "version": "v0.1.15m.i.i",
+  "schema": 10,
+  "artifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6",
+  "install": {
+    "command": "npm ci",
+    "pass": true,
+    "fallbackUsed": false
+  },
+  "fullSuite": {
+    "command": "npm test",
+    "tests": 826,
+    "passed": 825,
+    "failed": 0,
+    "skipped": 1,
+    "rawOutputSha256": "348c4325c00a9dffa5410f8c10a3988573a3b7a9f634e85935613d075637d937"
+  },
+  "focusedWaveform": {
+    "command": "node --test --test-isolation=none <four waveform suites>",
+    "tests": 33,
+    "passed": 33,
+    "newPermanentTests": 22
+  },
+  "protectedFocused": {
+    "command": "node --test --test-isolation=none <16 waveform/F/G/H/source/recorder suites>",
+    "tests": 442,
+    "passed": 442,
+    "rawOutputSha256": "c6012e2328adf9e49b7d25d6db859e144e033c5f47ff2b81b71985447cfdbb2f"
+  },
+  "negativeControls": {
+    "passed": 7,
+    "intendedAssertionFailures": 7,
+    "harnessCrashes": 0
+  },
+  "native": {
+    "passed": 12,
+    "failed": 0,
+    "artifact": "newly built portable HTML; hosted root/nested from same bundle",
+    "injection": "Native read/decode result delivery held; native completion recorded separately. Optional waveform decode failure and Stream refusal controlled; Mic fake hardware."
+  },
+  "protectedNative": {
+    "f": {
+      "passed": 21,
+      "total": 21,
+      "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    },
+    "g": {
+      "passed": 13,
+      "total": 13,
+      "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    },
+    "g1": {
+      "passed": 38,
+      "total": 38,
+      "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    },
+    "g2": {
+      "passed": 31,
+      "total": 31,
+      "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    },
+    "g3": {
+      "passed": 27,
+      "total": 27,
+      "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    },
+    "h": {
+      "passed": 9,
+      "total": 9,
+      "actualArtifactSha256": "56ce96df1e9a44f6bc7e8f75e49dd2a4d927c6707e41e57b53c139f03adc65f6"
+    }
+  },
+  "build": {
+    "command": "npm run build",
+    "pass": true
+  },
+  "distribution": {
+    "command": "python scripts/verify_distribution.py",
+    "pass": true
+  },
+  "whitespace": {
+    "command": "git diff --check",
+    "pass": true
+  },
+  "exactHeadCI": "Recorded in draft PR handoff after final push to avoid self-referential tracked commit metadata. Both Linux and Windows required.",
+  "scope": "No production files outside Scrubber/coordinator/extractor/constants; no budgets/UI preferences/CONFIG/source/recorder/main-loop changes; prior I.1 evidence unchanged."
+}

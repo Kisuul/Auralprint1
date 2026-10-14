@@ -7,10 +7,11 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 root = Path(__file__).resolve().parents[5]
 output = Path(sys.argv[1]) if len(sys.argv) > 1 else root / 'work/negative-controls.json'
-work = root / 'work/waveform-mutations'
+work = Path(tempfile.mkdtemp(prefix='auralprint-aud007-mutations-'))
 source = (root / 'src/js/audio/waveform-coordinator.js').read_text()
 controls = [
  ('reset-release', 'Reset during decode clears intent', 'Reset must retain unsettled occupancy',
@@ -56,5 +57,6 @@ for name, pattern, assertion, edits in controls:
  if not passed: print(json.dumps(row, indent=2))
 output.parent.mkdir(parents=True, exist_ok=True)
 output.write_text(json.dumps({'originalSourceModified':False, 'cases':results, 'passed':sum(r['pass'] for r in results)}, indent=2)+'\n')
+shutil.rmtree(work)
 assert all(r['pass'] for r in results), 'semantic negative control failed'
 print(json.dumps({'pass':True, 'controls':len(results)}))
