@@ -25,7 +25,7 @@ function readVersionMetadata(rootDir = projectRoot) {
   try {
     rawVersion = readFileSync(versionFile, "utf8");
   } catch (error) {
-    throw new Error(`Missing version file: ${versionFile}`, { cause: error });
+    throw new Error(`Cannot read version file: ${versionFile} (${error.code ?? error.message})`, { cause: error });
   }
 
   const versionTag = rawVersion.trim();
@@ -137,7 +137,9 @@ function runProcess(command, args, signal) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: paths.projectRoot,
-      stdio: "inherit",
+      // Watch-owned Python has a parent-lifetime pipe. EOF also stops it if the
+      // OS forcibly terminates Node (notably child.kill('SIGTERM') on Windows).
+      stdio: signal ? ["pipe", "inherit", "inherit"] : "inherit",
       signal,
     });
 
@@ -150,10 +152,25 @@ function runProcess(command, args, signal) {
         resolve();
         return;
       }
-      reject(new Error(`${command} ${args.join(" ")} exited with code ${code ?? "unknown"}`));
+      reject(new Error(`Assembler ${path.basename(paths.assembler)} (${command}) exited with code ${code ?? "unknown"}`));
     });
   });
 }
+
+const pythonParentGuard = `
+import os, runpy, sys, threading
+def stop_with_parent():
+    try:
+        os.read(0, 1)
+    except OSError:
+        pass
+    os._exit(1)
+threading.Thread(target=stop_with_parent, daemon=True).start()
+script = sys.argv.pop(1)
+sys.argv[0] = script
+sys.path.insert(0, os.path.dirname(script))
+runpy.run_path(script, run_name="__main__")
+`;
 
 // Optional transaction paths keep the no-argument build API compatible.
 async function assembleSingleFile({
@@ -176,7 +193,8 @@ async function assembleSingleFile({
   let missingInterpreter = null;
   for (const [command, prefixArgs] of candidates) {
     try {
-      await runProcess(command, [...prefixArgs, ...scriptArgs], signal);
+      const launch = signal ? ["-c", pythonParentGuard, ...scriptArgs] : scriptArgs;
+      await runProcess(command, [...prefixArgs, ...launch], signal);
       return { ...metadata, distHtml };
     } catch (error) {
       if (error && error.code === "ENOENT") {

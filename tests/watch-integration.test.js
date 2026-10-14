@@ -308,3 +308,50 @@ test("AUD-011 watcher starts with an invalid version and recovers without restar
     assert.match(watch.log, /\[watch\] stopped/);
   } finally { await watch.stop(); discard(dir); }
 });
+
+test("AUD-011 parent-lifetime pipe stops Python on EOF; native Windows forced termination releases children", { timeout: 60_000 }, async t => {
+  const run = async force => {
+    const dir = projectCopy();
+    instrumentAssembler(dir);
+    writeFileSync(`${dir}/assembly-gate`, "hold");
+    writeFileSync(`${dir}/scripts/parent-loss.mjs`, `import { subscribe } from 'node:diagnostics_channel';
+import { appendFileSync } from 'node:fs';
+let python;
+subscribe('child_process', ({ process: child }) => child.once('spawn', () => {
+  appendFileSync('owned-children', String(child.pid) + '\\n');
+  if (child.spawnargs.includes('-c')) python = child;
+}));
+process.on('message', message => {
+  if (message?.type === 'simulate-parent-pipe-eof') python.stdin.end();
+});
+`);
+    const watch = startWatch(dir, {}, ["--import", "./scripts/parent-loss.mjs"]);
+    const version = readFileSync(`${dir}/version`, "utf8").trim();
+    try {
+      await watch.wait(() => existsSync(`${dir}/assembly-started`), "parent-loss assembler gate");
+      const pythonPid = Number(readFileSync(`${dir}/assembly-started`, "utf8"));
+      if (force) {
+        const result = await watch.stop(); // Actual Windows child.kill('SIGTERM').
+        assert.equal(result.signal, "SIGTERM");
+        const pids = readFileSync(`${dir}/owned-children`, "utf8").trim().split(/\r?\n/).map(Number);
+        await until(() => pids.every(pid => {
+          try { process.kill(pid, 0); return false; }
+          catch (error) { assert.equal(error.code, "ESRCH"); return true; }
+        }), "all children exit after native Windows forced termination");
+        t.diagnostic("Native Windows forced SIGTERM: Python and esbuild exited after parent loss");
+      } else {
+        watch.child.send({ type: "simulate-parent-pipe-eof" });
+        await watch.wait(() => watch.log.includes("[watch] assembly failed"), "EOF terminates active Python");
+        assert.equal(watch.successes, 0);
+        assert.throws(() => process.kill(pythonPid, 0), { code: "ESRCH" });
+        rmSync(`${dir}/assembly-gate`);
+        appendFileSync(`${dir}/src/index.template.html`, "\n<!-- parent-pipe-recovered -->\n");
+        await watch.wait(() => watch.successes > 0 && outputs(dir, version).every(html => html.includes("parent-pipe-recovered")), "recovery after Python EOF");
+        verify(dir);
+        assert.equal((await watch.stop(true)).code, 0);
+      }
+    } finally { await watch.stop(); discard(dir); }
+  };
+  await run(false);
+  if (process.platform === "win32") await run(true);
+});
