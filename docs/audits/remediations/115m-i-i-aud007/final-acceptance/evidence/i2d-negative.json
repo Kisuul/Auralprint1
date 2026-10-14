@@ -1,0 +1,260 @@
+{
+  "originalSourceModified": false,
+  "passed": 13,
+  "cases": [
+    {
+      "name": "reset-frees-native",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "settings/manual storm cannot release native occupancy",
+      "suite": "waveform-hostile-acceptance.test.js",
+      "pattern": "an unsettled decoder",
+      "mutation": [
+        [
+          "function reset() {\n    generation++;",
+          "function reset() {\n    active = null;\n    generation++;"
+        ]
+      ],
+      "originalSha256": "71de335ae1a82a292daf3cee80fe7ac65a811bbede46b6b06fd8f4c657d23304",
+      "mutantSha256": "476fc4b2fd4f526b999b6b9f66bf20a286bae01f19c20628426b2e38c78af733",
+      "mutantOutput": "\u2716 I.2D an unsettled decoder preserves one newest intent under preference storms (6.271205ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 23.979254\n\n\u2716 failing tests:\n\ntest at tests/waveform-hostile-acceptance.test.js:102:1\n\u2716 I.2D an unsettled decoder preserves one newest intent under preference storms (6.271205ms)\n  AssertionError [ERR_ASSERTION]: settings/manual storm cannot release native occupancy\n  \n  true !== false\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/reset-frees-native/tests/waveform-hostile-acceptance.test.js:106:23)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "parallel-read",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "replacement must not start any optional operation before settlement",
+      "suite": "waveform-hostile-acceptance.test.js",
+      "pattern": "cross-stage occupancy under decode",
+      "mutation": [
+        [
+          "if (active) {",
+          "if (false && active) {"
+        ]
+      ],
+      "originalSha256": "71de335ae1a82a292daf3cee80fe7ac65a811bbede46b6b06fd8f4c657d23304",
+      "mutantSha256": "a0bb0507cba85d25a8fc2b6bfcc272e8f0be5b145248e13c63a62fdeac345df7",
+      "mutantOutput": "\u2716 I.2D cross-stage occupancy under decode A\u2192B\u2192C and obsolete rejection (7.142013ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 30.181807\n\n\u2716 failing tests:\n\ntest at tests/waveform-hostile-acceptance.test.js:67:47\n\u2716 I.2D cross-stage occupancy under decode A\u2192B\u2192C and obsolete rejection (7.142013ms)\n  AssertionError [ERR_ASSERTION]: replacement must not start any optional operation before settlement\n  \n  true !== false\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/parallel-read/tests/waveform-hostile-acceptance.test.js:70:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "retain-first-pending",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "only newest pending generation may be retained",
+      "suite": "waveform-coordinator.test.js",
+      "pattern": "reading A reserves",
+      "mutation": [
+        [
+          "const requestGeneration = ++generation;\n    discardPending();",
+          "const requestGeneration = ++generation;"
+        ],
+        [
+          "pending = job;",
+          "pending ??= job;"
+        ]
+      ],
+      "originalSha256": "71de335ae1a82a292daf3cee80fe7ac65a811bbede46b6b06fd8f4c657d23304",
+      "mutantSha256": "1dec9750e538f80f59b8d4d18096106431ee2ecc3545018f467309e43ffdca2a",
+      "mutantOutput": "\u2716 AUD-007 reading A reserves the entire pipeline; B never starts and only C remains pending (2.831419ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 20.732355\n\n\u2716 failing tests:\n\ntest at tests/waveform-coordinator.test.js:49:1\n\u2716 AUD-007 reading A reserves the entire pipeline; B never starts and only C remains pending (2.831419ms)\n  AssertionError [ERR_ASSERTION]: only newest pending generation may be retained\n  \n  2 !== 3\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/retain-first-pending/tests/waveform-coordinator.test.js:54:10)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 2,\n    expected: 3,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "omit-post-read-admission",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "post-read profile revocation must prevent native decoding",
+      "suite": "waveform-hostile-acceptance.test.js",
+      "pattern": "post-read admission",
+      "mutation": [
+        [
+          "if (!isCurrent() || !canDecode())",
+          "if (!isCurrent())"
+        ]
+      ],
+      "originalSha256": "c4e67cfa44b6bb6fb96e6629fee09ba886b955e9c314879de5d984ba551f9ff4",
+      "mutantSha256": "ff65266fc79910d361ec56177920b57830940e4a4a4ea6709a915f649c95ce36",
+      "mutantOutput": "\u2716 I.2D post-read admission rechecks policy without native work or retry loops (6.447759ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 30.826237\n\n\u2716 failing tests:\n\ntest at tests/waveform-hostile-acceptance.test.js:95:1\n\u2716 I.2D post-read admission rechecks policy without native work or retry loops (6.447759ms)\n  AssertionError [ERR_ASSERTION]: post-read profile revocation must prevent native decoding\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/omit-post-read-admission/tests/waveform-hostile-acceptance.test.js:98:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "manual-hard-bypass",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "manual request must respect PCM ceiling",
+      "suite": "waveform-policy.test.js",
+      "pattern": "manual bypasses convenience only",
+      "mutation": [
+        [
+          "if (input.fileSizeBytes > policy.maxEncodedBytes)",
+          "if (input.requestKind !== \"manual\" && input.fileSizeBytes > policy.maxEncodedBytes)"
+        ],
+        [
+          "if (estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes)",
+          "if (requestKind !== \"manual\" && estimatedPcmBytes > policy.maxEstimatedDecodedPcmBytes)"
+        ]
+      ],
+      "originalSha256": "f8773aa3a8e57a01c397f74448ba2241637f6a7b55a67a070f23dbe812ace486",
+      "mutantSha256": "78256acc654f8e87c6d2bf7eab1c140bb7e534f33463b1ccae9720f06ce7df16",
+      "mutantOutput": "\u2716 AUD-007 manual bypasses convenience only, never encoded or PCM hard ceilings (2.689909ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 30.302607\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:41:1\n\u2716 AUD-007 manual bypasses convenience only, never encoded or PCM hard ceilings (2.689909ms)\n  AssertionError [ERR_ASSERTION]: manual request must respect PCM ceiling\n  + actual - expected\n  \n  + 'within-budget'\n  - 'pcm-budget'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/manual-hard-bypass/tests/waveform-policy.test.js:43:9)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'within-budget',\n    expected: 'pcm-budget',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "stale-duration",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "stale duration must not activate old File",
+      "suite": "waveform-admission.test.js",
+      "pattern": "delayed duration and old media",
+      "mutation": [
+        [
+          "current.media?.removeEventListener?.(type, current.listener);",
+          "void type;"
+        ],
+        [
+          "current.file = current.media = null;",
+          "/* mutant retains old intent */"
+        ],
+        [
+          "      if (!valid(intent)) return;\n      if (event.type",
+          "      current = intent;\n      if (event.type"
+        ]
+      ],
+      "originalSha256": "679704f5e96e4835e719c4d46da7b0c3c223ece5c57edcee1c419637653545c3",
+      "mutantSha256": "8e1d2d9457863fadf3a3799672d906fd287f25b82598380acad6045a20591466",
+      "mutantOutput": "\u2716 AUD-007 delayed duration and old media callbacks cannot activate stale File (5.880664ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 24.910982\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:91:1\n\u2716 AUD-007 delayed duration and old media callbacks cannot activate stale File (5.880664ms)\n  AssertionError [ERR_ASSERTION]: stale duration must not activate old File\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/stale-duration/tests/waveform-admission.test.js:93:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "repeat-prefix",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "metadata refresh must not repeat probe work",
+      "suite": "waveform-admission.test.js",
+      "pattern": "pending duration waits once",
+      "mutation": [
+        [
+          "if (!intent.probed)",
+          "if (true)"
+        ],
+        [
+          "(intent.probed && decision.decision !== \"admit\")",
+          "(false && intent.probed && decision.decision !== \"admit\")"
+        ]
+      ],
+      "originalSha256": "679704f5e96e4835e719c4d46da7b0c3c223ece5c57edcee1c419637653545c3",
+      "mutantSha256": "875e3c68d3df6a660c1438a6ba5190a528c497bf1466e14163b9ca384e595f9c",
+      "mutantOutput": "\u2716 AUD-007 pending duration waits once and metadata events do not repeat probes (10.776769ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 30.401363\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:63:1\n\u2716 AUD-007 pending duration waits once and metadata events do not repeat probes (10.776769ms)\n  AssertionError [ERR_ASSERTION]: metadata refresh must not repeat probe work\n  \n  51 !== 1\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/repeat-prefix/tests/waveform-admission.test.js:65:58)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 51,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "false-verified",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "channel assumption must remain estimated",
+      "suite": "waveform-policy.test.js",
+      "pattern": "unknown channels use explicit",
+      "mutation": [
+        [
+          "assumption = \"configured-channel-fallback\";\n    metadataConfidence = \"estimated\";",
+          "assumption = \"configured-channel-fallback\";\n    metadataConfidence = \"verified\";"
+        ]
+      ],
+      "originalSha256": "9e9c1219ba85b169224fa6e2a1c3959c0258e4b5dcf0d93c4c95e70a61145983",
+      "mutantSha256": "b33ee814605a40e5617db650956e3060399b0dbae22c89a54d47aa662fc50cbe",
+      "mutantOutput": "\u2716 AUD-007 unknown channels use explicit configured estimated fallback, never verified (3.575558ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 32.451659\n\n\u2716 failing tests:\n\ntest at tests/waveform-policy.test.js:51:1\n\u2716 AUD-007 unknown channels use explicit configured estimated fallback, never verified (3.575558ms)\n  AssertionError [ERR_ASSERTION]: channel assumption must remain estimated\n  + actual - expected\n  \n  + 'verified'\n  - 'estimated'\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/false-verified/tests/waveform-policy.test.js:53:49)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'verified',\n    expected: 'estimated',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "unconditional-status-write",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "1001 !== 1",
+      "suite": "waveform-controls.test.js",
+      "pattern": "unchanged UI status",
+      "mutation": [
+        [
+          "if(statusEl.textContent!==text)statusEl.textContent=text;",
+          "statusEl.textContent=text;"
+        ]
+      ],
+      "originalSha256": "df2c110d19f9268f01d2cdee2a4b80ec1cc4de39ab3e4a33bd0ef4058020dee0",
+      "mutantSha256": "0594e5b210a2820ff6cd4bcd68f4b27be49f3efe81b6045d396c3097e446e29d",
+      "mutantOutput": "\u2716 AUD-007 unchanged UI status does not mutate text, announcement or action state (3.69105ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 19.605355\n\n\u2716 failing tests:\n\ntest at tests/waveform-controls.test.js:55:1\n\u2716 AUD-007 unchanged UI status does not mutate text, announcement or action state (3.69105ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  \n  1001 !== 1\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/unconditional-status-write/tests/waveform-controls.test.js:58:9)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 1001,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "stale-success",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "coordinator must reject stale success independent of extractor",
+      "suite": "waveform-coordinator.test.js",
+      "pattern": "coordinator rejects stale extractor success",
+      "mutation": [
+        [
+          "if (isCurrent(job) && peaks)",
+          "if (peaks)"
+        ]
+      ],
+      "originalSha256": "71de335ae1a82a292daf3cee80fe7ac65a811bbede46b6b06fd8f4c657d23304",
+      "mutantSha256": "651a152fc1a60b54b5abe16f42616ae0547e9669121772208fb1cc1a433b8a5b",
+      "mutantOutput": "\u2716 AUD-007 coordinator rejects stale extractor success independently of extractor checks (2.991267ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 23.178961\n\n\u2716 failing tests:\n\ntest at tests/waveform-coordinator.test.js:203:1\n\u2716 AUD-007 coordinator rejects stale extractor success independently of extractor checks (2.991267ms)\n  AssertionError [ERR_ASSERTION]: coordinator must reject stale success independent of extractor\n  \n  true !== false\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/stale-success/tests/waveform-coordinator.test.js:212:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "stale-rejection",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "stale rejection must not overwrite current status",
+      "suite": "waveform-coordinator.test.js",
+      "pattern": "obsolete decode rejection",
+      "mutation": [
+        [
+          "if (isCurrent(job)) onUpdate(\"unavailable\", null);",
+          "onUpdate(\"unavailable\", null);"
+        ]
+      ],
+      "originalSha256": "71de335ae1a82a292daf3cee80fe7ac65a811bbede46b6b06fd8f4c657d23304",
+      "mutantSha256": "b704a710f3c274a2906682de1c5e160812828569a86bd08474f952edbeea9d6a",
+      "mutantOutput": "\u2716 AUD-007 obsolete decode rejection cannot overwrite C status and C recovers (3.157756ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 22.072632\n\n\u2716 failing tests:\n\ntest at tests/waveform-coordinator.test.js:86:3\n\u2716 AUD-007 obsolete decode rejection cannot overwrite C status and C recovers (3.157756ms)\n  AssertionError [ERR_ASSERTION]: stale rejection must not overwrite current status\n  \n  true !== false\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/stale-rejection/tests/waveform-coordinator.test.js:92:12)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "revert-newest-reentrancy-fence",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "newer reentrant selection must win",
+      "suite": "waveform-hostile-acceptance.test.js",
+      "pattern": "reentrant File selection",
+      "mutation": [
+        [
+          "if (requestRevision !== revision) return Promise.resolve();",
+          "/* mutant ignores newer reentrant intent */"
+        ]
+      ],
+      "originalSha256": "679704f5e96e4835e719c4d46da7b0c3c223ece5c57edcee1c419637653545c3",
+      "mutantSha256": "2f082502a57ee5db0a3ad391101c9eedc13e1fd2adc58c05e156b29d5c5f7ecf",
+      "mutantOutput": "\u2716 I.2D reentrant File selection during Reset keeps newest intent and removes all listeners (8.410784ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 30.552038\n\n\u2716 failing tests:\n\ntest at tests/waveform-hostile-acceptance.test.js:41:1\n\u2716 I.2D reentrant File selection during Reset keeps newest intent and removes all listeners (8.410784ms)\n  AssertionError [ERR_ASSERTION]: newer reentrant selection must win\n  + actual - expected\n  \n    [\n  +   'older A'\n  -   'newer B'\n    ]\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/revert-newest-reentrancy-fence/tests/waveform-hostile-acceptance.test.js:46:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: [Array],\n    expected: [Array],\n    operator: 'deepStrictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "drop-reentrant-policy-reconciliation",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "reentrant profile edit must re-evaluate current File",
+      "suite": "waveform-hostile-acceptance.test.js",
+      "pattern": "profile edit during offer",
+      "mutation": [
+        [
+          "if (valid(intent) && intent.refreshPending)",
+          "if (false && valid(intent) && intent.refreshPending)"
+        ]
+      ],
+      "originalSha256": "679704f5e96e4835e719c4d46da7b0c3c223ece5c57edcee1c419637653545c3",
+      "mutantSha256": "6045aa770ed5a6e9a791756ccb0e2f6faee91d3afe864170b528c8c23a556174",
+      "mutantOutput": "\u2716 I.2D profile edit during offer notification is reconciled once after settlement (7.010146ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 34.251511\n\n\u2716 failing tests:\n\ntest at tests/waveform-hostile-acceptance.test.js:58:1\n\u2716 I.2D profile edit during offer notification is reconciled once after settlement (7.010146ms)\n  AssertionError [ERR_ASSERTION]: reentrant profile edit must re-evaluate current File\n  + actual - expected\n  \n  + []\n  - [\n  -   'nine minutes'\n  - ]\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2d-independent-9dsk5rxg/drop-reentrant-policy-reconciliation/tests/waveform-hostile-acceptance.test.js:62:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: [],\n    expected: [Array],\n    operator: 'deepStrictEqual',\n    diff: 'simple'\n  }\n"
+    }
+  ]
+}

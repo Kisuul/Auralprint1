@@ -1,6 +1,6 @@
 # Auralprint development roadmap
 
-Updated: October 8, 2026. Development revision: **`v0.1.15m.i.e` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
+Updated: October 13, 2026. Development revision: **`v0.1.15m.i.l` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
 
 **RC-01 through RC-22 have completed corrective review and merge at accepted main `a198b14b087da6b855041c3a23acb550a156ff4e`. 115N final acceptance remains WITHHELD. Build 115 is unshipped and noncanonical.** Corrective closure does not establish complete browser, media, accessibility, artistic, or hardware acceptance. The [current audit disposition index](docs/development/build-115.md#audit-disposition-index) records accepted corrections and residual limitations; earlier audit snapshots remain immutable.
 
@@ -13,6 +13,7 @@ Capabilities below are implemented in source. Covered automated behavior and rec
 | Area | Implemented | Acceptance / future work |
 | --- | --- | --- |
 | Playback and queue | Multi-file picker/drop, navigation, remove/clear, shuffle/repeat, decoded waveform seek; cancelled work cannot restore cleared transport | Real-media/browser/physical-touch evidence; broader Queue UX in Build 117 |
+| Optional waveforms | Single-flight preparation/read/decode/reduction, one latest pending intent, bounded metadata probe, encoded/estimated-PCM admission, application-only 4/8/15m choices and manual Generate | [I.2D](docs/audits/remediations/115m-i-i-aud007/final-acceptance/README.md) reviews AUD-007 closure; estimates do not bound total browser memory |
 | Audio sources | File/Mic/Stream manager, explicit support/permission/error states, ownership-scoped cancellation and teardown, source-aware recording | Physical hardware and native capture/permission dialogs in 115N |
 | Analysis | Orb-independent workspace, reusable AnalysisFrame, L/R/C channel spectra, 256-band default, five distributions, Nyquist-aware floor/ceiling and diagnostics | Measure channel-complete analysis on constrained hardware; richer tooling in Build 118 |
 | Orbs | Zero/one/N stable-ID collection, independent motion/response/particles/trace/source/position/color, complete controls and mixed-aware Bulk Edit | High-count editing ergonomics in Build 117; operational ceiling is not a frame-rate guarantee |
@@ -21,13 +22,13 @@ Capabilities below are implemented in source. Covered automated behavior and rec
 | Capture | Canvas video plus optional active-source audio, format negotiation, target FPS, retained latest export, terminal disposal with track ownership | Exported audio fidelity/external players, downloads, long duration and devices in 115N |
 | Presets | Pure schema-10 codec, URL transport, schemas 2–9 migration including both schema-9 forms, configuration-only persistence | File import/export remains Build 119 |
 | Workspace | Independent panels, unified launcher, collapse/global hide/restore, visible focus ownership and Queue focus recovery | Wider keyboard/accessibility/mobile acceptance; long-panel refinements in Build 117 |
-| Distribution | Versioned self-contained portable HTML and relocatable hosted package from shared JS/CSS | Direct `file://` launch remains blocked/unverified in current Chromium environment; no hosted caching/installability claim |
+| Distribution | Versioned self-contained portable HTML and relocatable hosted package from shared JS/CSS | Owner-reported direct-file and Python-hosted functional coverage; managed automation file:// blocked; network-disabled portability remains separate; no caching/installability claim |
 
 Camera, richer frequency/band tools, preset-file workflows, and 3D remain planned. A separate Scene/compositor architecture is not a prerequisite for the current interface.
 
 ## Build 115 staged delivery plan
 
-Stages 1–13 are complete. Subsequent audit corrections and distribution preparation are accepted through 115M.I.D; 115M.I.E reconciles documentation for review. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
+Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2C are accepted through main `45cbf558afa8b437e39af6e006b22d0db9d703c0` (PR #54). I.2D at v0.1.15m.i.l submits hostile acceptance and narrow corrections for human review; AUD-007 closure is not approved by this branch. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
 
 1. **Revised Build 115 canon** — real scope and state. *(115A complete)*
 2. **AnalysisFrame boundary** — data-only consumer seam. *(115B complete)*
@@ -41,7 +42,7 @@ Stages 1–13 are complete. Subsequent audit corrections and distribution prepar
 10. **Dedicated Analysis panel** — configuration/diagnostics separate from visualization; channel-complete spectra. *(115J/J.A complete)*
 11. **Spectral Ring promotion** — singleton lifecycle and sole presentation editor. *(115K complete)*
 12. **Explicit color ownership** — Scene policy and Orb overrides. *(115L complete)*
-13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M complete through I.D; I.E documentation review)*
+13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M accepted through I.2C; I.2D hostile acceptance submitted for review)*
 14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N WITHHELD)*
 15. **Canonization** — approved release comparison, artifacts and explicit human shipment approval. *(115N only after acceptance)*
 
@@ -73,7 +74,7 @@ The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tes
 - Real compressed/media breadth, device sample rates/channel layouts, microphone hardware, OS display/system-audio permissions, cancellation and recovery.
 - Recording/download workflows, external-player exported audio fidelity, repeated and long-duration capture/resource retention.
 - Representative constrained-hardware analysis/rendering, high-count/editor costs, large retention trim/expiry and expert limits. Exact human presets require artistic slow-frame/trail/Trace acceptance; synthetic histories alone do not establish it.
-- Actual portable `file://` boot/playback with networking offline in an environment permitting navigation; complete hosted root/subdirectory validation and correct server MIME setup. Existing blocked navigation is not a successful gate or an application finding.
+- Network-disabled portable `file://` boot/playback in an environment permitting navigation; complete hosted root/subdirectory validation and correct server MIME setup. Owner-reported direct-file and hosted functional coverage in Chrome/Opera/Edge/Firefox is recorded separately; it does not establish networking-disabled execution. Managed blocked navigation is not an application failure or, alone, an AUD-007 closure blocker.
 - Maskable artwork review, final public-versus-internal comparison baseline and editorial approval of eventual shipped notes. [Release-delta draft](docs/development/build-115-release-delta.md) is preparation only.
 - Approved artifacts and explicit shipment/canonization decision. Passing CI, merged corrective PRs and this documentation revision do not authorize it.
 
