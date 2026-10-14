@@ -10,6 +10,7 @@ import { extractWaveform } from "./waveform-extractor.js";
 function createWaveformAdmission({ onUpdate, policy = CONFIG.waveform, preferences = applicationPreferences,
   extract = extractWaveform, probe = probeWaveformMetadata } = {}) {
   let current = null;
+  let revision = 0;
   const valid = intent => current === intent && intent.isCurrent();
   function input(intent) {
     const duration = intent.media?.duration;
@@ -52,7 +53,13 @@ function createWaveformAdmission({ onUpdate, policy = CONFIG.waveform, preferenc
   });
   function refresh() {
     const intent = current;
-    if (!intent || !valid(intent) || intent.scheduled || intent.ready || intent.failed) return Promise.resolve();
+    if (!intent || !valid(intent) || intent.ready || intent.failed) return Promise.resolve();
+    if (intent.scheduled) {
+      // Synchronous presentation/focus callbacks may edit preferences while a
+      // decision is being delivered. Reconcile once, through the same owner.
+      intent.refreshPending = true;
+      return Promise.resolve();
+    }
     // Size/policy gates run BEFORE any prefix/full read, including queued work.
     const decision = evaluate(intent);
     intent.decision = decision;
@@ -71,6 +78,10 @@ function createWaveformAdmission({ onUpdate, policy = CONFIG.waveform, preferenc
       },
     }).then(() => {
       intent.scheduled = false;
+      if (valid(intent) && intent.refreshPending) {
+        intent.refreshPending = false;
+        return refresh();
+      }
       // An event during the last await cannot be lost. No repeated probe or retry
       // on native failure: only a formerly pending duration may now admit work.
       if (valid(intent) && intent.decision?.decision === "defer"
@@ -78,6 +89,7 @@ function createWaveformAdmission({ onUpdate, policy = CONFIG.waveform, preferenc
     });
   }
   function reset() {
+    revision++;
     if (current) {
       for (const type of ["loadedmetadata", "durationchange", "error"]) current.media?.removeEventListener?.(type, current.listener);
       current.file = current.media = null;
@@ -86,7 +98,11 @@ function createWaveformAdmission({ onUpdate, policy = CONFIG.waveform, preferenc
     coordinator.reset();
   }
   function loadFile(file, { media, isCurrent = () => true } = {}) {
+    const requestRevision = revision + 1;
     reset();
+    // Reset notifies presentation synchronously. A newer reentrant load/Clear
+    // owns the result; the older continuation must not replace its listeners.
+    if (requestRevision !== revision) return Promise.resolve();
     const intent = {file, media, isCurrent, manual:false, probed:false, scheduled:false, ready:false, failed:false, metadataFailed:false};
     current = intent;
     intent.listener = event => {
