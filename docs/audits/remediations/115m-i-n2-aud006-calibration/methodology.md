@@ -106,3 +106,13 @@ Full host samples, native event ledgers, scene settings, render timings, MIME fi
 container stream metadata and hashes are retained. Raw files are UTC observations;
 user-facing work date is October 14, 2026 in America/Los_Angeles. Resource-safety
 and browser/device gaps remain explicit. No video/audio payload is committed.
+
+During normalization, one guard-path instrumentation limitation was identified:
+the helper reads its field named `overlap.P` after a host guard may already have
+completed Stop. In the guarded high-VP8 row that field is the just-completed export,
+not a prior export. Every primary B/C workload starts in a fresh page with no prior
+export; normalized primary P is therefore correctly 0, established by fixture
+construction. The raw value is preserved and is not added a second time to D.
+This correction does not alter event bytes, the guard outcome or candidate values.
+D's separate active replacement snapshots are taken before manual Stop and retain
+their actual measured previous-export values.

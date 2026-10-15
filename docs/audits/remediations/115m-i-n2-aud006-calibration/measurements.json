@@ -4716,8 +4716,8 @@
       "post_stop_bytes": 66776,
       "max_event_gap_ms": 1257.0,
       "stop_to_terminal_ms": 22.399999999965075,
-      "prior_export_bytes": 3551669,
-      "max_logical_overlap_bytes": 7103338,
+      "prior_export_bytes": 0,
+      "max_logical_overlap_bytes": 3551669,
       "success": false,
       "events": [
         {

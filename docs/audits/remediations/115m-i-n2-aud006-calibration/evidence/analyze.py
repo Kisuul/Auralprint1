@@ -2,11 +2,15 @@
 No capture/media allocation. Python 3 standard library only. Run from any cwd.
 """
 from pathlib import Path
-import json, csv, math, statistics, hashlib
+import json, csv, math, statistics, hashlib, sys
 base=Path(__file__).resolve().parent.parent
 e=base/'evidence'
+raw_e=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else e
+out_base=Path(sys.argv[2]).resolve() if len(sys.argv)>2 else base
+out_e=out_base/'evidence'
+out_e.mkdir(parents=True,exist_ok=True)
 
-def load(name): return json.loads((e/name).read_text())
+def load(name): return json.loads((raw_e/name).read_text())
 def quantile(values,p):
     x=sorted(values)
     if not x:return None
@@ -42,7 +46,7 @@ for filename in ['native-stage-b-initial.json','native-stage-c.json']:
         packet_count=int(video['nb_read_packets']) if 'nb_read_packets' in video else None
         # One packet/frame is observed container structure, not a universal codec guarantee.
         extra=dict(width=s['width'],height=s['height'],requested_fps=s['fps'],scene=s['scene'],mode=s['mode'] if s['audio'] else 'video-only',success=bool(x.get('success')),guard=x.get('guard'),replay=x.get('replay','guard-aborted: not replayed'),actual_video_codec=video.get('codec_name'),actual_audio_codec=audio.get('codec_name'),encoded_video_packets=packet_count,encoded_packet_fps=packet_count*1000/x['elapsedMs'] if packet_count is not None else None,render_fps=len(times)*1000/x['elapsedMs'],render_gap_distribution_ms=dist(gaps),render_cost_distribution_ms=dist(costs),render_gap_histogram_0_1ms=histogram(gaps),render_cost_histogram_0_1ms=histogram(costs),rss_distribution_bytes=dist([h['rssBytes'] for h in x['hostSamples']]),cgroup_distribution_bytes=dist([h['cgroupBytes'] for h in x['hostSamples']]),download=x.get('download'),data_source=filename)
-        rows.append(row(x['id'],s['id'][0],x['native'],x['state'],x['overlap']['P'],extra))
+        rows.append(row(x['id'],s['id'][0],x['native'],x['state'],0,extra))
         if x.get('replacement'):
             b=x['replacement']; rows.append(row(x['id']+'-replacement','D',b['native'],b['state'],x['replacementActive']['P'],dict(width=s['width'],height=s['height'],requested_fps=s['fps'],scene=s['scene'],mode=s['mode'] if s['audio'] else 'video-only',replay='replacement not replayed; URL ledger and fetch checks',active_overlap=x['replacementActive'],revocations=b['revocations'],failed_replacement=x['failedReplacement'])))
 old=json.loads((base.parent/'115m-i-n-aud006/evidence/native.json').read_text())
@@ -50,7 +54,7 @@ comparison=[]
 for x,y in zip(old['cases'],a['cases']):
     assert x['name']==y['name']
     comparison.append(dict(id=y['name'],original_bytes=x['after']['lastExportByteSize'],reproduced_bytes=y['after']['lastExportByteSize'],change_percent=100*(y['after']['lastExportByteSize']/x['after']['lastExportByteSize']-1),original_events=[v for v in x['native']['events'] if v['type']=='dataavailable'],reproduced_events=[v for v in y['native']['events'] if v['type']=='dataavailable']))
-(e/'n1-comparison.json').write_text(json.dumps(comparison,indent=2)+'\n')
+(out_e/'n1-comparison.json').write_text(json.dumps(comparison,indent=2)+'\n')
 observed=[r for r in rows if r['success'] and r['stage']!='D']
 stats={'definition':'type-7 linearly interpolated sample quantiles; descriptive only; pooled trials are unequal workloads, not IID predictions','all_successful_trial_average_mbit_s':dist([r['average_mbit_s'] for r in observed]),'by_stage':{},'by_codec':{}}
 for stage in ['A','B','C']:
@@ -94,10 +98,10 @@ for sec in [1,5,15,30,60]:
     delay.append(dict(delay_seconds=sec,invented_tail_bytes=backlog,admitted=total<=2*S+R,assumption='observed maximum standard trial average held stationary; invented stress, not bitrate maximum'))
 count_sensitivity=[dict(C=limit,trial_id=r['id'],observed_nonempty_chunks=r['nonempty_chunks'],fits=r['nonempty_chunks']<=limit) for limit in [300,600,C,2400] for r in rows]
 duration_sensitivity=[dict(T_seconds=t,trial_id=r['id'],observed_elapsed_seconds=r['elapsed_ms']/1000,earlier_stop_requested=r['elapsed_ms']>t*1000,limitation='Timer checks may be delayed; changed final native output unknown') for t in [60,300,600,900] for r in rows]
-for name,obj in [('statistics.json',stats),('candidate.json',candidate),('policy-replay.json',policies),('sensitivity.json',dict(boundary_tail=sensitivity,factory_tail=factory_tail,delayed_delivery=delay,chunk_count=count_sensitivity,duration=duration_sensitivity))]: (e/name).write_text(json.dumps(obj,indent=2)+'\n')
-(base/'measurements.json').write_text(json.dumps(dict(semantics='Native observations; logical encoded payload, not physical memory. Stage D replacements are auxiliary; guard-aborted row retained and excluded from supported statistics.',rows=rows),indent=2)+'\n')
+for name,obj in [('statistics.json',stats),('candidate.json',candidate),('policy-replay.json',policies),('sensitivity.json',dict(boundary_tail=sensitivity,factory_tail=factory_tail,delayed_delivery=delay,chunk_count=count_sensitivity,duration=duration_sensitivity))]: (out_e/name).write_text(json.dumps(obj,indent=2)+'\n')
+(out_base/'measurements.json').write_text(json.dumps(dict(semantics='Native observations; logical encoded payload, not physical memory. Stage D replacements are auxiliary; guard-aborted row retained and excluded from supported statistics.',rows=rows),indent=2)+'\n')
 columns=[k for k,v in rows[0].items() if not isinstance(v,(dict,list)) and k not in ['replay']]+['actual_video_codec','actual_audio_codec','encoded_packet_fps','render_fps','guard']
 columns=list(dict.fromkeys(columns))
-with (base/'measurements.csv').open('w',newline='') as f:
-    w=csv.DictWriter(f,fieldnames=columns,extrasaction='ignore');w.writeheader();w.writerows([{k:r.get(k) for k in columns} for r in rows])
+with (out_base/'measurements.csv').open('w',newline='') as f:
+    w=csv.DictWriter(f,fieldnames=columns,extrasaction='ignore',lineterminator='\n');w.writeheader();w.writerows([{k:r.get(k) for k in columns} for r in rows])
 print(json.dumps(dict(rows=len(rows),statistics=stats['all_successful_trial_average_mbit_s'],candidate=candidate),indent=2))
