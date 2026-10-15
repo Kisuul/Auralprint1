@@ -1,0 +1,17 @@
+ℹ Original malformed URL radius: 721 px; empty control: 721 px; explicit silent Band 0: 10 px.
+ℹ [{"chanId":"L","fullRadius":721,"selectedRadius":299.6666666666667,"band0Radius":89},{"chanId":"R","fullRadius":247,"selectedRadius":326,"band0Radius":168},{"chanId":"C","fullRadius":484,"selectedRadius":405.0000000000001,"band0Radius":247}]
+ℹ {"phaseMode":"free","pausedOrb":1.2000000000000002,"pausedRing":1.2000000000000002,"samplesDuringPause":100,"resumedOrb":1.4000000000000004,"resumedRing":1.4000000000000004}
+ℹ {"phaseMode":"orb","pausedOrb":1.2000000000000002,"pausedRing":1.2000000000000002,"samplesDuringPause":100,"resumedOrb":1.4000000000000004,"resumedRing":1.4000000000000004}
+ℹ test_artifact_external_portable_icon (__main__.Packaging.test_artifact_external_portable_icon) ... ok
+ℹ [{"chanId":"L","bandIds":[0],"selected":0.9,"full":0.8,"waveform":0.75},{"chanId":"L","bandIds":[0,1],"selected":0.8,"full":0.8,"waveform":0.75},{"chanId":"L","bandIds":[],"selected":null,"full":0.8,"waveform":0.75},{"chanId":"R","bandIds":[0],"selected":0.1,"full":0.2,"waveform":-0.5},{"chanId":"R","bandIds":[0,1],"selected":0.2,"full":0.2,"waveform":-0.5},{"chanId":"R","bandIds":[],"selected":null,"full":0.2,"waveform":-0.5},{"chanId":"C","bandIds":[0],"selected":0.5,"full":0.6,"waveform":0.25},{"chanId":"C","bandIds":[0,1],"selected":0.45,"full":0.6,"waveform":0.25},{"chanId":"C","bandIds":[],"selected":null,"full":0.6,"waveform":0.25}]
+ℹ Channel selects both the Orb's waveform and its band energies (Left, Right, or Center). Selected bands use that channel's energy. With no bands selected, the Orb uses its channel's full-spectrum energy. Inactive targets contribute no energy. Checkbox and range edits keep them; Full spectrum clears all targets. Exact band indices can explicitly add or remove authored targets.
+ℹ {"confirmation":"Remove Orb 1 (spectral-ring)? This cannot be undone.","persisted":["ORB1"],"ringSurvived":true,"focus":{"action":"edit","orbId":"ORB1"}}
+ℹ Watcher completion events: 23; native platform: linux
+ℹ tests 1041
+ℹ suites 0
+ℹ pass 1040
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 29067.292931

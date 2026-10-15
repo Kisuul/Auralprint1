@@ -66,3 +66,56 @@ test("N3 policy settings never contaminate Scene presets or URL payload", async 
   assert.equal(payload.schema,10);assert.equal(Object.hasOwn(payload.prefs,"recordingResources"),false);
   assert.doesNotMatch(JSON.stringify(payload),/aggregateBytes|softBytes|durationMs|unrestricted/);
 });
+
+test("N3F decimal MB and minutes convert exactly at the policy boundary", async () => {
+  const { parseResourceInput, selectionFromResourceInputs } = await import("../src/js/recording/recording-policy.js");
+  assert.equal(parseResourceInput("softBytes", "130.000001"),130000001);
+  assert.equal(parseResourceInput("aggregateBytes", ".000029"),29);
+  assert.equal(parseResourceInput("durationMs", "120"),7200000);
+  assert.equal(parseResourceInput("durationMs", "0.001"),60);
+  assert.equal(parseResourceInput("maxChunks", "1200"),1200);
+  const result=selectionFromResourceInputs({profile:"custom",custom:{softBytes:"130.000001",aggregateBytes:"270.000007",maxChunks:"1200",durationMs:"120",warningFraction:.8}});
+  assert.equal(result.ok,true);assert.deepEqual(result.selection.custom,{softBytes:130000001,aggregateBytes:270000007,maxChunks:1200,durationMs:7200000,warningFraction:.8});
+});
+test("N3F arbitrary canonical values and integer safety round-trip without floating-point scaling", async () => {
+  const { parseResourceInput, formatResourceInput, optionalFields } = await import("../src/js/recording/recording-policy.js");
+  for(const key of optionalFields)for(const value of [1,3,29,300001,130000001,Number.MAX_SAFE_INTEGER]) {
+    assert.equal(parseResourceInput(key,formatResourceInput(key,value)),value,`${key}: ${value}`);
+  }
+  assert.equal(formatResourceInput("softBytes",Number.MAX_SAFE_INTEGER),"9007199254.740991");
+  assert.equal(formatResourceInput("durationMs",1),"1/60000");
+  assert.equal(formatResourceInput("durationMs",3),"0.00005");
+  assert.equal(parseResourceInput("durationMs","9007199254740991/60000"),Number.MAX_SAFE_INTEGER);
+});
+test("N3F invalid, fractional canonical and overflowing entries are rejected without clamping", async () => {
+  const { parseResourceInput } = await import("../src/js/recording/recording-policy.js");
+  for(const key of ["softBytes","aggregateBytes","durationMs","maxChunks"]) {
+    for(const raw of ["", " ", "0", "-1", "NaN", "Infinity", "1e3", "1,000", "1/0", "1/", "1.2.3", "9".repeat(40), 120, null, undefined]) {
+      assert.equal(parseResourceInput(key,raw),null,`${key}: ${raw}`);
+    }
+  }
+  assert.equal(parseResourceInput("softBytes","0.0000001"),null);
+  assert.equal(parseResourceInput("durationMs","0.000001"),null);
+  assert.equal(parseResourceInput("maxChunks","1.5"),null);
+  assert.equal(parseResourceInput("softBytes","9007199254.740992"),null);
+  assert.equal(parseResourceInput("durationMs","9007199254740992/60000"),null);
+});
+test("N3F converted limits retain relationship validation and independent persisted Off states", () => {
+  const store=memory(), settings=createRecordingPolicySettings({storage:()=>store});
+  const inputs={profile:"custom",custom:{softBytes:"260.000001",aggregateBytes:"270",durationMs:"120",maxChunks:"1200",warningFraction:.8}};
+  const bad=settings.setFromInputs(inputs);assert.equal(bad.ok,false);assert.ok(bad.errors.softBytes);
+  assert.equal(store.read(),null);
+  inputs.custom.softBytes="130";inputs.custom.durationMs=null;
+  assert.equal(settings.setFromInputs(inputs).ok,true);
+  const reload=createRecordingPolicySettings({storage:()=>store});
+  assert.deepEqual(reload.policy(),{profile:"custom",softBytes:130000000,aggregateBytes:270000000,reserveBytes:10000000,maxChunks:1200,durationMs:null,warningFraction:.8});
+});
+test("N3F every optional control persists Off without changing the other canonical values", () => {
+  for(const key of ["softBytes","aggregateBytes","maxChunks","durationMs"]) {
+    const store=memory(),settings=createRecordingPolicySettings({storage:()=>store});
+    const custom={softBytes:"130",aggregateBytes:"270",maxChunks:"1200",durationMs:"120",warningFraction:null,[key]:null};
+    assert.equal(settings.setFromInputs({profile:"custom",custom}).ok,true);
+    const reload=createRecordingPolicySettings({storage:()=>store});
+    assert.deepEqual(reload.read().selection.custom,{softBytes:130000000,aggregateBytes:270000000,maxChunks:1200,durationMs:7200000,warningFraction:null,[key]:null});
+  }
+});

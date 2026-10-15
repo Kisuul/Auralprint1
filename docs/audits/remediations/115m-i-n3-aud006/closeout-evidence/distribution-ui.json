@@ -1,0 +1,52 @@
+{
+  "version": "v0.1.15m.i.n",
+  "cases": [
+    {
+      "mode": "portable",
+      "http": 200,
+      "stored": {
+        "version": 1,
+        "profile": "custom",
+        "custom": {
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "maxChunks": 1200,
+          "durationMs": null,
+          "warningFraction": 0.8
+        }
+      }
+    },
+    {
+      "mode": "hosted",
+      "http": 200,
+      "stored": {
+        "version": 1,
+        "profile": "custom",
+        "custom": {
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "maxChunks": 1200,
+          "durationMs": null,
+          "warningFraction": 0.8
+        }
+      }
+    },
+    {
+      "mode": "hosted-subdirectory",
+      "http": 200,
+      "stored": {
+        "version": 1,
+        "profile": "custom",
+        "custom": {
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "maxChunks": 1200,
+          "durationMs": null,
+          "warningFraction": 0.8
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "passed": true
+}
