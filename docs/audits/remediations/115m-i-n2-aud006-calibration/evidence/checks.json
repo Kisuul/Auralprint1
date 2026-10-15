@@ -1,0 +1,265 @@
+[
+  {
+    "command": [
+      "npm",
+      "ci"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.482,
+    "full_log_sha256": "e7013ba45a693c97ea58b6538f3f91acfcf12bb7d2f9ff1fb3e98dc505b80a49",
+    "summary": [
+      "",
+      "added 2 packages in 427ms"
+    ]
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "tests/recording-export.test.js",
+      "tests/rc19-recorder-disposal.test.js",
+      "tests/targeted-audit.test.js",
+      "tests/transport-ownership.test.js",
+      "tests/live-source-ownership.test.js",
+      "tests/input-source-manager.test.js",
+      "tests/file-activation-ownership.test.js",
+      "tests/queue-entry-ownership.test.js",
+      "tests/stream-graph.test.js"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.695,
+    "full_log_sha256": "8244ad84c5c010c1ef160dfc4d8d87b7886953c7e39fa78a0076b213025ff89d",
+    "summary": [
+      "\u2714 AUD-002: obsolete Play resume rejects after clear without reads or writes (1.742882ms)",
+      "\u2714 AUD-002: obsolete Play resume rejects after replacement without reads or writes (1.925162ms)",
+      "\u2714 AUD-002: obsolete Play resume rejects after File to mic without touching winner (2.808932ms)",
+      "\u2714 AUD-002: obsolete Play resume rejects after File to stream without touching winner (2.691698ms)",
+      "\u2714 AUD-002: synchronous current native Play throw is a recoverable media error (2.184085ms)",
+      "\u2714 AUD-002: Play retry after failed resume and File replacement acts only on replacement (1.951461ms)",
+      "\u2139 tests 347",
+      "\u2139 suites 0",
+      "\u2139 pass 347",
+      "\u2139 fail 0",
+      "\u2139 cancelled 0",
+      "\u2139 skipped 0",
+      "\u2139 todo 0",
+      "\u2139 duration_ms 1656.681576"
+    ]
+  },
+  {
+    "command": [
+      "npm",
+      "test"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 15.715,
+    "full_log_sha256": "65387ffd9ac3598c4031505d5ec58bd03e1a77012a1bfc9d6bc3b13f883f4750",
+    "summary": [
+      "\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio hidden attribute (0.146126ms)",
+      "\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio visible without Queue toggle (0.153397ms)",
+      "\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 outside focus (0.116452ms)",
+      "\u2714 RC-13: visible focus owns panel stacking and Queue Hide restores the real toggle (0.328256ms)",
+      "\u2714 workspace owns deterministic visibility, restore, focus, record, collapse, and idempotent wiring (1.880807ms)",
+      "\u2714 Record restore remains eligible only while hooks are enabled (0.347414ms)",
+      "\u2139 tests 973",
+      "\u2139 suites 0",
+      "\u2139 pass 972",
+      "\u2139 fail 0",
+      "\u2139 cancelled 0",
+      "\u2139 skipped 1",
+      "\u2139 todo 0",
+      "\u2139 duration_ms 15588.094211"
+    ]
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.223,
+    "full_log_sha256": "24c864796c12c6d0ce6677eeb365edf8f511b0836307828c713819de21f301f3",
+    "summary": [
+      "",
+      "> build",
+      "> node scripts/build.mjs",
+      "",
+      "",
+      "  .build/auralprint.css  26.4kb",
+      "",
+      "\u26a1 Done in 16ms",
+      "",
+      "  .build/auralprint.js  386.6kb",
+      "",
+      "\u26a1 Done in 29ms"
+    ]
+  },
+  {
+    "command": [
+      "python",
+      "scripts/verify_distribution.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.056,
+    "full_log_sha256": "79c93271d54f6f1393a2e797504c1185368a218adefa94abbf526bf8a4c3ac16",
+    "summary": [
+      "  },",
+      "  \"hosted/site.webmanifest\": {",
+      "    \"bytes\": 517,",
+      "    \"sha256\": \"73dd427c1ba3897e29ba69a325e1220520f6ff8fccd45f661a2365e656b23495\"",
+      "  },",
+      "  \"hosted/web-app-manifest-192x192.png\": {",
+      "    \"bytes\": 22773,",
+      "    \"sha256\": \"b73872f891fdb6cb32eb57c67beb9ea3e940b1722cf5912c60bcb9185a537991\"",
+      "  },",
+      "  \"hosted/web-app-manifest-512x512.png\": {",
+      "    \"bytes\": 105356,",
+      "    \"sha256\": \"451750c8f7eebabce053802ebf3e17e447f84daf339f09fa0d43288d7f773568\"",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "command": [
+      "node",
+      "/workspace/Auralprint1/docs/audits/remediations/115m-i-n2-aud006-calibration/evidence/unmodified-control.cjs",
+      "/workspace/Auralprint1/docs/audits/remediations/115m-i-n2-aud006-calibration/evidence/unmodified-control.json",
+      "/workspace/Auralprint1/work/n2/control-media"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 4.531,
+    "full_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "summary": []
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-recording-export.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 3.817,
+    "full_log_sha256": "05cf040ef2677092defa5c7d132a75742d2bb0900c7abb7c68a82800f2e4942a",
+    "summary": [
+      "      {",
+      "        \"url\": \"blob:http://rc06.test/710197b9-e8ca-48fb-9e6c-8409a62db009\",",
+      "        \"size\": 68145,",
+      "        \"type\": \"video/webm;codecs=vp9,opus\"",
+      "      },",
+      "      {",
+      "        \"url\": \"blob:http://rc06.test/3b5f86c0-2964-40aa-ab8d-881fecc8a541\",",
+      "        \"size\": 112566,",
+      "        \"type\": \"video/webm;codecs=vp9,opus\"",
+      "      }",
+      "    ]",
+      "  },",
+      "  \"errors\": []",
+      "}"
+    ]
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-finalizing-eof.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 19.421,
+    "full_log_sha256": "de45055b0d4b61369dd1cf6780a3fe7d59aacfb577a8b572ff0eb38ea4c8278d",
+    "summary": [
+      "ordinary: PASS",
+      "recording-across-eof: PASS",
+      "delayed-onstop: PASS",
+      "native-eof-order: PASS",
+      "repeat-one: PASS",
+      "repeat-all: PASS",
+      "no-next: PASS",
+      "export-error: PASS"
+    ]
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-recorder-disposal.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 9.709,
+    "full_log_sha256": "323ee0a4fd8ad94cc9aa062a21adff5dd11f68a6b5e9c2f8ee67aabac4fa3515",
+    "summary": [
+      "        \"nativeStopCalls\": 1,",
+      "        \"exportBytes\": 20933,",
+      "        \"exportType\": \"video/webm\",",
+      "        \"oldCallbacksPreserveExport\": true,",
+      "        \"upstreamState\": \"live\",",
+      "        \"upstreamStops\": 0,",
+      "        \"playbackPaused\": false,",
+      "        \"exportRevocations\": 1,",
+      "        \"exportCleared\": true",
+      "      },",
+      "      \"errors\": []",
+      "    }",
+      "  ]",
+      "}"
+    ]
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-live-source-ownership.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 5.253,
+    "full_log_sha256": "40df3fa107dbf9137869cce4a1f25b0695e2400657e5814242641e6a36c47824",
+    "summary": [
+      "          },",
+      "          \"mic\": {",
+      "            \"ok\": true,",
+      "            \"kind\": \"mic\",",
+      "            \"status\": \"active\",",
+      "            \"label\": \"MediaStreamAudioDestinationNode\"",
+      "          }",
+      "        },",
+      "        \"status\": \"File mode ready. Load audio files to begin analysis.\"",
+      "      },",
+      "      \"errors\": []",
+      "    }",
+      "  ]",
+      "}"
+    ]
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-transport-ownership.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 15.069,
+    "full_log_sha256": "2a879af154de15a838c2c50517dd6af6e213c20ac80a4f31f03648bcc86a85ca",
+    "summary": [
+      "  },",
+      "  {",
+      "    \"case\": \"replacement-playing-during-play-resolve\",",
+      "    \"passed\": true",
+      "  },",
+      "  {",
+      "    \"case\": \"replacement-playing-during-play-reject\",",
+      "    \"passed\": true",
+      "  },",
+      "  {",
+      "    \"case\": \"ordinary-play-pause-current-failure\",",
+      "    \"passed\": true",
+      "  }",
+      "]"
+    ]
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.003,
+    "full_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "summary": []
+  }
+]

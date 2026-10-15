@@ -1,0 +1,1959 @@
+{
+  "boundary_tail": [
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 197773130,
+      "R": 2773130,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 197773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 197773130,
+      "R": 2773130,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 198467109,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 197773130,
+      "R": 2773130,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 199855069,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 197773130,
+      "R": 2773130,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 202630989,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 197773130,
+      "R": 2773130,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 208182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 200546260,
+      "R": 5546260,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 197773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 200546260,
+      "R": 5546260,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 198467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 200546260,
+      "R": 5546260,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 199855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 200546260,
+      "R": 5546260,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 202630989,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 200546260,
+      "R": 5546260,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 208182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 203319390,
+      "R": 8319390,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 197773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 203319390,
+      "R": 8319390,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 198467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 203319390,
+      "R": 8319390,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 199855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 203319390,
+      "R": 8319390,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 202630989,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 203319390,
+      "R": 8319390,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 208182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 206092520,
+      "R": 11092520,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 197773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 206092520,
+      "R": 11092520,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 198467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 206092520,
+      "R": 11092520,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 199855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 206092520,
+      "R": 11092520,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 202630989,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 0.75,
+      "S": 97500000,
+      "H": 206092520,
+      "R": 11092520,
+      "P": 97500000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 208182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 262773130,
+      "R": 2773130,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 262773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 262773130,
+      "R": 2773130,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 263467109,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 262773130,
+      "R": 2773130,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 264855069,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 262773130,
+      "R": 2773130,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 267630989,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 262773130,
+      "R": 2773130,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 273182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 265546260,
+      "R": 5546260,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 262773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 265546260,
+      "R": 5546260,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 263467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 265546260,
+      "R": 5546260,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 264855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 265546260,
+      "R": 5546260,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 267630989,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 265546260,
+      "R": 5546260,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 273182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 268319390,
+      "R": 8319390,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 262773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 268319390,
+      "R": 8319390,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 263467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 268319390,
+      "R": 8319390,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 264855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 268319390,
+      "R": 8319390,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 267630989,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 268319390,
+      "R": 8319390,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 273182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 271092520,
+      "R": 11092520,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 262773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 271092520,
+      "R": 11092520,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 263467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 271092520,
+      "R": 11092520,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 264855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 271092520,
+      "R": 11092520,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 267630989,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1,
+      "S": 130000000,
+      "H": 271092520,
+      "R": 11092520,
+      "P": 130000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 273182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 392773130,
+      "R": 2773130,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 392773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 392773130,
+      "R": 2773130,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 393467109,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 392773130,
+      "R": 2773130,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 394855069,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 392773130,
+      "R": 2773130,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 397630989,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 392773130,
+      "R": 2773130,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 403182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 395546260,
+      "R": 5546260,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 392773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 395546260,
+      "R": 5546260,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 393467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 395546260,
+      "R": 5546260,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 394855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 395546260,
+      "R": 5546260,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 397630989,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 395546260,
+      "R": 5546260,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 403182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 398319390,
+      "R": 8319390,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 392773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 398319390,
+      "R": 8319390,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 393467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 398319390,
+      "R": 8319390,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 394855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 398319390,
+      "R": 8319390,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 397630989,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 398319390,
+      "R": 8319390,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 403182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 401092520,
+      "R": 11092520,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "aggregate": 392773129,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 401092520,
+      "R": 11092520,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "aggregate": 393467109,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 401092520,
+      "R": 11092520,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "aggregate": 394855069,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 401092520,
+      "R": 11092520,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "aggregate": 397630989,
+      "admitted": true,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    },
+    {
+      "soft_factor": 1.5,
+      "S": 195000000,
+      "H": 401092520,
+      "R": 11092520,
+      "P": 195000000,
+      "crossing_event": 2079150,
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "aggregate": 403182829,
+      "admitted": false,
+      "input_class": "invented boundary/tail multiplier using observed M/F; not native events"
+    }
+  ],
+  "factory_tail": [
+    {
+      "tail_multiple": 1,
+      "tail_bytes": 693980,
+      "P": 130000000,
+      "crossing_overshoot": 2079149,
+      "aggregate": 262773129,
+      "admitted": true,
+      "input_class": "invented stress"
+    },
+    {
+      "tail_multiple": 2,
+      "tail_bytes": 1387960,
+      "P": 130000000,
+      "crossing_overshoot": 2079149,
+      "aggregate": 263467109,
+      "admitted": true,
+      "input_class": "invented stress"
+    },
+    {
+      "tail_multiple": 4,
+      "tail_bytes": 2775920,
+      "P": 130000000,
+      "crossing_overshoot": 2079149,
+      "aggregate": 264855069,
+      "admitted": true,
+      "input_class": "invented stress"
+    },
+    {
+      "tail_multiple": 8,
+      "tail_bytes": 5551840,
+      "P": 130000000,
+      "crossing_overshoot": 2079149,
+      "aggregate": 267630989,
+      "admitted": true,
+      "input_class": "invented stress"
+    },
+    {
+      "tail_multiple": 16,
+      "tail_bytes": 11103680,
+      "P": 130000000,
+      "crossing_overshoot": 2079149,
+      "aggregate": 273182829,
+      "admitted": false,
+      "input_class": "invented stress"
+    }
+  ],
+  "delayed_delivery": [
+    {
+      "delay_seconds": 1,
+      "invented_tail_bytes": 323560,
+      "admitted": true,
+      "assumption": "observed maximum standard trial average held stationary; invented stress, not bitrate maximum"
+    },
+    {
+      "delay_seconds": 5,
+      "invented_tail_bytes": 1617797,
+      "admitted": true,
+      "assumption": "observed maximum standard trial average held stationary; invented stress, not bitrate maximum"
+    },
+    {
+      "delay_seconds": 15,
+      "invented_tail_bytes": 4853390,
+      "admitted": true,
+      "assumption": "observed maximum standard trial average held stationary; invented stress, not bitrate maximum"
+    },
+    {
+      "delay_seconds": 30,
+      "invented_tail_bytes": 9706780,
+      "admitted": false,
+      "assumption": "observed maximum standard trial average held stationary; invented stress, not bitrate maximum"
+    },
+    {
+      "delay_seconds": 60,
+      "invented_tail_bytes": 19413559,
+      "admitted": false,
+      "assumption": "observed maximum standard trial average held stationary; invented stress, not bitrate maximum"
+    }
+  ],
+  "chunk_count": [
+    {
+      "C": 300,
+      "trial_id": "video-only",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "file-audio",
+      "observed_nonempty_chunks": 5,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "synthetic-mic",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "stream-codec-video/webm",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_nonempty_chunks": 59,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "repeat-1",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "repeat-2",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "repeat-3",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-baseline-video",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-standard-file",
+      "observed_nonempty_chunks": 45,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-high-mic",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-expert-stream",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_nonempty_chunks": 9,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "B-high-video-vp8",
+      "observed_nonempty_chunks": 23,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "C-standard-5min",
+      "observed_nonempty_chunks": 294,
+      "fits": true
+    },
+    {
+      "C": 300,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_nonempty_chunks": 4,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "video-only",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "file-audio",
+      "observed_nonempty_chunks": 5,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "synthetic-mic",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "stream-codec-video/webm",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_nonempty_chunks": 59,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "repeat-1",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "repeat-2",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "repeat-3",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-baseline-video",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-standard-file",
+      "observed_nonempty_chunks": 45,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-high-mic",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-expert-stream",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_nonempty_chunks": 9,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "B-high-video-vp8",
+      "observed_nonempty_chunks": 23,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "C-standard-5min",
+      "observed_nonempty_chunks": 294,
+      "fits": true
+    },
+    {
+      "C": 600,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_nonempty_chunks": 4,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "video-only",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "file-audio",
+      "observed_nonempty_chunks": 5,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "synthetic-mic",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "stream-codec-video/webm",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_nonempty_chunks": 59,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "repeat-1",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "repeat-2",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "repeat-3",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-baseline-video",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-standard-file",
+      "observed_nonempty_chunks": 45,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-high-mic",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-expert-stream",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_nonempty_chunks": 9,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "B-high-video-vp8",
+      "observed_nonempty_chunks": 23,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "C-standard-5min",
+      "observed_nonempty_chunks": 294,
+      "fits": true
+    },
+    {
+      "C": 1200,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_nonempty_chunks": 4,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "video-only",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "file-audio",
+      "observed_nonempty_chunks": 5,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "synthetic-mic",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "stream-codec-video/webm",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_nonempty_chunks": 59,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "repeat-1",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "repeat-2",
+      "observed_nonempty_chunks": 2,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "repeat-3",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-baseline-video",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_nonempty_chunks": 3,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-standard-file",
+      "observed_nonempty_chunks": 45,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-high-mic",
+      "observed_nonempty_chunks": 30,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-expert-stream",
+      "observed_nonempty_chunks": 29,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_nonempty_chunks": 9,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "B-high-video-vp8",
+      "observed_nonempty_chunks": 23,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "C-standard-5min",
+      "observed_nonempty_chunks": 294,
+      "fits": true
+    },
+    {
+      "C": 2400,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_nonempty_chunks": 4,
+      "fits": true
+    }
+  ],
+  "duration": [
+    {
+      "T_seconds": 60,
+      "trial_id": "video-only",
+      "observed_elapsed_seconds": 3.012,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "file-audio",
+      "observed_elapsed_seconds": 5.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "synthetic-mic",
+      "observed_elapsed_seconds": 3.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_elapsed_seconds": 3.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "stream-codec-video/webm",
+      "observed_elapsed_seconds": 3.023,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_elapsed_seconds": 60.017,
+      "earlier_stop_requested": true,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "repeat-1",
+      "observed_elapsed_seconds": 2.032,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "repeat-2",
+      "observed_elapsed_seconds": 2.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "repeat-3",
+      "observed_elapsed_seconds": 2.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-baseline-video",
+      "observed_elapsed_seconds": 30.041,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_elapsed_seconds": 3.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-standard-file",
+      "observed_elapsed_seconds": 45.062,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_elapsed_seconds": 30.076,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-high-mic",
+      "observed_elapsed_seconds": 30.066,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-expert-stream",
+      "observed_elapsed_seconds": 30.176,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_elapsed_seconds": 30.07,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "B-high-video-vp8",
+      "observed_elapsed_seconds": 23.77,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "C-standard-5min",
+      "observed_elapsed_seconds": 300.058,
+      "earlier_stop_requested": true,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 60,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_elapsed_seconds": 3.13,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "video-only",
+      "observed_elapsed_seconds": 3.012,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "file-audio",
+      "observed_elapsed_seconds": 5.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "synthetic-mic",
+      "observed_elapsed_seconds": 3.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_elapsed_seconds": 3.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "stream-codec-video/webm",
+      "observed_elapsed_seconds": 3.023,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_elapsed_seconds": 60.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "repeat-1",
+      "observed_elapsed_seconds": 2.032,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "repeat-2",
+      "observed_elapsed_seconds": 2.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "repeat-3",
+      "observed_elapsed_seconds": 2.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-baseline-video",
+      "observed_elapsed_seconds": 30.041,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_elapsed_seconds": 3.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-standard-file",
+      "observed_elapsed_seconds": 45.062,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_elapsed_seconds": 30.076,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-high-mic",
+      "observed_elapsed_seconds": 30.066,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-expert-stream",
+      "observed_elapsed_seconds": 30.176,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_elapsed_seconds": 30.07,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "B-high-video-vp8",
+      "observed_elapsed_seconds": 23.77,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "C-standard-5min",
+      "observed_elapsed_seconds": 300.058,
+      "earlier_stop_requested": true,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 300,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_elapsed_seconds": 3.13,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "video-only",
+      "observed_elapsed_seconds": 3.012,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "file-audio",
+      "observed_elapsed_seconds": 5.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "synthetic-mic",
+      "observed_elapsed_seconds": 3.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_elapsed_seconds": 3.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "stream-codec-video/webm",
+      "observed_elapsed_seconds": 3.023,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_elapsed_seconds": 60.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "repeat-1",
+      "observed_elapsed_seconds": 2.032,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "repeat-2",
+      "observed_elapsed_seconds": 2.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "repeat-3",
+      "observed_elapsed_seconds": 2.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-baseline-video",
+      "observed_elapsed_seconds": 30.041,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_elapsed_seconds": 3.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-standard-file",
+      "observed_elapsed_seconds": 45.062,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_elapsed_seconds": 30.076,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-high-mic",
+      "observed_elapsed_seconds": 30.066,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-expert-stream",
+      "observed_elapsed_seconds": 30.176,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_elapsed_seconds": 30.07,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "B-high-video-vp8",
+      "observed_elapsed_seconds": 23.77,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "C-standard-5min",
+      "observed_elapsed_seconds": 300.058,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 600,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_elapsed_seconds": 3.13,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "video-only",
+      "observed_elapsed_seconds": 3.012,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "file-audio",
+      "observed_elapsed_seconds": 5.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "synthetic-mic",
+      "observed_elapsed_seconds": 3.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "stream-codec-video/webm;codecs=vp9,opus",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "stream-codec-video/webm;codecs=vp8,opus",
+      "observed_elapsed_seconds": 3.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "stream-codec-video/webm",
+      "observed_elapsed_seconds": 3.023,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "stream-codec-video/mp4",
+      "observed_elapsed_seconds": 3.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "stream-longer-safe-60s",
+      "observed_elapsed_seconds": 60.017,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "repeat-1",
+      "observed_elapsed_seconds": 2.032,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "repeat-2",
+      "observed_elapsed_seconds": 2.014,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "repeat-3",
+      "observed_elapsed_seconds": 2.026,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-baseline-video",
+      "observed_elapsed_seconds": 30.041,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-baseline-video-replacement",
+      "observed_elapsed_seconds": 3.018,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-standard-file",
+      "observed_elapsed_seconds": 45.062,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-standard-stream-vp8",
+      "observed_elapsed_seconds": 30.076,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-high-mic",
+      "observed_elapsed_seconds": 30.066,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-expert-stream",
+      "observed_elapsed_seconds": 30.176,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-standard-stream-mp4",
+      "observed_elapsed_seconds": 30.07,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "B-high-video-vp8",
+      "observed_elapsed_seconds": 23.77,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "C-standard-5min",
+      "observed_elapsed_seconds": 300.058,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    },
+    {
+      "T_seconds": 900,
+      "trial_id": "C-standard-5min-replacement",
+      "observed_elapsed_seconds": 3.13,
+      "earlier_stop_requested": false,
+      "limitation": "Timer checks may be delayed; changed final native output unknown"
+    }
+  ]
+}
