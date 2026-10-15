@@ -2,7 +2,7 @@
 
 **Auralprint is an offline-capable audio-analysis system whose visualization expresses its analysis.** It combines file playback and live input analysis with configurable spectral inspection, visualizers, and recording.
 
-**Release 3 / Build 113 (`v0.1.13`) remains the canonical public shipped release.** Build 114 (`v0.1.14`) is an internally shipped milestone. Current development is **Build 115, `v0.1.15m.i.m`**, preset schema **10**. RC-01 through RC-22 have completed corrective review and merge at the accepted baseline; **115N final acceptance remains WITHHELD**. Build 115 is unshipped and noncanonical.
+**Release 3 / Build 113 (`v0.1.13`) remains the canonical public shipped release.** Build 114 (`v0.1.14`) is an internally shipped milestone. Current development is **Build 115, `v0.1.15m.i.n`**, preset schema **10**. RC-01 through RC-22 have completed corrective review and merge at the accepted baseline; **115N final acceptance remains WITHHELD**. Build 115 is unshipped and noncanonical.
 
 See [ROADMAP.md](ROADMAP.md) for current capabilities, dependencies, deferrals, and acceptance gates; [Build 115 development history](docs/development/build-115.md) for engineering decisions and the [current audit disposition index](docs/development/build-115.md#audit-disposition-index); and the [canonical changelog](docs/Canon/changelog.md) for shipped-build differences. The [release-delta draft](docs/development/build-115-release-delta.md) prepares both public and internal comparisons for human review without publishing release notes.
 
@@ -64,7 +64,7 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 | 112 | v0.1.12 | — | ✅ Shipped (Internal) | Scrubber + Playlist/Queue |
 | 113 | v0.1.13 | R3 | ✅ Shipped (canonical) | Recording / Capture + band distribution modes |
 | 114 | v0.1.14 | — | ✅ Shipped (Internal) | Live input sources (mic/tab/stream) |
-| 115 | v0.1.15 (`v0.1.15m.i.m` development revision) | — | Implemented; RC corrections accepted; AUD-007 I.2D merged via PR #55; AUD-011 corrective PR awaiting review; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
+| 115 | v0.1.15 (`v0.1.15m.i.n` development revision) | — | Implemented; RC corrections accepted; AUD-007 I.2D merged via PR #55; AUD-011 corrective PR awaiting review; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
 | 116 | v0.1.16 | R4 | Planned | Camera controls (render ≠ sim) |
 | 117 | v0.1.17 | — | Planned | UX polish + performance hardening |
 | 118 | v0.1.18 | — | Planned | Richer spectral selection |
@@ -264,3 +264,11 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
   - accept older schemas via migrations
 - Runtime-only state (playlist, recording session, live input permissions):
   - never stored in presets unless explicitly designed
+
+Recording Resources in Record → Settings offers Balanced, Custom and Unrestricted.
+Balanced targets automatic Stop at five minutes or the configured encoded-data
+threshold. Custom supports independent Off states; Unrestricted opts out of all
+application size/chunk/duration limits while retaining correctness and recovery
+protections. Local resource settings are separate from Scene presets. Limits do
+not guarantee browser/device memory safety; download the latest successful export
+before reloading after unconfirmed shutdown. See the [N.3 review package](docs/audits/remediations/115m-i-n3-aud006/README.md).

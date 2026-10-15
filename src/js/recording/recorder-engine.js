@@ -17,6 +17,7 @@ function createRecorderEngine() {
   const runtime = {
     diagnostics: null,
     shutdownBlocked: false,
+    cleanupFault: false,
     unresolvedOwnership: null,
     didInit: false,
     isDisposed: false,
@@ -538,10 +539,18 @@ function createRecorderEngine() {
     for (const handler of ["ondataavailable", "onstop", "onerror"]) {
       try { recorder[handler] = null; } catch (err) {
         released = false;
+        rememberCleanupFailure({ recorder });
         logRecorderException("recorder-handler-release-failed", err);
       }
     }
     return released;
+  }
+
+  function rememberCleanupFailure(resource) {
+    runtime.cleanupFault = true;
+    // Preserve an owner even if an acquisition failure released it before abort.
+    runtime.unresolvedOwnership ||= { recorder: runtime.mediaRecorder,
+      renderStream: runtime.renderStream, audioTap: runtime.audioTap, ...resource };
   }
 
   function releaseActiveSession() {
@@ -551,7 +560,7 @@ function createRecorderEngine() {
     // Capture cleanup follows the render and audio owners, never merged tracks.
     const streamsReleased = releaseMergedStream();
     runtime.isStopRequested = false;
-    return recorderReleased && streamsReleased;
+    return recorderReleased && streamsReleased && !runtime.cleanupFault;
   }
 
   // ── Render stream tap ──────────────────────────────────────────────────
@@ -588,7 +597,9 @@ function createRecorderEngine() {
     if (!renderStream) return true;
     // Cleanup stays inside RecorderEngine because the stream is recorder-owned,
     // even though the pixels come from the canonical app canvas.
-    return stopStreamTracks(renderStream);
+    const released = stopStreamTracks(renderStream);
+    if (!released) rememberCleanupFailure({ renderStream });
+    return released;
   }
 
   // ── Audio stream tap ───────────────────────────────────────────────────
@@ -678,6 +689,7 @@ function createRecorderEngine() {
     // ownership of a shared upstream source to RecorderEngine.
     if (audioTap && typeof audioTap.releaseStream === "function") {
       try { audioTap.releaseStream(); } catch (err) {
+        rememberCleanupFailure({ audioTap });
         logRecorderException("audio-stream-release-failed", err);
         return false;
       }
@@ -1121,7 +1133,13 @@ function createRecorderEngine() {
       evaluatePolicy(token);
       if (token === runtime.sessionToken) syncRecordingStateTick({ force: true });
     } catch (err) {
-      if (token === runtime.sessionToken) abortCapture(readRecorderErrorCode(err, "retention-failed"), err.message);
+      if (token === runtime.sessionToken) {
+        const d = runtime.diagnostics, size = event?.data?.size;
+        // Record the rejected event even when its byte size cannot be represented.
+        if (Number.isSafeInteger(d.rejectedEvents) && d.rejectedEvents < Number.MAX_SAFE_INTEGER) d.rejectedEvents += 1;
+        if (Number.isSafeInteger(size) && size >= 0 && d.rejectedBytes <= Number.MAX_SAFE_INTEGER - size) d.rejectedBytes += size;
+        abortCapture(readRecorderErrorCode(err, "retention-failed"), err.message);
+      }
     }
   }
 
@@ -1150,7 +1168,7 @@ function createRecorderEngine() {
     }
     if (!inactive || !released) {
       runtime.shutdownBlocked = true;
-      runtime.unresolvedOwnership = ownership;
+      runtime.unresolvedOwnership ||= ownership;
       message += !inactive ? " Native shutdown unconfirmed." : " Required owned-resource cleanup failed.";
       message += " Recording is disabled for this page. Download the retained export before reloading; primary audio and Queue remain available.";
     } else message += " Native recorder confirmed stopped; another recording may begin.";
@@ -1183,7 +1201,7 @@ function createRecorderEngine() {
       const ownership = { recorder: runtime.mediaRecorder, renderStream: runtime.renderStream, audioTap: runtime.audioTap };
       if (!releaseActiveSession()) {
         runtime.shutdownBlocked = true;
-        runtime.unresolvedOwnership = ownership;
+        runtime.unresolvedOwnership ||= ownership;
         throw createRecorderError("cleanup-failed", "Required recorder-owned cleanup failed. New export was not committed.");
       }
       runtime.diagnostics.nativeShutdown = "confirmed-stopped";

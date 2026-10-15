@@ -51,7 +51,7 @@ function harness(t, policy = custom()) {
   URL.revokeObjectURL=u=>{revoked.push({url:u,current:recording.lastExportUrl,pending:engine.inspect().pending.length});urls.revoke(u);};
   const init=()=>engine.init({stateRef:recording,getPolicy:()=>policy, nowMs:()=>clock,
     getRenderTap:()=>({canvas:{captureStream(){const t={kind:"video",stops:0,stop(){this.stops++;if(faults.render)throw Error("render cleanup refused");}};tracks.push(t);return new Stream([t]);}}}),
-    getAudioTap:()=>({ensureStream:()=>new Stream([upstream]), releaseStream(){calls.release++;if(faults.release)throw Error("tap release refused");}})});
+    getAudioTap:()=>({ensureStream:()=>new Stream(faults.audioEmpty?[]:[upstream]), releaseStream(){calls.release++;if(faults.release)throw Error("tap release refused");}})});
   init();
   t.after(()=>{faults.stopThrow=false;faults.remainActive=false;faults.release=false;faults.render=false;engine.dispose();
     created.forEach(u=>urls.revoke(u));URL.createObjectURL=urls.create;URL.revokeObjectURL=urls.revoke;Object.assign(globalThis,saved);Object.assign(state.audio,oldAudio);});
@@ -103,7 +103,7 @@ test("N3 oversized final event rejects whole replacement and preserves old downl
 });
 for(const size of [-1,NaN,Infinity,1.5,"1",undefined,Number.MAX_SAFE_INTEGER+1]) test(`N3 invalid reported size ${size}`,t=>{
   const h=harness(t,unrestricted()),r=h.start();r.data(size);
-  assert.equal(h.recording.lastCode,"accounting-invalid");assert.equal(h.engine.inspect().pending.length,0);
+  assert.equal(h.recording.lastCode,"accounting-invalid");assert.equal(h.recording.rejectedEvents,1);assert.equal(h.engine.inspect().pending.length,0);
 });
 test("N3 Unrestricted no hidden capacity; checked integer overflow fails explicitly",t=>{
   const h=harness(t,unrestricted()),r=h.start();h.clock(1e9);h.tick();
@@ -146,7 +146,7 @@ for(const finalizing of [false,true]) test(`N3 Cancel ${finalizing?"finalizing":
   assert.equal(h.recording.nativeShutdown,"confirmed-stopped");assert.equal(h.calls.upstreamStop,0);assert.equal(h.engine.inspect().pending.length,0);
   assert.equal(await(await fetch(old)).text(),"old");const next=h.start();const status={...h.recording};
   stale.data({data:new Blob(["stale"])});stale.error({error:Error("stale")});stale.stop();h.oldTimers[0]();
-  assert.deepEqual(h.recording,status);assert.equal(next.state,"recording");
+  assert.deepEqual(h.recording,status);assert.equal(h.engine.inspect().pending.length,0,"stale data must never enter the new collection");assert.equal(next.state,"recording");
 });
 for(const fault of ["stopThrow","remainActive","release","render"]) test(`N3 ${fault}: truthful blocked recovery; Init powerless; export kept`,async t=>{
   const h=harness(t),old=h.complete();const r=h.start();r.data(null,"new");h.faults[fault]=true;
@@ -187,4 +187,10 @@ test("N3 Dispose after unconfirmed abort destroys export but never claims resolv
   const unresolved=h.engine.inspect().unresolved;const result=h.engine.dispose();
   assert.equal(result.ok,false);assert.equal(h.recording.lastExportUrl,null);assert.equal(h.recording.recorderEnabled,false);
   assert.equal(h.engine.inspect().unresolved,unresolved);assert.equal(h.engine.init().ok,false);
+});
+test("N3 acquisition cleanup failure remains blocking even before native construction",t=>{
+  const h=harness(t);h.faults.audioEmpty=true;h.faults.release=true;
+  assert.equal(h.engine.start().ok,false);assert.equal(h.recording.recorderEnabled,false);
+  assert.equal(h.recorders.length,0);assert.ok(h.engine.inspect().unresolved.audioTap);
+  h.engine.init();assert.equal(h.engine.start().ok,false);assert.equal(h.calls.upstreamStop,0);
 });

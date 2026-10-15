@@ -1,10 +1,19 @@
 # Auralprint development roadmap
 
-Updated: October 14, 2026. Development revision: **`v0.1.15m.i.m` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
+Updated: October 15, 2026. Development revision: **`v0.1.15m.i.n` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
 
 **RC-01 through RC-22 have completed corrective review and merge at accepted main `a198b14b087da6b855041c3a23acb550a156ff4e`. 115N final acceptance remains WITHHELD. Build 115 is unshipped and noncanonical.** Corrective closure does not establish complete browser, media, accessibility, artistic, or hardware acceptance. The [current audit disposition index](docs/development/build-115.md#audit-disposition-index) records accepted corrections and residual limitations; earlier audit snapshots remain immutable.
 
 This document owns the current plan and acceptance criteria. [Development history](docs/development/build-115.md) owns chronology; [agents.md](agents.md) owns engineering policy. **Release 3 / Build 113 is the canonical public shipped release. Build 114 is internally shipped.** The [internal release-delta draft](docs/development/build-115-release-delta.md) compares both baselines without choosing a public release number or changelog baseline. Build 116 Camera remains dependent on Build 115 acceptance.
+
+
+Current corrective work: [N.3 recorder governor](docs/audits/remediations/115m-i-n3-aud006/README.md)
+implements the authorized October 9 AUD-006 policy on accepted PR #58 main
+`302173917ed9b337a9d1df9a3f93d083248fe51f`. Balanced defaults to a five-minute
+configured automatic-Stop target; Custom can change/disable individual limits and
+Unrestricted disables application capacity/duration restrictions. Correctness,
+source ownership and prior-export preservation remain mandatory. Independent
+hostile review is pending; AUD-006 is not closed and Build 115N stays WITHHELD.
 
 ## Current capability inventory
 
@@ -19,7 +28,7 @@ Capabilities below are implemented in source. Covered automated behavior and rec
 | Orbs | Zero/one/N stable-ID collection, independent motion/response/particles/trace/source/position/color, complete controls and mixed-aware Bulk Edit | High-count editing ergonomics in Build 117; operational ceiling is not a frame-rate guarantee |
 | Visuals and color | Singleton Spectral Ring and Orbs in Visualizers; shared Scene appearance in Settings; designed/reset/pause semantics | Artistic acceptance and resize/orientation coverage; simulation/projection separation in Build 116 |
 | Particle resources | Settings-owned emission/retention budgets and diagnostics; per-Orb minimum placement distance; fairness, oldest retirement and bounded emission time | Heavy Canvas/UI and large synchronous retirement costs require measured 115N disposition; broader optimization in Build 117 |
-| Capture | Canvas video plus optional active-source audio, format negotiation, target FPS, retained latest export, terminal disposal with track ownership | Exported audio fidelity/external players, downloads, long duration and devices in 115N |
+| Capture | Canvas plus optional source audio, format/FPS, Balanced/Custom/Unrestricted resource policy, five-minute default Stop target, independent local settings, retained export and preserve-export Cancel | Exported audio fidelity/external players, downloads, long duration and devices in 115N |
 | Presets | Pure schema-10 codec, URL transport, schemas 2–9 migration including both schema-9 forms, configuration-only persistence | File import/export remains Build 119 |
 | Workspace | Independent panels, unified launcher, collapse/global hide/restore, visible focus ownership and Queue focus recovery | Wider keyboard/accessibility/mobile acceptance; long-panel refinements in Build 117 |
 | Distribution | Versioned self-contained portable HTML and relocatable hosted package from shared JS/CSS | Owner-reported direct-file and Python-hosted functional coverage; managed automation file:// blocked; network-disabled portability remains separate; no caching/installability claim |
@@ -28,7 +37,7 @@ Camera, richer frequency/band tools, preset-file workflows, and 3D remain planne
 
 ## Build 115 staged delivery plan
 
-Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2D are accepted through main `a2f484b845df69e717ebd3998cabb7db640eb6c6` (merged PR #55, v0.1.15m.i.l). The v0.1.15m.i.m [AUD-011 watcher correction](docs/audits/remediations/115m-i-m-aud011/README.md) is submitted as a corrective PR awaiting human review; AUD-011 remains open until review and merge. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
+Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2D are accepted through main `a2f484b845df69e717ebd3998cabb7db640eb6c6` (merged PR #55, v0.1.15m.i.l). The v0.1.15m.i.n [AUD-011 watcher correction](docs/audits/remediations/115m-i-m-aud011/README.md) is submitted as a corrective PR awaiting human review; AUD-011 remains open until review and merge. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
 
 1. **Revised Build 115 canon** — real scope and state. *(115A complete)*
 2. **AnalysisFrame boundary** — data-only consumer seam. *(115B complete)*
@@ -89,7 +98,7 @@ The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tes
 | File / Queue UX refinement | Build 117, retaining accepted focus/cancellation corrections |
 | Broader constrained-hardware performance / resource hardening | Build 117; RC-15 corrective work is closed by accepted review/merge, while applicable 115N performance/artistic evidence remains required |
 | Broader source/load lifecycle hardening (AUD-006) | Build 117; demonstrated RC-02–RC-05 concurrency/EOF defects are closed |
-| Recorder retained-memory / backpressure (AUD-009) | Build 117; terminal disposal correction does not bound long recordings |
+| Broader recorder memory / encoder optimization (October 6 AUD-009) | Build 117; October 9 AUD-006 bounded application policy is implemented in N.3 for independent review. Encoded payload does not bound total browser memory; N.2 high-resolution VP8 reached its diagnostic resource guard. |
 | Remaining allocations / hidden UI refresh / channel-complete analysis cost (AUD-012) | Build 117; direct Trace suffix traversal and demonstrated quadratic editor/tooltip work have already been corrected |
 | Adjacent positive-width FFT-bin overlap (AUD-004) | Intentional current behavior; Build 118 spectral partition work, separate from corrected coordinate scaling |
 | Duplicate legacy band-name migration ambiguity (AUD-013) | Build 118 |

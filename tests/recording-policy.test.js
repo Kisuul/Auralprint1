@@ -56,3 +56,13 @@ test("N3 storage: invalid records fall back truthfully without overwriting; unav
   const session=prepareRecordingPolicy(a.policy(),0);a.reset();
   assert.equal(session.profile,"unrestricted");assert.equal(a.policy().profile,"balanced");
 });
+test("N3 policy settings never contaminate Scene presets or URL payload", async () => {
+  const { encodePresetPayload } = await import("../src/js/presets/preset-codec.js");
+  const { preferences } = await import("../src/js/core/preferences.js");
+  const before=JSON.stringify(encodePresetPayload(preferences));
+  const settings=createRecordingPolicySettings({storage:()=>memory()});settings.set(choice({},"unrestricted"));
+  assert.equal(JSON.stringify(encodePresetPayload(preferences)),before);
+  const payload=encodePresetPayload({...preferences,recordingResources:settings.read().selection});
+  assert.equal(payload.schema,10);assert.equal(Object.hasOwn(payload.prefs,"recordingResources"),false);
+  assert.doesNotMatch(JSON.stringify(payload),/aggregateBytes|softBytes|durationMs|unrestricted/);
+});

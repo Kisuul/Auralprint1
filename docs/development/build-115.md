@@ -166,3 +166,22 @@ Version-specific counts, mutation outcomes, CI run IDs, native results and inter
 The [115N gates](../../ROADMAP.md#build-115n-acceptance-gates) require independent applicable browser/media/device/accessibility/performance/artistic evidence and explicit approval to ship. The human 16-Orb preset, real capture/suspension behavior, demonstrably network-disabled direct-file operation, external-player fidelity, constrained-hardware limits and maskable artwork remain review items. The final public changelog baseline must distinguish public Build 113 from internal Build 114; this record and the [release-delta draft](build-115-release-delta.md) decide no release number or published notes.
 
 The [editorial integrity report](115m-i-e-documentation-review.md) records this pass's scope and validation. Canonical distributions, canonical changelog, original audit, remediation reports and evidence logs remain unchanged.
+
+## 115M.I.N.3 — October 9 AUD-006 corrective implementation
+
+Accepted baseline is `302173917ed9b337a9d1df9a3f93d083248fe51f`, merged PR #58,
+including required N.2 calibration head `3e6a01bc5453307d0b4d64db844d9dc0ce0518cf`.
+N.1/PR #57 and N.2 are immutable evidence-only checkpoints. The owner separately
+authorized N.3 production implementation and exact provisional factory values.
+Revision `v0.1.15m.i.n` adds Balanced/Custom/Unrestricted recorder policy, five-minute
+Stop target, whole-event admission and monotonic Stop scheduling, preserve-export
+Cancel and unresolved-backend fencing, independent versioned local settings and
+Record progress/accessibility. Schema remains 10. Earlier audit/remediation files
+and protected presets/branding remain byte-identical.
+
+The [N.3 package](../audits/remediations/115m-i-n3-aud006/README.md) owns validation,
+native evidence, negative controls, gaps and the independent-review recommendation.
+N.2's high-resolution VP8 resource guard and broader browser/device uncertainties
+remain real; encoded payload is not total native memory. Build 117 retains broader
+resource/encoder/performance optimization. AUD-006 closure requires independent
+review; **Build 115N remains WITHHELD**. No merge or shipment is authorized here.
