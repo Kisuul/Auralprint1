@@ -1,0 +1,320 @@
+{
+  "browser": "151.0.7922.173",
+  "rows": [
+    {
+      "name": "video-only",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9",
+      "elapsed_ms": 3037,
+      "chunks": 4,
+      "bytes": 387347,
+      "average_mbit_per_s": 1.02,
+      "maximum_event_gap_ms": 1017.8,
+      "maximum_event_bytes": 159512,
+      "last_event_bytes": 4480,
+      "stop_to_terminal_ms": 1.7,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 12348420,
+          "JSHeapTotalSize": 23293952
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 8478324,
+          "JSHeapTotalSize": 24080384
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 8922676,
+          "JSHeapTotalSize": 24080384
+        }
+      }
+    },
+    {
+      "name": "file-audio",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 5026,
+      "chunks": 5,
+      "bytes": 809855,
+      "average_mbit_per_s": 1.289,
+      "maximum_event_gap_ms": 1029.5,
+      "maximum_event_bytes": 175921,
+      "last_event_bytes": 174016,
+      "stop_to_terminal_ms": 4.9,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 8935340,
+          "JSHeapTotalSize": 24080384
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 11879972,
+          "JSHeapTotalSize": 24342528
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 12345920,
+          "JSHeapTotalSize": 24342528
+        }
+      }
+    },
+    {
+      "name": "synthetic-mic",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 3024,
+      "chunks": 3,
+      "bytes": 628295,
+      "average_mbit_per_s": 1.662,
+      "maximum_event_gap_ms": 1023.2,
+      "maximum_event_bytes": 240105,
+      "last_event_bytes": 234602,
+      "stop_to_terminal_ms": 2.6,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 12887324,
+          "JSHeapTotalSize": 24342528
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 9074644,
+          "JSHeapTotalSize": 24604672
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 9242736,
+          "JSHeapTotalSize": 24604672
+        }
+      }
+    },
+    {
+      "name": "stream-codec-video/webm;codecs=vp9,opus",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 3023,
+      "chunks": 3,
+      "bytes": 580924,
+      "average_mbit_per_s": 1.537,
+      "maximum_event_gap_ms": 1019.8,
+      "maximum_event_bytes": 230892,
+      "last_event_bytes": 230892,
+      "stop_to_terminal_ms": 3.0,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 9411156,
+          "JSHeapTotalSize": 24604672
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 12241156,
+          "JSHeapTotalSize": 24604672
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 12505092,
+          "JSHeapTotalSize": 24604672
+        }
+      }
+    },
+    {
+      "name": "stream-codec-video/webm;codecs=vp8,opus",
+      "selected_mime": "video/webm;codecs=vp8,opus",
+      "native_final_mime": "video/webm;codecs=vp8,opus",
+      "elapsed_ms": 3020,
+      "chunks": 3,
+      "bytes": 1003708,
+      "average_mbit_per_s": 2.659,
+      "maximum_event_gap_ms": 1019.3,
+      "maximum_event_bytes": 391108,
+      "last_event_bytes": 391108,
+      "stop_to_terminal_ms": 5.4,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 12517552,
+          "JSHeapTotalSize": 24604672
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 10947248,
+          "JSHeapTotalSize": 23498752
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 11415180,
+          "JSHeapTotalSize": 23498752
+        }
+      }
+    },
+    {
+      "name": "stream-codec-video/webm",
+      "selected_mime": "video/webm",
+      "native_final_mime": "video/webm;codecs=vp8,opus",
+      "elapsed_ms": 3027,
+      "chunks": 3,
+      "bytes": 993282,
+      "average_mbit_per_s": 2.625,
+      "maximum_event_gap_ms": 1024.2,
+      "maximum_event_bytes": 392327,
+      "last_event_bytes": 367768,
+      "stop_to_terminal_ms": 2.0,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 11427840,
+          "JSHeapTotalSize": 23498752
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 6203288,
+          "JSHeapTotalSize": 23498752
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 6316664,
+          "JSHeapTotalSize": 23498752
+        }
+      }
+    },
+    {
+      "name": "stream-codec-video/mp4",
+      "selected_mime": "video/mp4",
+      "native_final_mime": "video/mp4;codecs=vp9,opus",
+      "elapsed_ms": 3028,
+      "chunks": 2,
+      "bytes": 697106,
+      "average_mbit_per_s": 1.842,
+      "maximum_event_gap_ms": 3033.8,
+      "maximum_event_bytes": 695906,
+      "last_event_bytes": 695906,
+      "stop_to_terminal_ms": 5.6,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 6480880,
+          "JSHeapTotalSize": 23498752
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 7329724,
+          "JSHeapTotalSize": 22712320
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 7603952,
+          "JSHeapTotalSize": 22712320
+        }
+      }
+    },
+    {
+      "name": "stream-longer-safe-60s",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 60021,
+      "chunks": 59,
+      "bytes": 14470681,
+      "average_mbit_per_s": 1.929,
+      "maximum_event_gap_ms": 1039.1,
+      "maximum_event_bytes": 314551,
+      "last_event_bytes": 221514,
+      "stop_to_terminal_ms": 16.9,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 7641464,
+          "JSHeapTotalSize": 22712320
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 6852600,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 7717560,
+          "JSHeapTotalSize": 22974464
+        }
+      }
+    },
+    {
+      "name": "repeat-1",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 2033,
+      "chunks": 3,
+      "bytes": 460342,
+      "average_mbit_per_s": 1.811,
+      "maximum_event_gap_ms": 1020.0,
+      "maximum_event_bytes": 240720,
+      "last_event_bytes": 11642,
+      "stop_to_terminal_ms": 2.7,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 7729864,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 7377412,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 7860264,
+          "JSHeapTotalSize": 22974464
+        }
+      }
+    },
+    {
+      "name": "repeat-2",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 2030,
+      "chunks": 3,
+      "bytes": 462756,
+      "average_mbit_per_s": 1.824,
+      "maximum_event_gap_ms": 1019.9,
+      "maximum_event_bytes": 247351,
+      "last_event_bytes": 11095,
+      "stop_to_terminal_ms": 4.4,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 7872568,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 10477068,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 10739168,
+          "JSHeapTotalSize": 22974464
+        }
+      }
+    },
+    {
+      "name": "repeat-3",
+      "selected_mime": "video/webm;codecs=vp9,opus",
+      "native_final_mime": "video/webm;codecs=vp9,opus",
+      "elapsed_ms": 2022,
+      "chunks": 3,
+      "bytes": 458907,
+      "average_mbit_per_s": 1.816,
+      "maximum_event_gap_ms": 1023.6,
+      "maximum_event_bytes": 248431,
+      "last_event_bytes": 7079,
+      "stop_to_terminal_ms": 2.8,
+      "memory": {
+        "memoryBefore": {
+          "JSHeapUsedSize": 10939252,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryActive": {
+          "JSHeapUsedSize": 6592304,
+          "JSHeapTotalSize": 22974464
+        },
+        "memoryAfter": {
+          "JSHeapUsedSize": 7041768,
+          "JSHeapTotalSize": 22974464
+        }
+      }
+    }
+  ],
+  "ownership": {
+    "successfulExports": 11,
+    "revokedExports": 10,
+    "liveExports": 1
+  },
+  "download": {
+    "filename": "auralprint-capture-20261014-224411.webm",
+    "bytes": 458907,
+    "sha256": "aef7f0844fff52ecc5a99043bb40531a7a2c20815a93f203082201a127c910fb"
+  },
+  "replay": {
+    "width": 960,
+    "height": 640,
+    "currentTime": 0.443901,
+    "paused": false,
+    "readyState": 4
+  },
+  "passed": true
+}

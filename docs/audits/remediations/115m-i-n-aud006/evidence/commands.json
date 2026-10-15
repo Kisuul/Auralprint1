@@ -1,0 +1,87 @@
+[
+  {
+    "command": [
+      "npm",
+      "ci",
+      "--cache",
+      "/workspace/auralprint-environment/npm-cache"
+    ],
+    "exit_code": 0,
+    "log": "npm-ci.log",
+    "note": "Completed before modeled/native experiments, focused/full tests and final build."
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "tests/recording-export.test.js",
+      "tests/rc19-recorder-disposal.test.js",
+      "tests/targeted-audit.test.js",
+      "tests/transport-ownership.test.js",
+      "tests/live-source-ownership.test.js",
+      "tests/input-source-manager.test.js",
+      "tests/file-activation-ownership.test.js",
+      "tests/queue-entry-ownership.test.js",
+      "tests/stream-graph.test.js"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 2.097,
+    "log": "focused.log"
+  },
+  {
+    "command": [
+      "npm",
+      "test"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 18.967,
+    "log": "npm-test.log"
+  },
+  {
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.305,
+    "log": "build.log"
+  },
+  {
+    "command": [
+      "python",
+      "scripts/verify_distribution.py"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.073,
+    "log": "distribution.log"
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.007,
+    "log": "diff-check.log"
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-recording-export.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 4.283,
+    "log": "rc06-native.log"
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validate-finalizing-eof.cjs"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 21.364,
+    "log": "rc05-native.log"
+  }
+]
