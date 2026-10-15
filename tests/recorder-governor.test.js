@@ -10,7 +10,7 @@ import { defaultSelection, resolveRecordingPolicy } from "../src/js/recording/re
 // Observe pending references and authority without a production diagnostics API.
 const url = new URL("../src/js/recording/recorder-engine.js", import.meta.url);
 const source = readFileSync(url, "utf8").replace('    seenEvents: new WeakSet(),', '    retainedLedger: [], seenEvents: new WeakSet(),').replace('runtime.pendingChunks.push(data);', 'runtime.retainedLedger.push(data); runtime.pendingChunks.push(data);').replace(/from "(\.[^"]+)"/g, (_, path) => `from "${new URL(path,url).href}"`)
-  .replace("    init,", "    inspect: () => ({ pending: runtime.pendingChunks.slice(), ledger: runtime.retainedLedger.slice(), unresolved: runtime.unresolvedOwnership, timer: runtime.timerIntervalId }),\n    init,");
+  .replace("    init,", "    corrupt: values => Object.assign(runtime, values), inspect: () => ({ diagnostics: runtime.diagnostics, pending: runtime.pendingChunks.slice(), ledger: runtime.retainedLedger.slice(), unresolved: runtime.unresolvedOwnership, timer: runtime.timerIntervalId }),\n    init,");
 const temp = mkdtempSync(join(tmpdir(), "n3-recorder-"));
 const observed = join(temp, "engine.mjs");writeFileSync(observed, source);
 after(() => rmSync(temp, { recursive:true, force:true }));
@@ -193,4 +193,33 @@ test("N3 acquisition cleanup failure remains blocking even before native constru
   assert.equal(h.engine.start().ok,false);assert.equal(h.recording.recorderEnabled,false);
   assert.equal(h.recorders.length,0);assert.ok(h.engine.inspect().unresolved.audioTap);
   h.engine.init();assert.equal(h.engine.start().ok,false);assert.equal(h.calls.upstreamStop,0);
+});
+for(const bad of [-1,NaN,Number.MAX_SAFE_INTEGER]) test(`N3 invalid/overflow chunk counter ${bad}`,t=>{
+  const h=harness(t,unrestricted()),r=h.start();h.engine.corrupt({chunkCount:bad});r.data(1);
+  assert.equal(h.recording.terminalOutcome,"failed");assert.equal(h.recording.lastCode,"accounting-invalid");assert.equal(h.engine.inspect().pending.length,0);
+});
+for(const key of ["deliveredBytes","admittedBytes"]) test(`N3 invalid ${key} accounting is terminal before retention`,t=>{
+  const h=harness(t,unrestricted()),r=h.start();h.engine.inspect().diagnostics[key]=NaN;r.data(1);
+  assert.equal(h.recording.lastCode,"accounting-invalid");assert.equal(h.engine.inspect().pending.length,0);
+});
+test("N3 earlier duration Stop stays primary when final delivery later crosses S",t=>{
+  const h=harness(t),r=h.start();h.clock(1000);h.tick();r.data(null,"0123456789");r.onstop?.();
+  assert.equal(h.recording.phase,"complete");assert.equal(h.recording.stopReason,"duration-stop");assert.equal(h.recording.secondaryStopReason,null);assert.equal(r.stops,1);
+});
+test("N3 C rejection of final tail preserves prior export",async t=>{
+  const h=harness(t),old=h.complete();h.policy(custom({maxChunks:1}));const r=h.start();r.data(null,"0123456789");
+  r.data(null,"tail");assert.equal(h.recording.lastCode,"admission-rejected");assert.equal(h.recording.admittedBytes,10);
+  assert.equal(h.recording.rejectedBytes,4);assert.equal(await(await fetch(old)).text(),"old");assert.equal(h.engine.inspect().pending.length,0);
+});
+test("N3 public format/settings/support calls preserve terminal failure and blocked recovery message",t=>{
+  const h=harness(t),r=h.start();h.faults.stopThrow=true;h.engine.stop();
+  const message=h.recording.lastMessage,code=h.recording.lastCode;
+  h.engine.selectMimeType('video/webm');h.engine.getSupportStatus();h.engine.setTargetFps(60);h.engine.setIncludePlaybackAudio(false);h.init();
+  assert.equal(h.recording.lastMessage,message);assert.equal(h.recording.lastCode,code);assert.equal(h.recording.recorderEnabled,false);assert.equal(r.stops,1);
+});
+test("N3 format selection cannot change active session or hide completed automatic reason",t=>{
+  const h=harness(t),r=h.start(),selected=h.recording.selectedMimeType;
+  assert.equal(h.engine.selectMimeType('video/mp4').ok,false);assert.equal(h.recording.selectedMimeType,selected);
+  h.faults.stop=r=>r.onstop?.();r.data(null,"0123456789");const message=h.recording.lastMessage;
+  h.engine.selectMimeType('video/mp4');assert.equal(h.recording.phase,"complete");assert.equal(h.recording.lastMessage,message);assert.equal(h.recording.stopReason,"capacity-stop");
 });

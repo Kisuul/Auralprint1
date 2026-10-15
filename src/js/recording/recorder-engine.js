@@ -965,6 +965,8 @@ function createRecorderEngine() {
   }
 
   function selectMimeType(mimeType) {
+    if (!runtime.didInit || runtime.isDisposed || runtime.shutdownBlocked) return getSupportStatus();
+    if (["starting", "recording", "finalizing"].includes(runtime.lifecycle.phase)) return currentStatus(false);
     const support = readSupportDetails();
     if (!support.isSupported) return applySupportSnapshot();
     if (!support.availableMimeTypes.includes(mimeType)) {
@@ -974,7 +976,9 @@ function createRecorderEngine() {
       }));
     }
 
-    return commitStatus(buildStatus(true, "mime-selected", `Recording format updated to ${mimeType}.`, {
+    const terminal = ["complete", "error", "cancelled"].includes(runtime.lifecycle.phase);
+    return commitStatus(buildStatus(true, terminal ? runtime.lifecycle.lastCode : "mime-selected",
+      terminal ? runtime.lifecycle.lastMessage : `Recording format updated to ${mimeType}.`, {
       support,
       phase: runtime.lifecycle.phase,
       selectedMimeType: mimeType,

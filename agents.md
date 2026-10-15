@@ -39,6 +39,13 @@ state (ephemeral runtime: audio, UI, bands, etc.)
 - `runtime.settings` MUST be derived via `resolveSettings()`.
 - `state` is volatile and must be safe to reset at any time.
 
+Authorized application-settings exception (115M.I.N.3): Recording Resources owns
+profile and Custom limits in `recording-policy.js`, independently persisted under
+`auralprint.recording-resources` format 1. CONFIG owns definitions; each Start gets
+a frozen policy snapshot. This domain is outside Scene preferences, URL presets
+and schema-10 migrations. Record → Settings → Recording Resources is its sole UI
+owner and factory-reset action. Scene Reset All Settings does not reset it.
+
 Violation of this hierarchy = architectural bug.
 
 ---
@@ -178,9 +185,19 @@ Violation results in:
   recorder tap release through `releaseStream()`; live source tracks remain owned
   by InputSourceManager. An audio-owner cleanup failure never authorizes stopping
   upstream tracks.
-- Disposal remains disabled if native shutdown or handler cleanup fails, with a
-  truthful failed status that persists until explicit reinitialization. Do not
-  infer native inactivity from dropping the application reference.
+- Ordinary Stop is a one-shot native finalization request with durable manual,
+  capacity or duration reason. Admission rejects whole events before retention.
+  Candidate Blob/URL plus required cleanup precede successful replacement and
+  revocation of the previous URL.
+- `cancel()` is a preserve-export application abort, distinct from Dispose. Fence
+  before native cleanup, discard new chunks, release only owned resources and
+  unlock primary transport. Unconfirmed native shutdown or required cleanup leaves
+  a bounded ownership tombstone and recording disabled until page reload. Init
+  cannot reenable an unresolved backend. Never infer inactivity from dropping a
+  reference; advise downloading the retained export before reload.
+- Dispose retains destructive export disposal and terminal semantics. After
+  confirmed normal disposal explicit Init may create a fresh backend; unresolved
+  shutdown/cleanup remains blocked. There is no automatic finalization watchdog.
 
 ---
 
