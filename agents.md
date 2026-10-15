@@ -43,7 +43,7 @@ Application-only settings are not Scene preferences: waveform choices use
 `application-preferences.js` (`auralprint.waveform-preferences`, format 1);
 Recording Resources uses `recording-policy.js` (`auralprint.recording-resources`,
 format 1). Both derive defaults from CONFIG, remain outside presets/URL schema 10,
-and have independent UI ownership/reset. Recording policy is frozen on Start.
+and have independent UI controls. Recording policy is frozen on Start.
 
 Violation of this hierarchy = architectural bug.
 
