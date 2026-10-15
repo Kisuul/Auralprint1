@@ -7,13 +7,13 @@ Updated: October 15, 2026. Development revision: **`v0.1.15m.i.n` / Build 115**.
 This document owns the current plan and acceptance criteria. [Development history](docs/development/build-115.md) owns chronology; [agents.md](agents.md) owns engineering policy. **Release 3 / Build 113 is the canonical public shipped release. Build 114 is internally shipped.** The [internal release-delta draft](docs/development/build-115-release-delta.md) compares both baselines without choosing a public release number or changelog baseline. Build 116 Camera remains dependent on Build 115 acceptance.
 
 
-Current corrective work: [N.3 recorder governor](docs/audits/remediations/115m-i-n3-aud006/README.md)
-implements the authorized October 9 AUD-006 policy on accepted PR #58 main
-`302173917ed9b337a9d1df9a3f93d083248fe51f`. Balanced defaults to a five-minute
-configured automatic-Stop target; Custom can change/disable individual limits and
-Unrestricted disables application capacity/duration restrictions. Correctness,
-source ownership and prior-export preservation remain mandatory. Independent
-hostile review is pending; AUD-006 is not closed and Build 115N stays WITHHELD.
+Current accepted recorder work: the October 9 AUD-006 investigation/calibration
+(PRs #57/#58), [N.3 governor](docs/audits/remediations/115m-i-n3-aud006/README.md)
+(PR #59), and [lossless Custom settings closeout](docs/audits/remediations/115m-i-n3-aud006/closeout-n3f.md)
+(PR #60) are merged. Balanced targets a five-minute automatic Stop; Custom and
+Unrestricted offer deliberate overrides. Recorder correctness and prior-export
+preservation remain mandatory. Engineering corrective acceptance does **not**
+establish broader browser/device safety or authorize Build 115N shipment.
 
 ## Current capability inventory
 
@@ -37,7 +37,7 @@ Camera, richer frequency/band tools, preset-file workflows, and 3D remain planne
 
 ## Build 115 staged delivery plan
 
-Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2D are accepted through main `a2f484b845df69e717ebd3998cabb7db640eb6c6` (merged PR #55, v0.1.15m.i.l). The v0.1.15m.i.n [AUD-011 watcher correction](docs/audits/remediations/115m-i-m-aud011/README.md) is submitted as a corrective PR awaiting human review; AUD-011 remains open until review and merge. The [development record](docs/development/build-115.md) contains revision details. Stages 14–15 remain withheld.
+Stages 1–13 are complete. Accepted corrective milestones include AUD-007 I.2D (PR #55), [AUD-011 watcher correctness](docs/audits/remediations/115m-i-m-aud011/README.md) (PR #56, revision `v0.1.15m.i.m`), and October 9 AUD-006 recorder admission/recovery/settings work (PRs #57–#60, through `v0.1.15m.i.n`). The [development record](docs/development/build-115.md) contains chronology. Stages 14–15 remain withheld.
 
 1. **Revised Build 115 canon** — real scope and state. *(115A complete)*
 2. **AnalysisFrame boundary** — data-only consumer seam. *(115B complete)*
@@ -51,7 +51,7 @@ Stages 1–13 are complete. Subsequent F/G/H corrections and AUD-007 I.1–I.2D 
 10. **Dedicated Analysis panel** — configuration/diagnostics separate from visualization; channel-complete spectra. *(115J/J.A complete)*
 11. **Spectral Ring promotion** — singleton lifecycle and sole presentation editor. *(115K complete)*
 12. **Explicit color ownership** — Scene policy and Orb overrides. *(115L complete)*
-13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M accepted through I.2D; I.M watcher correction awaiting review)*
+13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M corrective changes merged through N.3F; 115N acceptance withheld)*
 14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N WITHHELD)*
 15. **Canonization** — approved release comparison, artifacts and explicit human shipment approval. *(115N only after acceptance)*
 
@@ -97,8 +97,8 @@ The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tes
 | Orb editor ergonomics / high-count navigation and long panels | Build 117 UX refinement |
 | File / Queue UX refinement | Build 117, retaining accepted focus/cancellation corrections |
 | Broader constrained-hardware performance / resource hardening | Build 117; RC-15 corrective work is closed by accepted review/merge, while applicable 115N performance/artistic evidence remains required |
-| Broader source/load lifecycle hardening (AUD-006) | Build 117; demonstrated RC-02–RC-05 concurrency/EOF defects are closed |
-| Broader recorder memory / encoder optimization (October 6 AUD-009) | Build 117; October 9 AUD-006 bounded application policy is implemented in N.3 for independent review. Encoded payload does not bound total browser memory; N.2 high-resolution VP8 reached its diagnostic resource guard. |
+| Broader source/load lifecycle hardening (October 6 AUD-006) | Build 117; demonstrated RC-02–RC-05 concurrency/EOF defects are closed |
+| Broader recorder memory / encoder optimization (October 6 AUD-009) | Build 117; October 9 AUD-006 bounded application policy is implemented and merged through N.3F (PRs #59/#60). Encoded payload does not bound total browser memory; N.2 high-resolution VP8 reached its diagnostic resource guard. |
 | Remaining allocations / hidden UI refresh / channel-complete analysis cost (AUD-012) | Build 117; direct Trace suffix traversal and demonstrated quadratic editor/tooltip work have already been corrected |
 | Adjacent positive-width FFT-bin overlap (AUD-004) | Intentional current behavior; Build 118 spectral partition work, separate from corrected coordinate scaling |
 | Duplicate legacy band-name migration ambiguity (AUD-013) | Build 118 |
