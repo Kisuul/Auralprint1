@@ -385,6 +385,27 @@ Avoid:
 - L, R, and C are first-class analysis channels. An Orb's `chanId` selects its waveform, full-spectrum energy, and selected-band spectral-energy source; empty `bandIds` uses that channel's full-spectrum energy, while nonempty `bandIds` averages selected energies from that channel.
 - `AnalysisFrame` exposes producer-owned channel band-energy arrays as read-only-by-contract references. Band definitions and metadata remain shared, and the global spectrum/dominant remains the real combined C channel unless a future deliberate contract changes it.
 
+## 5.5 Spectral Ring Ownership (Build 115K)
+
+- Spectral Ring is a first-class singleton `VisualizerRuntime` participant; its runtime ID and type are `spectral-ring`.
+- Visualizers owns its sole writable presentation editor. Analysis does not own presentation, and the transitional color panel must not duplicate it.
+- Spectral Ring consumes the global combined C spectrum and C waveform.
+- Schema-10 persistence intentionally remains under `bands.overlay` until a deliberate future schema revision.
+- Free-run phase resets independently to zero. Explicit Orb-lock may synchronize/reset to the first Orb and remains safe when no Orb exists.
+- Visualizer-specific configuration has exactly one writable UI owner.
+- Shared color/palette ownership is Scene-level and separate from Spectral Ring geometry.
+
+## 5.6 Scene Appearance Ownership (Build 115L)
+
+- Scene Appearance is the sole writable UI owner of shared visual color policy; this does not create a persisted `scene` object.
+- Persistence remains in schema-10 `visuals.*`, `bands.*`, and `orbs.*` paths.
+- Scene owns canvas background, Scene fixed particle color, default Orb color policy, and the shared band palette.
+- The palette is consumed by multiple visualizers and Analysis diagnostics; no individual visualizer owns it, and Spectral Ring has no independent color state.
+- Orb `colorSource=inherit` resolves through Scene default policy. Inherited dominant is target-aware for targeted Orbs; explicit dominant remains global combined-C.
+- Orb hue offset affects only that Orb's palette-derived colors. Trace color mode remains Orb-local.
+- Scene fixed particle color supplies current Orb/trace fixed modes and the last-particle fallback.
+- Every color setting has exactly one writable UI owner.
+
 ---
 
 ## 6. Queue System (Runtime Only)
@@ -517,26 +538,5 @@ When in doubt:
 > Choose the option that preserves invariants over the one that feels cleaner.
 
 ---
-
-## 5.5 Spectral Ring Ownership (Build 115K)
-
-- Spectral Ring is a first-class singleton `VisualizerRuntime` participant; its runtime ID and type are `spectral-ring`.
-- Visualizers owns its sole writable presentation editor. Analysis does not own presentation, and the transitional color panel must not duplicate it.
-- Spectral Ring consumes the global combined C spectrum and C waveform.
-- Schema-10 persistence intentionally remains under `bands.overlay` until a deliberate future schema revision.
-- Free-run phase resets independently to zero. Explicit Orb-lock may synchronize/reset to the first Orb and remains safe when no Orb exists.
-- Visualizer-specific configuration has exactly one writable UI owner.
-- Shared color/palette ownership is Scene-level and separate from Spectral Ring geometry.
-
-## 5.6 Scene Appearance Ownership (Build 115L)
-
-- Scene Appearance is the sole writable UI owner of shared visual color policy; this does not create a persisted `scene` object.
-- Persistence remains in schema-10 `visuals.*`, `bands.*`, and `orbs.*` paths.
-- Scene owns canvas background, Scene fixed particle color, default Orb color policy, and the shared band palette.
-- The palette is consumed by multiple visualizers and Analysis diagnostics; no individual visualizer owns it, and Spectral Ring has no independent color state.
-- Orb `colorSource=inherit` resolves through Scene default policy. Inherited dominant is target-aware for targeted Orbs; explicit dominant remains global combined-C.
-- Orb hue offset affects only that Orb's palette-derived colors. Trace color mode remains Orb-local.
-- Scene fixed particle color supplies current Orb/trace fixed modes and the last-particle fallback.
-- Every color setting has exactly one writable UI owner.
 
 **End of Contract**
