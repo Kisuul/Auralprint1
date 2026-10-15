@@ -9,8 +9,8 @@ import { defaultSelection, resolveRecordingPolicy } from "../src/js/recording/re
 
 // Observe pending references and authority without a production diagnostics API.
 const url = new URL("../src/js/recording/recorder-engine.js", import.meta.url);
-const source = readFileSync(url, "utf8").replace(/from "(\.[^"]+)"/g, (_, path) => `from "${new URL(path,url).href}"`)
-  .replace("    init,", "    inspect: () => ({ pending: runtime.pendingChunks.slice(), unresolved: runtime.unresolvedOwnership, timer: runtime.timerIntervalId }),\n    init,");
+const source = readFileSync(url, "utf8").replace('    seenEvents: new WeakSet(),', '    retainedLedger: [], seenEvents: new WeakSet(),').replace('runtime.pendingChunks.push(data);', 'runtime.retainedLedger.push(data); runtime.pendingChunks.push(data);').replace(/from "(\.[^"]+)"/g, (_, path) => `from "${new URL(path,url).href}"`)
+  .replace("    init,", "    inspect: () => ({ pending: runtime.pendingChunks.slice(), ledger: runtime.retainedLedger.slice(), unresolved: runtime.unresolvedOwnership, timer: runtime.timerIntervalId }),\n    init,");
 const temp = mkdtempSync(join(tmpdir(), "n3-recorder-"));
 const observed = join(temp, "engine.mjs");writeFileSync(observed, source);
 after(() => rmSync(temp, { recursive:true, force:true }));
@@ -70,7 +70,7 @@ for (const size of [99,100,101]) test(`N3 H boundary ${size}`,t=>{
   const h=harness(t,custom({softBytes:null})),r=h.start(),blob=r.data(size);
   assert.equal(h.recording.deliveredBytes,size);
   if(size<=100){assert.equal(h.recording.admittedBytes,size);assert.ok(h.engine.inspect().pending.includes(blob));}
-  else {assert.equal(h.recording.lastCode,"admission-rejected");assert.equal(h.recording.rejectedBytes,size);assert.equal(h.recording.rejectedEvents,1);assert.equal(h.engine.inspect().pending.length,0);}
+  else {assert.equal(h.recording.lastCode,"admission-rejected");assert.equal(h.recording.rejectedBytes,size);assert.equal(h.recording.rejectedEvents,1);assert.equal(h.engine.inspect().pending.length,0);assert.ok(!h.engine.inspect().ledger.includes(blob));}
 });
 for (const count of [4,5,6]) test(`N3 C boundary ${count}`,t=>{
   const h=harness(t,custom({softBytes:null})),r=h.start();for(let i=0;i<count;i++)r.data(1);
@@ -166,4 +166,25 @@ test("N3 required cleanup fails before export commit: candidate revoked, P retai
   assert.equal(h.recording.lastCode,"cleanup-failed");assert.equal(h.recording.lastExportUrl,old);assert.equal(h.recording.recorderEnabled,false);
   assert.equal(h.recording.finalExportBytes,null);assert.equal(h.created.length,2);assert.equal(h.revoked[0].url,h.created[1]);
   assert.equal(await(await fetch(old)).text(),"old");assert.equal(h.calls.upstreamStop,0);
+});
+test("N3 identical event delivered twice is admitted once; duplicate terminal cannot replace twice",async t=>{
+  const h=harness(t),r=h.start(),stale=r.handlers(),event={data:new Blob(["single"])};
+  stale.data(event);stale.data(event);assert.equal(h.recording.deliveredBytes,6);assert.equal(h.recording.retainedChunkCount,1);
+  h.engine.stop();stale.stop();stale.stop();assert.equal(h.created.length,1);
+  assert.equal(await(await fetch(h.recording.lastExportUrl)).text(),"single");
+});
+test("N3 metadata projection failure restores previous fields and revokes only candidate",async t=>{
+  const h=harness(t),old=h.complete(),before={url:h.recording.lastExportUrl,name:h.recording.lastExportFileName,size:h.recording.lastExportByteSize};
+  const r=h.start();r.data(null,"replacement");h.engine.stop();
+  let value=h.recording.lastExportFileName,once=true;
+  Object.defineProperty(h.recording,"lastExportFileName",{configurable:true,get:()=>value,set(v){if(once){once=false;throw Error("projection refused");}value=v;}});
+  r.onstop?.();assert.equal(h.recording.terminalOutcome,"failed");
+  assert.deepEqual({url:h.recording.lastExportUrl,name:h.recording.lastExportFileName,size:h.recording.lastExportByteSize},before);
+  assert.equal(await(await fetch(old)).text(),"old");assert.equal(h.revoked[0].url,h.created[1]);
+});
+test("N3 Dispose after unconfirmed abort destroys export but never claims resolved native ownership",t=>{
+  const h=harness(t);h.complete();h.start();h.faults.remainActive=true;h.engine.cancel();
+  const unresolved=h.engine.inspect().unresolved;const result=h.engine.dispose();
+  assert.equal(result.ok,false);assert.equal(h.recording.lastExportUrl,null);assert.equal(h.recording.recorderEnabled,false);
+  assert.equal(h.engine.inspect().unresolved,unresolved);assert.equal(h.engine.init().ok,false);
 });

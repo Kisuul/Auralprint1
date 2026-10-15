@@ -38,6 +38,7 @@ function createRecorderEngine() {
     audioTap: null,
     audioStream: null,
     mergedStream: null,
+    seenEvents: new WeakSet(),
     pendingChunks: [],
     chunkCount: 0,
     completedBlob: null,
@@ -687,6 +688,7 @@ function createRecorderEngine() {
   function resetSessionRuntime({ keepExport = true } = {}) {
     stopRecordingTimerSync();
     runtime.pendingChunks = [];
+    runtime.seenEvents = new WeakSet();
     runtime.chunkCount = 0;
     runtime.startedAtMs = null;
     runtime.stoppedAtMs = null;
@@ -712,6 +714,9 @@ function createRecorderEngine() {
     });
     if (!blob.size) {
       throw createRecorderError("empty-recording-export", "Recording export is empty.");
+    }
+    if (!Number.isSafeInteger(blob.size) || blob.size !== runtime.diagnostics.admittedBytes) {
+      throw createRecorderError("export-size-mismatch", "Assembled output does not match admitted encoded data; new capture discarded.");
     }
 
     const fileName = buildOutputFileName(runtime.activeMimeType);
@@ -764,7 +769,7 @@ function createRecorderEngine() {
       updateLifecycle("idle", support.supportCode, support.supportMessage);
     }
 
-    return commitStatus(buildStatus(support.isSupported, runtime.lifecycle.lastCode, runtime.lifecycle.lastMessage, {
+    return commitStatus(buildStatus(support.isSupported && !["error", "cancelled"].includes(runtime.lifecycle.phase), runtime.lifecycle.lastCode, runtime.lifecycle.lastMessage, {
       support,
       phase: runtime.lifecycle.phase,
     }), action);
@@ -1088,6 +1093,10 @@ function createRecorderEngine() {
   function admitEvent(token, event) {
     if (token !== runtime.sessionToken) return;
     try {
+      if (event && typeof event === "object") {
+        if (runtime.seenEvents.has(event)) return;
+        runtime.seenEvents.add(event);
+      }
       const data = event?.data, size = data?.size;
       // A missing payload is malformed, not an empty native Blob.
       checkedAdd(0, size);
@@ -1241,6 +1250,7 @@ function createRecorderEngine() {
       try { runtime.mediaRecorder = new MediaRecorder(merged.stream, { mimeType: selectedMimeType }); }
       catch (err) { throw createRecorderError("media-recorder-create-failed", err.message, err); }
       runtime.startedAtMs = runtime.deps.nowMs();
+      if (!Number.isFinite(runtime.startedAtMs)) throw createRecorderError("clock-invalid", "Recording clock is invalid.");
       runtime.stoppedAtMs = null;
       runtime.activeMimeType = runtime.mediaRecorder.mimeType || selectedMimeType;
       runtime.mediaRecorder.ondataavailable = event => admitEvent(token, event);
@@ -1365,6 +1375,16 @@ function createRecorderEngine() {
     if ((recorder && recorder.state !== "inactive") || !released) {
       runtime.shutdownBlocked = true;
       runtime.unresolvedOwnership ||= ownership;
+    }
+    if (runtime.shutdownBlocked && code === "disposed") {
+      code = "dispose-unresolved-shutdown";
+      message = "Exports disposed. Earlier native shutdown or owned cleanup remains unresolved; recording stays disabled until page reload.";
+    }
+    if (runtime.diagnostics) {
+      runtime.diagnostics.retainedChunkCount = 0;
+      runtime.diagnostics.terminalOutcome = "disposed";
+      runtime.diagnostics.finalExportBytes = null;
+      runtime.diagnostics.nativeShutdown = runtime.shutdownBlocked ? "unconfirmed" : "confirmed-stopped";
     }
     resetSessionRuntime({ keepExport: false });
     runtime.deps.getRenderTap = () => null;
