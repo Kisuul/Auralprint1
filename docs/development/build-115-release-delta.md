@@ -23,6 +23,7 @@ This is a source/artifact comparison supported by existing current-build regress
 - **First-class visualizer lifecycle and inventory:** [AnalysisFrame](../../src/js/audio/analysis-frame.js) separates producer data from consumers; [VisualizerRuntime](../../src/js/render/visualizer-runtime.js) dispatches the singleton Spectral Ring and each Orb. [Visualizers UI](../../src/js/ui/visualizers-panel.js) manages the collection in one workspace, including valid zero-Orb scenes.
 - **Independent Orb design and editing:** [Orb](../../src/js/render/orb.js) reads its own motion, response, particles and trace rather than historical global behavior. [OrbEditor](../../src/js/ui/orb-editor.js) exposes source/targets, centers, designed phase, hue/color overrides and nested settings, with mixed-aware Bulk Edit. Add/Duplicate/Remove preserve surviving stable identities/history; duplication starts new runtime history.
 - **Configurable particle resource governance:** [governor](../../src/js/render/particle-governor.js), [trail](../../src/js/render/trail-system.js) and [Settings UI](../../src/js/ui/scene-panel.js) enforce selected scene-wide emission/retention budgets, fair allocation, oldest-first retirement and diagnostics. Placement distance prevents redundant same-Orb placements; it does not delete history.
+- **Recording resource settings:** Balanced uses a five-minute automatic Stop target and encoded-data limits; Custom allows independently disabled limits, and Unrestricted opts out of application size/chunk/duration ceilings. Failed replacements preserve the previous export. The limits do not bound browser memory.
 - **Two distribution editions:** [build](../../scripts/build.mjs) and [packaging contract](../../scripts/distribution.py) produce a versioned self-contained portable HTML and a complete relocatable hosted package from shared bundles. Hosted metadata stays inside its deployment prefix; portable favicon is embedded.
 
 ### Meaningfully altered existing systems
@@ -57,7 +58,7 @@ Camera/projection, 3D, richer frequency/band-table tooling, local preset-file im
 
 ### New systems and capabilities
 
-The net additions are the analysis-consumer/lifecycle seam, runtime-backed Visualizers inventory, stable-ID collection operations with complete independent Orb editing/Bulk Edit, dedicated Analysis and shared Scene ownership, selected particle budgets/placement controls, and portable/hosted distribution contracts described above. Build 114 already contains Mic/Stream and source-aware recording; do not list them as new for this engineering comparison. Its source is already modularized inside the canonical single HTML; modularization itself is not a new Build 115 system.
+The net additions are the analysis-consumer/lifecycle seam, runtime-backed Visualizers inventory, stable-ID collection operations with complete independent Orb editing/Bulk Edit, dedicated Analysis and shared Scene ownership, selected particle budgets/placement controls, portable/hosted distribution contracts, and configurable recording resource policy described above. Build 114 already contains Mic/Stream and source-aware recording; do not list them as new for this engineering comparison. Its source is already modularized inside the canonical single HTML; modularization itself is not a new Build 115 system.
 
 ### Meaningfully altered existing systems
 
