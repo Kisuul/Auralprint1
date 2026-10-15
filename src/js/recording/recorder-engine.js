@@ -1,10 +1,11 @@
 import { CONFIG } from "../core/config.js";
 import { state } from "../core/state.js";
+import { recordingPolicySettings, prepareRecordingPolicy } from "./recording-policy.js";
 
 /* =============================================================================
    Recorder Engine
    ========================================================================== */
-const RecorderEngine = (() => {
+function createRecorderEngine() {
   // RecorderEngine owns only future recording lifecycle orchestration.
   // It must observe existing render/audio systems through injected read-only taps
   // and must not take ownership of playback, analysis, queue, or presets.
@@ -14,6 +15,9 @@ const RecorderEngine = (() => {
   // - MIME negotiation, session lifecycle, export ownership, and cleanup live here.
   // - UI observes state.recording and dispatches actions back into this module.
   const runtime = {
+    diagnostics: null,
+    shutdownBlocked: false,
+    unresolvedOwnership: null,
     didInit: false,
     isDisposed: false,
     config: null,
@@ -22,6 +26,7 @@ const RecorderEngine = (() => {
       getRenderTap: () => null,
       getAudioTap: () => null,
       nowMs: () => performance.now(),
+      getPolicy: () => recordingPolicySettings.policy(),
     },
     lifecycle: {
       phase: "uninitialized",
@@ -269,10 +274,14 @@ const RecorderEngine = (() => {
   }
 
   function stopStreamTracks(stream) {
-    if (!stream) return;
-    for (const track of stream.getTracks()) {
-      try { track.stop(); } catch {}
-    }
+    if (!stream) return true;
+    let released = true;
+    try {
+      for (const track of stream.getTracks()) {
+        try { track.stop(); } catch { released = false; }
+      }
+    } catch { released = false; }
+    return released;
   }
 
   function readElapsedMs(nowMs = runtime.deps.nowMs()) {
@@ -377,11 +386,13 @@ const RecorderEngine = (() => {
       : (Number.isFinite(recording.elapsedMs) ? recording.elapsedMs : 0);
     const chunkCount = hasOwn(extra, "chunkCount")
       ? extra.chunkCount
-      : ((runtime.chunkCount > 0 || phase === "recording" || phase === "finalizing")
+      : ((runtime.diagnostics || runtime.chunkCount > 0 || phase === "recording" || phase === "finalizing")
         ? runtime.chunkCount
         : (recording.chunkCount || 0));
 
     return {
+      ...runtime.diagnostics,
+      recorderEnabled: !runtime.shutdownBlocked && !runtime.isDisposed,
       ok,
       code,
       message,
@@ -425,6 +436,10 @@ const RecorderEngine = (() => {
     // Keep engine-to-state projection here so DOM code never becomes a second source of truth.
     const recording = readStateRef();
     if (recording && typeof recording === "object") {
+      for (const key of diagnosticKeys) {
+        if (hasOwn(status, key)) recording[key] = status[key];
+      }
+      recording.recorderEnabled = status.recorderEnabled;
       recording.hooksEnabled = !!status.hooksEnabled;
       recording.includePlaybackAudio = !!status.includePlaybackAudio;
       recording.targetFps = normalizeTargetFps(status.targetFps);
@@ -507,7 +522,10 @@ const RecorderEngine = (() => {
         stopRecordingTimerSync();
         return;
       }
-      syncRecordingStateTick({ phase: "recording", nowMs: runtime.deps.nowMs() });
+      evaluatePolicy(sessionToken);
+      if (sessionToken === runtime.sessionToken && runtime.lifecycle.phase === "recording") {
+        syncRecordingStateTick({ phase: "recording", nowMs: runtime.deps.nowMs() });
+      }
     }, readTimerUpdateIntervalMs());
   }
 
@@ -566,10 +584,10 @@ const RecorderEngine = (() => {
   function releaseRenderStream() {
     const renderStream = runtime.renderStream;
     runtime.renderStream = null;
-    if (!renderStream) return;
+    if (!renderStream) return true;
     // Cleanup stays inside RecorderEngine because the stream is recorder-owned,
     // even though the pixels come from the canonical app canvas.
-    stopStreamTracks(renderStream);
+    return stopStreamTracks(renderStream);
   }
 
   // ── Audio stream tap ───────────────────────────────────────────────────
@@ -723,6 +741,7 @@ const RecorderEngine = (() => {
   }
 
   function applySupportSnapshot(action = null) {
+    if (runtime.shutdownBlocked && !runtime.isDisposed) return currentStatus(false);
     if (runtime.isDisposed) {
       return commitStatus(buildDisposedStatus(), action);
     }
@@ -883,11 +902,16 @@ const RecorderEngine = (() => {
   function releaseMergedStream() {
     // This wrapper shares audio track references; it never owns their shutdown.
     runtime.mergedStream = null;
-    releaseRenderStream();
-    return releaseAudioStream();
+    const renderReleased = releaseRenderStream();
+    const audioReleased = releaseAudioStream();
+    return renderReleased && audioReleased;
   }
 
   function init(options = {}) {
+    // Init cannot prove shutdown of a backend that refused cleanup. Page reload
+    // is the conservative recovery boundary; preserve its bounded ownership handle.
+    if (runtime.shutdownBlocked) return currentStatus(false);
+    if (["starting", "recording", "finalizing"].includes(runtime.lifecycle.phase)) return currentStatus(false);
     runtime.config = options.config || CONFIG.recording || null;
     runtime.stateRef = options.stateRef || null;
     runtime.deps.getRenderTap = (typeof options.getRenderTap === "function")
@@ -900,6 +924,8 @@ const RecorderEngine = (() => {
       ? options.nowMs
       : (() => performance.now());
 
+    runtime.deps.getPolicy = typeof options.getPolicy === "function"
+      ? options.getPolicy : () => recordingPolicySettings.policy();
     runtime.didInit = true;
     runtime.isDisposed = false;
     updateLifecycle("boot-pending", "boot-pending", "Checking recording support.");
@@ -1016,316 +1042,261 @@ const RecorderEngine = (() => {
     }), `transport-${type}`);
   }
 
-  function finalizeStoppedRecorder(sessionToken) {
-    if (sessionToken !== runtime.sessionToken) return;
+  const diagnosticKeys = ["sessionPolicy", "deliveredBytes", "admittedBytes", "rejectedBytes",
+    "rejectedEvents", "retainedChunkCount", "previousExportBytes", "stopReason", "secondaryStopReason",
+    "terminalOutcome", "finalExportBytes", "nativeShutdown", "warnings"];
 
-    runtime.stoppedAtMs = Number.isFinite(runtime.stoppedAtMs) ? runtime.stoppedAtMs : runtime.deps.nowMs();
-    const elapsedMs = readElapsedMs(runtime.stoppedAtMs);
-    // commitStatus mutates the canonical state; capture URL ownership by value.
-    const previousExportUrl = readStateRef()?.lastExportUrl || null;
+  function currentStatus(ok = runtime.lifecycle.phase !== "error") {
+    return buildStatus(ok, runtime.lifecycle.lastCode, runtime.lifecycle.lastMessage, {
+      phase: runtime.lifecycle.phase, elapsedMs: readElapsedMs(),
+    });
+  }
 
-    let nextUrl = null;
-    let nextFileName = "";
-    let nextByteSize = 0;
+  function checkedAdd(a, b) {
+    if (!Number.isSafeInteger(a) || a < 0 || !Number.isSafeInteger(b) || b < 0 || a > Number.MAX_SAFE_INTEGER - b) {
+      throw createRecorderError("accounting-invalid", "Encoded data accounting exceeds safe integer representation or contains an invalid size.");
+    }
+    return a + b;
+  }
 
-    try {
-      const completedExport = assembleCompletedRecordingExport();
-      nextFileName = completedExport.fileName;
-      nextByteSize = completedExport.byteSize;
-      nextUrl = completedExport.objectUrl;
+  function updateWarnings() {
+    const d = runtime.diagnostics, p = d?.sessionPolicy;
+    if (!p || p.warningFraction === null) return;
+    const checks = [
+      ["size", d.admittedBytes, p.effectiveSoftBytes],
+      ["aggregate", checkedAdd(p.previousExportBytes, d.admittedBytes), p.aggregateBytes],
+      ["chunks", runtime.chunkCount, p.maxChunks],
+      ["duration", readElapsedMs(), p.durationMs],
+    ];
+    const warnings = checks.filter(([,value,limit]) => limit !== null && value >= limit * p.warningFraction).map(([key]) => key);
+    // Categories remain latched for the session, with no repeated announcements.
+    d.warnings = Object.freeze([...new Set([...d.warnings, ...warnings])]);
+  }
 
-      updateLifecycle("complete", "complete", "Recording export ready.");
-      releaseActiveSession();
-
-      commitStatus(buildStatus(true, "complete", "Recording export ready.", {
-        support: readSupportDetails(),
-        phase: "complete",
-        resolvedMimeType: runtime.activeMimeType,
-        startedAtMs: runtime.startedAtMs,
-        stoppedAtMs: runtime.stoppedAtMs,
-        elapsedMs,
-        chunkCount: runtime.chunkCount,
-        lastExportUrl: nextUrl,
-        lastExportFileName: nextFileName,
-        lastExportByteSize: nextByteSize,
-      }), "finalize");
-
-      runtime.completedBlob = completedExport.blob;
-      // Replacement owns the new URL only after its metadata is committed.
-      if (previousExportUrl && previousExportUrl !== nextUrl) revokeObjectUrl(previousExportUrl);
-      resetSessionRuntime({ keepExport: true });
-      return;
-    } catch (err) {
-      const code = readRecorderErrorCode(err, "finalize-failed");
-      logRecorderException(code, err);
-      if (nextUrl) revokeObjectUrl(nextUrl);
-
-      const message = err && err.message ? err.message : "Recording export failed.";
-      updateLifecycle("error", code, message);
-      releaseActiveSession();
-      runtime.pendingChunks = [];
-
-      commitStatus(buildStatus(false, code, message, {
-        support: readSupportDetails(),
-        phase: "error",
-        resolvedMimeType: runtime.activeMimeType,
-        startedAtMs: runtime.startedAtMs,
-        stoppedAtMs: runtime.stoppedAtMs,
-        elapsedMs,
-        chunkCount: runtime.chunkCount,
-      }), "finalize");
-      resetSessionRuntime({ keepExport: true });
+  function evaluatePolicy(token) {
+    if (token !== runtime.sessionToken || runtime.lifecycle.phase !== "recording") return;
+    const d = runtime.diagnostics, p = d.sessionPolicy;
+    updateWarnings();
+    const bytes = p.effectiveSoftBytes !== null && d.admittedBytes >= p.effectiveSoftBytes;
+    const time = p.durationMs !== null && readElapsedMs() >= p.durationMs;
+    if (bytes || time) {
+      if (bytes && time) d.secondaryStopReason = "duration-stop";
+      requestStop(bytes ? "capacity-stop" : "duration-stop");
     }
   }
 
-  function handleRecorderError(sessionToken, event) {
-    if (sessionToken !== runtime.sessionToken) return;
+  function admitEvent(token, event) {
+    if (token !== runtime.sessionToken) return;
+    try {
+      const data = event?.data, size = data?.size;
+      // A missing payload is malformed, not an empty native Blob.
+      checkedAdd(0, size);
+      if (size === 0) { evaluatePolicy(token); return; }
+      const d = runtime.diagnostics, p = d.sessionPolicy;
+      d.deliveredBytes = checkedAdd(d.deliveredBytes, size);
+      const nextBytes = checkedAdd(d.admittedBytes, size);
+      const nextCount = checkedAdd(runtime.chunkCount, 1);
+      const aggregate = checkedAdd(p.previousExportBytes, nextBytes);
+      if ((p.aggregateBytes !== null && aggregate > p.aggregateBytes)
+        || (p.maxChunks !== null && nextCount > p.maxChunks)) {
+        d.rejectedBytes = checkedAdd(d.rejectedBytes, size);
+        d.rejectedEvents = checkedAdd(d.rejectedEvents, 1);
+        abortCapture("admission-rejected", "A delivered event exceeded aggregate payload or chunk admission. New capture discarded.");
+        return;
+      }
+      // Whole-event admission precedes retention. No copying to measure bytes.
+      runtime.pendingChunks.push(data);
+      runtime.chunkCount = nextCount;
+      d.admittedBytes = nextBytes;
+      d.retainedChunkCount = nextCount;
+      evaluatePolicy(token);
+      if (token === runtime.sessionToken) syncRecordingStateTick({ force: true });
+    } catch (err) {
+      if (token === runtime.sessionToken) abortCapture(readRecorderErrorCode(err, "retention-failed"), err.message);
+    }
+  }
 
-    const err = event && event.error ? event.error : null;
-    logRecorderException("recorder-error", err || event);
-    const message = err && err.message
-      ? `Recording failed: ${err.message}`
-      : "Recording failed while capturing or finalizing media.";
-    runtime.stoppedAtMs = Number.isFinite(runtime.stoppedAtMs) ? runtime.stoppedAtMs : runtime.deps.nowMs();
-    const elapsedMs = readElapsedMs(runtime.stoppedAtMs);
-
-    updateLifecycle("error", "recorder-error", message);
-    releaseActiveSession();
+  function abortCapture(code, message, cancelled = false, attemptNativeStop = true) {
+    // Fence first: stop() and owner cleanup may synchronously deliver any callback.
+    runtime.sessionToken += 1;
+    stopRecordingTimerSync();
+    const recorder = runtime.mediaRecorder;
+    const ownership = { recorder, renderStream: runtime.renderStream, audioTap: runtime.audioTap };
+    runtime.stoppedAtMs ??= runtime.deps.nowMs();
+    let inactive = !recorder;
+    try {
+      if (attemptNativeStop && recorder && recorder.state !== "inactive") recorder.stop();
+      inactive = !recorder || recorder.state === "inactive";
+    } catch (err) {
+      logRecorderException("abort-stop-failed", err);
+      inactive = recorder?.state === "inactive";
+    }
+    const released = releaseActiveSession();
     runtime.pendingChunks = [];
+    if (runtime.diagnostics) {
+      runtime.diagnostics.retainedChunkCount = 0;
+      runtime.diagnostics.terminalOutcome = cancelled ? "cancelled" : "failed";
+      runtime.diagnostics.finalExportBytes = null;
+      runtime.diagnostics.nativeShutdown = inactive ? "confirmed-stopped" : "unconfirmed";
+    }
+    if (!inactive || !released) {
+      runtime.shutdownBlocked = true;
+      runtime.unresolvedOwnership = ownership;
+      message += !inactive ? " Native shutdown unconfirmed." : " Required owned-resource cleanup failed.";
+      message += " Recording is disabled for this page. Download the retained export before reloading; primary audio and Queue remain available.";
+    } else message += " Native recorder confirmed stopped; another recording may begin.";
+    if (readStateRef()?.lastExportUrl) message += " Previous export preserved.";
+    updateLifecycle(cancelled ? "cancelled" : "error", code, message);
+    return commitStatus(currentStatus(false), cancelled ? "cancel" : "error");
+  }
 
-    commitStatus(buildStatus(false, "recorder-error", message, {
-      support: readSupportDetails(),
-      phase: "error",
-      resolvedMimeType: runtime.activeMimeType,
-      startedAtMs: runtime.startedAtMs,
-      stoppedAtMs: runtime.stoppedAtMs,
-      elapsedMs,
-      chunkCount: runtime.chunkCount,
-    }), "error");
-    resetSessionRuntime({ keepExport: true });
+  function cancel() {
+    if (!["starting", "recording", "finalizing"].includes(runtime.lifecycle.phase)) return currentStatus(false);
+    return abortCapture("capture-cancelled", "Current unsaved capture cancelled and discarded.", true);
+  }
+
+  function finalizeStoppedRecorder(token) {
+    if (token !== runtime.sessionToken) return;
+    if (runtime.mediaRecorder?.state !== "inactive") {
+      abortCapture("terminal-active", "Native terminal event arrived without confirmed inactivity.");
+      return;
+    }
+    // Capture finalized elapsed time at terminal observation (includes finalization).
+    runtime.stoppedAtMs = runtime.deps.nowMs();
+    const recording = readStateRef();
+    const previous = recording ? { ...recording } : null;
+    let candidate = null, committed = false;
+    try {
+      candidate = assembleCompletedRecordingExport();
+      // Support reads may fail; keep them before commit and leave P intact.
+      const support = readSupportDetails();
+      runtime.sessionToken += 1;
+      const ownership = { recorder: runtime.mediaRecorder, renderStream: runtime.renderStream, audioTap: runtime.audioTap };
+      if (!releaseActiveSession()) {
+        runtime.shutdownBlocked = true;
+        runtime.unresolvedOwnership = ownership;
+        throw createRecorderError("cleanup-failed", "Required recorder-owned cleanup failed. New export was not committed.");
+      }
+      runtime.diagnostics.nativeShutdown = "confirmed-stopped";
+      runtime.diagnostics.terminalOutcome = "complete";
+      runtime.diagnostics.finalExportBytes = candidate.byteSize;
+      runtime.diagnostics.retainedChunkCount = 0;
+      const reason = runtime.diagnostics.stopReason || "native-stop";
+      const message = reason === "capacity-stop" ? "Recording completed at configured capacity threshold."
+        : reason === "duration-stop" ? "Recording completed at configured duration target."
+        : "Recording export ready.";
+      updateLifecycle("complete", "complete", message);
+      commitStatus(buildStatus(true, "complete", message, { support, phase: "complete", elapsedMs: readElapsedMs(),
+        lastExportUrl: candidate.objectUrl, lastExportFileName: candidate.fileName, lastExportByteSize: candidate.byteSize }), "finalize");
+      runtime.completedBlob = candidate.blob;
+      committed = true;
+      if (previous?.lastExportUrl && previous.lastExportUrl !== candidate.objectUrl) revokeObjectUrl(previous.lastExportUrl);
+      runtime.pendingChunks = [];
+    } catch (err) {
+      if (!committed && candidate?.objectUrl) revokeObjectUrl(candidate.objectUrl);
+      // Restore metadata if projection threw partway through; never revoke P.
+      if (!committed && previous && recording) {
+        for (const key of ["lastExportUrl", "lastExportFileName", "lastExportByteSize"]) recording[key] = previous[key];
+      }
+      const code = readRecorderErrorCode(err, "finalize-failed");
+      logRecorderException(code, err);
+      abortCapture(code, err.message || "Recording export failed.");
+    }
+  }
+
+  function handleRecorderError(token, event) {
+    if (token !== runtime.sessionToken) return;
+    const err = event?.error;
+    logRecorderException("recorder-error", err || event);
+    abortCapture("recorder-error", err?.message ? `Recording failed: ${err.message}` : "Native encoder error.");
   }
 
   function start(options = {}) {
     if (!runtime.didInit || runtime.isDisposed) return getSupportStatus();
+    if (runtime.shutdownBlocked) return currentStatus(false);
+    if (["starting", "recording", "finalizing"].includes(runtime.lifecycle.phase)) return currentStatus(false);
     const support = readSupportDetails();
-    if (!support.isSupported) {
-      if (runtime.lifecycle.phase !== "unsupported") {
-        updateLifecycle("unsupported", support.supportCode, support.supportMessage);
-      }
-      return commitStatus(buildStatus(false, support.supportCode, support.supportMessage, {
-        support,
-        phase: "unsupported",
-        requestedMimeType: options.mimeType || null,
-      }), "start");
-    }
-
-    if (runtime.lifecycle.phase === "recording") {
-      return commitStatus(buildStatus(false, "already-recording", "Recording is already in progress.", {
-        support,
-        phase: "recording",
-      }), "start");
-    }
-
-    if (runtime.lifecycle.phase === "finalizing") {
-      return commitStatus(buildStatus(false, "finalizing", "Recording is still finalizing the current export.", {
-        support,
-        phase: "finalizing",
-      }), "start");
-    }
-
-    if (!hasRecordableSource()) {
-      return commitStatus(buildStatus(false, "no-active-source", "Activate a source to start recording.", {
-        support,
-        phase: runtime.lifecycle.phase === "complete" ? "complete" : "idle",
-      }), "start");
-    }
-
+    if (!support.isSupported) return applySupportSnapshot("start");
+    if (!hasRecordableSource()) return commitStatus(buildStatus(false, "no-active-source", "Activate a source to start recording.", { support }), "start");
     const selectedMimeType = readMimeTypeForSession(options.mimeType || null, support);
-    if (!selectedMimeType) {
-      updateLifecycle("unsupported", "no-supported-mime-types", "No supported recording MIME type is available.");
-      return commitStatus(buildStatus(false, "no-supported-mime-types", "No supported recording MIME type is available.", {
-        support,
-        phase: "unsupported",
-      }), "start");
-    }
-    const renderTap = runtime.deps.getRenderTap() || null;
-    const captureFn = support.captureFn;
-    if (!renderTap || !renderTap.canvas || !captureFn) {
-      updateLifecycle("unsupported", "canvas-capture-unsupported", "Canvas capture is unavailable in this browser.");
-      return commitStatus(buildStatus(false, "canvas-capture-unsupported", "Canvas capture is unavailable in this browser.", {
-        support,
-        phase: "unsupported",
-      }), "start");
-    }
-
-    // A new session does not own the last completed export. Retain it until
-    // successful replacement in finalizeStoppedRecorder(), or full disposal.
-    resetSessionRuntime({ keepExport: true });
-
+    let policy;
     try {
-      const mergeResult = acquireMergedStream();
-      if (!mergeResult.ok || !mergeResult.stream) {
-        updateLifecycle("error", mergeResult && mergeResult.code ? mergeResult.code : "stream-acquisition-failed", mergeResult && mergeResult.message ? mergeResult.message : "Stream acquisition failed.");
-        const status = commitStatus(buildStatus(false, mergeResult && mergeResult.code ? mergeResult.code : "stream-acquisition-failed", mergeResult && mergeResult.message ? mergeResult.message : "Stream acquisition failed.", {
-          support,
-          phase: "error",
-          selectedMimeType,
-          resolvedMimeType: null,
-          startedAtMs: null,
-          stoppedAtMs: null,
-          elapsedMs: 0,
-          chunkCount: 0,
-        }), "start");
-        resetSessionRuntime({ keepExport: true });
-        return status;
-      }
-      runtime.mergedStream = mergeResult.stream;
-
-      try {
-        runtime.mediaRecorder = new MediaRecorder(runtime.mergedStream, { mimeType: selectedMimeType });
-      } catch (err) {
-        throw createRecorderError(
-          "media-recorder-create-failed",
-          err && err.message
-            ? `MediaRecorder could not be created: ${err.message}`
-            : "MediaRecorder could not be created for the selected MIME type.",
-          err
-        );
-      }
+      policy = prepareRecordingPolicy(runtime.deps.getPolicy(), readStateRef()?.lastExportByteSize ?? 0);
+    } catch (err) {
+      return commitStatus(buildStatus(false, "policy-start-refused", err.message, { support }), "start");
+    }
+    resetSessionRuntime({ keepExport: true });
+    const token = ++runtime.sessionToken;
+    runtime.diagnostics = { sessionPolicy: policy, deliveredBytes: 0, admittedBytes: 0,
+      rejectedBytes: 0, rejectedEvents: 0, retainedChunkCount: 0,
+      previousExportBytes: policy.previousExportBytes, stopReason: null, secondaryStopReason: null,
+      terminalOutcome: null, finalExportBytes: null, nativeShutdown: "active", warnings: Object.freeze([]) };
+    updateLifecycle("starting", "starting", "Acquiring recording resources.");
+    commitStatus(buildStatus(true, "starting", "Acquiring recording resources.", { support,
+      startedAtMs: null, stoppedAtMs: null, elapsedMs: 0, chunkCount: 0 }), "start");
+    try {
+      const merged = acquireMergedStream();
+      if (!merged.ok || !merged.stream) throw createRecorderError(merged.code || "stream-acquisition-failed", merged.message);
+      if (token !== runtime.sessionToken) return currentStatus();
+      try { runtime.mediaRecorder = new MediaRecorder(merged.stream, { mimeType: selectedMimeType }); }
+      catch (err) { throw createRecorderError("media-recorder-create-failed", err.message, err); }
       runtime.startedAtMs = runtime.deps.nowMs();
       runtime.stoppedAtMs = null;
-      runtime.activeMimeType = selectedMimeType;
-      runtime.pendingChunks = [];
-      runtime.chunkCount = 0;
-      runtime.isStopRequested = false;
-
-      const sessionToken = ++runtime.sessionToken;
-      runtime.mediaRecorder.ondataavailable = (event) => {
-        if (sessionToken !== runtime.sessionToken) return;
-        if (!event.data || !event.data.size) return;
-        runtime.pendingChunks.push(event.data);
-        runtime.chunkCount += 1;
-        syncRecordingStateTick({
-          phase: runtime.lifecycle.phase === "finalizing" ? "finalizing" : "recording",
-          nowMs: runtime.deps.nowMs(),
-        });
-      };
-      runtime.mediaRecorder.onstop = () => finalizeStoppedRecorder(sessionToken);
-      runtime.mediaRecorder.onerror = (event) => handleRecorderError(sessionToken, event);
-
-      updateLifecycle("recording", mergeResult.code, mergeResult.message);
-      try {
-        runtime.mediaRecorder.start(readCaptureTimesliceMs());
-      } catch (err) {
-        throw createRecorderError(
-          "media-recorder-start-failed",
-          err && err.message
-            ? `MediaRecorder could not start: ${err.message}`
-            : "MediaRecorder could not start.",
-          err
-        );
-      }
+      runtime.activeMimeType = runtime.mediaRecorder.mimeType || selectedMimeType;
+      runtime.mediaRecorder.ondataavailable = event => admitEvent(token, event);
+      runtime.mediaRecorder.onstop = () => finalizeStoppedRecorder(token);
+      runtime.mediaRecorder.onerror = event => handleRecorderError(token, event);
+      updateLifecycle("recording", merged.code, merged.message);
+      commitStatus(buildStatus(true, merged.code, merged.message, { support, phase: "recording", elapsedMs: 0 }), "start");
+      try { runtime.mediaRecorder.start(readCaptureTimesliceMs()); }
+      catch (err) { throw createRecorderError("media-recorder-start-failed", err.message, err); }
+      // Native Start may have synchronously stopped, failed or finalized.
+      if (token !== runtime.sessionToken || runtime.lifecycle.phase !== "recording") return currentStatus();
       startRecordingTimerSync();
-
-      return commitStatus(buildStatus(true, mergeResult.code, mergeResult.message, {
-        support,
-        phase: "recording",
-        selectedMimeType,
-        resolvedMimeType: selectedMimeType,
-        startedAtMs: runtime.startedAtMs,
-        stoppedAtMs: null,
-        elapsedMs: 0,
-        chunkCount: 0,
-      }), "start");
+      evaluatePolicy(token);
+      return currentStatus();
     } catch (err) {
+      if (token !== runtime.sessionToken) return currentStatus();
       const code = readRecorderErrorCode(err, "start-failed");
-      const message = err && err.message ? err.message : "Recording could not be started.";
       logRecorderException(code, err);
-      releaseActiveSession();
-      updateLifecycle("error", code, message);
-      const status = commitStatus(buildStatus(false, code, message, {
-        support,
-        phase: "error",
-        selectedMimeType,
-        resolvedMimeType: null,
-        startedAtMs: null,
-        stoppedAtMs: null,
-        elapsedMs: 0,
-        chunkCount: 0,
-      }), "start");
-      resetSessionRuntime({ keepExport: true });
-      return status;
+      return abortCapture(code, err.message || "Recording could not start.");
     }
+  }
+
+  function requestStop(reason) {
+    if (!runtime.didInit || runtime.isDisposed || runtime.shutdownBlocked) return currentStatus(false);
+    if (runtime.isStopRequested || runtime.lifecycle.phase === "finalizing") return currentStatus();
+    if (runtime.lifecycle.phase !== "recording" || !runtime.mediaRecorder) return currentStatus(false);
+    if (runtime.mediaRecorder.state === "inactive") return abortCapture("recorder-inactive", "Recording is no longer active.");
+    const token = runtime.sessionToken;
+    runtime.stoppedAtMs = runtime.deps.nowMs();
+    runtime.isStopRequested = true;
+    runtime.diagnostics.stopReason = reason;
+    stopRecordingTimerSync();
+    const message = reason === "capacity-stop" ? "Capacity threshold reached; finalizing export."
+      : reason === "duration-stop" ? "Configured duration reached; finalizing export."
+      : "Finalizing recording export...";
+    updateLifecycle("finalizing", reason, message);
+    commitStatus(buildStatus(true, reason, message, { phase: "finalizing", elapsedMs: readElapsedMs() }), "stop");
+    try { runtime.mediaRecorder.stop(); }
+    catch (err) {
+      // A synchronous terminal callback already settled this authority.
+      if (token !== runtime.sessionToken) return currentStatus();
+      logRecorderException("stop-failed", err);
+      return abortCapture("stop-failed", err.message || "Recording stop failed.", false, false);
+    }
+    return currentStatus();
   }
 
   function stop() {
-    if (!runtime.didInit || runtime.isDisposed) return getSupportStatus();
-    const support = readSupportDetails();
-
-    if (runtime.isStopRequested) {
-      return commitStatus(buildStatus(false, "finalizing", "Recording is already finalizing.", {
-        support,
-        phase: "finalizing",
-        elapsedMs: readElapsedMs(),
-      }), "stop");
-    }
-
-    if (runtime.lifecycle.phase === "finalizing") {
-      return commitStatus(buildStatus(false, "finalizing", "Recording is already finalizing.", {
-        support,
-        phase: "finalizing",
-        elapsedMs: readElapsedMs(),
-      }), "stop");
-    }
-
-    if (runtime.lifecycle.phase !== "recording" || !runtime.mediaRecorder) {
-      return commitStatus(buildStatus(false, "not-recording", "No active recording session exists.", {
-        support,
-        phase: runtime.lifecycle.phase,
-      }), "stop");
-    }
-
-    if (runtime.mediaRecorder && runtime.mediaRecorder.state === "inactive") {
-      updateLifecycle("error", "recorder-inactive", "Recording is no longer active.");
-      releaseActiveSession();
-      const status = commitStatus(buildStatus(false, "recorder-inactive", "Recording is no longer active.", {
-        support,
-        phase: "error",
-        elapsedMs: readElapsedMs(),
-      }), "stop");
-      resetSessionRuntime({ keepExport: true });
-      return status;
-    }
-
-    runtime.stoppedAtMs = runtime.deps.nowMs();
-    runtime.isStopRequested = true;
-    stopRecordingTimerSync();
-    updateLifecycle("finalizing", "finalizing", "Finalizing recording export...");
-
-    try {
-      runtime.mediaRecorder.stop();
-    } catch (err) {
-      logRecorderException("stop-failed", err);
-      const message = err && err.message ? err.message : "Recording stop failed.";
-      updateLifecycle("error", "stop-failed", message);
-      releaseActiveSession();
-      const status = commitStatus(buildStatus(false, "stop-failed", message, {
-        support,
-        phase: "error",
-        elapsedMs: readElapsedMs(runtime.stoppedAtMs),
-      }), "stop");
-      resetSessionRuntime({ keepExport: true });
-      return status;
-    }
-
-    return commitStatus(buildStatus(true, "finalizing", "Finalizing recording export...", {
-      support,
-      phase: "finalizing",
-      elapsedMs: readElapsedMs(runtime.stoppedAtMs),
-    }), "stop");
+    // Public boundary samples monotonic time; an earlier independently reached
+    // duration target wins over a later manual request.
+    evaluatePolicy(runtime.sessionToken);
+    return requestStop("manual-stop");
   }
 
   function reset() {
+    if (runtime.shutdownBlocked) return currentStatus(false);
     if (!runtime.didInit || runtime.isDisposed) return getSupportStatus();
     if (runtime.lifecycle.phase === "recording" || runtime.lifecycle.phase === "finalizing") {
       return commitStatus(buildStatus(false, "reset-blocked", "Stop the active recording before resetting recording state.", {
@@ -1336,6 +1307,7 @@ const RecorderEngine = (() => {
     }
 
     resetSessionRuntime({ keepExport: true });
+    runtime.diagnostics = null;
     runtime.isStopRequested = false;
     return applySupportSnapshot("reset");
   }
@@ -1368,6 +1340,7 @@ const RecorderEngine = (() => {
     runtime.isDisposed = true;
     runtime.didInit = false;
     const recorder = runtime.mediaRecorder;
+    const ownership = { recorder, renderStream: runtime.renderStream, audioTap: runtime.audioTap };
     let code = "disposed";
     let message = "RecorderEngine has been disposed.";
     try {
@@ -1388,6 +1361,10 @@ const RecorderEngine = (() => {
     if (!released) {
       if (code === "disposed") code = "dispose-cleanup-failed";
       message += " Some recorder-owned cleanup failed; upstream audio ownership is preserved.";
+    }
+    if ((recorder && recorder.state !== "inactive") || !released) {
+      runtime.shutdownBlocked = true;
+      runtime.unresolvedOwnership ||= ownership;
     }
     resetSessionRuntime({ keepExport: false });
     runtime.deps.getRenderTap = () => null;
@@ -1412,14 +1389,16 @@ const RecorderEngine = (() => {
     onTransportMutation,
     start,
     stop,
+    cancel,
     reset,
     dispose,
     onAnimationFrame,
   };
-})();
+}
+const RecorderEngine = createRecorderEngine();
 
 /* =============================================================================
    UI
    ========================================================================== */
 
-export { RecorderEngine };
+export { RecorderEngine, createRecorderEngine };
