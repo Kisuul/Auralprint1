@@ -35,16 +35,15 @@ state (ephemeral runtime: audio, UI, bands, etc.)
 
 **Rules**
 - `CONFIG` MUST NEVER be mutated.
-- `preferences` is the only writable long-lived state.
+- `preferences` is the writable long-lived **Scene** configuration; application-only preferences are separate.
 - `runtime.settings` MUST be derived via `resolveSettings()`.
 - `state` is volatile and must be safe to reset at any time.
 
-Authorized application-settings exception (115M.I.N.3): Recording Resources owns
-profile and Custom limits in `recording-policy.js`, independently persisted under
-`auralprint.recording-resources` format 1. CONFIG owns definitions; each Start gets
-a frozen policy snapshot. This domain is outside Scene preferences, URL presets
-and schema-10 migrations. Record → Settings → Recording Resources is its sole UI
-owner and factory-reset action. Scene Reset All Settings does not reset it.
+Application-only settings are not Scene preferences: waveform choices use
+`application-preferences.js` (`auralprint.waveform-preferences`, format 1);
+Recording Resources uses `recording-policy.js` (`auralprint.recording-resources`,
+format 1). Both derive defaults from CONFIG, remain outside presets/URL schema 10,
+and have independent UI ownership/reset. Recording policy is frozen on Start.
 
 Violation of this hierarchy = architectural bug.
 
