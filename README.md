@@ -25,14 +25,14 @@ The supported install/test/build sequence uses `package-lock.json`; the final Py
 
 `npm run build` generates:
 
-- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (currently `dist/auralprint_0.1.15m.i.l.html`), with embedded application JavaScript, CSS, and SVG favicon. It needs no adjacent application assets.
+- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (currently `dist/auralprint_0.1.15m.i.n.html`), with embedded application JavaScript, CSS, and SVG favicon. It needs no adjacent application assets.
 - **Hosted:** `dist/hosted/index.html`, six supplied icon files, and `site.webmanifest`. Deploy the complete `dist/hosted/` directory at a root or subdirectory, with correct server MIME types. All metadata URLs are package-relative; both editions use the same application bundles and version.
 
 The portable build is intended for offline execution. The project owner reports successful direct local-file and Python-hosted functional testing in Chrome, Opera, Edge and Firefox; the [I.2D acceptance matrix](docs/audits/remediations/115m-i-i-aud007/final-acceptance/acceptance-matrix.md) records the supplied cases without inferring codec details or a complete per-browser matrix. Managed Chromium automation still blocks `file://` navigation with `ERR_BLOCKED_BY_ADMINISTRATOR`; portable HTTP and hosted root/nested paths have automated evidence. Demonstrably network-disabled execution remains a separate portability evidence gap. Hosted metadata does not establish offline caching or installability; no service worker is provided.
 
 `npm ci` may require registry access; installation is not promised to work offline. No global esbuild or committed `node_modules` is needed. If the default npm cache is unwritable, use `npm ci --cache ./.npm-cache`, then remove that disposable cache. Native-executable/child-process EPERM requires an environment fix. The assembler tries `PYTHON`, `python`, `python3`, then `py -3` on Windows. Dependencies and generated `node_modules/`, `.build/`, `build/`, and `dist/` remain ignored and untracked.
 
-[GitHub Actions CI](.github/workflows/ci.yml) provisions Node 24/Python 3.12 and validates locked installation, tests, both distributions, packaging contracts, generated-output tracking, and whitespace on Linux and Windows. It caches npm packages, never `node_modules`. Browser tooling is optional and outside project dependencies; [historical diagnostic instructions](docs/development/build-115.md#diagnostics-and-evidence) link to the owning reports and scripts. `npm run watch` observes JS/CSS dependencies, `src/index.template.html`, root `version`, and flat branding inputs. It assembles both editions from staged snapshots, refuses invalid inputs, and retains earlier versioned portable files. See the [AUD-011 corrective review](docs/audits/remediations/115m-i-m-aud011/README.md) for ordering, recovery and lifecycle limits; the corrective PR awaits human review.
+[GitHub Actions CI](.github/workflows/ci.yml) provisions Node 24/Python 3.12 and validates locked installation, tests, both distributions, packaging contracts, generated-output tracking, and whitespace on Linux and Windows. It caches npm packages, never `node_modules`. Browser tooling is optional and outside project dependencies; [historical diagnostic instructions](docs/development/build-115.md#diagnostics-and-evidence) link to the owning reports and scripts. `npm run watch` observes JS/CSS dependencies, `src/index.template.html`, root `version`, and flat branding inputs. It assembles both editions from staged snapshots, refuses invalid inputs, and retains earlier versioned portable files. See the [AUD-011 corrective review](docs/audits/remediations/115m-i-m-aud011/README.md) for ordering, recovery and lifecycle limits. Its corrective PR #56 has merged; browser/device and release acceptance remain separate.
 
 **CI success does not complete browser/device or release acceptance. 115N remains WITHHELD.**
 
@@ -64,7 +64,7 @@ The project uses intermediate builds (e.g., 112, 114–120) as structured milest
 | 112 | v0.1.12 | — | ✅ Shipped (Internal) | Scrubber + Playlist/Queue |
 | 113 | v0.1.13 | R3 | ✅ Shipped (canonical) | Recording / Capture + band distribution modes |
 | 114 | v0.1.14 | — | ✅ Shipped (Internal) | Live input sources (mic/tab/stream) |
-| 115 | v0.1.15 (`v0.1.15m.i.n` development revision) | — | Implemented; RC corrections accepted; AUD-007 I.2D merged via PR #55; AUD-011 corrective PR awaiting review; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
+| 115 | v0.1.15 (`v0.1.15m.i.n` development revision) | — | Implemented; RC corrections accepted; AUD-007 I.2D merged via PR #55; AUD-011 correction merged via PR #56; AUD-006 recorder correction merged via PRs #59/#60; 115N WITHHELD; unshipped | Visualizer Architecture + Orb Overhaul v1 |
 | 116 | v0.1.16 | R4 | Planned | Camera controls (render ≠ sim) |
 | 117 | v0.1.17 | — | Planned | UX polish + performance hardening |
 | 118 | v0.1.18 | — | Planned | Richer spectral selection |
