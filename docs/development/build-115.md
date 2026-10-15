@@ -1,6 +1,8 @@
 # Build 115 development history
 
-Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current development revision: **`v0.1.15m.i.m`**, preset schema **10**.
+Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current development revision: **`v0.1.15m.i.n`**, preset schema **10**.
+
+Current accepted main includes watcher correction PR #56 and the October 9 AUD-006 recorder investigation, calibration, governor and Custom-units closeout through merged PRs #57–#60 (`1bd8ef65b3589f0d1ef321edaf07e177d94ced01`). The recorder's corrective implementation is merged; Build 115N final acceptance remains WITHHELD, and device/browser acceptance is separate. Historical reports retain their original checkpoint status.
 
 The historical I.E documentation reconciliation started from [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge are complete at that baseline. **115N final acceptance remains WITHHELD.** “Closed” below describes the accepted corrective disposition; it does not claim shipment, universal performance, or completion of independent artistic/device acceptance.
 
