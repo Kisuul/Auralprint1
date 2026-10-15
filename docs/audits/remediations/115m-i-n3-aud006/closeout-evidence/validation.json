@@ -1,0 +1,83 @@
+{
+  "assignment": "115M.I.N.3F",
+  "verdict": "AUD-006 CLOSEOUT READY \u2014 Implementation complete; independent final review required.",
+  "reviewed_remote_head": "7866967160291782c6a0265f9d936c68b364f892",
+  "accepted_start": "bfb06e78b7673d23ebc756283a54854a6c43fa5c",
+  "implementation_head": "b94fde8e8175f5cb89eb43bbdab81c525de93571",
+  "branch": "codex/115m-i-n3-aud006-recorder-governor",
+  "pr59": "already merged before N.3F; no changes to historical PR",
+  "follow_up_pr": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/60",
+  "version": "v0.1.15m.i.n",
+  "schema": 10,
+  "build115N": "WITHHELD",
+  "tests": {
+    "total": 1041,
+    "pass": 1040,
+    "fail": 0,
+    "existing_opt_in_skip": 1,
+    "focused_pass": 298,
+    "targeted_new_regressions": 10
+  },
+  "commands": {
+    "npm ci": 0,
+    "npm test": 0,
+    "npm run build": 0,
+    "python scripts/verify_distribution.py": 0,
+    "git diff --check": 0
+  },
+  "native": {
+    "ui_passed": true,
+    "ui_cases": [
+      "arbitrary-canonical-one-field-lossless-reload",
+      "decimal-fraction-overflow-validation-two-hours",
+      "independent-off-and-profile-switching",
+      "native-minute-duration-frozen-next-start-download",
+      "native-hard-admission-failure-preserves-export",
+      "native-keyboard-download-cancel-hide-reveal",
+      "narrow-layout-and-session-only-unrestricted"
+    ],
+    "artifact_sha256": "897a69c6afc2b7c203b0e8dc4c63e5f71bfb4c7296117b2f415c5d0559cd866a",
+    "portable_hosted_relocated_hosted": true,
+    "fresh_existing_native_probes": [
+      "RC-03",
+      "RC-04",
+      "RC-05",
+      "RC-06",
+      "RC-19",
+      "Cancel at EOF"
+    ],
+    "platform": "Linux Chromium; synthetic File/Mic/Stream fixtures; no physical-device or perceptual acceptance claim"
+  },
+  "protected": {
+    "passed": true,
+    "baseline": "bfb06e78b7673d23ebc756283a54854a6c43fa5c",
+    "protected_files_checked": 1089,
+    "changed_protected_files": [],
+    "protected_git_blob_manifest_sha256": "1435f1ae53d69b06ad8d027be9611285b2dc7b5ab1e5066266e7c6dcc443c3e8",
+    "recorder_engine_unchanged": true,
+    "config_factory_unchanged": true,
+    "version_unchanged": "v0.1.15m.i.n",
+    "preset_schema_unchanged": 10,
+    "historical_documentation_and_remediation_evidence_unchanged": true,
+    "allowed_existing_changes": [
+      "src/index.template.html",
+      "src/js/recording/recording-policy.js",
+      "src/js/ui/recording-resources.js",
+      "tests/recording-policy.test.js",
+      "tests/recording-resources-ui.test.js"
+    ]
+  },
+  "ci": {
+    "implementation": {
+      "conclusion": "success",
+      "head_sha": "b94fde8e8175f5cb89eb43bbdab81c525de93571",
+      "html_url": "https://github.com/cosmicdance-4-2-0/Auralprint1/actions/runs/38713504651",
+      "id": 38713504651,
+      "status": "completed"
+    },
+    "exact_ending_head": "Final SHA and Ubuntu/Windows run URLs are recorded in PR #60 after the handoff commit, avoiding a self-referential evidence commit."
+  },
+  "unresolved_aud006_corrective_issues": [],
+  "independent_final_review_required": true,
+  "automatic_merge_closure_shipment": false
+}

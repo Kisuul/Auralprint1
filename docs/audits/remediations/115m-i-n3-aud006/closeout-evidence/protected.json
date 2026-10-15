@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "baseline": "bfb06e78b7673d23ebc756283a54854a6c43fa5c",
+  "protected_files_checked": 1089,
+  "changed_protected_files": [],
+  "protected_git_blob_manifest_sha256": "1435f1ae53d69b06ad8d027be9611285b2dc7b5ab1e5066266e7c6dcc443c3e8",
+  "recorder_engine_unchanged": true,
+  "config_factory_unchanged": true,
+  "version_unchanged": "v0.1.15m.i.n",
+  "preset_schema_unchanged": 10,
+  "historical_documentation_and_remediation_evidence_unchanged": true,
+  "allowed_existing_changes": [
+    "src/index.template.html",
+    "src/js/recording/recording-policy.js",
+    "src/js/ui/recording-resources.js",
+    "tests/recording-policy.test.js",
+    "tests/recording-resources-ui.test.js"
+  ]
+}

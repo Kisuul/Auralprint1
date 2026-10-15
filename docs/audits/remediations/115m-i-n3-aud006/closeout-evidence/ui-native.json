@@ -1,0 +1,96 @@
+{
+  "version": "v0.1.15m.i.n",
+  "artifactSha256": "897a69c6afc2b7c203b0e8dc4c63e5f71bfb4c7296117b2f415c5d0559cd866a",
+  "cases": [
+    {
+      "id": "arbitrary-canonical-one-field-lossless-reload",
+      "stored": {
+        "version": 1,
+        "profile": "custom",
+        "custom": {
+          "softBytes": 130000001,
+          "aggregateBytes": 270000007,
+          "maxChunks": 1201,
+          "durationMs": 300001,
+          "warningFraction": 0.8
+        }
+      }
+    },
+    {
+      "id": "decimal-fraction-overflow-validation-two-hours",
+      "stored": {
+        "version": 1,
+        "profile": "custom",
+        "custom": {
+          "softBytes": 130000001,
+          "aggregateBytes": 270000007,
+          "maxChunks": 1201,
+          "durationMs": 7200000,
+          "warningFraction": 0.8
+        }
+      }
+    },
+    {
+      "id": "independent-off-and-profile-switching",
+      "stored": {
+        "version": 1,
+        "profile": "custom",
+        "custom": {
+          "softBytes": 130000001,
+          "aggregateBytes": 270000007,
+          "maxChunks": 1201,
+          "durationMs": null,
+          "warningFraction": 0.8
+        }
+      }
+    },
+    {
+      "id": "native-minute-duration-frozen-next-start-download",
+      "bytes": 465223,
+      "sha256": "ac6bc1793ce5b096f830787377cc6e9e4eb15238d2d789045cd819ca9897407e",
+      "streams": [
+        {
+          "type": "video",
+          "codec": "vp9"
+        },
+        {
+          "type": "audio",
+          "codec": "opus"
+        }
+      ],
+      "replayTime": 0.366715,
+      "progress": "Last capture profile: custom. Elapsed 3s. Delivered 465,223 bytes; admitted 465,223 bytes. Soft Stop: 0% of 130,000,001 bytes. Aggregate: 0% of 270,000,007 bytes. Retained chunks: 0 / 1,201 chunks. Duration target: 3,000 ms. Previous export at Start: 0 bytes. Latest successful export available to download. Stop reason: duration-stop. Final output: 465,223 bytes.",
+      "stopCalls": 1
+    },
+    {
+      "id": "native-hard-admission-failure-preserves-export",
+      "prior": {
+        "bytes": 465223,
+        "hash": "ac6bc1793ce5b096f830787377cc6e9e4eb15238d2d789045cd819ca9897407e"
+      },
+      "stopCalls": 1
+    },
+    {
+      "id": "native-keyboard-download-cancel-hide-reveal",
+      "prior": {
+        "bytes": 465223,
+        "hash": "ac6bc1793ce5b096f830787377cc6e9e4eb15238d2d789045cd819ca9897407e"
+      },
+      "stopCalls": 1
+    },
+    {
+      "id": "narrow-layout-and-session-only-unrestricted",
+      "layout": {
+        "left": 10,
+        "right": 380,
+        "innerWidth": 390,
+        "scrollWidth": 368,
+        "clientWidth": 368
+      },
+      "message": "Applied for this session only; local saving failed. This selection, including Unrestricted, remains active for the next Start on this page."
+    }
+  ],
+  "errors": [],
+  "instrumentation": "Unmodified built HTML; seeded application storage; native recorder Stop counter; anchor observation; only finalizing Cancel delays real terminal handler. No fabricated data.",
+  "passed": true
+}
