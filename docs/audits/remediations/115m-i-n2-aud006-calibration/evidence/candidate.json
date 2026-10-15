@@ -1,0 +1,12 @@
+{
+  "S": 130000000,
+  "H": 270000000,
+  "R": 10000000,
+  "C": 1200,
+  "T_ms": 300000,
+  "measured_standard_max_bytes_s": 323559.3118663725,
+  "observed_largest_event_bytes": 2079150,
+  "observed_max_post_stop_bytes": 693980,
+  "scope": "provisional desktop interactive baseline/standard; no hardware safety certification",
+  "approved": false
+}

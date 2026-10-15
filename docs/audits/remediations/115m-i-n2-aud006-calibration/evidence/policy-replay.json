@@ -1,0 +1,233 @@
+[
+  {
+    "id": "video-only",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 377679,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "file-audio",
+    "P": 377679,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 806412,
+    "count": 5,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "synthetic-mic",
+    "P": 806412,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 572359,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "stream-codec-video/webm;codecs=vp9,opus",
+    "P": 572359,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 608712,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "stream-codec-video/webm;codecs=vp8,opus",
+    "P": 608712,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 993461,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "stream-codec-video/webm",
+    "P": 993461,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 990907,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "stream-codec-video/mp4",
+    "P": 990907,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 693980,
+    "count": 2,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "stream-longer-safe-60s",
+    "P": 693980,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 14507040,
+    "count": 59,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "repeat-1",
+    "P": 14507040,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 463716,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "repeat-2",
+    "P": 463716,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 453949,
+    "count": 2,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "repeat-3",
+    "P": 453949,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 466077,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-baseline-video",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 4469902,
+    "count": 30,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-baseline-video-replacement",
+    "P": 4469902,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 425916,
+    "count": 3,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-standard-file",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 7802083,
+    "count": 45,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-standard-stream-vp8",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 8505654,
+    "count": 29,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-high-mic",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 10748775,
+    "count": 30,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-expert-stream",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 5717411,
+    "count": 29,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-standard-stream-mp4",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 9570630,
+    "count": 9,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "B-high-video-vp8",
+    "P": 3551669,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 3551669,
+    "count": 23,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "C-standard-5min",
+    "P": 0,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 97086560,
+    "count": 294,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "duration-stop",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  },
+  {
+    "id": "C-standard-5min-replacement",
+    "P": 97086560,
+    "whole_recorded_ledger_admitted": true,
+    "admitted_bytes": 964926,
+    "count": 4,
+    "effective_soft_bytes": 130000000,
+    "prospective_trigger": "manual-before-limit",
+    "rejection": null,
+    "limitation": "Replays actual delivered integer ledger; cannot predict event schedule/output after a different earlier Stop. No media exported by policy model."
+  }
+]
