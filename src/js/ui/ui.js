@@ -1,3 +1,4 @@
+import { createRecordingResourcesControls } from "./recording-resources.js";
 import { clamp, fmt, deepClone } from "../core/utils.js";
 import { CONFIG } from "../core/config.js";
 import { preferences, runtime, resolveSettings, replacePreferences, normalizeOrbDef } from "../core/preferences.js";
@@ -667,8 +668,9 @@ const UI = (() => {
 
   function shouldSurfaceRecordingLastMessage(recording) {
     if (!recording || !recording.lastMessage) return false;
-    if (recording.phase === "error") return true;
+    if (["error", "cancelled"].includes(recording.phase) || recording.recorderEnabled === false) return true;
     return [
+      "policy-start-refused",
       "already-recording",
       "not-recording",
       "invalid-mime-type",
@@ -700,6 +702,8 @@ const UI = (() => {
     return !hasRecordableSource();
   }
 
+  let recordingResourceControls = null;
+  const wiredRecordingControls = new WeakSet();
   function formatRecordingPrimaryStatus(recording) {
     if (!recording || !recording.hooksEnabled) return "Recording disabled";
     if (shouldSurfaceRecordingLastMessage(recording)) return recording.lastMessage;
@@ -716,8 +720,12 @@ const UI = (() => {
         if (isRecordingAudioCurrentlyUnavailable(recording)) return "Recording continues without an active audio source.";
         return includeAudio ? `Recording ${sourceLabel} + video` : "Recording video only";
       case "finalizing":
+        if (recording.stopReason === "capacity-stop") return "Capacity threshold reached; finalizing export";
+        if (recording.stopReason === "duration-stop") return "Configured duration reached; finalizing export";
         return "Finalizing export";
       case "complete":
+        if (recording.stopReason === "capacity-stop") return "Completed automatically at capacity threshold";
+        if (recording.stopReason === "duration-stop") return "Completed automatically at configured duration";
         return "Latest export ready";
       case "idle":
         if (recording.isSupported !== true) return "Checking recording support";
@@ -732,6 +740,7 @@ const UI = (() => {
     if (!recording || !recording.hooksEnabled || recording.phase === "disabled") {
       return "Recording is disabled by configuration.";
     }
+    if (recording.recorderEnabled === false) return recording.lastMessage;
     if (isRecordingAudioCurrentlyUnavailable(recording)) {
       return "Recording continues while no audio source is active.";
     }
@@ -856,13 +865,15 @@ const UI = (() => {
       && recording.phase !== "finalizing";
     const canStartPhase = recording.phase === "idle"
       || recording.phase === "complete"
-      || recording.phase === "error";
+      || recording.phase === "error"
+      || recording.phase === "cancelled";
     return {
       config: CONFIG.recording,
       recording,
       includeAudio,
       panelVisible: !!ui.recordingPanelVisible,
-      canStart: recording.hooksEnabled
+      canCancel: ["starting", "recording", "finalizing"].includes(recording.phase),
+      canStart: recording.recorderEnabled !== false && recording.hooksEnabled
         && recording.isSupported === true
         && hasRecordableSource()
         && canStartPhase,
@@ -1016,6 +1027,11 @@ const UI = (() => {
       recording.lastCode || "",
       recording.lastMessage || "",
       recording.lastExportByteSize || 0,
+      recording.deliveredBytes || 0,
+      recording.admittedBytes || 0,
+      recording.retainedChunkCount || 0,
+      recording.recorderEnabled === false ? "blocked" : "enabled",
+      (recording.warnings || []).join(","),
       (recording.availableMimeTypes || []).join(","),
       readRecordingTimerText(recording),
       recording.includePlaybackAudio ? "1" : "0",
@@ -1105,6 +1121,8 @@ const UI = (() => {
       syncProperty(ui.chkRecordIncludeAudio, "disabled", !model.canToggleIncludeAudio);
     }
     if (ui.btnRecordStart) syncProperty(ui.btnRecordStart, "disabled", !model.canStart);
+    recordingResourceControls?.refresh(recording);
+    if (ui.btnRecordCancel) syncProperty(ui.btnRecordCancel, "disabled", !model.canCancel);
     if (ui.btnRecordStop) syncProperty(ui.btnRecordStop, "disabled", !model.canStop);
     if (ui.btnRecordDownloadLast) syncProperty(ui.btnRecordDownloadLast, "disabled", !model.canDownload);
     if (ui.selRecordMime) syncProperty(ui.selRecordMime, "disabled", !model.canSelectMime);
@@ -1131,6 +1149,9 @@ const UI = (() => {
         break;
       case "start":
         result = RecorderEngine.start(options);
+        break;
+      case "cancel":
+        result = RecorderEngine.cancel();
         break;
       case "stop":
         result = RecorderEngine.stop();
@@ -1677,8 +1698,17 @@ const UI = (() => {
     wireConfigTooltipFeedbackEvents();
     workspace.init({ onRefreshQueuePanel: refreshQueuePanel });
     analysisPanelUi.init();
+    recordingResourceControls = createRecordingResourcesControls();
     refreshRecordingUi();
 
+    if (ui.btnRecordStart && !wiredRecordingControls.has(ui.btnRecordStart)) {
+      wiredRecordingControls.add(ui.btnRecordStart);
+    if (ui.btnRecordCancel) ui.btnRecordCancel.addEventListener("click", () => {
+      dispatchRecordingAction("cancel");
+      // The terminal action is now disabled; keep keyboard focus in Record.
+      (state.recording.lastExportUrl ? ui.btnRecordDownloadLast
+        : state.recording.recorderEnabled !== false ? ui.btnRecordStart : ui.btnHideRecord)?.focus();
+    });
     if (ui.btnRecordStart) ui.btnRecordStart.addEventListener("click", () => {
       dispatchRecordingAction("start");
     });
@@ -1697,6 +1727,8 @@ const UI = (() => {
     if (ui.btnRecordDownloadLast) ui.btnRecordDownloadLast.addEventListener("click", () => {
       downloadLastRecording();
     });
+
+    }
 
     function toastFileModeOnlyAction() {
       audioStatusToast("Switch to File mode to use file playback controls.", 2500);
