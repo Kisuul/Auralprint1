@@ -125,3 +125,16 @@
         animation: none;
       }
     }
+
+    #recordPanel .recordResources { margin-top: var(--ui-gap); }
+    #recordPanel .recordResources summary { cursor: pointer; padding: var(--ui-gap) 0; }
+    #recordPanel .recordResources select, #recordPanel .resourceLimit input[type="number"] {
+      width: 100%; min-width: 0; box-sizing: border-box;
+    }
+    #recordPanel .resourceLimit { display: grid; gap: var(--ui-gap); margin: var(--ui-gap) 0; }
+    #recordPanel .resourceToggle { font-size: 0.9em; }
+    #recordPanel #recordingPolicyError:not(:empty), #recordPanel #recordingWarnings:not(:empty) {
+      border-inline-start: 2px solid currentColor; padding-inline-start: var(--ui-gap);
+    }
+    #recordPanel .recordCopy { overflow-wrap: anywhere; }
+    #recordPanel .recordActions { position: sticky; top: 0; background: #10181c; z-index: 1; }

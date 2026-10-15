@@ -1,0 +1,37 @@
+{
+  "version": "v0.1.15m.i.n",
+  "artifactSha256": "75513ddec2b6bd3973550d6a5d7285149714146a6184ee674915d6d9ff6e9a42",
+  "cases": [
+    {
+      "id": "native-next-session-freeze-duration",
+      "status": "Completed automatically at configured duration",
+      "progress": "Last capture profile: custom. Elapsed 2s. Delivered 131,254 bytes; admitted 131,254 bytes. Soft Stop: 0% of 130,000,000 bytes. Aggregate: 0% of 270,000,000 bytes. Retained chunks: 0 / 1,200 chunks. Duration target: 2,000 ms. Previous export at Start: 0 bytes. Latest successful export available to download. Stop reason: duration-stop. Final output: 131,254 bytes."
+    },
+    {
+      "id": "native-finalizing-cancel-hide-reveal-keyboard",
+      "priorDownload": "auralprint-capture-20261015-074742.webm",
+      "status": "Current unsaved capture cancelled and discarded. Native recorder confirmed stopped; another recording may begin. Previous export preserved.",
+      "focus": "btnRecordDownloadLast"
+    },
+    {
+      "id": "narrow-settings-focus",
+      "layout": {
+        "left": 10,
+        "right": 380,
+        "innerWidth": 390,
+        "scrollWidth": 368,
+        "clientWidth": 368
+      }
+    },
+    {
+      "id": "corrupt-storage-truthful-fallback",
+      "message": "Stored Recording Resources are invalid or from an unsupported version. Factory defaults are active for this session; choose settings to save a replacement."
+    },
+    {
+      "id": "denied-save-retains-unrestricted",
+      "message": "Applied for this session only; local saving failed. This selection, including Unrestricted, remains active for the next Start on this page."
+    }
+  ],
+  "errors": [],
+  "passed": true
+}

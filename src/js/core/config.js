@@ -327,6 +327,24 @@ const CONFIG = deepFreeze({
     metadataProbe: { maxBytes: 64 * 1024, maxChunks: 128 },
   },
 
+  // Application policy only: decimal bytes and milliseconds, outside Scene presets.
+  recordingResources: {
+    defaultProfile: "balanced",
+    profiles: ["balanced", "custom", "unrestricted"],
+    factory: {
+      softBytes: 130_000_000,
+      aggregateBytes: 270_000_000,
+      reserveBytes: 10_000_000,
+      maxChunks: 1_200,
+      durationMs: 300_000,
+      warningFraction: 0.80,
+    },
+    // Representation constraints, not substitute resource ceilings.
+    integer: { min: 1, max: Number.MAX_SAFE_INTEGER },
+    reserveDivisor: 10,
+    storage: { key: "auralprint.recording-resources", version: 1 },
+  },
+
   recording: {
     // Build 113 recording feature gate.
     hooksEnabled: true,

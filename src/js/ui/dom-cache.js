@@ -181,6 +181,7 @@ function primeDomCache() {
     ui.btnHideRecord = document.getElementById("btnHideRecord");
     ui.btnOpenRecord = document.getElementById("btnOpenRecord");
     ui.btnRecordStart = document.getElementById("btnRecordStart");
+    ui.btnRecordCancel = document.getElementById("btnRecordCancel");
     ui.btnRecordStop = document.getElementById("btnRecordStop");
     ui.btnRecordDownloadLast = document.getElementById("btnRecordDownloadLast");
     ui.recordExportMeta = document.getElementById("recordExportMeta");

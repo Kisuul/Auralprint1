@@ -1,0 +1,45 @@
+{
+  "version": "v0.1.15m.i.n",
+  "browser": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "a": {
+    "url": "blob:http://rc06.test/567ab33a-c45c-4fc2-add1-d4feaf8f8659",
+    "filename": "auralprint-capture-20261015-073901.webm",
+    "size": 46146,
+    "type": "video/webm",
+    "meta": "Latest export: auralprint-capture-20261015-073901.webm (46146 bytes)"
+  },
+  "failed": {
+    "url": "blob:http://rc06.test/567ab33a-c45c-4fc2-add1-d4feaf8f8659",
+    "filename": "auralprint-capture-20261015-073901.webm",
+    "size": 46146,
+    "type": "video/webm",
+    "meta": "Latest export: auralprint-capture-20261015-073901.webm (46146 bytes)"
+  },
+  "errorStatus": "Canvas capture did not provide a video stream. Native recorder confirmed stopped; another recording may begin. Previous export preserved.",
+  "b": {
+    "url": "blob:http://rc06.test/6de11697-1661-4044-8d0b-c79f91e36e88",
+    "filename": "auralprint-capture-20261015-073903.webm",
+    "size": 100376,
+    "type": "video/webm",
+    "meta": "Latest export: auralprint-capture-20261015-073903.webm (100376 bytes)"
+  },
+  "ownership": {
+    "oldResolves": false,
+    "oldRevocations": 1,
+    "newRevocations": 0,
+    "newResolves": true,
+    "created": [
+      {
+        "url": "blob:http://rc06.test/567ab33a-c45c-4fc2-add1-d4feaf8f8659",
+        "size": 46146,
+        "type": "video/webm;codecs=vp9,opus"
+      },
+      {
+        "url": "blob:http://rc06.test/6de11697-1661-4044-8d0b-c79f91e36e88",
+        "size": 100376,
+        "type": "video/webm;codecs=vp9,opus"
+      }
+    ]
+  },
+  "errors": []
+}

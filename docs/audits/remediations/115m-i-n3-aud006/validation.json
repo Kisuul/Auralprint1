@@ -1,0 +1,86 @@
+{
+  "assignment": "115M.I.N.3",
+  "verdict": "N.3 PASS \u2014 AUD-006 corrective implementation ready for independent hostile review.",
+  "build115N": "WITHHELD",
+  "aud006": "pending independent hostile review; not closed",
+  "baseline": "302173917ed9b337a9d1df9a3f93d083248fe51f",
+  "accepted_calibration_head": "3e6a01bc5453307d0b4d64db844d9dc0ce0518cf",
+  "baseline_pr": 58,
+  "version": "v0.1.15m.i.n",
+  "preset_schema": 10,
+  "branch": "codex/115m-i-n3-aud006-recorder-governor",
+  "draft_pr": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/59",
+  "implementation_head": "67f1435dad4692dbadd99ed34abadb207066ccde",
+  "artifact_sha256": "75513ddec2b6bd3973550d6a5d7285149714146a6184ee674915d6d9ff6e9a42",
+  "factory": {
+    "S": 130000000,
+    "H": 270000000,
+    "R": 10000000,
+    "C": 1200,
+    "T": 300000,
+    "W": 0.8,
+    "byte_units": "decimal"
+  },
+  "checks": {
+    "npm ci": 0,
+    "npm test": 0,
+    "npm run build": 0,
+    "python scripts/verify_distribution.py": 0,
+    "git diff --check": 0,
+    "new_policy_governor_ui_tests": "included in full suite",
+    "native_rc03_rc04_rc05_rc06_rc19": "passed",
+    "native_cancel_eof": "passed",
+    "unit_tests": {
+      "total": 1031,
+      "pass": 1030,
+      "fail": 0,
+      "skip": 1,
+      "skip_reason": "existing opt-in test"
+    },
+    "mutation_controls": {
+      "detected": 11,
+      "total": 11,
+      "harness_crashes_counted": 0
+    },
+    "protected_files_checked": 865
+  },
+  "native": {
+    "passed": true,
+    "browser": "151.0.7922.173",
+    "cases": [
+      "manual-file-webm",
+      "native-hard-failure-preserves-download",
+      "native-short-capacity",
+      "native-cancel-mic",
+      "native-cancel-stream",
+      "native-stream-mp4",
+      "factory-300000ms"
+    ],
+    "factory_bytes": 68975914,
+    "factory_elapsed_ms": 300011,
+    "factory_packet_span_seconds": 299.986,
+    "guard": null,
+    "decoded_stereo_signal_checks": true
+  },
+  "ui_native": true,
+  "unmodified_artifact_control": true,
+  "ci": {
+    "implementation": {
+      "conclusion": "success",
+      "head_sha": "67f1435dad4692dbadd99ed34abadb207066ccde",
+      "html_url": "https://github.com/cosmicdance-4-2-0/Auralprint1/actions/runs/38701043783",
+      "id": 38701043783,
+      "status": "completed"
+    },
+    "final_handoff": "Exact final-head Ubuntu and Windows runs must pass after this evidence commit; final full SHA and run links are recorded in draft PR #59 without a self-referential evidence commit."
+  },
+  "limitations": [
+    "Linux headless Chromium only for native capture",
+    "Physical low-memory/mobile and other browsers unverified",
+    "Real Mic/Stream permission dialogs and hardware unverified",
+    "Background/suspension deadline behavior unverified",
+    "External-player/perceptual fidelity unverified",
+    "Near-H physical memory survival not proven; N.2 high-resolution VP8 guard remains relevant"
+  ],
+  "release_recommendation": "Independent review only. No merge, AUD-006 closure or Build 115 shipment."
+}

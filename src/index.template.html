@@ -337,7 +337,7 @@
         <div class="sectionTitle">Recording / Capture Export</div>
         <div id="recordStatus" class="muted recordCopy" aria-live="polite">Checking recording support</div>
       </div>
-      <div class="recordTimerBlock" aria-live="polite">
+      <div class="recordTimerBlock">
         <div class="muted recordTimerLabel">Elapsed</div>
         <span id="recordTimer" class="val">00:00</span>
       </div>
@@ -354,9 +354,13 @@
     <div class="recordActions">
       <button id="btnRecordStart" disabled>Start Recording</button>
       <button id="btnRecordStop" disabled>Stop Recording</button>
+      <button id="btnRecordCancel" disabled aria-describedby="recordCancelNote">Cancel Current Capture</button>
       <button id="btnRecordDownloadLast" disabled>Download Latest Export</button>
     </div>
     <div id="recordExportMeta" class="muted recordCopy recordExportMeta">Latest export: none this session.</div>
+    <div id="recordCancelNote" class="muted recordCopy">Cancel discards the current unsaved capture and preserves the latest successful export.</div>
+    <div id="recordingProgress" class="muted recordCopy"></div>
+    <div id="recordingWarnings" class="muted recordCopy" aria-live="polite"></div>
     <div class="sectionTitle">Settings</div>
     <div class="row recordRow">
       <label for="chkRecordIncludeAudio">Include Audio</label>
@@ -373,6 +377,41 @@
       <select id="selRecordTargetFps" class="recordSelect"></select>
       <div id="valRecordTargetFps" class="val recordInlineValue">30 fps</div>
     </div>
+    <details id="recordingResources" class="recordResources">
+      <summary>Recording Resources</summary>
+      <label for="selRecordingProfile">Profile</label>
+      <select id="selRecordingProfile"><option value="balanced">Balanced</option><option value="custom">Custom</option><option value="unrestricted">Unrestricted</option></select>
+      <p id="recordingPolicySummary" class="muted recordCopy"></p>
+      <div id="recordingCustom" hidden>
+        <div class="resourceLimit">
+          <label for="recording-softBytes">Soft received-data Stop (bytes)</label>
+          <label class="resourceToggle"><input id="recording-softBytes-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-softBytes" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+        </div>
+        <div class="resourceLimit">
+          <label for="recording-aggregateBytes">Aggregate retained-data admission (bytes)</label>
+          <label class="resourceToggle"><input id="recording-aggregateBytes-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-aggregateBytes" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+        </div>
+        <div class="resourceLimit">
+          <label for="recording-maxChunks">Maximum nonempty chunk references</label>
+          <label class="resourceToggle"><input id="recording-maxChunks-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-maxChunks" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+        </div>
+        <div class="resourceLimit">
+          <label for="recording-durationMs">Automatic elapsed Stop target (ms)</label>
+          <label class="resourceToggle"><input id="recording-durationMs-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-durationMs" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+        </div>
+        <label><input id="recording-warnings" type="checkbox" /> <span id="recordingWarningsLabel">Nonblocking warnings</span></label>
+        <button id="btnApplyRecordingResources" type="button">Apply Custom Limits</button>
+      </div>
+      <p id="recordingPolicyError" class="recordCopy" role="status"></p>
+      <p id="recordingPolicyNext" class="muted recordCopy"></p>
+      <p id="recordingPolicyStorage" class="muted recordCopy" role="status"></p>
+      <p class="muted recordCopy">Encoded data limits use decimal bytes, not available RAM. Duration is a configured automatic-Stop target; browser throttling can delay action. Five minutes is not universally safe across devices.</p>
+      <button id="btnResetRecordingResources" type="button">Reset Recording Resources to Factory Defaults</button>
+    </details>
     <div id="recordSettingsNote" class="muted recordSettingsNote">Settings apply to new recordings only. Not saved to presets.</div>
   </div>
 

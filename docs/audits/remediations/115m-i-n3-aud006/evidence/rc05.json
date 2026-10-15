@@ -1,0 +1,781 @@
+{
+  "version": "v0.1.15m.i.n",
+  "artifact": "dist/auralprint_0.1.15m.i.n.html",
+  "browser": "151.0.7922.173",
+  "results": [
+    {
+      "mode": "ordinary",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "idle",
+            "cursor": 1,
+            "filename": "A.wav",
+            "ended": false,
+            "transitions": 2
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "B.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": false
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": true
+            }
+          ],
+          "cursor": 1,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "B.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "idle",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": null,
+          "stoppedAtMs": null,
+          "elapsedMs": 0,
+          "chunkCount": 0,
+          "recorderEnabled": true,
+          "sessionPolicy": null,
+          "deliveredBytes": 0,
+          "admittedBytes": 0,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": null,
+          "secondaryStopReason": null,
+          "terminalOutcome": null,
+          "finalExportBytes": null,
+          "nativeShutdown": "not-started",
+          "warnings": [],
+          "lastExportUrl": null,
+          "lastExportFileName": "",
+          "lastExportByteSize": 0,
+          "lastAction": "init",
+          "lastCode": "recording-supported-webm",
+          "lastMessage": "Audio + video recording is available. Using WebM (video/webm;codecs=vp9,opus).",
+          "lastUpdatedAtMs": 315.30000000004657
+        },
+        "exportBytes": 0,
+        "mediaEnded": false
+      },
+      "errors": []
+    },
+    {
+      "mode": "recording-across-eof",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "recording",
+            "cursor": 1,
+            "filename": "A.wav",
+            "ended": false,
+            "transitions": 2
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "B.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": false
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": true
+            }
+          ],
+          "cursor": 1,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "B.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "recording",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 2081.5,
+          "stoppedAtMs": null,
+          "elapsedMs": 1377,
+          "chunkCount": 1,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 7357,
+          "admittedBytes": 7357,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 1,
+          "previousExportBytes": 0,
+          "stopReason": null,
+          "secondaryStopReason": null,
+          "terminalOutcome": null,
+          "finalExportBytes": null,
+          "nativeShutdown": "active",
+          "warnings": [],
+          "lastExportUrl": null,
+          "lastExportFileName": "",
+          "lastExportByteSize": 0,
+          "lastAction": "transport-track-change-complete",
+          "lastCode": "track-change-complete",
+          "lastMessage": "Recording continues on the newly loaded track.",
+          "lastUpdatedAtMs": 3458.4000000000233
+        },
+        "exportBytes": 0,
+        "mediaEnded": false,
+        "nativeRecorderState": "recording"
+      },
+      "errors": []
+    },
+    {
+      "mode": "delayed-onstop",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 0,
+            "filename": "A.wav",
+            "ended": true,
+            "transitions": 1
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "B.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": false
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": true
+            }
+          ],
+          "cursor": 1,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "B.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "complete",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1895.6000000000931,
+          "stoppedAtMs": 3813.20000000007,
+          "elapsedMs": 1918,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 20713,
+          "admittedBytes": 20713,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "complete",
+          "finalExportBytes": 20713,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": "blob:http://rc05.test/60b3b38c-3232-4e10-9645-7df431d46fa5",
+          "lastExportFileName": "auralprint-capture-20261015-073914.webm",
+          "lastExportByteSize": 20713,
+          "lastAction": "finalize",
+          "lastCode": "complete",
+          "lastMessage": "Recording export ready.",
+          "lastUpdatedAtMs": 3819.100000000093
+        },
+        "exportBytes": 20713,
+        "mediaEnded": false,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    },
+    {
+      "mode": "native-eof-order",
+      "evidence": {
+        "events": [
+          {
+            "event": "capture-stop-at-eof",
+            "phase": "finalizing"
+          },
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 0,
+            "filename": "A.wav",
+            "ended": true,
+            "transitions": 1
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "B.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": false
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": true
+            }
+          ],
+          "cursor": 1,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "B.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "complete",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1312.1000000000931,
+          "stoppedAtMs": 2558.5,
+          "elapsedMs": 1246,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 23338,
+          "admittedBytes": 23338,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "complete",
+          "finalExportBytes": 23338,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": "blob:http://rc05.test/86240637-223f-4e0e-a1b5-8beb668691f0",
+          "lastExportFileName": "auralprint-capture-20261015-073917.webm",
+          "lastExportByteSize": 23338,
+          "lastAction": "finalize",
+          "lastCode": "complete",
+          "lastMessage": "Recording export ready.",
+          "lastUpdatedAtMs": 2563.100000000093
+        },
+        "exportBytes": 23338,
+        "mediaEnded": false,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    },
+    {
+      "mode": "repeat-one",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 0,
+            "filename": "A.wav",
+            "ended": true,
+            "transitions": 1
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "A.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": true
+            }
+          ],
+          "cursor": 0,
+          "length": 1
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "A.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "complete",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1112,
+          "stoppedAtMs": 3049,
+          "elapsedMs": 1937,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 20908,
+          "admittedBytes": 20908,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "complete",
+          "finalExportBytes": 20908,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": "blob:http://rc05.test/05d6769d-4e04-43cb-9f6c-5cd111b2abea",
+          "lastExportFileName": "auralprint-capture-20261015-073921.webm",
+          "lastExportByteSize": 20908,
+          "lastAction": "finalize",
+          "lastCode": "complete",
+          "lastMessage": "Recording export ready.",
+          "lastUpdatedAtMs": 3050.5999999999767
+        },
+        "exportBytes": 20908,
+        "mediaEnded": false,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    },
+    {
+      "mode": "repeat-all",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 1,
+            "filename": "B.wav",
+            "ended": true,
+            "transitions": 2
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 3,
+            "filename": "A.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": true
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": false
+            }
+          ],
+          "cursor": 0,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "A.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "complete",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1269.4000000000233,
+          "stoppedAtMs": 3180.3000000000466,
+          "elapsedMs": 1911,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 12601,
+          "admittedBytes": 12601,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "complete",
+          "finalExportBytes": 12601,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": "blob:http://rc05.test/0694949f-a721-4957-8c96-68d05ff724a2",
+          "lastExportFileName": "auralprint-capture-20261015-073924.webm",
+          "lastExportByteSize": 12601,
+          "lastAction": "finalize",
+          "lastCode": "complete",
+          "lastMessage": "Recording export ready.",
+          "lastUpdatedAtMs": 3181.9000000000233
+        },
+        "exportBytes": 12601,
+        "mediaEnded": false,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    },
+    {
+      "mode": "no-next",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 0,
+            "filename": "A.wav",
+            "ended": true,
+            "transitions": 1
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "audio-unloaded",
+            "reason": "track-ended-no-next"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": true
+            }
+          ],
+          "cursor": 0,
+          "length": 1
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": false,
+          "filename": "A.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "complete",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1027.7999999999302,
+          "stoppedAtMs": 2958.79999999993,
+          "elapsedMs": 1931,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 18401,
+          "admittedBytes": 18401,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "complete",
+          "finalExportBytes": 18401,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": "blob:http://rc05.test/a0cc8846-9221-49f3-81d2-585c2a1cb19a",
+          "lastExportFileName": "auralprint-capture-20261015-073928.webm",
+          "lastExportByteSize": 18401,
+          "lastAction": "finalize",
+          "lastCode": "complete",
+          "lastMessage": "Recording export ready.",
+          "lastUpdatedAtMs": 2961
+        },
+        "exportBytes": 18401,
+        "mediaEnded": true,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    },
+    {
+      "mode": "export-error",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 0,
+            "filename": "A.wav",
+            "ended": true,
+            "transitions": 1
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "B.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": false
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": true
+            }
+          ],
+          "cursor": 1,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "B.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "error",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1127.5,
+          "stoppedAtMs": 3037.9000000000233,
+          "elapsedMs": 1910,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 15828,
+          "admittedBytes": 15828,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "failed",
+          "finalExportBytes": null,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": null,
+          "lastExportFileName": "",
+          "lastExportByteSize": 0,
+          "lastAction": "error",
+          "lastCode": "finalize-failed",
+          "lastMessage": "RC05 injected export assembly failure Native recorder confirmed stopped; another recording may begin.",
+          "lastUpdatedAtMs": 3039.3000000000466
+        },
+        "exportBytes": 0,
+        "mediaEnded": false,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    }
+  ]
+}

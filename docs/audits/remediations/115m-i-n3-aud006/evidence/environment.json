@@ -1,0 +1,10 @@
+{
+  "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "node": "v24.19.0",
+  "python": "3.12.14",
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "ffprobe": "ffprobe version 7.1.5-0+deb13u1 Copyright (c) 2007-2026 the FFmpeg developers",
+  "cgroup_memory_max_bytes": 8589934592,
+  "limitations": "Cloud Linux headless host. No physical memory tier certification, real hardware permissions, GPU/thermal/battery or perceptual fidelity acceptance. Summed RSS double-counts shared mappings; not recorder-attributable memory."
+}
