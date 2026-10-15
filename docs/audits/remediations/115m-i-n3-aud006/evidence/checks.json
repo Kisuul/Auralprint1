@@ -1,0 +1,23 @@
+{
+  "npm ci": 0,
+  "npm test": 0,
+  "npm run build": 0,
+  "python scripts/verify_distribution.py": 0,
+  "git diff --check": 0,
+  "new_policy_governor_ui_tests": "included in full suite",
+  "native_rc03_rc04_rc05_rc06_rc19": "passed",
+  "native_cancel_eof": "passed",
+  "unit_tests": {
+    "total": 1031,
+    "pass": 1030,
+    "fail": 0,
+    "skip": 1,
+    "skip_reason": "existing opt-in test"
+  },
+  "mutation_controls": {
+    "detected": 11,
+    "total": 11,
+    "harness_crashes_counted": 0
+  },
+  "protected_files_checked": 865
+}

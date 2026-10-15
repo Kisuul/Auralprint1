@@ -1,0 +1,82 @@
+{
+  "passed": false,
+  "results": [
+    {
+      "name": "S-equality",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.315,
+      "assertion_failure": true
+    },
+    {
+      "name": "H-equality",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.271,
+      "assertion_failure": true
+    },
+    {
+      "name": "C-equality",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.284,
+      "assertion_failure": true
+    },
+    {
+      "name": "omit-P",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.27,
+      "assertion_failure": true
+    },
+    {
+      "name": "retain-rejected",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.274,
+      "assertion_failure": true
+    },
+    {
+      "name": "ignore-duration",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.255,
+      "assertion_failure": true
+    },
+    {
+      "name": "no-data-token",
+      "killed": false,
+      "returncode": 0,
+      "seconds": 0.245,
+      "assertion_failure": false
+    },
+    {
+      "name": "cleanup-success",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.272,
+      "assertion_failure": true
+    },
+    {
+      "name": "cancel-disposes",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.289,
+      "assertion_failure": true
+    },
+    {
+      "name": "unrestricted-hidden-T",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.292,
+      "assertion_failure": true
+    },
+    {
+      "name": "reserve-omitted",
+      "killed": true,
+      "returncode": 1,
+      "seconds": 0.262,
+      "assertion_failure": true
+    }
+  ]
+}

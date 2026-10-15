@@ -4024,13 +4024,13 @@ test("RC-05: no-next/repeat-off clears pending ownership before reentrant and re
   });
 });
 
-test("RC-05: export failure still releases EOF without overwriting recording error", async t => {
+for (const phase of ["error", "cancelled"]) test(`RC-05: ${phase} settlement releases EOF without overwriting recorder outcome`, async t => {
   await withRc02FileWorkflow(t, {}, async ({ audio, ingest, scrubberLoads }) => {
     await ingest(["A.wav", "B.wav"]);
     preferences.audio.repeatMode = "none";
     state.recording.phase = "finalizing";
     rc05End(audio);
-    Object.assign(state.recording, { phase: "error", lastCode: "finalize-failed", lastMessage: "export failure" });
+    Object.assign(state.recording, { phase, lastCode: phase === "error" ? "finalize-failed" : "capture-cancelled", lastMessage: phase === "error" ? "export failure" : "capture cancelled" });
     const error = structuredClone(state.recording);
     UI.refreshRecordingUi();
     await rc05Settle();
