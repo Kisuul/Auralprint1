@@ -384,25 +384,30 @@
       <p id="recordingPolicySummary" class="muted recordCopy"></p>
       <div id="recordingCustom" hidden>
         <div class="resourceLimit">
-          <label for="recording-softBytes">Soft received-data Stop (bytes)</label>
+          <label for="recording-softBytes">Soft recording size (MB)</label>
           <label class="resourceToggle"><input id="recording-softBytes-enabled" type="checkbox" /> On (unchecked = Off)</label>
-          <input id="recording-softBytes" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+          <input id="recording-softBytes" type="number" step="any" inputmode="decimal" aria-describedby="recordingUnitsNote recording-softBytes-exact recordingPolicyError" />
+          <span id="recording-softBytes-exact" class="muted recordCopy"></span>
         </div>
         <div class="resourceLimit">
-          <label for="recording-aggregateBytes">Aggregate retained-data admission (bytes)</label>
+          <label for="recording-aggregateBytes">Aggregate retained recording size (MB)</label>
           <label class="resourceToggle"><input id="recording-aggregateBytes-enabled" type="checkbox" /> On (unchecked = Off)</label>
-          <input id="recording-aggregateBytes" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+          <input id="recording-aggregateBytes" type="number" step="any" inputmode="decimal" aria-describedby="recordingUnitsNote recording-aggregateBytes-exact recordingPolicyError" />
+          <span id="recording-aggregateBytes-exact" class="muted recordCopy"></span>
         </div>
         <div class="resourceLimit">
-          <label for="recording-maxChunks">Maximum nonempty chunk references</label>
+          <label for="recording-maxChunks">Maximum retained chunks</label>
           <label class="resourceToggle"><input id="recording-maxChunks-enabled" type="checkbox" /> On (unchecked = Off)</label>
-          <input id="recording-maxChunks" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+          <input id="recording-maxChunks" type="number" step="1" inputmode="numeric" aria-describedby="recordingUnitsNote recording-maxChunks-exact recordingPolicyError" />
+          <span id="recording-maxChunks-exact" class="muted recordCopy"></span>
         </div>
         <div class="resourceLimit">
-          <label for="recording-durationMs">Automatic elapsed Stop target (ms)</label>
+          <label for="recording-durationMs">Automatic elapsed Stop target (minutes)</label>
           <label class="resourceToggle"><input id="recording-durationMs-enabled" type="checkbox" /> On (unchecked = Off)</label>
-          <input id="recording-durationMs" type="number" step="1" inputmode="numeric" aria-describedby="recordingPolicyError" />
+          <input id="recording-durationMs" type="text" inputmode="decimal" aria-describedby="recordingUnitsNote recording-durationMs-exact recordingPolicyError" />
+          <span id="recording-durationMs-exact" class="muted recordCopy"></span>
         </div>
+        <p id="recordingUnitsNote" class="muted recordCopy"></p>
         <label><input id="recording-warnings" type="checkbox" /> <span id="recordingWarningsLabel">Nonblocking warnings</span></label>
         <button id="btnApplyRecordingResources" type="button">Apply Custom Limits</button>
       </div>

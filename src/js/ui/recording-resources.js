@@ -1,7 +1,8 @@
 import { CONFIG } from "../core/config.js";
-import { defaultSelection, deriveReserve, recordingPolicySettings } from "../recording/recording-policy.js";
+import { defaultSelection, deriveReserve, recordingPolicySettings, RECORDING_RESOURCE_INPUTS, formatResourceInput, MILLISECONDS_PER_MINUTE, DECIMAL_BYTES_PER_MB } from "../recording/recording-policy.js";
 
 const bytes = value => `${value.toLocaleString("en-US")} bytes`;
+const megabytes = value => `${formatResourceInput("softBytes", value)} MB (${bytes(value)})`;
 const limit = (value, unit) => value === null ? "Off" : unit === "bytes" ? bytes(value) : `${value.toLocaleString("en-US")} ${unit}`;
 function recordingResourcePresentation(recording) {
   const p = recording.sessionPolicy;
@@ -45,13 +46,14 @@ function createRecordingResourcesControls({ document: doc = globalThis.document,
     sync(custom,"hidden",p !== "custom");
     const reserve = deriveReserve(selection.custom.aggregateBytes);
     sync(summary,"textContent", p === "balanced"
-      ? `Automatic Stop target: ${f.durationMs / 60000} minutes (${limit(f.durationMs,"ms")}). Soft Stop ${bytes(f.softBytes)}; aggregate ${bytes(f.aggregateBytes)}; intended headroom ${bytes(f.reserveBytes)}; ${f.maxChunks.toLocaleString("en-US")} chunks. Warnings at ${f.warningFraction * 100}%.`
+      ? `Automatic Stop target: ${f.durationMs / MILLISECONDS_PER_MINUTE} minutes (${limit(f.durationMs,"ms")}). Soft Stop ${megabytes(f.softBytes)}; aggregate ${megabytes(f.aggregateBytes)}; intended headroom ${megabytes(f.reserveBytes)}; ${f.maxChunks.toLocaleString("en-US")} chunks. Warnings at ${f.warningFraction * 100}%.`
       : p === "unrestricted"
         ? "Application size, chunk and automatic duration limits are Off. Browser and device limits still apply. A crash may lose the current unsaved capture. The latest successful export stays available until valid replacement or explicit disposal."
-        : `Derived final-delivery headroom: ${limit(reserve,"bytes")}. Headroom cannot guarantee that native final data fits. `
+        : `Derived final-delivery headroom: ${reserve === null ? "Off" : megabytes(reserve)}. Headroom cannot guarantee that native final data fits. `
           + (selection.custom.softBytes === null && selection.custom.aggregateBytes !== null
             ? "Soft Stop is Off: recording may fail at hard aggregate admission instead of completing early. " : "")
-          + "Custom edits take effect after Apply, on the next Start.");
+          + "Size, duration and chunk limits operate independently: a two-hour duration still stops at an enabled size threshold and can fail hard admission at an aggregate or chunk limit. Turning duration Off leaves other limits active. Custom edits take effect after Apply, on the next Start.");
+    sync(get("recordingUnitsNote"),"textContent",`1 MB = ${DECIMAL_BYTES_PER_MB.toLocaleString("en-US")} bytes; 1 minute = ${MILLISECONDS_PER_MINUTE.toLocaleString("en-US")} milliseconds. Decimal entries must resolve to whole bytes or milliseconds. Exact durations may display as fractions of a minute: 1/${MILLISECONDS_PER_MINUTE} means 1 millisecond. Fractions remain exact when saved or reloaded.`);
     sync(storage,"textContent",message);
     refreshNext();
     sync(get("recordingWarningsLabel"),"textContent",`Nonblocking warnings at ${f.warningFraction * 100}% of applicable limits`);
@@ -63,9 +65,13 @@ function createRecordingResourcesControls({ document: doc = globalThis.document,
       const value = selection.custom[key], toggle = get(`recording-${key}-enabled`), input = get(`recording-${key}`);
       sync(toggle,"checked",value !== null);
       sync(input,"disabled",value === null);
-      sync(input,"value",value === null ? "" : String(value));
-      input.min = String(CONFIG.recordingResources.integer.min);
-      input.max = String(CONFIG.recordingResources.integer.max);
+      sync(input,"value",formatResourceInput(key, value));
+      const spec = RECORDING_RESOURCE_INPUTS[key];
+      if (key !== "durationMs") {
+        input.min = formatResourceInput(key, CONFIG.recordingResources.integer.min);
+        input.max = formatResourceInput(key, CONFIG.recordingResources.integer.max);
+      }
+      sync(get(`recording-${key}-exact`),"textContent",value === null ? "Off" : `Exact setting: ${value.toLocaleString("en-US")} ${spec.canonicalUnit}.`);
       input.setAttribute("aria-invalid","false");
     }
     sync(get("recording-warnings"),"checked",selection.custom.warningFraction !== null);
@@ -77,18 +83,18 @@ function createRecordingResourcesControls({ document: doc = globalThis.document,
   for(const key of fields) get(`recording-${key}-enabled`).addEventListener("change",()=>{
     const enabled=get(`recording-${key}-enabled`).checked,input=get(`recording-${key}`);
     sync(input,"disabled",!enabled);
-    if(enabled && !input.value) input.value=String(defaultSelection().custom[key]);
+    if(enabled && !input.value) input.value=formatResourceInput(key, defaultSelection().custom[key]);
   });
   get("btnApplyRecordingResources").addEventListener("click",()=>{
     const custom = {};
     for(const key of fields) {
       const raw=get(`recording-${key}`).value;
-      custom[key]=get(`recording-${key}-enabled`).checked ? (/^\d+$/.test(raw) ? Number(raw) : NaN) : null;
+      custom[key]=get(`recording-${key}-enabled`).checked ? raw : null;
     }
     custom.warningFraction=get("recording-warnings").checked ? CONFIG.recordingResources.factory.warningFraction : null;
-    const result=settings.set({profile:profile.value,custom});
+    const result=settings.setFromInputs({profile:profile.value,custom});
     if(!result.ok) {
-      sync(error,"textContent",Object.entries(result.errors).map(([key,text])=>`${key}: ${text}`).join(" "));
+      sync(error,"textContent",Object.entries(result.errors).map(([key,text])=>`${RECORDING_RESOURCE_INPUTS[key]?.label || key}: ${text}`).join(" "));
       for(const key of fields) get(`recording-${key}`).setAttribute("aria-invalid",String(!!result.errors[key]));
     }
   });
