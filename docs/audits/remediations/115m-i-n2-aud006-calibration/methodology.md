@@ -64,3 +64,45 @@ Fifteen-minute trial requires the preceding five-minute result to be complete,
 replayed, <=32 MiB encoded, <=1.2 GiB summed RSS and no abort/page errors. Otherwise
 record an omission and retain the five-minute evidence. Do not extrapolate bitrate
 as a maximum. All captured files remain in work/ and are represented by hashes.
+
+## Execution dispositions and isolation follow-up
+
+Stage A ran the original diagnostic byte-for-byte on Chromium 151.0.7922.173.
+Stage B used `native-initial.cjs` (saved exact executed source), six completed
+workloads and one early guard abort. High-video VP8 crossed 1.5 GiB summed RSS
+at 23.770s; native Stop settled, report `passed=false`, no replay/media extraction
+was attempted for that guarded sample. Exit code alone is not the result: the
+initial harness returned 0 on a guard abort; inspect `aborted`/`passed` in JSON.
+Its planned C rows were halted and not executed in that browser. All raw evidence
+is preserved in `native-stage-b-initial.json`.
+
+After reviewing the guard, Stage C was separately authorized by the existing
+assignment and run in a fresh browser using `N2_SCENARIO_IDS` to select only the
+standard five-minute and conditional baseline fifteen-minute scenarios. Resource
+limits were unchanged; no attempt to defeat the guard. Short standard trials had
+stayed below it. The five-minute trial completed, but 97,086,560 bytes exceeded
+the prerequisite 32 MiB for fifteen minutes. Fifteen minutes was omitted, never
+marked passed. The five-minute peak sampled summed RSS was 1,168.2 MiB, below
+its 1.2 GiB prerequisite, but payload alone disqualified continuation. A rough
+threefold byte projection would exceed the diagnostic's 96 MiB per-session guard;
+that arithmetic is a justification for omission, not a maximum-bitrate prediction.
+
+`native.cjs` adds only scenario selection, executed-source hash and clearer omitted
+rows after guard to the initial diagnostic. It is the exact Stage C executed source.
+Both variants use the same capture/observation path. Their render wrapper times
+existing VisualizerRuntime.render calls and counts cadence; it does not replace
+rendering or inject frames. Saved gap/cost distributions describe instrumented
+rendering. ffprobe packet counts are reported as a rate proxy, not claimed decoded
+frame counts. The N.1 downloaded last export also receives ffprobe decoded-frame
+inspection; other Stage A exports have event/final MIME evidence only.
+
+An additional positive control serves the built artifact byte-for-byte, with no
+symbol exposure, MediaRecorder/URL/render wrappers or synthetic mediaDevices. It
+uses File input, UI Start/Stop/Download and ffprobe decoding. This checks the ordinary
+unmodified recording path; it does not establish that instrumentation has zero
+performance cost or quantify a performance correction factor.
+
+Full host samples, native event ledgers, scene settings, render timings, MIME fields,
+container stream metadata and hashes are retained. Raw files are UTC observations;
+user-facing work date is October 14, 2026 in America/Los_Angeles. Resource-safety
+and browser/device gaps remain explicit. No video/audio payload is committed.

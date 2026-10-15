@@ -1,0 +1,731 @@
+{
+  "baseline": "v0.1.15m.i.m",
+  "kind": "modeled encoded-payload characterization; NOT native memory",
+  "cases": [
+    {
+      "name": "low-steady",
+      "reportedInputBytes": 10000,
+      "physicalInputBytes": 11,
+      "active": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 10,
+        "bytes": 10000,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 1,
+        "lifecycle": "recording"
+      },
+      "finalizing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 11,
+        "bytes": 10017,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 1,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 10017,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 10017,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 2,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "high-steady",
+      "reportedInputBytes": 80000000,
+      "physicalInputBytes": 11,
+      "active": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 10,
+        "bytes": 80000000,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 5,
+        "lifecycle": "recording"
+      },
+      "finalizing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 11,
+        "bytes": 80000017,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 5,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 80000017,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 80000017,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 6,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "bursty",
+      "reportedInputBytes": 50000005,
+      "physicalInputBytes": 6,
+      "active": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 5,
+        "bytes": 50000005,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 9,
+        "lifecycle": "recording"
+      },
+      "finalizing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 6,
+        "bytes": 50000022,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 9,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 50000022,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 50000022,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 10,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "many-tiny",
+      "reportedInputBytes": 10000,
+      "physicalInputBytes": 10001,
+      "active": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 10000,
+        "bytes": 10000,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 13,
+        "lifecycle": "recording"
+      },
+      "finalizing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 10001,
+        "bytes": 10017,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 13,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 10017,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 10017,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 14,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "large-single",
+      "reportedInputBytes": 1073741824,
+      "physicalInputBytes": 2,
+      "active": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 1,
+        "bytes": 1073741824,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 17,
+        "lifecycle": "recording"
+      },
+      "finalizing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 2,
+        "bytes": 1073741841,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 17,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 1073741841,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 1073741841,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 18,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "zero-size-ignored",
+      "reportedInputBytes": 13,
+      "physicalInputBytes": 4,
+      "active": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 1,
+        "bytes": 13,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 21,
+        "lifecycle": "recording"
+      },
+      "finalizing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 2,
+        "bytes": 30,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 21,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 30,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 30,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 22,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "delayed-no-delivery",
+      "delayMs": 600000,
+      "before": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 25,
+        "lifecycle": "recording"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 90000000,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 90000000,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 26,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "hypothetical-final-overshoot",
+      "hypotheticalBudget": 100,
+      "crossing": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 2,
+        "bytes": 599,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 29,
+        "lifecycle": "finalizing"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 599,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 599,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 30,
+        "lifecycle": "complete"
+      },
+      "note": "No governor installed; entire final event retained."
+    },
+    {
+      "name": "replacement-and-failed-replacement",
+      "overlap": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 41,
+        "pending": 1,
+        "bytes": 100,
+        "completedBytes": 41,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 35,
+        "lifecycle": "recording"
+      },
+      "settled": {
+        "phase": "error",
+        "code": "object-url-create-failed",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 41,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 41,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 36,
+        "lifecycle": "error"
+      }
+    },
+    {
+      "name": "repeated-cycles",
+      "cycles": 25,
+      "created": 25,
+      "revoked": 24,
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-24",
+        "exportBytes": 25,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 25,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 88,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "error-before-late-stop-data",
+      "failed": {
+        "phase": "error",
+        "code": "recorder-error",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 11,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 94,
+        "lifecycle": "error"
+      },
+      "nativeAfterError": "recording",
+      "lateCallbacksFenced": true,
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-1",
+        "exportBytes": 4,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 4,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 96,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "error-after-stop-before-terminal-data",
+      "failed": {
+        "phase": "error",
+        "code": "recorder-error",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 11,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 102,
+        "lifecycle": "error"
+      },
+      "afterLate": {
+        "phase": "error",
+        "code": "recorder-error",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 11,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 102,
+        "lifecycle": "error"
+      },
+      "stopAttempts": 1
+    },
+    {
+      "name": "transport-mutations-continue-capture",
+      "before": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 1,
+        "bytes": 5,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 105,
+        "lifecycle": "recording"
+      },
+      "after": {
+        "phase": "recording",
+        "code": "audio-unloaded",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 1,
+        "bytes": 5,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 105,
+        "lifecycle": "recording"
+      },
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 5,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 5,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 106,
+        "lifecycle": "complete"
+      },
+      "note": "Message seam only; public UI source selectors lock during active recording."
+    },
+    {
+      "name": "missing-terminal-event",
+      "modeledWaitMs": 3600000,
+      "retained": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 1,
+        "bytes": 100,
+        "completedBytes": 11,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": false,
+        "token": 111,
+        "lifecycle": "finalizing"
+      },
+      "stops": 1,
+      "note": "Clock advanced; no real waiting/native leak assertion."
+    },
+    {
+      "name": "stop-throws-active-native",
+      "settled": {
+        "phase": "error",
+        "code": "stop-failed",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 11,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 117,
+        "lifecycle": "error"
+      },
+      "nativeState": "recording",
+      "stopAttempts": 1
+    },
+    {
+      "name": "reentrant-stop",
+      "stopAttempts": 1,
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 4,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 4,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 121,
+        "lifecycle": "complete"
+      }
+    },
+    {
+      "name": "synchronous-stop-complete",
+      "result": {
+        "ok": true,
+        "code": "finalizing"
+      },
+      "immediate": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": "blob:modeled-1",
+        "exportBytes": 12,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 12,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 127,
+        "lifecycle": "complete"
+      },
+      "finding": "Outer stop overwrites terminal canonical status with finalizing."
+    },
+    {
+      "name": "synchronous-stop-error",
+      "result": {
+        "ok": true,
+        "code": "finalizing"
+      },
+      "immediate": {
+        "phase": "finalizing",
+        "code": "finalizing",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 11,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 133,
+        "lifecycle": "error"
+      },
+      "finding": "Outer stop overwrites terminal canonical status with finalizing."
+    },
+    {
+      "name": "synchronous-start-data",
+      "result": {
+        "ok": true,
+        "code": "recorder-input-audio-video"
+      },
+      "immediate": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 1,
+        "bytes": 7,
+        "completedBytes": 0,
+        "nativeHeld": true,
+        "streamsHeld": true,
+        "timerHeld": true,
+        "token": 136,
+        "lifecycle": "recording"
+      },
+      "canonicalChunkCount": 0,
+      "finding": "Outer start projection overwrites synchronous event outcome/counter."
+    },
+    {
+      "name": "synchronous-start-stop",
+      "result": {
+        "ok": true,
+        "code": "recorder-input-audio-video"
+      },
+      "immediate": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 0,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": true,
+        "token": 140,
+        "lifecycle": "error"
+      },
+      "canonicalChunkCount": 0,
+      "finding": "Outer start projection overwrites synchronous event outcome/counter."
+    },
+    {
+      "name": "synchronous-start-error",
+      "result": {
+        "ok": true,
+        "code": "recorder-input-audio-video"
+      },
+      "immediate": {
+        "phase": "recording",
+        "code": "recorder-input-audio-video",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 0,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": true,
+        "token": 144,
+        "lifecycle": "error"
+      },
+      "canonicalChunkCount": 0,
+      "finding": "Outer start projection overwrites synchronous event outcome/counter."
+    },
+    {
+      "name": "dispose-finalizing-and-late-callbacks",
+      "disposed": {
+        "phase": "disabled",
+        "code": "disposed",
+        "exportUrl": null,
+        "exportBytes": 0,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 0,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 151,
+        "lifecycle": "disabled"
+      },
+      "lateCallbacksFenced": true
+    },
+    {
+      "name": "owner-release-failure-at-success",
+      "settled": {
+        "phase": "complete",
+        "code": "complete",
+        "exportUrl": "blob:modeled-0",
+        "exportBytes": 11,
+        "pending": 0,
+        "bytes": 0,
+        "completedBytes": 11,
+        "nativeHeld": false,
+        "streamsHeld": false,
+        "timerHeld": false,
+        "token": 153,
+        "lifecycle": "complete"
+      },
+      "finding": "Cleanup false is logged but ignored by ordinary successful finalization."
+    }
+  ],
+  "expectedLogs": [
+    "[RecorderEngine] object-url-create-failed",
+    "[RecorderEngine] recorder-error",
+    "[RecorderEngine] recorder-error",
+    "[RecorderEngine] stop-failed",
+    "[RecorderEngine] recorder-error",
+    "[RecorderEngine] no-captured-chunks",
+    "[RecorderEngine] recorder-error",
+    "[RecorderEngine] audio-stream-release-failed"
+  ]
+}
