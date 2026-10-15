@@ -435,6 +435,13 @@ Before implementing any change, an agent must:
 - No duplicate listeners
 - Presets round-trip
 
+### Documentation discipline
+- Document the **current implementation**, configuration, interfaces, developer workflows, and known limitations. Be brief and verifiable; no marketing copy or development diary.
+- Correct stale code comments. Update an existing authoritative document before creating another; avoid repeating the same facts across files.
+- Keep test logs, investigations, failed approaches, and transient pre-release fixes in PRs or scoped evidence, not permanent operational documentation.
+- The changelog compares **shipped public releases**. Report fixes only when the defect existed in the previous public release; do not list defects introduced and corrected solely during unpublished development.
+- Historical audit evidence stays historical unless explicitly authorized for archival or deletion. Do not rewrite its original findings.
+
 ---
 
 ## 8. Roadmap Alignment (DO NOT FREEFORM)
