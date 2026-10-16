@@ -21,7 +21,7 @@ production picker, panel, `selectOrbAnalysis`, Orb runtime/collection, coordinat
 confirmation callback, and existing UI/channel/identity regression harnesses.
 RC-16 strict targeting, RC-17 designed phase/native editor, RC-18 visual pause,
 and RC-19 recorder disposal remain present; **81 baseline protection assertions
-passed** ([log](baseline-protections.log)). Historical audit evidence is unchanged.
+passed** ([log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/baseline-protections.log)). Historical audit evidence is unchanged.
 
 Classification: two UI truthfulness bug fixes. Production behavior changes are
 one help string and one type-aware lookup condition. Risk is confirmation
@@ -36,9 +36,9 @@ Before production editing, new tests instantiated the actual band picker and
 failed on its inaccurate rendered explanation. Production `selectOrbAnalysis`
 still returned different selected-channel energies. The optional Chromium
 harness also reproduced both findings using an isolated archive of the exact
-accepted commit, without editing the baseline. See [baseline assertions](baseline-focused.log)
+accepted commit, without editing the baseline. See [baseline assertions](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/baseline-focused.log)
 and [native baseline](baseline-native.json). Four focused assertions failed on
-baseline; all 12 focused cases pass after correction ([focused log](focused.log)).
+baseline; all 12 focused cases pass after correction ([focused log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/focused.log)).
 
 Before:
 
@@ -166,16 +166,16 @@ object identity is intentionally not exposed.
 
 ## Full validation and artifact
 
-- Locked offline `npm ci` passed ([log](npm-ci.log)). The initial sandbox blocked
+- Locked offline `npm ci` passed ([log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/npm-ci.log)). The initial sandbox blocked
   esbuild subprocess execution; authorized execution resolved that environment
   constraint. Initial sandbox Node runs hid child assertion reports; all retained
   final counts use ordinary subprocess execution with individual assertions.
 - Relevant channel, picker/editor, inventory/identity and RC-15–RC-19 suites:
-  **265 pass, 0 fail, 1 existing opt-in skip** ([log](regressions.log)).
-- Existing opt-in 1,048,576-particle boundary: **1 pass** ([log](million-stress.log)).
+  **265 pass, 0 fail, 1 existing opt-in skip** ([log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/regressions.log)).
+- Existing opt-in 1,048,576-particle boundary: **1 pass** ([log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/million-stress.log)).
 - `npm test`: **602 pass, 0 fail, 1 existing opt-in skip**; 603 registered
-  ([log](full-test.log)).
-- `npm run build`: passed after full tests, sequentially ([log](build.log)).
+  ([log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/full-test.log)).
+- `npm run build`: passed after full tests, sequentially ([log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-c-rc21-rc22/build.log)).
 - `git diff --check`: passed.
 - [Artifact verification](artifact.json): `dist/auralprint_0.1.15m.i.c.html`,
   **400,363 bytes**, SHA-256 `15d661654b2161e506ffcbb15cb72739b68b910a1f102499c037719327f070dd`.
