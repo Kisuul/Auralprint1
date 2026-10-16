@@ -45,7 +45,7 @@ following public disposal, and demonstrated:
 
 See [original adaptation output](baseline/native-capture-results.json). The
 focused regression suite also failed **9 of 17 assertions** against the baseline,
-then passed all 17 with the correction; see [baseline assertions](baseline-focused.log).
+then passed all 17 with the correction; see [baseline assertions](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-b-rc19/baseline-focused.log).
 
 A subsequent same-script comparison used a detached worktree at the exact
 accepted commit. [Timestamped baseline](baseline-native-timed.json) observed native
@@ -197,7 +197,7 @@ Both preexisting optional browser scripts are preserved unchanged.
 
 ## Focused tests and mutations
 
-[Focused recording/export/source regressions](focused-regressions.log): **47 passed**,
+[Focused recording/export/source regressions](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-b-rc19/focused-regressions.log): **47 passed**,
 including **17 dedicated RC-19 tests**. The fake tracks native inactive/recording
 states, stop attempts, retained handlers, queued/manual and synchronous event
 delivery, configurable native stop failure, and exceptional handler cleanup.
@@ -226,10 +226,10 @@ The script restores production source even on failure.
 
 Sequential local validation completed:
 
-- [npm ci](npm-ci.log): passed with a workspace cache; the first attempt could not write the default home cache, then succeeded with `--cache /workspace/work/rc19/npm-cache`.
-- [npm test](full-test.log): **590 passed, 0 failed, 1 existing opt-in million-retention stress skip** (591 registered).
-- [Optional million-retention stress](million-stress.log): enabled separately with `AP_MILLION_STRESS=1`, **1 passed**, including its 1,048,576-particle boundary.
-- [npm run build](build.log): passed.
+- [npm ci](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-b-rc19/npm-ci.log): passed with a workspace cache; the first attempt could not write the default home cache, then succeeded with `--cache /workspace/work/rc19/npm-cache`.
+- [npm test](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-b-rc19/full-test.log): **590 passed, 0 failed, 1 existing opt-in million-retention stress skip** (591 registered).
+- [Optional million-retention stress](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-b-rc19/million-stress.log): enabled separately with `AP_MILLION_STRESS=1`, **1 passed**, including its 1,048,576-particle boundary.
+- [npm run build](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-b-rc19/build.log): passed.
 - `git diff --check`: passed.
 - [Artifact verification](artifact.json): `auralprint_0.1.15m.i.b.html`, 400,289 bytes, correct version/schema/native-shutdown code; generated output and dependencies remain ignored/untracked.
 

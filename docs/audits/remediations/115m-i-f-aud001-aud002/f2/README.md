@@ -11,7 +11,7 @@ AUD-001 (High) is implementation-corrected for the tested ownership paths. Final
 - Before implementation, PR #46 was verified open/draft with exactly the accepted F.1 head. Main and PR ancestry were rechecked before publication. F.1 changed documentation/evidence only.
 - All **15** original F.1 files, including its runner, logs, results, trace and contracts, were compared byte-for-byte against the accepted commit after validation. [Integrity inventory](evidence/f1-integrity.json) records their original hashes. Nothing in the existing audit, F.1 evidence or canonical shipped builds changed.
 
-The original [F.1 results](../baseline-results.json), [trace](../ownership-trace.md) and [contracts](../regression-contracts.md) remain the baseline record. The new results below describe corrected development code, not a regenerated baseline.
+The original [F.1 results](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-f-aud001-aud002/baseline-results.json), [trace](../ownership-trace.md) and [contracts](../regression-contracts.md) remain the baseline record. The new results below describe corrected development code, not a regenerated baseline.
 
 ## Ownership change
 
@@ -64,7 +64,7 @@ Chromium **151.0.7922.173**, headless, native Web Audio/HTMLMediaElement, muted 
 | Loaded playing/paused removal and ordinary unmodified WAV activation | Successor preserves actual play/pause intent; ordinary playback time advances. |
 | Current attach resume rejects | Existing structured `file-activation-failed` path remains observable, without a rejection leak. |
 
-[Full native snapshots and assertion failures](evidence/native-results.json), [first-run summary](evidence/f2-native-summary.json), and both native logs preserve actual execution. Native snapshots include Queue/entry/File IDs, request ID, source/audio state, element identity/state, graph readiness, URLs, recorder notifications, projected UI, browser exceptions and unhandled rejections. Generated stereo PCM WAVs are deterministic, 30 seconds, 44.1 kHz, using 440/554/659 Hz fixtures; hashes/bytes are in the results.
+[Full native snapshots and assertion failures](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-f-aud001-aud002/f2/evidence/native-results.json), [first-run summary](evidence/f2-native-summary.json), and both native logs preserve actual execution. Native snapshots include Queue/entry/File IDs, request ID, source/audio state, element identity/state, graph readiness, URLs, recorder notifications, projected UI, browser exceptions and unhandled rejections. Generated stereo PCM WAVs are deterministic, 30 seconds, 44.1 kHz, using 440/554/659 Hz fixtures; hashes/bytes are in the results.
 
 The six remaining failures are unchanged F.3 work:
 
@@ -97,7 +97,7 @@ python scripts/verify_distribution.py
 git diff --check
 ```
 
-All exited **0**; staged `git diff --cached --check` also passed. Captured terminal logs normalize trailing blank lines. Full suite: **628 tests, 627 pass, 0 fail, 1 established opt-in particle-budget skip**. Portable and hosted I.F metadata and identical shared implementation passed distribution verification. Distribution hashes are recorded in [validation.json](validation.json) and [distribution log](evidence/distribution.log). `.build/` and `dist/` remain ignored; no distribution is committed.
+All exited **0**; staged `git diff --cached --check` also passed. Captured terminal logs normalize trailing blank lines. Full suite: **628 tests, 627 pass, 0 fail, 1 established opt-in particle-budget skip**. Portable and hosted I.F metadata and identical shared implementation passed distribution verification. Distribution hashes are recorded in [validation.json](validation.json) and [distribution log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-f-aud001-aud002/f2/evidence/distribution.log). `.build/` and `dist/` remain ignored; no distribution is committed.
 
 Run diagnostics separately from the default suite, writing fresh results outside the historical evidence:
 
