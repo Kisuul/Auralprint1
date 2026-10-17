@@ -1,6 +1,6 @@
 # Build 115 development history
 
-Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current development revision: **`v0.1.15m.i.n`**, preset schema **10**.
+Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current release-candidate revision: **`v0.1.15n` (Build 115N)**, preset schema **10**. This promotion changes version/documentation metadata only; final acceptance and shipment remain withheld.
 
 Current accepted main includes watcher correction PR #56 and the October 9 AUD-006 recorder investigation, calibration, governor and Custom-units closeout through merged PRs #57–#60 (`1bd8ef65b3589f0d1ef321edaf07e177d94ced01`). The recorder's corrective implementation is merged; Build 115N final acceptance remains WITHHELD, and device/browser acceptance is separate. Historical reports retain their original checkpoint status.
 
