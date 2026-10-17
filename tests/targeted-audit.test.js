@@ -21,9 +21,11 @@ import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/u
 import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
 
-test("development version metadata and schema remain aligned", () => {
-  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.n");
-  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.n\s/);
+test("version metadata and schema remain aligned", () => {
+  const version = readFileSync(new URL("../version", import.meta.url), "utf8").trim();
+  const constants = readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8");
+  assert.match(version, /^v[0-9][A-Za-z0-9.\-]*$/);
+  assert.ok(constants.includes(`   Auralprint\n   ${version.slice(1)}\n`), "Source header must match root version");
   assert.equal(PRESET_SCHEMA_VERSION, 10);
 });
 
