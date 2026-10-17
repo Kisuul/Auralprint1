@@ -2,7 +2,7 @@
 
 Offline-capable audio analysis, playback, visualization, and recording. Spectral analysis drives the visualizers.
 
-**Current release:** Release 3 / Build 113 (`v0.1.13`). Build 114 (`v0.1.14`) was shipped internally. **Development:** Build 115 (`v0.1.15m.i.n`), preset schema 10; **115N acceptance WITHHELD**. Build 115 is not a canonical release.
+**Current release:** Release 3 / Build 113 (`v0.1.13`). Build 114 (`v0.1.14`) was shipped internally. **Release candidate:** Build 115N (`v0.1.15n`), preset schema 10; final acceptance **WITHHELD**. Build 115 is unshipped and noncanonical.
 
 - [ROADMAP.md](ROADMAP.md): current scope, future builds, acceptance gates, and deferrals.
 - [agents.md](agents.md): binding architecture and development contracts.
@@ -25,7 +25,7 @@ Do not run test and build concurrently: tests temporarily rename build directori
 
 Build outputs:
 
-- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (for this revision: `dist/auralprint_0.1.15m.i.n.html`); application JS/CSS and favicon embedded.
+- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (for this candidate: `dist/auralprint_0.1.15n.html`); application JS/CSS and favicon embedded.
 - **Hosted:** `dist/hosted/index.html` plus the included icons and `site.webmanifest`. Deploy the whole directory, including at subdirectory paths, with appropriate MIME types.
 
 `npm run watch` watches JS/CSS, the HTML template, root `version`, and branding inputs. Build and watch share the distribution contract. CI checks Linux and Windows builds. Browser tooling is optional.
@@ -64,7 +64,7 @@ Builds 112 and 114 were shipped internally, not as new public releases.
 | --- | --- | --- |
 | 112 | Internal shipped | Queue and scrubber |
 | 114 | Internal shipped | Microphone and stream input |
-| 115 | Implemented; unshipped; 115N WITHHELD | Analysis/visualizer separation and independent Orbs |
+| 115 | 115N RC in validation; unshipped; acceptance WITHHELD | Analysis/visualizer separation and independent Orbs |
 | 116–120 | Planned | See [ROADMAP.md](ROADMAP.md) |
 
 ## Build 111 — v0.1.11 (Release 2, ✅ shipped - previous canonical)
@@ -85,9 +85,9 @@ Permission-gated microphone and stream analysis, source switching, and source-aw
 
 ## Build 115 — v0.1.15: Visualizer Architecture + Orb Overhaul v1
 
-Implemented but not shipped. AnalysisFrame separates analysis from visualizer consumers; VisualizerRuntime owns lifecycle. The Spectral Ring is a singleton, while zero/one/N Orbs have stable IDs and independent configuration/editors. Scene owns shared color; particle limits and recorder-resource policy are configurable. Schema 10 preserves supported legacy preset migration.
+Release candidate under validation; not shipped. AnalysisFrame separates analysis from visualizer consumers; VisualizerRuntime owns lifecycle. The Spectral Ring is a singleton, while zero/one/N Orbs have stable IDs and independent configuration/editors. Scene owns shared color; particle limits and recorder-resource policy are configurable. Schema 10 preserves supported legacy preset migration.
 
-**Release gate:** [115N acceptance](ROADMAP.md#build-115n-acceptance-gates) still requires applicable media/device, browser, accessibility, performance, artistic, distribution, and release evidence. Passing tests or merged corrective PRs does not authorize shipment.
+**RC acceptance pending:** [115N acceptance](ROADMAP.md#build-115n-acceptance-gates) still requires applicable media/device, browser, accessibility, performance, artistic, distribution, and release evidence. Passing tests or merged corrective PRs does not authorize shipment.
 
 ## Build 116 — v0.1.16: Camera Controls (Render ≠ Sim)
 

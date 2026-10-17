@@ -1,8 +1,8 @@
 # Auralprint development roadmap
 
-Updated: October 15, 2026. Development revision: **`v0.1.15m.i.n` / Build 115**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
+Updated: October 16, 2026. Release-candidate revision: **`v0.1.15n` / Build 115N**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
 
-**RC-01 through RC-22 have completed corrective review and merge at accepted main `a198b14b087da6b855041c3a23acb550a156ff4e`. 115N final acceptance remains WITHHELD. Build 115 is unshipped and noncanonical.** Corrective closure does not establish complete browser, media, accessibility, artistic, or hardware acceptance. The [current audit disposition index](docs/development/build-115.md#audit-disposition-index) records accepted corrections and residual limitations; earlier audit snapshots remain immutable.
+**RC-01 through RC-22 have completed corrective review and merge at accepted main `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N has entered release-candidate validation; final acceptance remains WITHHELD. Build 115 is unshipped and noncanonical.** Corrective closure does not establish complete browser, media, accessibility, artistic, or hardware acceptance. The [current audit disposition index](docs/development/build-115.md#audit-disposition-index) records accepted corrections and residual limitations; earlier audit snapshots remain immutable.
 
 This document owns the current plan and acceptance criteria. [Development history](docs/development/build-115.md) owns chronology; [agents.md](agents.md) owns engineering policy. **Release 3 / Build 113 is the canonical public shipped release. Build 114 is internally shipped.** The [internal release-delta draft](docs/development/build-115-release-delta.md) compares both baselines without choosing a public release number or changelog baseline. Build 116 Camera remains dependent on Build 115 acceptance.
 
@@ -37,7 +37,7 @@ Camera, richer frequency/band tools, preset-file workflows, and 3D remain planne
 
 ## Build 115 staged delivery plan
 
-Stages 1–13 are complete. Accepted corrective milestones include AUD-007 I.2D (PR #55), [AUD-011 watcher correctness](docs/audits/remediations/115m-i-m-aud011/README.md) (PR #56, revision `v0.1.15m.i.m`), and October 9 AUD-006 recorder admission/recovery/settings work (PRs #57–#60, through `v0.1.15m.i.n`). The [development record](docs/development/build-115.md) contains chronology. Stages 14–15 remain withheld.
+Stages 1–13 are complete. Accepted corrective milestones include AUD-007 I.2D (PR #55), [AUD-011 watcher correctness](docs/audits/remediations/115m-i-m-aud011/README.md) (PR #56, revision `v0.1.15m.i.m`), and October 9 AUD-006 recorder admission/recovery/settings work (PRs #57–#60, through `v0.1.15m.i.n`). The [development record](docs/development/build-115.md) contains chronology. Stage 14 (115N RC validation) is in progress, with final acceptance withheld; Stage 15 (canonization) has not begun.
 
 1. **Revised Build 115 canon** — real scope and state. *(115A complete)*
 2. **AnalysisFrame boundary** — data-only consumer seam. *(115B complete)*
@@ -52,7 +52,7 @@ Stages 1–13 are complete. Accepted corrective milestones include AUD-007 I.2D 
 11. **Spectral Ring promotion** — singleton lifecycle and sole presentation editor. *(115K complete)*
 12. **Explicit color ownership** — Scene policy and Orb overrides. *(115L complete)*
 13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M corrective changes merged through N.3F; 115N acceptance withheld)*
-14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N WITHHELD)*
+14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N RC validation in progress; acceptance WITHHELD)*
 15. **Canonization** — approved release comparison, artifacts and explicit human shipment approval. *(115N only after acceptance)*
 
 ## Build 115: Visualizer Architecture + Orb Overhaul v1
@@ -77,7 +77,7 @@ The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tes
 
 ### Build 115N acceptance gates
 
-**WITHHELD.** Independent evidence and explicit human approval are still required for applicable scenarios:
+**115N RC validation in progress; final acceptance WITHHELD.** Independent evidence and explicit human approval are still required for applicable scenarios:
 
 - Firefox/Safari and mobile browsers, physical touch, responsive panel recovery, keyboard/focus and assistive technology.
 - Real compressed/media breadth, device sample rates/channel layouts, microphone hardware, OS display/system-audio permissions, cancellation and recovery.
