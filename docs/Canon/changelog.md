@@ -167,3 +167,32 @@
 - **File-only controls now fail safely outside file mode.** Queue actions, drag-and-drop loading, and track navigation are guarded with file-mode checks and user-facing affordance text instead of silently doing the wrong thing in live-input workflows.
   - **Why:** The new `toastFileModeOnlyAction()` path and repeated `isFileWorkflowMode(...)` checks were added specifically around transport controls that only make sense for queued files.
   - **Impact:** The expanded source model does not leave legacy file controls in ambiguous states, which reduces accidental no-ops and cross-mode bugs.
+
+---
+
+## v114 → v115 (Release 4 / Build 115)
+
+Build 115 (`v0.1.15`, preset schema 10) is the fourth public release. Build 114 was internal; public users upgrading from Release 3 / Build 113 also receive the Mic/Stream functionality described in [v113 → v114](#v113--v114).
+
+### New Features
+
+- **Independent visualizer architecture.** AnalysisFrame separates audio analysis from visualizer consumers. VisualizerRuntime manages the Spectral Ring and a stable-ID collection of zero, one or many Orbs.
+- **Complete per-Orb controls.** Add, duplicate, remove and edit individual Orbs, including channel/band targets, motion, response, particle trails, Trace, center, color and designed starting phase. Bulk Edit supports multiple selected Orbs.
+- **Dedicated workspaces.** Analysis owns FFT and band settings, Visualizers owns Orbs and Spectral Ring, and Settings owns shared Scene appearance and presets.
+- **Particle resource controls.** Configurable per-frame emission and live-particle budgets, minimum Orb-local placement spacing and live resource diagnostics.
+- **Recording Resources controls.** Balanced offers a five-minute automatic Stop target, while Custom and Unrestricted provide deliberate application-limit overrides. Previous successful exports survive cancelled or failed replacements.
+- **Portable and hosted editions.** The same source produces a self-contained HTML file and relocatable hosted package.
+
+### Changes
+
+- **Channel-aware targeting.** An Orb's selected-band energy now follows its chosen L/R/C channel instead of using combined-C values for every selected target. Existing presets may respond differently by design.
+- **Independent Orb persistence.** Preset schema 10 migrates supported older schemas (including both schema-9 forms); historical global behavior becomes per-Orb configuration. Obsolete particle-overlap settings are discarded rather than reinterpreted.
+- **Particle history and timekeeping.** Placement filtering replaces deletion of nearby particles; retention and TTL govern retirement. Visible motion, emission-work limits and elapsed-time aging have distinct rules.
+
+### Fixes
+
+- **Audio and queue lifecycle.** Superseded Play/Clear operations cannot revive replaced transport; natural end-of-file events survive recording finalization; stale live-capture attachments cannot replace newer sessions.
+- **Seeking and file admission.** Touch cancellation ends scrubber interaction cleanly; supported Ogg and unknown-MIME files can reach actual browser decoding.
+- **Recording exports.** Failed or cancelled new captures no longer discard the previous successful export.
+- **FFT band boundaries.** Frequency-to-bin mapping uses consistent FFT geometry rather than the earlier off-by-scale lower-bin inclusion.
+
