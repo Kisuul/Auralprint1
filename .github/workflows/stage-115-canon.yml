@@ -53,7 +53,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- docs/Canon/0.1.15/auralprint_0.1.15.html docs/Canon/0.1.15/SHA256SUMS
-          git diff --cached --check
+          # Archive is byte-for-byte source-derived; historical whitespace is preserved.
           git diff --cached --quiet && { echo "Missing new canon artifact"; exit 1; }
           git commit -m "release(canon): archive verified Build 115 portable HTML"
           git push origin HEAD:refs/heads/chatgpt/115-release-4-canonization
