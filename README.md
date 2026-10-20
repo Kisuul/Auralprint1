@@ -2,13 +2,13 @@
 
 Offline-capable audio analysis, playback, visualization, and recording. Spectral analysis drives the visualizers.
 
-**Current release:** Release 3 / Build 113 (`v0.1.13`). Build 114 (`v0.1.14`) was shipped internally. **Release candidate:** Build 115N (`v0.1.15n`), preset schema 10; final acceptance **WITHHELD**. Build 115 is unshipped and noncanonical.
+**Current release:** Release 4 / Build 115 (`v0.1.15`), preset schema 10. Released following 115N RC testing and owner acceptance. Build 114 (`v0.1.14`) was internal; previous public release was Release 3 / Build 113.
 
 - [ROADMAP.md](ROADMAP.md): current scope, future builds, acceptance gates, and deferrals.
 - [agents.md](agents.md): binding architecture and development contracts.
 - [Build 115 history](docs/development/build-115.md): engineering chronology and corrective dispositions.
-- [Release comparison draft](docs/development/build-115-release-delta.md): unpublished comparison with public Build 113 and internal Build 114.
-- [Canonical changelog](docs/Canon/changelog.md): changes between shipped public releases.
+- [Build 115 release comparison](docs/development/build-115-release-delta.md): public Build 113 and internal Build 114 baselines.
+- [Canonical changelog](docs/Canon/changelog.md): chronological build changes, including internal milestones.
 
 ## Developer and agent bootstrap
 
@@ -25,14 +25,14 @@ Do not run test and build concurrently: tests temporarily rename build directori
 
 Build outputs:
 
-- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (for this candidate: `dist/auralprint_0.1.15n.html`); application JS/CSS and favicon embedded.
+- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (for this release: `dist/auralprint_0.1.15.html`); application JS/CSS and favicon embedded.
 - **Hosted:** `dist/hosted/index.html` plus the included icons and `site.webmanifest`. Deploy the whole directory, including at subdirectory paths, with appropriate MIME types.
 
 `npm run watch` watches JS/CSS, the HTML template, root `version`, and branding inputs. Build and watch share the distribution contract. CI checks Linux and Windows builds. Browser tooling is optional.
 
 The portable file is designed to run without adjacent assets. Direct local-file usage has owner-reported browser coverage, but fully network-disabled operation remains an open acceptance check. Hosted packaging does not provide a service worker or offline caching.
 
-## Using the development build
+## Using Auralprint
 
 Load audio in **File**, or select **Mic** / **Stream** with browser permission. **Audio** controls sources and playback; **Queue** controls the playlist; **Analysis** owns spectral configuration; **Visualizers** owns Orbs and the Spectral Ring; **Settings** owns Scene appearance, particle resources, and presets; **Record** owns capture. **H** hides/restores panels outside text inputs; **Space** pauses visual motion/emission, not audio analysis.
 
@@ -54,7 +54,8 @@ Interfaces are canon; modules are mutable. Shipped builds and published preset c
 | --- | --- | --- | --- |
 | 1 | 110 | `v0.1.10` | Shipped, legacy |
 | 2 | 111 | `v0.1.11` | Shipped, previous |
-| 3 | 113 | `v0.1.13` | Current canonical |
+| 3 | 113 | `v0.1.13` | Shipped, previous |
+| 4 | 115 | `v0.1.15` | Current canonical |
 
 Builds 112 and 114 were shipped internally, not as new public releases.
 
@@ -64,7 +65,7 @@ Builds 112 and 114 were shipped internally, not as new public releases.
 | --- | --- | --- |
 | 112 | Internal shipped | Queue and scrubber |
 | 114 | Internal shipped | Microphone and stream input |
-| 115 | 115N RC in validation; unshipped; acceptance WITHHELD | Analysis/visualizer separation and independent Orbs |
+| 115 | Release 4, shipped | Analysis/visualizer separation and independent Orbs |
 | 116–120 | Planned | See [ROADMAP.md](ROADMAP.md) |
 
 ## Build 111 — v0.1.11 (Release 2, ✅ shipped - previous canonical)
@@ -77,7 +78,7 @@ Waveform seeking, multi-file queue, navigation, drag/drop, repeat and track-end 
 
 ## Build 113 — v0.1.13 (Release 3, ✅ shipped - canonical): Recording / Capture
 
-Recording panel with browser-supported WebM/MP4, optional source audio, frame-rate choice, latest export/download, and five band-distribution modes. This is the current public release baseline.
+Recording panel with browser-supported WebM/MP4, optional source audio, frame-rate choice, latest export/download, and five band-distribution modes. Previously the public release baseline.
 
 ## Build 114 — v0.1.14: Live Input Sources
 
@@ -85,9 +86,9 @@ Permission-gated microphone and stream analysis, source switching, and source-aw
 
 ## Build 115 — v0.1.15: Visualizer Architecture + Orb Overhaul v1
 
-Release candidate under validation; not shipped. AnalysisFrame separates analysis from visualizer consumers; VisualizerRuntime owns lifecycle. The Spectral Ring is a singleton, while zero/one/N Orbs have stable IDs and independent configuration/editors. Scene owns shared color; particle limits and recorder-resource policy are configurable. Schema 10 preserves supported legacy preset migration.
+Release 4, accepted and shipped. AnalysisFrame separates analysis from visualizer consumers; VisualizerRuntime owns lifecycle. The Spectral Ring is a singleton, while zero/one/N Orbs have stable IDs and independent configuration/editors. Scene owns shared color; particle limits and recorder-resource policy are configurable. Schema 10 preserves supported legacy preset migration.
 
-**RC acceptance pending:** [115N acceptance](ROADMAP.md#build-115n-acceptance-gates) still requires applicable media/device, browser, accessibility, performance, artistic, distribution, and release evidence. Passing tests or merged corrective PRs does not authorize shipment.
+**Release artifact:** [Canonical portable HTML](docs/Canon/0.1.15/auralprint_0.1.15.html). Firefox does not supply shared-display audio for Stream mode; File and Mic are separate workflows. See [release acceptance and qualifications](ROADMAP.md#build-115-release-acceptance-and-qualifications).
 
 ## Build 116 — v0.1.16: Camera Controls (Render ≠ Sim)
 
@@ -111,4 +112,4 @@ Optional exploration after the 2D/camera baseline stabilizes. [Acceptance requir
 
 ## Release discipline notes
 
-Changes to published preset schemas require versioning and migrations. Runtime state—queue, playback position, recording sessions, live-input permissions—does not belong in Scene presets. Changelog fixes describe bugs present in the prior **public release**, not problems introduced and corrected only during development. Canonization requires explicit 115N acceptance.
+Changes to published preset schemas require versioning and migrations. Runtime state—queue, playback position, recording sessions, live-input permissions—does not belong in Scene presets. Changelog fixes describe defects present in the compared shipped baseline, not problems introduced and corrected only during unpublished development. Release 4 public comparison spans Build 113 through the internal 114 milestone and Build 115.
