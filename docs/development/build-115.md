@@ -1,10 +1,10 @@
 # Build 115 development history
 
-Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current release-candidate revision: **`v0.1.15n` (Build 115N)**, preset schema **10**. This promotion changes version/documentation metadata only; final acceptance and shipment remain withheld.
+Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is **Release 4 (`v0.1.15`)**, owner-accepted October 20, 2026 after the 115N public RC. Preset schema **10** is frozen. The [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [roadmap](../../ROADMAP.md), and [release comparison](build-115-release-delta.md) state the final disposition; this file preserves engineering chronology and immutable audit evidence.
 
-Current accepted main includes watcher correction PR #56 and the October 9 AUD-006 recorder investigation, calibration, governor and Custom-units closeout through merged PRs #57–#60 (`1bd8ef65b3589f0d1ef321edaf07e177d94ced01`). The recorder's corrective implementation is merged; Build 115N final acceptance remains WITHHELD, and device/browser acceptance is separate. Historical reports retain their original checkpoint status.
+Accepted corrective history includes watcher correction PR #56 and October 9 AUD-006 recorder changes through PRs #57–#60 (`1bd8ef65b3589f0d1ef321edaf07e177d94ced01`). Final 115N owner acceptance is separate from those corrective reviews. Historical audit reports retain their original checkpoint statuses.
 
-The historical I.E documentation reconciliation started from [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge are complete at that baseline. **115N final acceptance remains WITHHELD.** “Closed” below describes the accepted corrective disposition; it does not claim shipment, universal performance, or completion of independent artistic/device acceptance.
+The historical I.E documentation reconciliation started from [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge were complete at that baseline. Final 115N acceptance occurred later, on October 20, 2026. “Closed” in historical entries describes the corrective disposition; it does not claim universal browser/device certification.
 
 ## Intent and original architecture
 
@@ -163,9 +163,9 @@ Version-specific counts, mutation outcomes, CI run IDs, native results and inter
 | [Finalizing EOF](../../scripts/validate-finalizing-eof.cjs) | [RC-05 report](../audits/remediations/115m-h-g-rc05/README.md); `RC05_PLAYWRIGHT_MODULE`, `RC05_CHROMIUM_PATH`, `RC05_REPORT` |
 | [Distribution/browser](../../scripts/validate-rc20.cjs) | [RC-20 report](../audits/remediations/115m-i-d-rc20/README.md); `RC20_PLAYWRIGHT_MODULE`, `RC20_CHROMIUM_PATH`, `RC20_REPORT` |
 
-## Remaining 115N acceptance work
+## 115N release disposition
 
-The [115N gates](../../ROADMAP.md#build-115n-acceptance-gates) require independent applicable browser/media/device/accessibility/performance/artistic evidence and explicit approval to ship. The human 16-Orb preset, real capture/suspension behavior, demonstrably network-disabled direct-file operation, external-player fidelity, constrained-hardware limits and maskable artwork remain review items. The final public changelog baseline must distinguish public Build 113 from internal Build 114; this record and the [release-delta draft](build-115-release-delta.md) decide no release number or published notes.
+The owner accepted Build 115 as Release 4 on October 20, 2026 following extended local testing and public RC feedback. The [roadmap qualifications](../../ROADMAP.md#build-115-release-acceptance-and-qualifications) record limits of that acceptance, including Firefox Stream audio. The [release comparison](build-115-release-delta.md) distinguishes public Build 113 from internal Build 114; the canonical changelog follows the existing `v114 → v115` chronological format.
 
 The [editorial integrity report](115m-i-e-documentation-review.md) records this pass's scope and validation. Canonical distributions, canonical changelog, original audit, remediation reports and evidence logs remain unchanged.
 
