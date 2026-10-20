@@ -1,6 +1,6 @@
-# Build 115 release-delta preparation — internal draft
+# Build 115 release comparison — Release 4
 
-**For human editorial review during 115N. Not a canonical changelog entry or shipment claim.** Prospective Build 115 candidate is `v0.1.15n` (115N RC), schema 10. AUD-007 I.2D (PR #55), the [AUD-011 watcher correction](../audits/remediations/115m-i-m-aud011/README.md) (PR #56), and the October 9 AUD-006 recorder corrections (PRs #57–#60) are merged; broader Build 115N acceptance remains separate. The earlier I.E reconciliation checkpoint was `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N remains WITHHELD. No release number, published notes, or final comparison baseline is assigned here.
+**Release 4 / Build 115 (`v0.1.15`, schema 10)** was accepted by the owner on October 20, 2026 after 115N RC testing. This development comparison is not the canonical changelog. Public predecessor: Build 113 / Release 3; Build 114 was shipped internally. The [canonical changelog](../Canon/changelog.md) records chronological `v114 → v115` changes; together with its `v113 → v114` entry these describe the public Release 3 → Release 4 span.
 
 Current development also provides resource-admitted optional waveforms: a single-flight pipeline, bounded metadata inspection, source-owned encoded/estimated-PCM ceilings, independent local 4/8/15m application choices and manual Generate. Playback and seeking remain primary. The [I.2D report](../audits/remediations/115m-i-i-aud007/final-acceptance/README.md) records corrections, owner-reported cross-browser/direct-file acceptance and residual estimate/offline uncertainty; it does not approve 115N or publish release notes.
 
@@ -11,11 +11,11 @@ Current development also provides resource-admitted optional waveforms: a single
 | A · Public release | [Build 113 executable artifact](../Canon/0.1.13/auralprint_0.1.13.html), `v0.1.13`, schema 8 | Release 3, canonical public shipped baseline |
 | B · Engineering milestone | [Build 114 executable artifact](../Canon/0.1.14/auralprint_0.1.14.html), `v0.1.14`, schema 8 | Internally shipped milestone; not a public Release 4 |
 
-The two HTML artifacts were inspected as executable source, including CONFIG, Orb/TrailSystem, channel selection/sample, codec, UI, transport and recorder functions. Current references are the implemented modules linked below. [Build 110](../Canon/0.1.10/index.html), [111](../Canon/0.1.11/index.html) and [112](../Canon/0.1.12/auralprint_0.1.12.html) establish older schema/analysis/queue context; they are not substituted for either comparison baseline. The [canonical changelog](../Canon/changelog.md) supplies editorial context, not behavioral proof, and remains unchanged.
+The Build 113 and 114 HTML artifacts were inspected as executable source, including CONFIG, Orb/TrailSystem, channel selection/sample, codec, UI, transport and recorder functions. Current references are the implemented modules linked below. [Build 110](../Canon/0.1.10/index.html), [111](../Canon/0.1.11/index.html) and [112](../Canon/0.1.12/auralprint_0.1.12.html) establish older schema/analysis/queue context; they are not substituted for either comparison baseline. The [canonical changelog](../Canon/changelog.md) supplies editorial context, not behavioral proof, and remains unchanged.
 
 This is a source/artifact comparison supported by existing current-build regression and remediation evidence. Retired bundles were not rerun across devices or subjected to a new browser audit. Where the same defective control flow exists in a baseline, that is stated explicitly; historical incidence, full media fidelity and hardware performance are not inferred. Internal prototype corrections are not automatically shipped-product “Fixes.” The [development record](build-115.md) owns that chronology.
 
-## A · Public Build 113 → prospective Build 115
+## A · Public Build 113 → Build 115
 
 ### New systems and capabilities
 
@@ -41,7 +41,7 @@ The Analysis workspace displays band count but does not offer an editor. Importe
 
 ### Verified corrections relative to the comparison baseline
 
-These defects are present in inspected Build 113 control flow and absent from the corresponding current implementation. They are candidates for eventual shipped notes after release review, not claims that every audit correction was experienced by public users.
+These defects are present in inspected Build 113 control flow and absent from Build 115. This source comparison does not establish that every defect occurred in a public user's session.
 
 | Observable correction | Baseline proof → current implementation / evidence |
 | --- | --- |
@@ -52,9 +52,9 @@ These defects are present in inspected Build 113 control flow and absent from th
 
 ### Deliberately absent or deferred
 
-Camera/projection, 3D, richer frequency/band-table tooling, local preset-file import/export, broader constrained-hardware/long-panel optimization, hosted offline caching and service-worker installation remain absent. Real devices/permissions, exported fidelity, physical accessibility/touch and demonstrably network-disabled direct-file operation require [115N evidence](../../ROADMAP.md#build-115n-acceptance-gates). Recording and the five band distributions already exist in Build 113 and are not new Build 115 public capabilities.
+Camera/projection, 3D, richer frequency/band-table tooling, local preset-file import/export, broader constrained-hardware/long-panel optimization, hosted offline caching and service-worker installation remain absent. Real devices/permissions, exported fidelity, physical accessibility/touch and demonstrably network-disabled direct-file operation are not universally certified by [Release 4 acceptance](../../ROADMAP.md#build-115-release-acceptance-and-qualifications). Recording and the five band distributions already exist in Build 113 and are not new Build 115 public capabilities.
 
-## B · Internal Build 114 → prospective Build 115
+## B · Internal Build 114 → Build 115
 
 ### New systems and capabilities
 
@@ -90,12 +90,9 @@ These are verified baseline-path corrections, not a claim of a new defect introd
 
 The same Camera/3D, richer band, file-preset, hardware/UX and caching deferrals apply. Resolving bounded resource correctness does not complete Build 117 optimization, bound long-duration recording memory, or certify expert/max-count visual usability.
 
-## Decisions reserved for release review
+## Final release disposition
 
-- Approve whether eventual public notes compare Build 113 or another explicitly approved shipped baseline; preserve Build 114's internal distinction.
-- Select final user-facing wording and grouping after browser/device/media/artistic/performance acceptance. No public release number is assigned here.
-- Approve compatibility communication for changed L/R targets, per-Orb ownership, discarded overlap semantics and selected resource limits. Review representative real legacy presets and the exact human scene.
-- Verify direct portable launch, exported audio fidelity/downloads, maskable artwork and representative constrained-device behavior. Existing Chromium HTTP/generated-media evidence cannot resolve these decisions.
-- Treat static baseline control-flow proof separately from reproduced historical device incidence; rerun retired-artifact scenarios if final notes need stronger before/after behavioral claims.
-
-**`docs/Canon/changelog.md` remains unchanged.** Only an approved shipped-to-shipped delta belongs there; the final release decision and publication occur after 115N acceptance.
+- Release 4 is Build 115 (`v0.1.15`), preset schema 10. Public predecessor is Release 3 / Build 113; Build 114 is an internal comparison milestone.
+- Owner accepted the 115N RC after public use and tester feedback. This is an acceptance decision, not certification of every platform, device or exported format.
+- Firefox does not provide shared-display audio; Stream requires an audio track. Other input workflows remain independent.
+- The [canonical changelog](../Canon/changelog.md) carries the requested incremental `v114 → v115` delta. Compatibility notes remain relevant for channel-targeted energy, discarded overlap behavior and per-Orb settings. Build 116/117 own postponed camera and UX/optimization work.

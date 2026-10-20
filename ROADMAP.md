@@ -1,10 +1,10 @@
 # Auralprint development roadmap
 
-Updated: October 16, 2026. Release-candidate revision: **`v0.1.15n` / Build 115N**. Preset schema: **10**, with approved pre-release exceptions in [agents.md](agents.md#21-schema-discipline); frozen on shipment.
+Updated: October 20, 2026. **Release 4 / Build 115 (`v0.1.15`) is accepted for public shipment.** Preset schema **10** is frozen; changes after shipment require versioned migration per [agents.md](agents.md#21-schema-discipline).
 
-**RC-01 through RC-22 have completed corrective review and merge at accepted main `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N has entered release-candidate validation; final acceptance remains WITHHELD. Build 115 is unshipped and noncanonical.** Corrective closure does not establish complete browser, media, accessibility, artistic, or hardware acceptance. The [current audit disposition index](docs/development/build-115.md#audit-disposition-index) records accepted corrections and residual limitations; earlier audit snapshots remain immutable.
+**RC-01 through RC-22 completed corrective review at checkpoint `a198b14b087da6b855041c3a23acb550a156ff4e`; Build 115N passed automated CI and received owner acceptance following public RC testing.** Release 4 is Build 115. Platform limitations and unverified environments are disclosed below; earlier audit snapshots remain immutable. The [audit disposition index](docs/development/build-115.md#audit-disposition-index) retains historical corrective evidence.
 
-This document owns the current plan and acceptance criteria. [Development history](docs/development/build-115.md) owns chronology; [agents.md](agents.md) owns engineering policy. **Release 3 / Build 113 is the canonical public shipped release. Build 114 is internally shipped.** The [internal release-delta draft](docs/development/build-115-release-delta.md) compares both baselines without choosing a public release number or changelog baseline. Build 116 Camera remains dependent on Build 115 acceptance.
+This document owns the current plan and acceptance criteria. [Development history](docs/development/build-115.md) owns chronology; [agents.md](agents.md) owns engineering policy. **Release 4 / Build 115 is the current public release. Build 113 was Release 3; Build 114 was an internal shipment.** The [release comparison](docs/development/build-115-release-delta.md) distinguishes both baselines. Build 116 Camera follows Build 115.
 
 
 Current accepted recorder work: the October 9 AUD-006 investigation/calibration
@@ -12,8 +12,7 @@ Current accepted recorder work: the October 9 AUD-006 investigation/calibration
 (PR #59), and [lossless Custom settings closeout](docs/audits/remediations/115m-i-n3-aud006/closeout-n3f.md)
 (PR #60) are merged. Balanced targets a five-minute automatic Stop; Custom and
 Unrestricted offer deliberate overrides. Recorder correctness and prior-export
-preservation remain mandatory. Engineering corrective acceptance does **not**
-establish broader browser/device safety or authorize Build 115N shipment.
+preservation remain mandatory. Engineering corrective acceptance alone did not establish broader browser/device safety; owner release acceptance is recorded separately.
 
 ## Current capability inventory
 
@@ -37,7 +36,7 @@ Camera, richer frequency/band tools, preset-file workflows, and 3D remain planne
 
 ## Build 115 staged delivery plan
 
-Stages 1–13 are complete. Accepted corrective milestones include AUD-007 I.2D (PR #55), [AUD-011 watcher correctness](docs/audits/remediations/115m-i-m-aud011/README.md) (PR #56, revision `v0.1.15m.i.m`), and October 9 AUD-006 recorder admission/recovery/settings work (PRs #57–#60, through `v0.1.15m.i.n`). The [development record](docs/development/build-115.md) contains chronology. Stage 14 (115N RC validation) is in progress, with final acceptance withheld; Stage 15 (canonization) has not begun.
+Stages 1–15 are complete for Build 115. Accepted corrective milestones include AUD-007 I.2D (PR #55), [AUD-011 watcher correctness](docs/audits/remediations/115m-i-m-aud011/README.md) (PR #56), and October 9 AUD-006 recorder work (PRs #57–#60). Stage 14 concluded with owner acceptance after 115N public RC testing; Stage 15 produces the canonical `v0.1.15` artifact and documentation. The [development record](docs/development/build-115.md) retains chronology.
 
 1. **Revised Build 115 canon** — real scope and state. *(115A complete)*
 2. **AnalysisFrame boundary** — data-only consumer seam. *(115B complete)*
@@ -51,9 +50,9 @@ Stages 1–13 are complete. Accepted corrective milestones include AUD-007 I.2D 
 10. **Dedicated Analysis panel** — configuration/diagnostics separate from visualization; channel-complete spectra. *(115J/J.A complete)*
 11. **Spectral Ring promotion** — singleton lifecycle and sole presentation editor. *(115K complete)*
 12. **Explicit color ownership** — Scene policy and Orb overrides. *(115L complete)*
-13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M corrective changes merged through N.3F; 115N acceptance withheld)*
-14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N RC validation in progress; acceptance WITHHELD)*
-15. **Canonization** — approved release comparison, artifacts and explicit human shipment approval. *(115N only after acceptance)*
+13. **Preset/lifecycle hardening** — codec/migration, ownership and UI consolidation; subsequent corrective audit review/merge and packaging complete. *(115M corrections merged through N.3F; complete)*
+14. **Final acceptance** — browser, real-media/device, accessibility, artistic and constrained-hardware evidence. *(115N public RC tested; owner accepted October 20, 2026)*
+15. **Canonization** — approved release comparison, artifacts and explicit human shipment approval. *(Release 4 / v0.1.15, canonized)*
 
 ## Build 115: Visualizer Architecture + Orb Overhaul v1
 
@@ -73,19 +72,18 @@ Visualizers owns collection management, complete Orb editors/Bulk Edit, and the 
 
 ### Current regression evidence
 
-The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tests/build and both distribution contracts on Linux/Windows. [README bootstrap](README.md#developer-and-agent-bootstrap) documents commands/toolchains. The [audit disposition index](docs/development/build-115.md#audit-disposition-index) links accepted numerical, lifecycle, native Chromium and mutation evidence without duplicating historical logs. These checks protect implemented behavior; they do not complete 115N.
+The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tests/build and both distribution contracts on Linux/Windows. [README bootstrap](README.md#developer-and-agent-bootstrap) documents commands/toolchains. The [audit disposition index](docs/development/build-115.md#audit-disposition-index) links accepted numerical, lifecycle, native Chromium and mutation evidence without duplicating historical logs. These checks protect implemented behavior; release acceptance additionally included owner and community field testing.
 
-### Build 115N acceptance gates
+<a id="build-115n-acceptance-gates"></a>
 
-**115N RC validation in progress; final acceptance WITHHELD.** Independent evidence and explicit human approval are still required for applicable scenarios:
+### Build 115 release acceptance and qualifications
 
-- Firefox/Safari and mobile browsers, physical touch, responsive panel recovery, keyboard/focus and assistive technology.
-- Real compressed/media breadth, device sample rates/channel layouts, microphone hardware, OS display/system-audio permissions, cancellation and recovery.
-- Recording/download workflows, external-player exported audio fidelity, repeated and long-duration capture/resource retention.
-- Representative constrained-hardware analysis/rendering, high-count/editor costs, large retention trim/expiry and expert limits. Exact human presets require artistic slow-frame/trail/Trace acceptance; synthetic histories alone do not establish it.
-- Network-disabled portable `file://` boot/playback in an environment permitting navigation; complete hosted root/subdirectory validation and correct server MIME setup. Owner-reported direct-file and hosted functional coverage in Chrome/Opera/Edge/Firefox is recorded separately; it does not establish networking-disabled execution. Managed blocked navigation is not an application failure or, alone, an AUD-007 closure blocker.
-- Maskable artwork review, final public-versus-internal comparison baseline and editorial approval of eventual shipped notes. [Release-delta draft](docs/development/build-115-release-delta.md) is preparation only.
-- Approved artifacts and explicit shipment/canonization decision. Passing CI, merged corrective PRs and this documentation revision do not authorize it.
+**Accepted by the owner for Release 4 on October 20, 2026** following extended 115N testing and live public RC feedback. Automated Linux/Windows CI and the shared distribution contract passed. Acceptance is a release decision, not a claim of universal browser/device certification.
+
+- Firefox shared-display **audio** is unavailable through its display-capture API; Auralprint's Stream workflow requires an audio track and rejects video-only sessions. Chrome, Opera and Edge Stream operation was owner-reported. File and Mic modes have separate support requirements.
+- Browser/device combinations, physical touch, accessibility, recording/export fidelity, network-disabled portable operation and maskable artwork have not all been independently certified. Unsupported browser features and environmental limitations remain documented, not silently treated as passing tests.
+- Canonical portable artifact: [`docs/Canon/0.1.15/auralprint_0.1.15.html`](docs/Canon/0.1.15/auralprint_0.1.15.html). The hosted distribution is generated by the same build pipeline; deployment must include its complete directory.
+- Usability and rendering optimization are deferred to Build 117; new feature work does not reopen Build 115.
 
 <a id="known-deferrals-after-115mh"></a>
 
@@ -96,7 +94,7 @@ The [CI workflow](.github/workflows/ci.yml) checks sequential locked install/tes
 | Resize / move / orientation visual smearing | Build 116 simulation-space / Camera separation |
 | Orb editor ergonomics / high-count navigation and long panels | Build 117 UX refinement |
 | File / Queue UX refinement | Build 117, retaining accepted focus/cancellation corrections |
-| Broader constrained-hardware performance / resource hardening | Build 117; RC-15 corrective work is closed by accepted review/merge, while applicable 115N performance/artistic evidence remains required |
+| Broader constrained-hardware performance / resource hardening | Build 117; RC-15 corrective work is closed, and broader tuning is deferred |
 | Broader source/load lifecycle hardening (October 6 AUD-006) | Build 117; demonstrated RC-02–RC-05 concurrency/EOF defects are closed |
 | Broader recorder memory / encoder optimization (October 6 AUD-009) | Build 117; October 9 AUD-006 bounded application policy is implemented and merged through N.3F (PRs #59/#60). Encoded payload does not bound total browser memory; N.2 high-resolution VP8 reached its diagnostic resource guard. |
 | Remaining allocations / hidden UI refresh / channel-complete analysis cost (AUD-012) | Build 117; direct Trace suffix traversal and demonstrated quadratic editor/tooltip work have already been corrected |
@@ -107,7 +105,7 @@ Accepted items (AUD-001/003/005, editor jump, Stream stereo, schema closure, vis
 
 ## Build 116: camera controls, render separate from simulation
 
-**Status: planned after Build 115 acceptance.**
+**Status: next planned milestone after Release 4.**
 
 Deliver pan, zoom, rotation, and reset camera. Start at the simulation origin. Provide discoverable controls and define pointer/keyboard interactions before adding gestures that compete with seeking, file drop, or panel scrolling.
 
@@ -174,6 +172,6 @@ Acceptance gates:
 
 ## Completion and release evidence
 
-For each delivered milestone, record the implementation scope, test/build result, browser/device checks, preset compatibility result, and remaining limitations. Mark completion only when its acceptance gates have evidence. Keep the public release designation unchanged until an actual release is prepared.
+For each delivered milestone, record the implementation scope, test/build result, browser/device checks, preset compatibility result, and remaining limitations. Mark completion only when its acceptance gates have evidence. Release tags, distribution deployment and archival checks must match the accepted canonical version.
 
 Prioritize fixes that make an existing capability understandable or recoverable. Defer new abstractions and feature expansion that do not resolve a demonstrated workflow problem.
