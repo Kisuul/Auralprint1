@@ -112,7 +112,7 @@ AUD-007 closure review is distinct from Build 115N acceptance and shipment. Wave
 
 The accepted starting point is main `a2f484b845df69e717ebd3998cabb7db640eb6c6`, merged PR #55, root `v0.1.15m.i.l`, schema 10. I.M advances development metadata to `v0.1.15m.i.m` and corrects only builder/watcher integration. JS/CSS dependencies, template, root version and flat branding inputs trigger coherent staged assembly; version metadata is selected afresh for each candidate. Assemblers remain serialized, superseded snapshots are discarded, and errors retain prior successful artifacts. Earlier versioned portable HTML is retained until an explicit developer cleanup.
 
-The [remediation report](../audits/remediations/115m-i-m-aud011/README.md) records original reproductions, permanent integration coverage, hostile testing, recovery/lifecycle behavior and Linux/Windows evidence. **AUD-011 corrective implementation was merged via PR #56 (`a85ed8d7`); broader 115N release acceptance remains separate.** The October 9 audit/materials and prior remediation evidence are immutable. This is separate from AUD-006/013/014 and Build 116; **115N remains WITHHELD**.
+The [remediation report](../audits/remediations/115m-i-m-aud011/README.md) records original reproductions, permanent integration coverage, hostile testing, recovery/lifecycle behavior and Linux/Windows evidence. **AUD-011 corrective implementation was merged via PR #56 (`a85ed8d7`); broader 115N release acceptance remains separate.** The October 9 audit/materials and prior remediation evidence are immutable. This is separate from AUD-006/013/014 and Build 116; **115N acceptance was withheld at this historical checkpoint**, before its October 20 release approval.
 
 ## Audit disposition index
 
@@ -186,4 +186,4 @@ native evidence, negative controls, gaps and the independent-review recommendati
 N.2's high-resolution VP8 resource guard and broader browser/device uncertainties
 remain real; encoded payload is not total native memory. Build 117 retains broader
 resource/encoder/performance optimization. AUD-006 closure requires independent
-review; **Build 115N remains WITHHELD**. No merge or shipment is authorized here.
+review; **Build 115N was withheld at this October 9 checkpoint**. This report did not authorize merge or shipment; final owner acceptance came later.
