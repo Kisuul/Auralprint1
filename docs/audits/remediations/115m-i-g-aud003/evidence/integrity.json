@@ -1,0 +1,21 @@
+{
+  "acceptedG1": "0b8ddc43c36c941c51b3dbce25a1d50e7fb8692d",
+  "changedTrackedFiles": [
+    "src/js/render/visualizer-runtime.js",
+    "src/js/ui/orb-band-picker.js",
+    "src/js/ui/orb-editor.js",
+    "tests/analysis-frame.test.js",
+    "tests/band-count-coverage.test.js",
+    "tests/orb-band-picker.test.js",
+    "tests/orb-editor.test.js",
+    "tests/targeted-audit.test.js",
+    "tests/visualizer-runtime.test.js"
+  ],
+  "otherTrackedFilesByteIdentical": 747,
+  "g1InventoryAndEvidenceIntact": true,
+  "configPreferencesPresetCodecBandBankColorPolicyUnchanged": true,
+  "rc16AndRc21TestsUnchanged": true,
+  "version": "v0.1.15m.i.g",
+  "schema": 10,
+  "noDependencyChanges": true
+}

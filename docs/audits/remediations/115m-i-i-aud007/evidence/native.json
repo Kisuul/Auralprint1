@@ -1,0 +1,239 @@
+{
+  "baseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+  "version": "v0.1.15m.i.h",
+  "browser": "151.0.7922.173",
+  "platform": "linux",
+  "node": "v24.19.0",
+  "artifactSha256": "c275f8131b0f1bd784c79269e92f58ed95ec0baa5fa3f5ed89ca62a944a8f05b",
+  "environment": "headless native Chromium on localhost; instrumentation in served HTML only; WAV generated in memory; no process RSS measurement",
+  "cases": [
+    {
+      "name": "portable native playback/waveform",
+      "pass": true,
+      "details": {
+        "reads": [
+          {
+            "name": "short-stereo.wav",
+            "fileBytes": 705644,
+            "isLoaded": true,
+            "isPlaying": true,
+            "sourceStatus": "active",
+            "mediaReadyState": 4,
+            "mediaPaused": false,
+            "mediaDuration": 4
+          }
+        ],
+        "decodes": [
+          {
+            "encodedArrayBufferBytes": 705644,
+            "contextSampleRate": 44100,
+            "controlledFailure": false,
+            "bufferBytesAfterNativeAdmission": 0,
+            "decodedFrames": 176400,
+            "decodedSampleRate": 44100,
+            "decodedChannels": 2,
+            "jsVisiblePcmBytes": 1411200,
+            "firstChannelViewBytes": 705600
+          }
+        ],
+        "maxActive": 1,
+        "text": "0:00 / 0:04",
+        "isLoaded": true,
+        "isPlaying": true,
+        "mediaTimeAdvances": true
+      },
+      "pageErrors": [],
+      "failedAssets": []
+    },
+    {
+      "name": "hosted root native playback/waveform",
+      "pass": true,
+      "details": {
+        "reads": [
+          {
+            "name": "short-stereo.wav",
+            "fileBytes": 705644,
+            "isLoaded": true,
+            "isPlaying": true,
+            "sourceStatus": "active",
+            "mediaReadyState": 4,
+            "mediaPaused": false,
+            "mediaDuration": 4
+          }
+        ],
+        "decodes": [
+          {
+            "encodedArrayBufferBytes": 705644,
+            "contextSampleRate": 44100,
+            "controlledFailure": false,
+            "bufferBytesAfterNativeAdmission": 0,
+            "decodedFrames": 176400,
+            "decodedSampleRate": 44100,
+            "decodedChannels": 2,
+            "jsVisiblePcmBytes": 1411200,
+            "firstChannelViewBytes": 705600
+          }
+        ],
+        "maxActive": 1,
+        "text": "0:00 / 0:04",
+        "isLoaded": true,
+        "isPlaying": true,
+        "mediaTimeAdvances": true
+      },
+      "pageErrors": [],
+      "failedAssets": []
+    },
+    {
+      "name": "hosted nested native playback/waveform",
+      "pass": true,
+      "details": {
+        "reads": [
+          {
+            "name": "short-stereo.wav",
+            "fileBytes": 705644,
+            "isLoaded": true,
+            "isPlaying": true,
+            "sourceStatus": "active",
+            "mediaReadyState": 4,
+            "mediaPaused": false,
+            "mediaDuration": 4
+          }
+        ],
+        "decodes": [
+          {
+            "encodedArrayBufferBytes": 705644,
+            "contextSampleRate": 44100,
+            "controlledFailure": false,
+            "bufferBytesAfterNativeAdmission": 0,
+            "decodedFrames": 176400,
+            "decodedSampleRate": 44100,
+            "decodedChannels": 2,
+            "jsVisiblePcmBytes": 1411200,
+            "firstChannelViewBytes": 705600
+          }
+        ],
+        "maxActive": 1,
+        "text": "0:00 / 0:04",
+        "isLoaded": true,
+        "isPlaying": true,
+        "mediaTimeAdvances": true
+      },
+      "pageErrors": [],
+      "failedAssets": []
+    },
+    {
+      "name": "native six-channel 96kHz input resamples decode to 44.1kHz",
+      "pass": true,
+      "details": {
+        "reads": [
+          {
+            "name": "six-channel.wav",
+            "fileBytes": 1152044,
+            "isLoaded": true,
+            "isPlaying": true,
+            "sourceStatus": "active",
+            "mediaReadyState": 4,
+            "mediaPaused": false,
+            "mediaDuration": 1
+          }
+        ],
+        "decodes": [
+          {
+            "encodedArrayBufferBytes": 1152044,
+            "contextSampleRate": 44100,
+            "controlledFailure": false,
+            "bufferBytesAfterNativeAdmission": 0,
+            "decodedFrames": 44099,
+            "decodedSampleRate": 44100,
+            "decodedChannels": 6,
+            "jsVisiblePcmBytes": 1058376,
+            "firstChannelViewBytes": 176396
+          }
+        ],
+        "maxActive": 1,
+        "text": "0:00 / 0:01",
+        "isLoaded": true,
+        "isPlaying": true
+      },
+      "pageErrors": [],
+      "failedAssets": []
+    },
+    {
+      "name": "valid native File plays and seeks while controlled waveform decode rejects; later File recovers",
+      "pass": true,
+      "details": {
+        "unavailable": {
+          "text": "0:00 / 0:04 • waveform unavailable",
+          "playing": true,
+          "loaded": true,
+          "transportError": ""
+        },
+        "seek": {
+          "time": 0.338685,
+          "expected": 0.33036947179599685,
+          "playing": true
+        },
+        "recovered": {
+          "reads": [
+            {
+              "name": "short-stereo.wav",
+              "fileBytes": 705644,
+              "isLoaded": true,
+              "isPlaying": true,
+              "sourceStatus": "active",
+              "mediaReadyState": 4,
+              "mediaPaused": false,
+              "mediaDuration": 4
+            },
+            {
+              "name": "recovery.wav",
+              "fileBytes": 705644,
+              "isLoaded": true,
+              "isPlaying": true,
+              "sourceStatus": "active",
+              "mediaReadyState": 4,
+              "mediaPaused": false,
+              "mediaDuration": 4
+            }
+          ],
+          "decodes": [
+            {
+              "encodedArrayBufferBytes": 705644,
+              "contextSampleRate": 44100,
+              "controlledFailure": true
+            },
+            {
+              "encodedArrayBufferBytes": 705644,
+              "contextSampleRate": 44100,
+              "controlledFailure": false,
+              "bufferBytesAfterNativeAdmission": 0,
+              "decodedFrames": 176400,
+              "decodedSampleRate": 44100,
+              "decodedChannels": 2,
+              "jsVisiblePcmBytes": 1411200,
+              "firstChannelViewBytes": 705600
+            }
+          ],
+          "maxActive": 1,
+          "text": "0:00 / 0:04",
+          "isLoaded": true,
+          "isPlaying": true
+        },
+        "scope": "controlled optional decode rejection; real native streaming playback; this phase does not implement or test a budget refusal"
+      },
+      "pageErrors": [],
+      "failedAssets": []
+    },
+    {
+      "name": "production reset/Clear releases presentation after native completion",
+      "pass": true,
+      "details": {
+        "queueLength": 0,
+        "mediaNull": true,
+        "text": "--:-- / --:-- • no track loaded"
+      },
+      "pageErrors": [],
+      "failedAssets": []
+    }
+  ]
+}

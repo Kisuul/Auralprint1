@@ -1,0 +1,120 @@
+{
+  "kind": "unmodified built artifact, UI File/Start/Stop/Download only; no app symbol exposure, native recorder/URL/render/mediaDevices instrumentation",
+  "artifactSha256": "22830bf41d4e1f558a7271e7e595f1581895db65f52c8bb5fa0f49d56168cc31",
+  "browser": "151.0.7922.173",
+  "errors": [],
+  "ui": {
+    "phase": "complete",
+    "status": "Latest export ready",
+    "exportMeta": "Latest export: auralprint-capture-20261015-074417.webm (418749 bytes)",
+    "mime": "video/webm;codecs=vp9,opus"
+  },
+  "download": {
+    "bytes": 418749,
+    "sha256": "83577747047279b07d93bc84b3ebb34a78f57d249066272d3d3d44c745221e9e"
+  },
+  "ffprobe": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "vp9",
+        "codec_long_name": "Google VP9",
+        "profile": "Profile 0",
+        "codec_type": "video",
+        "codec_tag_string": "[0][0][0][0]",
+        "codec_tag": "0x0000",
+        "width": 960,
+        "height": 640,
+        "coded_width": 960,
+        "coded_height": 640,
+        "closed_captions": 0,
+        "film_grain": 0,
+        "has_b_frames": 0,
+        "sample_aspect_ratio": "1:1",
+        "display_aspect_ratio": "3:2",
+        "pix_fmt": "yuv420p",
+        "level": -99,
+        "color_range": "tv",
+        "color_space": "smpte170m",
+        "refs": 1,
+        "r_frame_rate": "1000/1",
+        "avg_frame_rate": "0/0",
+        "time_base": "1/1000",
+        "start_pts": 0,
+        "start_time": "0.000000",
+        "nb_read_frames": "90",
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "eng",
+          "alpha_mode": "1"
+        }
+      },
+      {
+        "index": 1,
+        "codec_name": "opus",
+        "codec_long_name": "Opus (Opus Interactive Audio Codec)",
+        "codec_type": "audio",
+        "codec_tag_string": "[0][0][0][0]",
+        "codec_tag": "0x0000",
+        "sample_fmt": "fltp",
+        "sample_rate": "48000",
+        "channels": 2,
+        "channel_layout": "stereo",
+        "bits_per_sample": 0,
+        "initial_padding": 0,
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "time_base": "1/1000",
+        "start_pts": 40,
+        "start_time": "0.040000",
+        "nb_read_frames": "49",
+        "extradata_size": 19,
+        "disposition": {
+          "default": 1,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        },
+        "tags": {
+          "language": "eng"
+        }
+      }
+    ]
+  },
+  "passed": true
+}

@@ -1,0 +1,20 @@
+{
+  "startingSha": "a2a92e0ed73acd57cc0ee782934a206024084328",
+  "implementationSha": "2dda1235d3272557b39cbdd961b076197cd8cc05",
+  "node": "v24.19.0",
+  "python": "3.12.14",
+  "system": "Linux",
+  "kernel": "6.18.44",
+  "architecture": "x86_64",
+  "logicalCpus": 3,
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "sceneRunCount": 1,
+  "iterationsPerScenario": 2000,
+  "warming": "One real boot frame; configuration and presentation primed before counters/observer. Recording driven at native-frame warmup for 1100ms before synchronous isolation. Playback waits 2600ms through load-toast deadline. Hidden inventory focus selects the visible Workspace launcher.",
+  "timingLimits": "One synchronous batch per scenario; JIT/order/host scheduling affect timing. Sequential baseline/fixed final measurement without concurrent test workloads. No FPS or full-frame claim.",
+  "playwrightDependency": "Preinstalled environment module via NODE_PATH; no repository dependency added."
+}

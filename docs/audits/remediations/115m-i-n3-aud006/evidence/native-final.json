@@ -1,0 +1,3987 @@
+{
+  "version": "v0.1.15m.i.n",
+  "head": "67f1435dad4692dbadd99ed34abadb207066ccde",
+  "started": "2026-10-15T07:46:37.605Z",
+  "artifactSha256": "75513ddec2b6bd3973550d6a5d7285149714146a6184ee674915d6d9ff6e9a42",
+  "harnessSha256": "0631b885bd94cc57073ef26c22a2e877ffc05942c298b0dff6bc2301cad0b679",
+  "cases": [
+    {
+      "state": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 1427.5,
+        "stoppedAtMs": 3196.600000000093,
+        "elapsedMs": 1769,
+        "chunkCount": 2,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "balanced",
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "reserveBytes": 10000000,
+          "maxChunks": 1200,
+          "durationMs": 300000,
+          "warningFraction": 0.8,
+          "previousExportBytes": 0,
+          "effectiveSoftBytes": 130000000
+        },
+        "deliveredBytes": 198972,
+        "admittedBytes": 198972,
+        "rejectedBytes": 0,
+        "rejectedEvents": 0,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 0,
+        "stopReason": "manual-stop",
+        "secondaryStopReason": null,
+        "terminalOutcome": "complete",
+        "finalExportBytes": 198972,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [],
+        "lastExportUrl": "blob:http://localhost/cb96dcbd-ee34-4739-afc1-5f13e4fa08b0",
+        "lastExportFileName": "auralprint-capture-20261015-074641.webm",
+        "lastExportByteSize": 198972,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 3199.4000000001397
+      },
+      "timestamps": {
+        "0": {
+          "count": 52,
+          "first": 0,
+          "last": 1.692,
+          "end": 1.6929999999999998
+        },
+        "1": {
+          "count": 26,
+          "first": 0.057,
+          "last": 1.656,
+          "end": 1.716
+        }
+      },
+      "containerDuration": 1.716,
+      "download": {
+        "filename": "auralprint-capture-20261015-074641.webm",
+        "bytes": 198972,
+        "sha256": "73f290db2e7653a453c5607e8613a66ae27dc67333eab7ac61cb346f5e72eb99"
+      },
+      "streams": [
+        {
+          "codec": "vp9",
+          "type": "video",
+          "width": 960,
+          "height": 640
+        },
+        {
+          "codec": "opus",
+          "type": "audio",
+          "channels": 2
+        }
+      ],
+      "format": {
+        "filename": "/workspace/Auralprint1/work/native-final-guard-media/manual-file.webm",
+        "nb_streams": 2,
+        "nb_programs": 0,
+        "nb_stream_groups": 0,
+        "format_name": "matroska,webm",
+        "format_long_name": "Matroska / WebM",
+        "start_time": "0.000000",
+        "size": "198972",
+        "probe_score": 100,
+        "tags": {
+          "encoder": "Chrome"
+        }
+      },
+      "replay": {
+        "time": 0.370605,
+        "width": 960,
+        "height": 640,
+        "duration": 1.692
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "events": [
+          {
+            "type": "dataavailable",
+            "bytes": 75343,
+            "at": 2506.600000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 123629,
+            "at": 3196.100000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "stop",
+            "bytes": 0,
+            "at": 3196.3000000000466
+          }
+        ],
+        "stops": 1,
+        "tracks": [
+          {
+            "kind": "audio",
+            "readyState": "ended"
+          },
+          {
+            "kind": "video",
+            "readyState": "ended"
+          }
+        ]
+      },
+      "id": "manual-file-webm",
+      "playbackSurvived": true
+    },
+    {
+      "id": "native-hard-failure-preserves-download",
+      "state": {
+        "hooksEnabled": true,
+        "phase": "error",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 4341.5,
+        "stoppedAtMs": 6428.600000000093,
+        "elapsedMs": 2087,
+        "chunkCount": 1,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "custom",
+          "softBytes": null,
+          "aggregateBytes": null,
+          "maxChunks": 1,
+          "durationMs": null,
+          "warningFraction": 0.8,
+          "reserveBytes": null,
+          "previousExportBytes": 198972,
+          "effectiveSoftBytes": null
+        },
+        "deliveredBytes": 287297,
+        "admittedBytes": 109289,
+        "rejectedBytes": 178008,
+        "rejectedEvents": 1,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 198972,
+        "stopReason": null,
+        "secondaryStopReason": null,
+        "terminalOutcome": "failed",
+        "finalExportBytes": null,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [
+          "chunks"
+        ],
+        "lastExportUrl": "blob:http://localhost/cb96dcbd-ee34-4739-afc1-5f13e4fa08b0",
+        "lastExportFileName": "auralprint-capture-20261015-074641.webm",
+        "lastExportByteSize": 198972,
+        "lastAction": "error",
+        "lastCode": "admission-rejected",
+        "lastMessage": "A delivered event exceeded aggregate payload or chunk admission. New capture discarded. Native recorder confirmed stopped; another recording may begin. Previous export preserved.",
+        "lastUpdatedAtMs": 6429.5
+      },
+      "priorBytes": 198972,
+      "revoked": false,
+      "playback": true
+    },
+    {
+      "state": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 6515.600000000093,
+        "stoppedAtMs": 7581.600000000093,
+        "elapsedMs": 1066,
+        "chunkCount": 2,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "custom",
+          "softBytes": 1000,
+          "aggregateBytes": 10000000,
+          "maxChunks": 100,
+          "durationMs": 30000,
+          "warningFraction": 0.8,
+          "reserveBytes": 1000000,
+          "previousExportBytes": 198972,
+          "effectiveSoftBytes": 1000
+        },
+        "deliveredBytes": 98772,
+        "admittedBytes": 98772,
+        "rejectedBytes": 0,
+        "rejectedEvents": 0,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 198972,
+        "stopReason": "capacity-stop",
+        "secondaryStopReason": null,
+        "terminalOutcome": "complete",
+        "finalExportBytes": 98772,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [
+          "size"
+        ],
+        "lastExportUrl": "blob:http://localhost/2daa0131-6064-4a84-9195-153f5bbae7d5",
+        "lastExportFileName": "auralprint-capture-20261015-074645.webm",
+        "lastExportByteSize": 98772,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording completed at configured capacity threshold.",
+        "lastUpdatedAtMs": 7584.90000000014
+      },
+      "timestamps": {
+        "0": {
+          "count": 26,
+          "first": 0,
+          "last": 0.968,
+          "end": 0.968
+        },
+        "1": {
+          "count": 14,
+          "first": 0.062,
+          "last": 1.03,
+          "end": 1.09
+        }
+      },
+      "containerDuration": 1.09,
+      "download": {
+        "filename": "auralprint-capture-20261015-074645.webm",
+        "bytes": 98772,
+        "sha256": "e2c580205a2724b7fa16185d87f1c306594c78ab0d0df5059a992fa124301900"
+      },
+      "streams": [
+        {
+          "codec": "vp9",
+          "type": "video",
+          "width": 960,
+          "height": 640
+        },
+        {
+          "codec": "opus",
+          "type": "audio",
+          "channels": 2
+        }
+      ],
+      "format": {
+        "filename": "/workspace/Auralprint1/work/native-final-guard-media/native-capacity.webm",
+        "nb_streams": 2,
+        "nb_programs": 0,
+        "nb_stream_groups": 0,
+        "format_name": "matroska,webm",
+        "format_long_name": "Matroska / WebM",
+        "start_time": "0.000000",
+        "size": "98772",
+        "probe_score": 100,
+        "tags": {
+          "encoder": "Chrome"
+        }
+      },
+      "replay": {
+        "time": 0.390967,
+        "width": 960,
+        "height": 640,
+        "duration": 1.03
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "events": [
+          {
+            "type": "dataavailable",
+            "bytes": 89257,
+            "at": 7580.800000000047,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 9515,
+            "at": 7581.600000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "stop",
+            "bytes": 0,
+            "at": 7581.600000000093
+          }
+        ],
+        "stops": 1,
+        "tracks": [
+          {
+            "kind": "audio",
+            "readyState": "ended"
+          },
+          {
+            "kind": "video",
+            "readyState": "ended"
+          }
+        ]
+      },
+      "id": "native-short-capacity"
+    },
+    {
+      "id": "native-cancel-mic",
+      "state": {
+        "hooksEnabled": true,
+        "phase": "cancelled",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 8833,
+        "stoppedAtMs": 10192.5,
+        "elapsedMs": 1360,
+        "chunkCount": 1,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "balanced",
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "reserveBytes": 10000000,
+          "maxChunks": 1200,
+          "durationMs": 300000,
+          "warningFraction": 0.8,
+          "previousExportBytes": 98772,
+          "effectiveSoftBytes": 130000000
+        },
+        "deliveredBytes": 125086,
+        "admittedBytes": 125086,
+        "rejectedBytes": 0,
+        "rejectedEvents": 0,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 98772,
+        "stopReason": null,
+        "secondaryStopReason": null,
+        "terminalOutcome": "cancelled",
+        "finalExportBytes": null,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [],
+        "lastExportUrl": "blob:http://localhost/2daa0131-6064-4a84-9195-153f5bbae7d5",
+        "lastExportFileName": "auralprint-capture-20261015-074645.webm",
+        "lastExportByteSize": 98772,
+        "lastAction": "cancel",
+        "lastCode": "capture-cancelled",
+        "lastMessage": "Current unsaved capture cancelled and discarded. Native recorder confirmed stopped; another recording may begin. Previous export preserved.",
+        "lastUpdatedAtMs": 10202.300000000047
+      },
+      "upstream": [
+        {
+          "kind": "audio",
+          "state": "live"
+        }
+      ],
+      "sourceActive": true,
+      "focus": "btnRecordDownloadLast",
+      "priorDownload": true,
+      "primaryUnlocked": true
+    },
+    {
+      "id": "native-cancel-stream",
+      "state": {
+        "hooksEnabled": true,
+        "phase": "cancelled",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 10288.100000000093,
+        "stoppedAtMs": 11710,
+        "elapsedMs": 1422,
+        "chunkCount": 1,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "balanced",
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "reserveBytes": 10000000,
+          "maxChunks": 1200,
+          "durationMs": 300000,
+          "warningFraction": 0.8,
+          "previousExportBytes": 98772,
+          "effectiveSoftBytes": 130000000
+        },
+        "deliveredBytes": 166841,
+        "admittedBytes": 166841,
+        "rejectedBytes": 0,
+        "rejectedEvents": 0,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 98772,
+        "stopReason": null,
+        "secondaryStopReason": null,
+        "terminalOutcome": "cancelled",
+        "finalExportBytes": null,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [],
+        "lastExportUrl": "blob:http://localhost/2daa0131-6064-4a84-9195-153f5bbae7d5",
+        "lastExportFileName": "auralprint-capture-20261015-074645.webm",
+        "lastExportByteSize": 98772,
+        "lastAction": "cancel",
+        "lastCode": "capture-cancelled",
+        "lastMessage": "Current unsaved capture cancelled and discarded. Native recorder confirmed stopped; another recording may begin. Previous export preserved.",
+        "lastUpdatedAtMs": 11711.90000000014
+      },
+      "upstream": [
+        {
+          "kind": "audio",
+          "state": "live"
+        },
+        {
+          "kind": "video",
+          "state": "live"
+        }
+      ],
+      "sourceActive": true,
+      "focus": "btnRecordDownloadLast",
+      "priorDownload": true,
+      "primaryUnlocked": true
+    },
+    {
+      "state": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/mp4",
+        "resolvedMimeType": "video/mp4",
+        "startedAtMs": 11887.600000000093,
+        "stoppedAtMs": 13516.90000000014,
+        "elapsedMs": 1629,
+        "chunkCount": 2,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "balanced",
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "reserveBytes": 10000000,
+          "maxChunks": 1200,
+          "durationMs": 300000,
+          "warningFraction": 0.8,
+          "previousExportBytes": 98772,
+          "effectiveSoftBytes": 130000000
+        },
+        "deliveredBytes": 296608,
+        "admittedBytes": 296608,
+        "rejectedBytes": 0,
+        "rejectedEvents": 0,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 98772,
+        "stopReason": "manual-stop",
+        "secondaryStopReason": null,
+        "terminalOutcome": "complete",
+        "finalExportBytes": 296608,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [],
+        "lastExportUrl": "blob:http://localhost/e86aa288-4393-4aaa-a151-3f1a7f4c8525",
+        "lastExportFileName": "auralprint-capture-20261015-074651.mp4",
+        "lastExportByteSize": 296608,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 13524.600000000093
+      },
+      "timestamps": {
+        "0": {
+          "count": 40,
+          "first": 0,
+          "last": 1.518467,
+          "end": 1.5185
+        },
+        "1": {
+          "count": 21,
+          "first": 0,
+          "last": 1.526604,
+          "end": 1.526604
+        }
+      },
+      "containerDuration": 1.526604,
+      "download": {
+        "filename": "auralprint-capture-20261015-074651.mp4",
+        "bytes": 296608,
+        "sha256": "09e375f8d2a36ba070521b1db5f2745ea7e6f12ddc4fe711e11ee09ca546bd41"
+      },
+      "streams": [
+        {
+          "codec": "vp9",
+          "type": "video",
+          "width": 960,
+          "height": 640,
+          "duration": "1.551767"
+        },
+        {
+          "codec": "opus",
+          "type": "audio",
+          "duration": "1.547604",
+          "channels": 2
+        }
+      ],
+      "format": {
+        "filename": "/workspace/Auralprint1/work/native-final-guard-media/stream-mp4.mp4",
+        "nb_streams": 2,
+        "nb_programs": 0,
+        "nb_stream_groups": 0,
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "format_long_name": "QuickTime / MOV",
+        "start_time": "0.000000",
+        "duration": "1.551767",
+        "size": "296608",
+        "bit_rate": "1529136",
+        "probe_score": 100,
+        "tags": {
+          "major_brand": "isom",
+          "minor_version": "512",
+          "compatible_brands": "isomiso6iso2vp09mp41",
+          "creation_time": "2026-10-15T07:46:51.000000Z"
+        }
+      },
+      "replay": {
+        "time": 0.372172,
+        "width": 960,
+        "height": 640,
+        "duration": 1.551767
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/mp4"
+        },
+        "mime": "video/mp4",
+        "events": [
+          {
+            "type": "dataavailable",
+            "bytes": 1200,
+            "at": 13516.5,
+            "mime": "video/mp4;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 295408,
+            "at": 13516.90000000014,
+            "mime": "video/mp4;codecs=vp9,opus"
+          },
+          {
+            "type": "stop",
+            "bytes": 0,
+            "at": 13516.90000000014
+          }
+        ],
+        "stops": 1,
+        "tracks": [
+          {
+            "kind": "audio",
+            "readyState": "live"
+          },
+          {
+            "kind": "video",
+            "readyState": "ended"
+          }
+        ]
+      },
+      "id": "native-stream-mp4"
+    },
+    {
+      "id": "factory-300000ms",
+      "guard": null,
+      "samples": [
+        {
+          "cgroupBytes": 1309614080,
+          "rssBytes": 1085218816,
+          "elapsed": 1026
+        },
+        {
+          "cgroupBytes": 1305169920,
+          "rssBytes": 1063223296,
+          "elapsed": 2095
+        },
+        {
+          "cgroupBytes": 1287077888,
+          "rssBytes": 1065058304,
+          "elapsed": 3006
+        },
+        {
+          "cgroupBytes": 1287516160,
+          "rssBytes": 1064861696,
+          "elapsed": 4182
+        },
+        {
+          "cgroupBytes": 1289428992,
+          "rssBytes": 1066033152,
+          "elapsed": 5227
+        },
+        {
+          "cgroupBytes": 1287274496,
+          "rssBytes": 1065750528,
+          "elapsed": 6282
+        },
+        {
+          "cgroupBytes": 1289523200,
+          "rssBytes": 1065340928,
+          "elapsed": 7276
+        },
+        {
+          "cgroupBytes": 1292079104,
+          "rssBytes": 1068572672,
+          "elapsed": 8401
+        },
+        {
+          "cgroupBytes": 1288704000,
+          "rssBytes": 1060122624,
+          "elapsed": 9400
+        },
+        {
+          "cgroupBytes": 1282777088,
+          "rssBytes": 1061154816,
+          "elapsed": 10405
+        },
+        {
+          "cgroupBytes": 1284534272,
+          "rssBytes": 1060265984,
+          "elapsed": 11606
+        },
+        {
+          "cgroupBytes": 1287270400,
+          "rssBytes": 1061044224,
+          "elapsed": 12603
+        },
+        {
+          "cgroupBytes": 1288482816,
+          "rssBytes": 1068044288,
+          "elapsed": 13610
+        },
+        {
+          "cgroupBytes": 1289932800,
+          "rssBytes": 1065017344,
+          "elapsed": 14803
+        },
+        {
+          "cgroupBytes": 1278689280,
+          "rssBytes": 1056145408,
+          "elapsed": 15801
+        },
+        {
+          "cgroupBytes": 1278623744,
+          "rssBytes": 1050497024,
+          "elapsed": 16803
+        },
+        {
+          "cgroupBytes": 1280167936,
+          "rssBytes": 1054810112,
+          "elapsed": 17800
+        },
+        {
+          "cgroupBytes": 1278046208,
+          "rssBytes": 1052270592,
+          "elapsed": 18800
+        },
+        {
+          "cgroupBytes": 1275277312,
+          "rssBytes": 1054588928,
+          "elapsed": 20021
+        },
+        {
+          "cgroupBytes": 1282236416,
+          "rssBytes": 1058086912,
+          "elapsed": 21000
+        },
+        {
+          "cgroupBytes": 1281134592,
+          "rssBytes": 1052975104,
+          "elapsed": 22007
+        },
+        {
+          "cgroupBytes": 1280782336,
+          "rssBytes": 1051680768,
+          "elapsed": 23007
+        },
+        {
+          "cgroupBytes": 1283063808,
+          "rssBytes": 1056579584,
+          "elapsed": 24219
+        },
+        {
+          "cgroupBytes": 1281392640,
+          "rssBytes": 1057628160,
+          "elapsed": 25200
+        },
+        {
+          "cgroupBytes": 1302421504,
+          "rssBytes": 1057288192,
+          "elapsed": 26201
+        },
+        {
+          "cgroupBytes": 1283387392,
+          "rssBytes": 1060421632,
+          "elapsed": 27412
+        },
+        {
+          "cgroupBytes": 1291460608,
+          "rssBytes": 1059864576,
+          "elapsed": 28407
+        },
+        {
+          "cgroupBytes": 1284485120,
+          "rssBytes": 1058590720,
+          "elapsed": 29427
+        },
+        {
+          "cgroupBytes": 1289502720,
+          "rssBytes": 1062387712,
+          "elapsed": 30603
+        },
+        {
+          "cgroupBytes": 1289736192,
+          "rssBytes": 1059074048,
+          "elapsed": 31603
+        },
+        {
+          "cgroupBytes": 1286062080,
+          "rssBytes": 1061044224,
+          "elapsed": 32621
+        },
+        {
+          "cgroupBytes": 1291571200,
+          "rssBytes": 1062924288,
+          "elapsed": 33800
+        },
+        {
+          "cgroupBytes": 1290768384,
+          "rssBytes": 1064480768,
+          "elapsed": 34813
+        },
+        {
+          "cgroupBytes": 1288843264,
+          "rssBytes": 1061814272,
+          "elapsed": 35807
+        },
+        {
+          "cgroupBytes": 1291812864,
+          "rssBytes": 1062629376,
+          "elapsed": 36800
+        },
+        {
+          "cgroupBytes": 1293152256,
+          "rssBytes": 1064210432,
+          "elapsed": 38005
+        },
+        {
+          "cgroupBytes": 1294364672,
+          "rssBytes": 1061392384,
+          "elapsed": 39001
+        },
+        {
+          "cgroupBytes": 1299034112,
+          "rssBytes": 1065304064,
+          "elapsed": 40008
+        },
+        {
+          "cgroupBytes": 1299582976,
+          "rssBytes": 1059979264,
+          "elapsed": 41205
+        },
+        {
+          "cgroupBytes": 1437134848,
+          "rssBytes": 1066385408,
+          "elapsed": 42207
+        },
+        {
+          "cgroupBytes": 1545498624,
+          "rssBytes": 1065996288,
+          "elapsed": 43222
+        },
+        {
+          "cgroupBytes": 1644728320,
+          "rssBytes": 1060208640,
+          "elapsed": 44401
+        },
+        {
+          "cgroupBytes": 1691176960,
+          "rssBytes": 1053962240,
+          "elapsed": 45413
+        },
+        {
+          "cgroupBytes": 1733816320,
+          "rssBytes": 1055690752,
+          "elapsed": 46600
+        },
+        {
+          "cgroupBytes": 1843040256,
+          "rssBytes": 1055059968,
+          "elapsed": 47600
+        },
+        {
+          "cgroupBytes": 1837924352,
+          "rssBytes": 1052889088,
+          "elapsed": 48680
+        },
+        {
+          "cgroupBytes": 1846317056,
+          "rssBytes": 1059721216,
+          "elapsed": 49812
+        },
+        {
+          "cgroupBytes": 1762168832,
+          "rssBytes": 1060765696,
+          "elapsed": 50819
+        },
+        {
+          "cgroupBytes": 1763467264,
+          "rssBytes": 1058762752,
+          "elapsed": 51815
+        },
+        {
+          "cgroupBytes": 1738420224,
+          "rssBytes": 1056542720,
+          "elapsed": 53003
+        },
+        {
+          "cgroupBytes": 1732837376,
+          "rssBytes": 1056092160,
+          "elapsed": 54000
+        },
+        {
+          "cgroupBytes": 1730457600,
+          "rssBytes": 1057927168,
+          "elapsed": 55012
+        },
+        {
+          "cgroupBytes": 1324118016,
+          "rssBytes": 1059586048,
+          "elapsed": 56001
+        },
+        {
+          "cgroupBytes": 1467691008,
+          "rssBytes": 1057198080,
+          "elapsed": 57210
+        },
+        {
+          "cgroupBytes": 1545629696,
+          "rssBytes": 1056583680,
+          "elapsed": 58212
+        },
+        {
+          "cgroupBytes": 1665286144,
+          "rssBytes": 1061584896,
+          "elapsed": 59400
+        },
+        {
+          "cgroupBytes": 1841397760,
+          "rssBytes": 1059454976,
+          "elapsed": 60406
+        },
+        {
+          "cgroupBytes": 1808158720,
+          "rssBytes": 1056280576,
+          "elapsed": 61401
+        },
+        {
+          "cgroupBytes": 1808793600,
+          "rssBytes": 1057325056,
+          "elapsed": 62600
+        },
+        {
+          "cgroupBytes": 1755222016,
+          "rssBytes": 1059520512,
+          "elapsed": 63602
+        },
+        {
+          "cgroupBytes": 1293905920,
+          "rssBytes": 1059979264,
+          "elapsed": 64601
+        },
+        {
+          "cgroupBytes": 1305505792,
+          "rssBytes": 1060016128,
+          "elapsed": 65601
+        },
+        {
+          "cgroupBytes": 1291366400,
+          "rssBytes": 1058701312,
+          "elapsed": 66602
+        },
+        {
+          "cgroupBytes": 1296633856,
+          "rssBytes": 1064546304,
+          "elapsed": 67801
+        },
+        {
+          "cgroupBytes": 1294389248,
+          "rssBytes": 1058099200,
+          "elapsed": 68801
+        },
+        {
+          "cgroupBytes": 1297215488,
+          "rssBytes": 1061171200,
+          "elapsed": 69806
+        },
+        {
+          "cgroupBytes": 1299599360,
+          "rssBytes": 1064267776,
+          "elapsed": 70802
+        },
+        {
+          "cgroupBytes": 1297080320,
+          "rssBytes": 1064472576,
+          "elapsed": 72005
+        },
+        {
+          "cgroupBytes": 1295708160,
+          "rssBytes": 1060458496,
+          "elapsed": 73001
+        },
+        {
+          "cgroupBytes": 1297965056,
+          "rssBytes": 1062875136,
+          "elapsed": 74003
+        },
+        {
+          "cgroupBytes": 1299185664,
+          "rssBytes": 1063247872,
+          "elapsed": 75006
+        },
+        {
+          "cgroupBytes": 1304174592,
+          "rssBytes": 1064742912,
+          "elapsed": 76001
+        },
+        {
+          "cgroupBytes": 1298812928,
+          "rssBytes": 1062969344,
+          "elapsed": 77203
+        },
+        {
+          "cgroupBytes": 1303130112,
+          "rssBytes": 1063653376,
+          "elapsed": 78203
+        },
+        {
+          "cgroupBytes": 1302888448,
+          "rssBytes": 1067245568,
+          "elapsed": 79201
+        },
+        {
+          "cgroupBytes": 1309503488,
+          "rssBytes": 1067802624,
+          "elapsed": 80206
+        },
+        {
+          "cgroupBytes": 1306718208,
+          "rssBytes": 1061462016,
+          "elapsed": 81408
+        },
+        {
+          "cgroupBytes": 1308491776,
+          "rssBytes": 1061093376,
+          "elapsed": 82403
+        },
+        {
+          "cgroupBytes": 1313538048,
+          "rssBytes": 1067892736,
+          "elapsed": 83409
+        },
+        {
+          "cgroupBytes": 1304829952,
+          "rssBytes": 1058865152,
+          "elapsed": 84400
+        },
+        {
+          "cgroupBytes": 1307004928,
+          "rssBytes": 1062305792,
+          "elapsed": 85601
+        },
+        {
+          "cgroupBytes": 1299759104,
+          "rssBytes": 1063571456,
+          "elapsed": 86600
+        },
+        {
+          "cgroupBytes": 1309859840,
+          "rssBytes": 1063522304,
+          "elapsed": 87607
+        },
+        {
+          "cgroupBytes": 1302073344,
+          "rssBytes": 1064275968,
+          "elapsed": 88600
+        },
+        {
+          "cgroupBytes": 1262690304,
+          "rssBytes": 1017393152,
+          "elapsed": 89603
+        },
+        {
+          "cgroupBytes": 1253969920,
+          "rssBytes": 1015037952,
+          "elapsed": 90800
+        },
+        {
+          "cgroupBytes": 1258340352,
+          "rssBytes": 1019744256,
+          "elapsed": 91804
+        },
+        {
+          "cgroupBytes": 1260593152,
+          "rssBytes": 1019981824,
+          "elapsed": 92800
+        },
+        {
+          "cgroupBytes": 1262174208,
+          "rssBytes": 1018507264,
+          "elapsed": 94002
+        },
+        {
+          "cgroupBytes": 1262120960,
+          "rssBytes": 1021591552,
+          "elapsed": 95003
+        },
+        {
+          "cgroupBytes": 1270632448,
+          "rssBytes": 1023631360,
+          "elapsed": 96000
+        },
+        {
+          "cgroupBytes": 1265725440,
+          "rssBytes": 1017561088,
+          "elapsed": 97000
+        },
+        {
+          "cgroupBytes": 1261281280,
+          "rssBytes": 1016541184,
+          "elapsed": 98005
+        },
+        {
+          "cgroupBytes": 1260122112,
+          "rssBytes": 1017094144,
+          "elapsed": 99201
+        },
+        {
+          "cgroupBytes": 1267154944,
+          "rssBytes": 1024442368,
+          "elapsed": 100211
+        },
+        {
+          "cgroupBytes": 1261027328,
+          "rssBytes": 1022251008,
+          "elapsed": 101205
+        },
+        {
+          "cgroupBytes": 1264402432,
+          "rssBytes": 1023156224,
+          "elapsed": 102208
+        },
+        {
+          "cgroupBytes": 1262178304,
+          "rssBytes": 1021263872,
+          "elapsed": 103201
+        },
+        {
+          "cgroupBytes": 1271283712,
+          "rssBytes": 1023037440,
+          "elapsed": 104409
+        },
+        {
+          "cgroupBytes": 1268453376,
+          "rssBytes": 1023131648,
+          "elapsed": 105423
+        },
+        {
+          "cgroupBytes": 1264046080,
+          "rssBytes": 1025155072,
+          "elapsed": 106483
+        },
+        {
+          "cgroupBytes": 1273970688,
+          "rssBytes": 1023434752,
+          "elapsed": 107487
+        },
+        {
+          "cgroupBytes": 1272832000,
+          "rssBytes": 1026650112,
+          "elapsed": 108600
+        },
+        {
+          "cgroupBytes": 1269370880,
+          "rssBytes": 1024139264,
+          "elapsed": 109600
+        },
+        {
+          "cgroupBytes": 1272180736,
+          "rssBytes": 1026625536,
+          "elapsed": 110600
+        },
+        {
+          "cgroupBytes": 1277861888,
+          "rssBytes": 1025585152,
+          "elapsed": 111622
+        },
+        {
+          "cgroupBytes": 1269157888,
+          "rssBytes": 1024057344,
+          "elapsed": 112808
+        },
+        {
+          "cgroupBytes": 1272098816,
+          "rssBytes": 1024016384,
+          "elapsed": 113804
+        },
+        {
+          "cgroupBytes": 1270341632,
+          "rssBytes": 1026973696,
+          "elapsed": 114807
+        },
+        {
+          "cgroupBytes": 1277595648,
+          "rssBytes": 1028657152,
+          "elapsed": 115803
+        },
+        {
+          "cgroupBytes": 1279016960,
+          "rssBytes": 1024933888,
+          "elapsed": 117001
+        },
+        {
+          "cgroupBytes": 1278627840,
+          "rssBytes": 1028767744,
+          "elapsed": 118006
+        },
+        {
+          "cgroupBytes": 1281114112,
+          "rssBytes": 1028861952,
+          "elapsed": 119204
+        },
+        {
+          "cgroupBytes": 1279287296,
+          "rssBytes": 1027391488,
+          "elapsed": 120201
+        },
+        {
+          "cgroupBytes": 1279344640,
+          "rssBytes": 1029189632,
+          "elapsed": 121204
+        },
+        {
+          "cgroupBytes": 1271324672,
+          "rssBytes": 1029214208,
+          "elapsed": 122214
+        },
+        {
+          "cgroupBytes": 1280245760,
+          "rssBytes": 1029599232,
+          "elapsed": 123401
+        },
+        {
+          "cgroupBytes": 1283915776,
+          "rssBytes": 1031098368,
+          "elapsed": 124400
+        },
+        {
+          "cgroupBytes": 1279332352,
+          "rssBytes": 1031151616,
+          "elapsed": 125420
+        },
+        {
+          "cgroupBytes": 1279971328,
+          "rssBytes": 1031270400,
+          "elapsed": 126400
+        },
+        {
+          "cgroupBytes": 1295986688,
+          "rssBytes": 1033252864,
+          "elapsed": 127400
+        },
+        {
+          "cgroupBytes": 1373130752,
+          "rssBytes": 1032327168,
+          "elapsed": 128601
+        },
+        {
+          "cgroupBytes": 1528115200,
+          "rssBytes": 1030238208,
+          "elapsed": 129615
+        },
+        {
+          "cgroupBytes": 1606078464,
+          "rssBytes": 1034608640,
+          "elapsed": 130837
+        },
+        {
+          "cgroupBytes": 1755709440,
+          "rssBytes": 1032339456,
+          "elapsed": 131800
+        },
+        {
+          "cgroupBytes": 1775783936,
+          "rssBytes": 1030803456,
+          "elapsed": 133017
+        },
+        {
+          "cgroupBytes": 1724940288,
+          "rssBytes": 1031127040,
+          "elapsed": 134008
+        },
+        {
+          "cgroupBytes": 1330573312,
+          "rssBytes": 1030668288,
+          "elapsed": 135009
+        },
+        {
+          "cgroupBytes": 1502732288,
+          "rssBytes": 1034264576,
+          "elapsed": 136201
+        },
+        {
+          "cgroupBytes": 1634504704,
+          "rssBytes": 1032413184,
+          "elapsed": 137202
+        },
+        {
+          "cgroupBytes": 1286422528,
+          "rssBytes": 1030782976,
+          "elapsed": 138204
+        },
+        {
+          "cgroupBytes": 1288974336,
+          "rssBytes": 1028321280,
+          "elapsed": 139206
+        },
+        {
+          "cgroupBytes": 1290502144,
+          "rssBytes": 1034125312,
+          "elapsed": 140400
+        },
+        {
+          "cgroupBytes": 1289375744,
+          "rssBytes": 1030258688,
+          "elapsed": 141400
+        },
+        {
+          "cgroupBytes": 1290141696,
+          "rssBytes": 1034907648,
+          "elapsed": 142408
+        },
+        {
+          "cgroupBytes": 1285926912,
+          "rssBytes": 1032994816,
+          "elapsed": 143400
+        },
+        {
+          "cgroupBytes": 1286303744,
+          "rssBytes": 1034948608,
+          "elapsed": 144603
+        },
+        {
+          "cgroupBytes": 1289318400,
+          "rssBytes": 1032638464,
+          "elapsed": 145601
+        },
+        {
+          "cgroupBytes": 1285316608,
+          "rssBytes": 1030758400,
+          "elapsed": 146601
+        },
+        {
+          "cgroupBytes": 1294454784,
+          "rssBytes": 1039351808,
+          "elapsed": 147712
+        },
+        {
+          "cgroupBytes": 1294336000,
+          "rssBytes": 1035161600,
+          "elapsed": 148781
+        },
+        {
+          "cgroupBytes": 1298776064,
+          "rssBytes": 1034489856,
+          "elapsed": 149808
+        },
+        {
+          "cgroupBytes": 1297772544,
+          "rssBytes": 1039237120,
+          "elapsed": 150818
+        },
+        {
+          "cgroupBytes": 1375481856,
+          "rssBytes": 1038036992,
+          "elapsed": 151819
+        },
+        {
+          "cgroupBytes": 1388871680,
+          "rssBytes": 1034309632,
+          "elapsed": 152879
+        },
+        {
+          "cgroupBytes": 791891968,
+          "rssBytes": 1036836864,
+          "elapsed": 153885
+        },
+        {
+          "cgroupBytes": 789999616,
+          "rssBytes": 1041084416,
+          "elapsed": 154912
+        },
+        {
+          "cgroupBytes": 790102016,
+          "rssBytes": 1041707008,
+          "elapsed": 155932
+        },
+        {
+          "cgroupBytes": 792825856,
+          "rssBytes": 1038364672,
+          "elapsed": 156948
+        },
+        {
+          "cgroupBytes": 790941696,
+          "rssBytes": 1039888384,
+          "elapsed": 157965
+        },
+        {
+          "cgroupBytes": 792039424,
+          "rssBytes": 1042702336,
+          "elapsed": 159000
+        },
+        {
+          "cgroupBytes": 791834624,
+          "rssBytes": 1039863808,
+          "elapsed": 160005
+        },
+        {
+          "cgroupBytes": 789733376,
+          "rssBytes": 1038315520,
+          "elapsed": 161029
+        },
+        {
+          "cgroupBytes": 794705920,
+          "rssBytes": 1043591168,
+          "elapsed": 162000
+        },
+        {
+          "cgroupBytes": 791232512,
+          "rssBytes": 1038008320,
+          "elapsed": 163000
+        },
+        {
+          "cgroupBytes": 794066944,
+          "rssBytes": 1040453632,
+          "elapsed": 164000
+        },
+        {
+          "cgroupBytes": 790151168,
+          "rssBytes": 1038880768,
+          "elapsed": 165000
+        },
+        {
+          "cgroupBytes": 794673152,
+          "rssBytes": 1043357696,
+          "elapsed": 166000
+        },
+        {
+          "cgroupBytes": 794406912,
+          "rssBytes": 1040621568,
+          "elapsed": 167000
+        },
+        {
+          "cgroupBytes": 792707072,
+          "rssBytes": 1042567168,
+          "elapsed": 168000
+        },
+        {
+          "cgroupBytes": 794591232,
+          "rssBytes": 1043124224,
+          "elapsed": 169000
+        },
+        {
+          "cgroupBytes": 792481792,
+          "rssBytes": 1041092608,
+          "elapsed": 170000
+        },
+        {
+          "cgroupBytes": 792248320,
+          "rssBytes": 1042432000,
+          "elapsed": 171000
+        },
+        {
+          "cgroupBytes": 792420352,
+          "rssBytes": 1041514496,
+          "elapsed": 172000
+        },
+        {
+          "cgroupBytes": 795234304,
+          "rssBytes": 1043943424,
+          "elapsed": 173200
+        },
+        {
+          "cgroupBytes": 792227840,
+          "rssBytes": 1037258752,
+          "elapsed": 174200
+        },
+        {
+          "cgroupBytes": 796151808,
+          "rssBytes": 1044615168,
+          "elapsed": 175200
+        },
+        {
+          "cgroupBytes": 793501696,
+          "rssBytes": 1042198528,
+          "elapsed": 176200
+        },
+        {
+          "cgroupBytes": 796721152,
+          "rssBytes": 1045078016,
+          "elapsed": 177200
+        },
+        {
+          "cgroupBytes": 797728768,
+          "rssBytes": 1043111936,
+          "elapsed": 178200
+        },
+        {
+          "cgroupBytes": 830693376,
+          "rssBytes": 1040920576,
+          "elapsed": 179200
+        },
+        {
+          "cgroupBytes": 814665728,
+          "rssBytes": 1043423232,
+          "elapsed": 180200
+        },
+        {
+          "cgroupBytes": 851341312,
+          "rssBytes": 1042243584,
+          "elapsed": 181200
+        },
+        {
+          "cgroupBytes": 850722816,
+          "rssBytes": 1046683648,
+          "elapsed": 182201
+        },
+        {
+          "cgroupBytes": 808108032,
+          "rssBytes": 1043709952,
+          "elapsed": 183400
+        },
+        {
+          "cgroupBytes": 863178752,
+          "rssBytes": 1045876736,
+          "elapsed": 184400
+        },
+        {
+          "cgroupBytes": 879890432,
+          "rssBytes": 1046827008,
+          "elapsed": 185400
+        },
+        {
+          "cgroupBytes": 888684544,
+          "rssBytes": 1043374080,
+          "elapsed": 186400
+        },
+        {
+          "cgroupBytes": 912760832,
+          "rssBytes": 1040044032,
+          "elapsed": 187400
+        },
+        {
+          "cgroupBytes": 898412544,
+          "rssBytes": 1045454848,
+          "elapsed": 188600
+        },
+        {
+          "cgroupBytes": 860573696,
+          "rssBytes": 1048281088,
+          "elapsed": 189600
+        },
+        {
+          "cgroupBytes": 866299904,
+          "rssBytes": 1044496384,
+          "elapsed": 190601
+        },
+        {
+          "cgroupBytes": 866680832,
+          "rssBytes": 1045798912,
+          "elapsed": 191600
+        },
+        {
+          "cgroupBytes": 1117581312,
+          "rssBytes": 1044361216,
+          "elapsed": 192601
+        },
+        {
+          "cgroupBytes": 874782720,
+          "rssBytes": 1046249472,
+          "elapsed": 193606
+        },
+        {
+          "cgroupBytes": 921985024,
+          "rssBytes": 1044705280,
+          "elapsed": 194620
+        },
+        {
+          "cgroupBytes": 935682048,
+          "rssBytes": 1045282816,
+          "elapsed": 195601
+        },
+        {
+          "cgroupBytes": 949755904,
+          "rssBytes": 1045078016,
+          "elapsed": 196800
+        },
+        {
+          "cgroupBytes": 963399680,
+          "rssBytes": 1044488192,
+          "elapsed": 197800
+        },
+        {
+          "cgroupBytes": 954683392,
+          "rssBytes": 1043017728,
+          "elapsed": 198800
+        },
+        {
+          "cgroupBytes": 962125824,
+          "rssBytes": 1046859776,
+          "elapsed": 199801
+        },
+        {
+          "cgroupBytes": 958263296,
+          "rssBytes": 1045692416,
+          "elapsed": 200800
+        },
+        {
+          "cgroupBytes": 957100032,
+          "rssBytes": 1045012480,
+          "elapsed": 201800
+        },
+        {
+          "cgroupBytes": 897716224,
+          "rssBytes": 1046294528,
+          "elapsed": 202800
+        },
+        {
+          "cgroupBytes": 935993344,
+          "rssBytes": 1049075712,
+          "elapsed": 203800
+        },
+        {
+          "cgroupBytes": 866959360,
+          "rssBytes": 1043312640,
+          "elapsed": 204800
+        },
+        {
+          "cgroupBytes": 799535104,
+          "rssBytes": 1049931776,
+          "elapsed": 206000
+        },
+        {
+          "cgroupBytes": 794480640,
+          "rssBytes": 1044127744,
+          "elapsed": 207030
+        },
+        {
+          "cgroupBytes": 803250176,
+          "rssBytes": 1049063424,
+          "elapsed": 208000
+        },
+        {
+          "cgroupBytes": 800579584,
+          "rssBytes": 1046818816,
+          "elapsed": 209000
+        },
+        {
+          "cgroupBytes": 799866880,
+          "rssBytes": 1044561920,
+          "elapsed": 210000
+        },
+        {
+          "cgroupBytes": 795987968,
+          "rssBytes": 1044299776,
+          "elapsed": 211000
+        },
+        {
+          "cgroupBytes": 804249600,
+          "rssBytes": 1049808896,
+          "elapsed": 212000
+        },
+        {
+          "cgroupBytes": 799563776,
+          "rssBytes": 1048305664,
+          "elapsed": 213000
+        },
+        {
+          "cgroupBytes": 798408704,
+          "rssBytes": 1050763264,
+          "elapsed": 214003
+        },
+        {
+          "cgroupBytes": 801767424,
+          "rssBytes": 1046638592,
+          "elapsed": 215000
+        },
+        {
+          "cgroupBytes": 800833536,
+          "rssBytes": 1052889088,
+          "elapsed": 216000
+        },
+        {
+          "cgroupBytes": 802914304,
+          "rssBytes": 1048182784,
+          "elapsed": 217200
+        },
+        {
+          "cgroupBytes": 799621120,
+          "rssBytes": 1048014848,
+          "elapsed": 218200
+        },
+        {
+          "cgroupBytes": 803909632,
+          "rssBytes": 1052315648,
+          "elapsed": 219200
+        },
+        {
+          "cgroupBytes": 804933632,
+          "rssBytes": 1050460160,
+          "elapsed": 220200
+        },
+        {
+          "cgroupBytes": 800280576,
+          "rssBytes": 1048592384,
+          "elapsed": 221200
+        },
+        {
+          "cgroupBytes": 806273024,
+          "rssBytes": 1054224384,
+          "elapsed": 222200
+        },
+        {
+          "cgroupBytes": 801492992,
+          "rssBytes": 1049784320,
+          "elapsed": 223200
+        },
+        {
+          "cgroupBytes": 805552128,
+          "rssBytes": 1051414528,
+          "elapsed": 224200
+        },
+        {
+          "cgroupBytes": 805036032,
+          "rssBytes": 1053401088,
+          "elapsed": 225200
+        },
+        {
+          "cgroupBytes": 807563264,
+          "rssBytes": 1053429760,
+          "elapsed": 226200
+        },
+        {
+          "cgroupBytes": 804925440,
+          "rssBytes": 1053151232,
+          "elapsed": 227200
+        },
+        {
+          "cgroupBytes": 807096320,
+          "rssBytes": 1053454336,
+          "elapsed": 228200
+        },
+        {
+          "cgroupBytes": 806293504,
+          "rssBytes": 1056296960,
+          "elapsed": 229401
+        },
+        {
+          "cgroupBytes": 804597760,
+          "rssBytes": 1051525120,
+          "elapsed": 230400
+        },
+        {
+          "cgroupBytes": 807362560,
+          "rssBytes": 1053499392,
+          "elapsed": 231400
+        },
+        {
+          "cgroupBytes": 805298176,
+          "rssBytes": 1057140736,
+          "elapsed": 232400
+        },
+        {
+          "cgroupBytes": 808538112,
+          "rssBytes": 1051930624,
+          "elapsed": 233400
+        },
+        {
+          "cgroupBytes": 805875712,
+          "rssBytes": 1052651520,
+          "elapsed": 234400
+        },
+        {
+          "cgroupBytes": 807976960,
+          "rssBytes": 1056362496,
+          "elapsed": 235401
+        },
+        {
+          "cgroupBytes": 806002688,
+          "rssBytes": 1054461952,
+          "elapsed": 236400
+        },
+        {
+          "cgroupBytes": 809955328,
+          "rssBytes": 1058242560,
+          "elapsed": 237400
+        },
+        {
+          "cgroupBytes": 806952960,
+          "rssBytes": 1055248384,
+          "elapsed": 238400
+        },
+        {
+          "cgroupBytes": 809730048,
+          "rssBytes": 1058488320,
+          "elapsed": 239400
+        },
+        {
+          "cgroupBytes": 811798528,
+          "rssBytes": 1057812480,
+          "elapsed": 240400
+        },
+        {
+          "cgroupBytes": 807882752,
+          "rssBytes": 1056100352,
+          "elapsed": 241400
+        },
+        {
+          "cgroupBytes": 806637568,
+          "rssBytes": 1056288768,
+          "elapsed": 242400
+        },
+        {
+          "cgroupBytes": 811679744,
+          "rssBytes": 1060073472,
+          "elapsed": 243600
+        },
+        {
+          "cgroupBytes": 806752256,
+          "rssBytes": 1051979776,
+          "elapsed": 244600
+        },
+        {
+          "cgroupBytes": 812339200,
+          "rssBytes": 1060909056,
+          "elapsed": 245600
+        },
+        {
+          "cgroupBytes": 809345024,
+          "rssBytes": 1057964032,
+          "elapsed": 246600
+        },
+        {
+          "cgroupBytes": 810348544,
+          "rssBytes": 1059487744,
+          "elapsed": 247600
+        },
+        {
+          "cgroupBytes": 812306432,
+          "rssBytes": 1060679680,
+          "elapsed": 248600
+        },
+        {
+          "cgroupBytes": 813146112,
+          "rssBytes": 1059569664,
+          "elapsed": 249600
+        },
+        {
+          "cgroupBytes": 810905600,
+          "rssBytes": 1059676160,
+          "elapsed": 250600
+        },
+        {
+          "cgroupBytes": 813056000,
+          "rssBytes": 1061609472,
+          "elapsed": 251600
+        },
+        {
+          "cgroupBytes": 810262528,
+          "rssBytes": 1058017280,
+          "elapsed": 252600
+        },
+        {
+          "cgroupBytes": 809750528,
+          "rssBytes": 1061498880,
+          "elapsed": 253600
+        },
+        {
+          "cgroupBytes": 812335104,
+          "rssBytes": 1060532224,
+          "elapsed": 254600
+        },
+        {
+          "cgroupBytes": 810414080,
+          "rssBytes": 1058938880,
+          "elapsed": 255600
+        },
+        {
+          "cgroupBytes": 813682688,
+          "rssBytes": 1062027264,
+          "elapsed": 256600
+        },
+        {
+          "cgroupBytes": 812257280,
+          "rssBytes": 1059332096,
+          "elapsed": 257600
+        },
+        {
+          "cgroupBytes": 813666304,
+          "rssBytes": 1061863424,
+          "elapsed": 258600
+        },
+        {
+          "cgroupBytes": 815513600,
+          "rssBytes": 1061548032,
+          "elapsed": 259800
+        },
+        {
+          "cgroupBytes": 813588480,
+          "rssBytes": 1062699008,
+          "elapsed": 260800
+        },
+        {
+          "cgroupBytes": 814387200,
+          "rssBytes": 1061584896,
+          "elapsed": 261800
+        },
+        {
+          "cgroupBytes": 807792640,
+          "rssBytes": 1062842368,
+          "elapsed": 262800
+        },
+        {
+          "cgroupBytes": 816197632,
+          "rssBytes": 1064603648,
+          "elapsed": 263800
+        },
+        {
+          "cgroupBytes": 811188224,
+          "rssBytes": 1059794944,
+          "elapsed": 264800
+        },
+        {
+          "cgroupBytes": 816672768,
+          "rssBytes": 1064955904,
+          "elapsed": 265800
+        },
+        {
+          "cgroupBytes": 812265472,
+          "rssBytes": 1060470784,
+          "elapsed": 266800
+        },
+        {
+          "cgroupBytes": 817623040,
+          "rssBytes": 1066061824,
+          "elapsed": 267800
+        },
+        {
+          "cgroupBytes": 816328704,
+          "rssBytes": 1061097472,
+          "elapsed": 268800
+        },
+        {
+          "cgroupBytes": 817659904,
+          "rssBytes": 1065603072,
+          "elapsed": 269800
+        },
+        {
+          "cgroupBytes": 817041408,
+          "rssBytes": 1062793216,
+          "elapsed": 271000
+        },
+        {
+          "cgroupBytes": 815067136,
+          "rssBytes": 1066291200,
+          "elapsed": 272000
+        },
+        {
+          "cgroupBytes": 827777024,
+          "rssBytes": 1065013248,
+          "elapsed": 273000
+        },
+        {
+          "cgroupBytes": 829104128,
+          "rssBytes": 1067479040,
+          "elapsed": 274001
+        },
+        {
+          "cgroupBytes": 815439872,
+          "rssBytes": 1063526400,
+          "elapsed": 275000
+        },
+        {
+          "cgroupBytes": 816640000,
+          "rssBytes": 1062891520,
+          "elapsed": 276000
+        },
+        {
+          "cgroupBytes": 819793920,
+          "rssBytes": 1067745280,
+          "elapsed": 277000
+        },
+        {
+          "cgroupBytes": 816553984,
+          "rssBytes": 1065111552,
+          "elapsed": 278014
+        },
+        {
+          "cgroupBytes": 819486720,
+          "rssBytes": 1067601920,
+          "elapsed": 279004
+        },
+        {
+          "cgroupBytes": 821485568,
+          "rssBytes": 1067515904,
+          "elapsed": 280005
+        },
+        {
+          "cgroupBytes": 819867648,
+          "rssBytes": 1068126208,
+          "elapsed": 281004
+        },
+        {
+          "cgroupBytes": 820228096,
+          "rssBytes": 1068781568,
+          "elapsed": 282207
+        },
+        {
+          "cgroupBytes": 818708480,
+          "rssBytes": 1068634112,
+          "elapsed": 283207
+        },
+        {
+          "cgroupBytes": 821886976,
+          "rssBytes": 1067917312,
+          "elapsed": 284205
+        },
+        {
+          "cgroupBytes": 820690944,
+          "rssBytes": 1067970560,
+          "elapsed": 285204
+        },
+        {
+          "cgroupBytes": 823881728,
+          "rssBytes": 1072050176,
+          "elapsed": 286204
+        },
+        {
+          "cgroupBytes": 820969472,
+          "rssBytes": 1069694976,
+          "elapsed": 287204
+        },
+        {
+          "cgroupBytes": 822411264,
+          "rssBytes": 1069228032,
+          "elapsed": 288207
+        },
+        {
+          "cgroupBytes": 823529472,
+          "rssBytes": 1070850048,
+          "elapsed": 289204
+        },
+        {
+          "cgroupBytes": 822611968,
+          "rssBytes": 1068318720,
+          "elapsed": 290207
+        },
+        {
+          "cgroupBytes": 826413056,
+          "rssBytes": 1074479104,
+          "elapsed": 291204
+        },
+        {
+          "cgroupBytes": 820260864,
+          "rssBytes": 1070395392,
+          "elapsed": 292204
+        },
+        {
+          "cgroupBytes": 825491456,
+          "rssBytes": 1073479680,
+          "elapsed": 293206
+        },
+        {
+          "cgroupBytes": 824066048,
+          "rssBytes": 1072144384,
+          "elapsed": 294207
+        },
+        {
+          "cgroupBytes": 825401344,
+          "rssBytes": 1073860608,
+          "elapsed": 295211
+        },
+        {
+          "cgroupBytes": 825475072,
+          "rssBytes": 1073754112,
+          "elapsed": 296405
+        },
+        {
+          "cgroupBytes": 826462208,
+          "rssBytes": 1074925568,
+          "elapsed": 297405
+        },
+        {
+          "cgroupBytes": 826363904,
+          "rssBytes": 1072427008,
+          "elapsed": 298406
+        },
+        {
+          "cgroupBytes": 825942016,
+          "rssBytes": 1074221056,
+          "elapsed": 299408
+        },
+        {
+          "cgroupBytes": 762691584,
+          "rssBytes": 1010077696,
+          "elapsed": 300011
+        }
+      ],
+      "state": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 15001.100000000093,
+        "stoppedAtMs": 315011.69999999995,
+        "elapsedMs": 300011,
+        "chunkCount": 292,
+        "recorderEnabled": true,
+        "sessionPolicy": {
+          "profile": "balanced",
+          "softBytes": 130000000,
+          "aggregateBytes": 270000000,
+          "reserveBytes": 10000000,
+          "maxChunks": 1200,
+          "durationMs": 300000,
+          "warningFraction": 0.8,
+          "previousExportBytes": 296608,
+          "effectiveSoftBytes": 130000000
+        },
+        "deliveredBytes": 68975914,
+        "admittedBytes": 68975914,
+        "rejectedBytes": 0,
+        "rejectedEvents": 0,
+        "retainedChunkCount": 0,
+        "previousExportBytes": 296608,
+        "stopReason": "duration-stop",
+        "secondaryStopReason": null,
+        "terminalOutcome": "complete",
+        "finalExportBytes": 68975914,
+        "nativeShutdown": "confirmed-stopped",
+        "warnings": [
+          "duration"
+        ],
+        "lastExportUrl": "blob:http://localhost/46b2de01-f3b6-4a49-9542-543547e7bd92",
+        "lastExportFileName": "auralprint-capture-20261015-075153.webm",
+        "lastExportByteSize": 68975914,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording completed at configured duration target.",
+        "lastUpdatedAtMs": 315030.40000000014
+      },
+      "timestamps": {
+        "0": {
+          "count": 8551,
+          "first": 0,
+          "last": 299.95,
+          "end": 299.95099999999996
+        },
+        "1": {
+          "count": 4565,
+          "first": 0.037,
+          "last": 299.926,
+          "end": 299.986
+        }
+      },
+      "containerDuration": 299.986,
+      "download": {
+        "filename": "auralprint-capture-20261015-075153.webm",
+        "bytes": 68975914,
+        "sha256": "1f03611b5b1364e38162f26ead38c518d87e357c99e2f8953503e8d1e3c1ae1f"
+      },
+      "streams": [
+        {
+          "codec": "vp9",
+          "type": "video",
+          "width": 960,
+          "height": 640
+        },
+        {
+          "codec": "opus",
+          "type": "audio",
+          "channels": 2
+        }
+      ],
+      "format": {
+        "filename": "/workspace/Auralprint1/work/native-final-guard-media/factory-five-minutes.webm",
+        "nb_streams": 2,
+        "nb_programs": 0,
+        "nb_stream_groups": 0,
+        "format_name": "matroska,webm",
+        "format_long_name": "Matroska / WebM",
+        "start_time": "0.000000",
+        "size": "68975914",
+        "probe_score": 100,
+        "tags": {
+          "encoder": "Chrome"
+        }
+      },
+      "replay": {
+        "time": 0.364091,
+        "width": 960,
+        "height": 640,
+        "duration": null
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "events": [
+          {
+            "type": "dataavailable",
+            "bytes": 179846,
+            "at": 16026.699999999953,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 212390,
+            "at": 17096,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 204625,
+            "at": 18147.600000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 224081,
+            "at": 19182.800000000047,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 207370,
+            "at": 20228.100000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 220970,
+            "at": 21283,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 193453,
+            "at": 22277.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228321,
+            "at": 23283.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 214498,
+            "at": 24307.100000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 225215,
+            "at": 25343.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 213224,
+            "at": 26396.800000000047,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 247973,
+            "at": 27425.800000000047,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 218708,
+            "at": 28440.800000000047,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 193251,
+            "at": 29477,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 245104,
+            "at": 30481.600000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236088,
+            "at": 31538.600000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228861,
+            "at": 32595.100000000093,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 273552,
+            "at": 33654.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 229001,
+            "at": 34681.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 214445,
+            "at": 35683,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237367,
+            "at": 36708.10000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 252022,
+            "at": 37742.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 234078,
+            "at": 38793.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 229507,
+            "at": 39810.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 223270,
+            "at": 40812.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 152805,
+            "at": 41831.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 215751,
+            "at": 42883.10000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 222834,
+            "at": 43895,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 227866,
+            "at": 44908,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 220257,
+            "at": 45925.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 245460,
+            "at": 46998,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235814,
+            "at": 48020.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 262082,
+            "at": 49016.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 186570,
+            "at": 50076.10000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 244347,
+            "at": 51126.10000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 251467,
+            "at": 52182,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 251776,
+            "at": 53210.60000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 217821,
+            "at": 54216.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 223149,
+            "at": 55245.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 251297,
+            "at": 56312.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 193899,
+            "at": 57387.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 149759,
+            "at": 58405.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 147196,
+            "at": 59436.10000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 176224,
+            "at": 60524.60000000009,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 199055,
+            "at": 61516.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 176497,
+            "at": 62601.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 168094,
+            "at": 63681,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 199077,
+            "at": 64706.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 155358,
+            "at": 65782.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 170188,
+            "at": 66815.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 168644,
+            "at": 67882.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 186377,
+            "at": 68908.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 169737,
+            "at": 69911,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 189687,
+            "at": 70988.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 159755,
+            "at": 72001.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 151278,
+            "at": 73021.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 154451,
+            "at": 74102.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 197015,
+            "at": 75110.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 159178,
+            "at": 76110.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 185478,
+            "at": 77177.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 213520,
+            "at": 78180.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 175949,
+            "at": 79297,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 201367,
+            "at": 80324.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 234523,
+            "at": 81337.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246315,
+            "at": 82383.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 243936,
+            "at": 83400.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 245135,
+            "at": 84418.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 268994,
+            "at": 85429,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228015,
+            "at": 86494.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233319,
+            "at": 87525.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228199,
+            "at": 88525.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 300896,
+            "at": 89576.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 215060,
+            "at": 90552.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 251585,
+            "at": 91621.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 291256,
+            "at": 92682.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 219443,
+            "at": 93708,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 242515,
+            "at": 94727,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231894,
+            "at": 95737.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 242635,
+            "at": 96781.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 211640,
+            "at": 97792.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 242060,
+            "at": 98824.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 273244,
+            "at": 99841.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 248925,
+            "at": 100884.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 261572,
+            "at": 101925.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 269245,
+            "at": 102935.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 223507,
+            "at": 103988.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237323,
+            "at": 105006.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 221026,
+            "at": 106036.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 276213,
+            "at": 107091.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 254137,
+            "at": 108112.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 216145,
+            "at": 109128,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230609,
+            "at": 110138.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 245814,
+            "at": 111184.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 265200,
+            "at": 112236,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 291156,
+            "at": 113233.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 203834,
+            "at": 114308.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231589,
+            "at": 115339.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 221604,
+            "at": 116350.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 267018,
+            "at": 117377.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230497,
+            "at": 118402.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 229945,
+            "at": 119409.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 260066,
+            "at": 120424.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 241132,
+            "at": 121483.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 195172,
+            "at": 122487.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235587,
+            "at": 123538,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 243879,
+            "at": 124554.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 224128,
+            "at": 125556.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240762,
+            "at": 126623,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 272669,
+            "at": 127637.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233991,
+            "at": 128689.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246679,
+            "at": 129728,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246768,
+            "at": 130782.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 252320,
+            "at": 131801.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 245731,
+            "at": 132828.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233516,
+            "at": 133836.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 268720,
+            "at": 134888.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246141,
+            "at": 135936.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 252279,
+            "at": 136941,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 264939,
+            "at": 138025.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235950,
+            "at": 139123.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 211841,
+            "at": 140135.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 229314,
+            "at": 141136,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 247093,
+            "at": 142139.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 205432,
+            "at": 143176,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 211352,
+            "at": 144194.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 205509,
+            "at": 145211.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 168635,
+            "at": 146240.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 166879,
+            "at": 147335.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 179146,
+            "at": 148338.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 179095,
+            "at": 149389.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 221418,
+            "at": 150426.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 189121,
+            "at": 151406.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 199279,
+            "at": 152420.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 186279,
+            "at": 153433,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228209,
+            "at": 154478.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246160,
+            "at": 155520.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 241754,
+            "at": 156587.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 259517,
+            "at": 157600.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235616,
+            "at": 158636,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 247939,
+            "at": 159649.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 276408,
+            "at": 160691.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 220214,
+            "at": 161697.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 244020,
+            "at": 162713.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235810,
+            "at": 163782.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240613,
+            "at": 164809.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 214074,
+            "at": 165819.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233542,
+            "at": 166820.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 262529,
+            "at": 167880.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 207538,
+            "at": 168885.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246472,
+            "at": 169912.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 258643,
+            "at": 170932.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228649,
+            "at": 171948.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 243466,
+            "at": 172966.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228783,
+            "at": 173985.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 288750,
+            "at": 175005.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238776,
+            "at": 176029.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237424,
+            "at": 177053.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 274317,
+            "at": 178066.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233888,
+            "at": 179086.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233754,
+            "at": 180109.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 286261,
+            "at": 181128.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 224693,
+            "at": 182151.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238514,
+            "at": 183165.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228257,
+            "at": 184186.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 282437,
+            "at": 185205.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 257555,
+            "at": 186228.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235038,
+            "at": 187248.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 268381,
+            "at": 188265.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236064,
+            "at": 189286,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 232098,
+            "at": 190310.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 283082,
+            "at": 191328.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 232293,
+            "at": 192351.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240506,
+            "at": 193366.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 229803,
+            "at": 194400.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 296699,
+            "at": 195479.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 244797,
+            "at": 196498.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 234717,
+            "at": 197518.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 265223,
+            "at": 198580.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237034,
+            "at": 199582.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 263227,
+            "at": 200600.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 274104,
+            "at": 201602,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 212217,
+            "at": 202648.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230767,
+            "at": 203681.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 297400,
+            "at": 204710.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 246206,
+            "at": 205736.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 254413,
+            "at": 206801,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 245082,
+            "at": 207836,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 252634,
+            "at": 208885.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 193080,
+            "at": 209898.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240257,
+            "at": 210916,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 275503,
+            "at": 211936.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 232108,
+            "at": 212961.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 261577,
+            "at": 213976.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240820,
+            "at": 214996.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 273692,
+            "at": 216015.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240471,
+            "at": 217036,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233161,
+            "at": 218122.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 274420,
+            "at": 219168.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228995,
+            "at": 220186.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236263,
+            "at": 221213.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 248291,
+            "at": 222231.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 261210,
+            "at": 223259.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228389,
+            "at": 224286.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 286676,
+            "at": 225311.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 232244,
+            "at": 226326.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236203,
+            "at": 227360.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231650,
+            "at": 228377,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 283196,
+            "at": 229397.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 226813,
+            "at": 230416.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 239565,
+            "at": 231436.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 274003,
+            "at": 232461.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235014,
+            "at": 233480.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237032,
+            "at": 234495.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 277119,
+            "at": 235516,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 234424,
+            "at": 236536.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238968,
+            "at": 237559.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 234779,
+            "at": 238577,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 306946,
+            "at": 239595.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236132,
+            "at": 240616.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228523,
+            "at": 241636.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 276821,
+            "at": 242660.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233861,
+            "at": 243679.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 239526,
+            "at": 244696.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 269000,
+            "at": 245717.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238924,
+            "at": 246736.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238777,
+            "at": 247759.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238609,
+            "at": 248780.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 278228,
+            "at": 249795.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 241776,
+            "at": 250816,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231047,
+            "at": 251836,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 277192,
+            "at": 252858.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231598,
+            "at": 253878.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240156,
+            "at": 254896.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 251367,
+            "at": 255915.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 262008,
+            "at": 256935.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230064,
+            "at": 257960.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 285957,
+            "at": 258979.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230199,
+            "at": 259996.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238808,
+            "at": 261015.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237837,
+            "at": 262042.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 288447,
+            "at": 263059.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 227389,
+            "at": 264078.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 243180,
+            "at": 265095.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 264162,
+            "at": 266115.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 241084,
+            "at": 267141.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233102,
+            "at": 268161.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 285816,
+            "at": 269176,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231286,
+            "at": 270195.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236210,
+            "at": 271216,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233978,
+            "at": 272240.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 307581,
+            "at": 273258.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231099,
+            "at": 274281.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 249590,
+            "at": 275296.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 265110,
+            "at": 276315.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236934,
+            "at": 277339.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236946,
+            "at": 278358.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 281669,
+            "at": 279378.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235446,
+            "at": 280395.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 235954,
+            "at": 281415.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 238548,
+            "at": 282440,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 281065,
+            "at": 283461,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233882,
+            "at": 284477.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 240401,
+            "at": 285495.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 262680,
+            "at": 286515.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 242201,
+            "at": 287542.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233575,
+            "at": 288566.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 284239,
+            "at": 289578.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231581,
+            "at": 290595.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233301,
+            "at": 291617.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236122,
+            "at": 292639.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 279077,
+            "at": 293660.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230802,
+            "at": 294677.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 236243,
+            "at": 295695.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 295848,
+            "at": 296715.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 231313,
+            "at": 297742,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 239920,
+            "at": 298757.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 247588,
+            "at": 299782.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 243764,
+            "at": 300795.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228350,
+            "at": 301815.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 291496,
+            "at": 302839.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 233443,
+            "at": 303859.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 249605,
+            "at": 304890.6000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 230683,
+            "at": 305908.5,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 281221,
+            "at": 306925.69999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 228316,
+            "at": 307947.30000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 241238,
+            "at": 308966.40000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 275873,
+            "at": 309990.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 234313,
+            "at": 311009.19999999995,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237774,
+            "at": 312025.90000000014,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 283288,
+            "at": 313045.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 258868,
+            "at": 314065.80000000005,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "dataavailable",
+            "bytes": 237523,
+            "at": 315011.1000000001,
+            "mime": "video/webm;codecs=vp9,opus"
+          },
+          {
+            "type": "stop",
+            "bytes": 0,
+            "at": 315011.30000000005
+          }
+        ],
+        "stops": 1,
+        "tracks": [
+          {
+            "kind": "audio",
+            "readyState": "live"
+          },
+          {
+            "kind": "video",
+            "readyState": "ended"
+          }
+        ]
+      }
+    }
+  ],
+  "guards": {
+    "rssBytes": 2147483648,
+    "cgroupBytes": 6442450944,
+    "deliveredBytes": 150000000
+  },
+  "instrumentation": "In-memory application symbol exposure; native MediaRecorder observation; synthetic permissions. Only capacity diagnostic injects short policy via explicit init seam. Factory policy unchanged. No forced OOM.",
+  "browser": "151.0.7922.173",
+  "errors": [],
+  "finished": "2026-10-15T07:51:54.896Z",
+  "passed": true
+}

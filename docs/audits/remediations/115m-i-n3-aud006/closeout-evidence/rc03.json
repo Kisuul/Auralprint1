@@ -1,0 +1,975 @@
+{
+  "version": "v0.1.15m.i.n",
+  "browser": "151.0.7922.173",
+  "generatedMediaStreams": true,
+  "evidence": [
+    {
+      "case": "cancelled-mic-attach-destroys-new-stream-graph",
+      "passed": true,
+      "before": {
+        "source": {
+          "kind": "stream",
+          "status": "active",
+          "label": "Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg==",
+          "permission": {
+            "mic": "prompt",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": true,
+            "audioChannelCount": 2
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg=="
+          }
+        },
+        "status": "Stream live: Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg== - Capture: 2ch - Bands: mono-ish (L≈R)"
+      },
+      "after": {
+        "source": {
+          "kind": "stream",
+          "status": "active",
+          "label": "Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg==",
+          "permission": {
+            "mic": "prompt",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": true,
+            "audioChannelCount": 2
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg=="
+          },
+          "mic": {
+            "ok": false,
+            "kind": "mic",
+            "status": "idle",
+            "errorCode": "mic-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "Stream live: Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg== - Capture: 2ch - Bands: mono-ish (L≈R)"
+      },
+      "teardown": {
+        "source": {
+          "kind": "none",
+          "status": "idle",
+          "label": "",
+          "permission": {
+            "mic": "prompt",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": false,
+          "streamMeta": {
+            "hasAudio": false,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": false,
+        "winningUpstream": false,
+        "winningGraphDisconnects": 1,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "Je8DAFGkIjL+niL3hludxX4Rlaz0ej0fVv3nGIqbY4ceO2UiZXnQkO2QddZfEB9/knKyfhoc1bVdppWX54P1Kg=="
+          },
+          "mic": {
+            "ok": false,
+            "kind": "mic",
+            "status": "idle",
+            "errorCode": "mic-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "File mode ready. Load audio files to begin analysis."
+      },
+      "errors": []
+    },
+    {
+      "case": "error-mic-to-stream",
+      "passed": true,
+      "before": {
+        "source": {
+          "kind": "stream",
+          "status": "active",
+          "label": "/QXiAu2Sa9cc/a5kcKloZR3eJqsplQZosSUnKMkf10cJWbupziLCwrq4ThEiS/ou8PCBKjcMUpgOSbStIxVFFA==",
+          "permission": {
+            "mic": "prompt",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": true,
+            "audioChannelCount": 2
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "/QXiAu2Sa9cc/a5kcKloZR3eJqsplQZosSUnKMkf10cJWbupziLCwrq4ThEiS/ou8PCBKjcMUpgOSbStIxVFFA=="
+          }
+        },
+        "status": "Waiting for stream share permission."
+      },
+      "after": {
+        "source": {
+          "kind": "stream",
+          "status": "active",
+          "label": "/QXiAu2Sa9cc/a5kcKloZR3eJqsplQZosSUnKMkf10cJWbupziLCwrq4ThEiS/ou8PCBKjcMUpgOSbStIxVFFA==",
+          "permission": {
+            "mic": "prompt",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": true,
+            "audioChannelCount": 2
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "/QXiAu2Sa9cc/a5kcKloZR3eJqsplQZosSUnKMkf10cJWbupziLCwrq4ThEiS/ou8PCBKjcMUpgOSbStIxVFFA=="
+          },
+          "mic": {
+            "ok": false,
+            "kind": "mic",
+            "status": "idle",
+            "errorCode": "mic-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "Stream live: /QXiAu2Sa9cc/a5kcKloZR3eJqsplQZosSUnKMkf10cJWbupziLCwrq4ThEiS/ou8PCBKjcMUpgOSbStIxVFFA== - Capture: 2ch - Bands: mono-ish (L≈R)"
+      },
+      "teardown": {
+        "source": {
+          "kind": "none",
+          "status": "idle",
+          "label": "",
+          "permission": {
+            "mic": "prompt",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": false,
+          "streamMeta": {
+            "hasAudio": false,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": false,
+        "winningUpstream": false,
+        "winningGraphDisconnects": 1,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "/QXiAu2Sa9cc/a5kcKloZR3eJqsplQZosSUnKMkf10cJWbupziLCwrq4ThEiS/ou8PCBKjcMUpgOSbStIxVFFA=="
+          },
+          "mic": {
+            "ok": false,
+            "kind": "mic",
+            "status": "idle",
+            "errorCode": "mic-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "File mode ready. Load audio files to begin analysis."
+      },
+      "errors": []
+    },
+    {
+      "case": "normal-mic-to-stream",
+      "passed": true,
+      "before": {
+        "source": {
+          "kind": "stream",
+          "status": "active",
+          "label": "o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg==",
+          "permission": {
+            "mic": "granted",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": true,
+            "audioChannelCount": 2
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg=="
+          }
+        },
+        "status": "Stream live: o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg== - Capture: 2ch - Bands: mono-ish (L≈R)"
+      },
+      "after": {
+        "source": {
+          "kind": "stream",
+          "status": "active",
+          "label": "o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg==",
+          "permission": {
+            "mic": "granted",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": true,
+            "audioChannelCount": 2
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg=="
+          }
+        },
+        "status": "Stream live: o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg== - Capture: 2ch - Bands: mono-ish (L≈R)"
+      },
+      "teardown": {
+        "source": {
+          "kind": "none",
+          "status": "idle",
+          "label": "",
+          "permission": {
+            "mic": "granted",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": false,
+          "streamMeta": {
+            "hasAudio": false,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": false,
+        "winningUpstream": false,
+        "winningGraphDisconnects": 1,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "o1cpAbXdNjtFjNhnmIpx9HvmBOYYaoUfWdf4jjGYwaPxkkVxrCNIC2/+slMxuwDAVBrCOfnMseFHzOjDLcEhsg=="
+          }
+        },
+        "status": "File mode ready. Load audio files to begin analysis."
+      },
+      "errors": []
+    },
+    {
+      "case": "cancelled-stream-attach-destroys-new-mic-graph",
+      "passed": true,
+      "before": {
+        "source": {
+          "kind": "mic",
+          "status": "active",
+          "label": "MediaStreamAudioDestinationNode",
+          "permission": {
+            "mic": "granted",
+            "stream": "prompt"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          }
+        },
+        "status": "Microphone live: MediaStreamAudioDestinationNode - Bands: mono-ish (L≈R)"
+      },
+      "after": {
+        "source": {
+          "kind": "mic",
+          "status": "active",
+          "label": "MediaStreamAudioDestinationNode",
+          "permission": {
+            "mic": "granted",
+            "stream": "prompt"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": false,
+            "kind": "stream",
+            "status": "idle",
+            "errorCode": "stream-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "Microphone live: MediaStreamAudioDestinationNode - Bands: mono-ish (L≈R)"
+      },
+      "teardown": {
+        "source": {
+          "kind": "none",
+          "status": "idle",
+          "label": "",
+          "permission": {
+            "mic": "granted",
+            "stream": "prompt"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": false,
+          "streamMeta": {
+            "hasAudio": false,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": false,
+        "winningUpstream": false,
+        "winningGraphDisconnects": 1,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": false,
+            "kind": "stream",
+            "status": "idle",
+            "errorCode": "stream-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "File mode ready. Load audio files to begin analysis."
+      },
+      "errors": []
+    },
+    {
+      "case": "error-stream-to-mic",
+      "passed": true,
+      "before": {
+        "source": {
+          "kind": "mic",
+          "status": "active",
+          "label": "MediaStreamAudioDestinationNode",
+          "permission": {
+            "mic": "granted",
+            "stream": "prompt"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "live",
+            "live"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          }
+        },
+        "status": "Microphone live: MediaStreamAudioDestinationNode - Bands: mono-ish (L≈R)"
+      },
+      "after": {
+        "source": {
+          "kind": "mic",
+          "status": "active",
+          "label": "MediaStreamAudioDestinationNode",
+          "permission": {
+            "mic": "granted",
+            "stream": "prompt"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": false,
+            "kind": "stream",
+            "status": "idle",
+            "errorCode": "stream-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "Microphone live: MediaStreamAudioDestinationNode - Bands: mono-ish (L≈R)"
+      },
+      "teardown": {
+        "source": {
+          "kind": "none",
+          "status": "idle",
+          "label": "",
+          "permission": {
+            "mic": "granted",
+            "stream": "prompt"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": false,
+          "streamMeta": {
+            "hasAudio": false,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": false,
+        "winningUpstream": false,
+        "winningGraphDisconnects": 1,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          },
+          "stream": {
+            "ok": false,
+            "kind": "stream",
+            "status": "idle",
+            "errorCode": "stream-activation-cancelled",
+            "errorMessage": ""
+          }
+        },
+        "status": "File mode ready. Load audio files to begin analysis."
+      },
+      "errors": []
+    },
+    {
+      "case": "normal-stream-to-mic",
+      "passed": true,
+      "before": {
+        "source": {
+          "kind": "mic",
+          "status": "active",
+          "label": "MediaStreamAudioDestinationNode",
+          "permission": {
+            "mic": "granted",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "wpCY79wzQHxseKPLKAOdkWoeVSwOnveGkt5HNlBpk3PIRYPkIG3uyNIbuiXys/r9TIOxVy/gVTV9+qzc1NG7bA=="
+          },
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          }
+        },
+        "status": "Microphone live: MediaStreamAudioDestinationNode - Bands: mono-ish (L≈R)"
+      },
+      "after": {
+        "source": {
+          "kind": "mic",
+          "status": "active",
+          "label": "MediaStreamAudioDestinationNode",
+          "permission": {
+            "mic": "granted",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": true,
+          "streamMeta": {
+            "hasAudio": true,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": true,
+        "winningUpstream": true,
+        "winningGraphDisconnects": 0,
+        "trackStates": {
+          "mic": [
+            "live"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "wpCY79wzQHxseKPLKAOdkWoeVSwOnveGkt5HNlBpk3PIRYPkIG3uyNIbuiXys/r9TIOxVy/gVTV9+qzc1NG7bA=="
+          },
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          }
+        },
+        "status": "Microphone live: MediaStreamAudioDestinationNode - Bands: mono-ish (L≈R)"
+      },
+      "teardown": {
+        "source": {
+          "kind": "none",
+          "status": "idle",
+          "label": "",
+          "permission": {
+            "mic": "granted",
+            "stream": "granted"
+          },
+          "support": {
+            "mic": true,
+            "stream": true
+          },
+          "errorCode": "",
+          "errorMessage": "",
+          "sessionActive": false,
+          "streamMeta": {
+            "hasAudio": false,
+            "hasVideo": false,
+            "audioChannelCount": null
+          }
+        },
+        "sampleReady": false,
+        "winningUpstream": false,
+        "winningGraphDisconnects": 1,
+        "trackStates": {
+          "mic": [
+            "ended"
+          ],
+          "stream": [
+            "ended",
+            "ended"
+          ]
+        },
+        "recorderTracks": [
+          "live"
+        ],
+        "results": {
+          "stream": {
+            "ok": true,
+            "kind": "stream",
+            "status": "active",
+            "label": "wpCY79wzQHxseKPLKAOdkWoeVSwOnveGkt5HNlBpk3PIRYPkIG3uyNIbuiXys/r9TIOxVy/gVTV9+qzc1NG7bA=="
+          },
+          "mic": {
+            "ok": true,
+            "kind": "mic",
+            "status": "active",
+            "label": "MediaStreamAudioDestinationNode"
+          }
+        },
+        "status": "File mode ready. Load audio files to begin analysis."
+      },
+      "errors": []
+    }
+  ]
+}

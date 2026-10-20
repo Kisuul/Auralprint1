@@ -1,0 +1,2042 @@
+{
+  "version": "v0.1.15m.i.m",
+  "browser": "151.0.7922.173",
+  "artifactSha256": "7ca224e26b120acecbb219485e009db93dc020340223c4d87a896999854de678",
+  "instrumentation": "In-memory symbol exposure; native MediaRecorder subclass observers; synthetic mediaDevices acquisition, actual production source manager/audio/render/UI.",
+  "cases": [
+    {
+      "name": "video-only",
+      "requestedSeconds": 3,
+      "beforeExportBytes": 0,
+      "retained": {
+        "same": true,
+        "previousFetchable": null
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": false,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 1090.7999999999884,
+        "stoppedAtMs": null,
+        "elapsedMs": 3020,
+        "chunkCount": 3,
+        "lastExportUrl": null,
+        "lastExportFileName": "",
+        "lastExportByteSize": 0,
+        "lastAction": "start",
+        "lastCode": "recorder-input-video-only",
+        "lastMessage": "Recording video only.",
+        "lastUpdatedAtMs": 4110.700000000012
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": false,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 1090.7999999999884,
+        "stoppedAtMs": 4128.100000000035,
+        "elapsedMs": 3037,
+        "chunkCount": 4,
+        "lastExportUrl": "blob:http://localhost/500851ca-117d-4cb2-a61a-01b19ba08ea9",
+        "lastExportFileName": "auralprint-capture-20261014-224244.webm",
+        "lastExportByteSize": 387347,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 4135.100000000035
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 1090.7999999999884,
+        "stopMs": 4128.200000000012,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 2108.600000000035,
+            "bytes": 69105,
+            "mime": "video/webm;codecs=vp9",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 3109.7999999999884,
+            "bytes": 159512,
+            "mime": "video/webm;codecs=vp9",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 4110.5,
+            "bytes": 154250,
+            "mime": "video/webm;codecs=vp9",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 4129.600000000035,
+            "bytes": 4480,
+            "mime": "video/webm;codecs=vp9",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 4129.900000000023,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "mdNU+J9VpyfcEohrgzozPofrT0vtIhUWKHONjHiOnbAqfCPuEV+h+Fwy5MPDstyOe6Ir977Y/Tzw/PXCOX3iew=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 12348420,
+        "JSHeapTotalSize": 23293952
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 8478324,
+        "JSHeapTotalSize": 24080384
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 8922676,
+        "JSHeapTotalSize": 24080384
+      }
+    },
+    {
+      "name": "file-audio",
+      "requestedSeconds": 5,
+      "beforeExportBytes": 387347,
+      "retained": {
+        "same": true,
+        "previousFetchable": 387347
+      },
+      "sourceSwitch": {
+        "before": "file",
+        "after": "file",
+        "disabled": true
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 4164,
+        "stoppedAtMs": null,
+        "elapsedMs": 5000,
+        "chunkCount": 4,
+        "lastExportUrl": "blob:http://localhost/500851ca-117d-4cb2-a61a-01b19ba08ea9",
+        "lastExportFileName": "auralprint-capture-20261014-224244.webm",
+        "lastExportByteSize": 387347,
+        "lastAction": "transport-audio-unloaded",
+        "lastCode": "audio-unloaded",
+        "lastMessage": "Recording continues while no audio is currently loaded.",
+        "lastUpdatedAtMs": 9164.400000000023
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 4164,
+        "stoppedAtMs": 9190.299999999988,
+        "elapsedMs": 5026,
+        "chunkCount": 5,
+        "lastExportUrl": "blob:http://localhost/fce50daa-5c5d-41e9-903a-baa0a4948bf9",
+        "lastExportFileName": "auralprint-capture-20261014-224250.webm",
+        "lastExportByteSize": 809855,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 9197.700000000012
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 4164,
+        "stopMs": 9190.299999999988,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 5179.799999999988,
+            "bytes": 121986,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 6197.299999999988,
+            "bytes": 175921,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 7226.799999999988,
+            "bytes": 167525,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 8242.5,
+            "bytes": 170407,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 9195,
+            "bytes": 174016,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 9195.200000000012,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "ended",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-55e48486-2444-40df-b8f0-5d2131ec39e2",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "YcXrlzXUpTPMMgjpYCsffzm6AIdCGrEL88v0ImkyLrcCP3GNBqb3mhIlrdLBSkyEZzUTz8a7bH0pGtormuQPAw=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 8935340,
+        "JSHeapTotalSize": 24080384
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 11879972,
+        "JSHeapTotalSize": 24342528
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 12345920,
+        "JSHeapTotalSize": 24342528
+      }
+    },
+    {
+      "name": "synthetic-mic",
+      "requestedSeconds": 3,
+      "beforeExportBytes": 809855,
+      "retained": {
+        "same": true,
+        "previousFetchable": 809855
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 9266.100000000035,
+        "stoppedAtMs": null,
+        "elapsedMs": 3000,
+        "chunkCount": 2,
+        "lastExportUrl": "blob:http://localhost/fce50daa-5c5d-41e9-903a-baa0a4948bf9",
+        "lastExportFileName": "auralprint-capture-20261014-224250.webm",
+        "lastExportByteSize": 809855,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 12266.5
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 9266.100000000035,
+        "stoppedAtMs": 12290.100000000035,
+        "elapsedMs": 3024,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/cea69c2e-b7c4-4297-8ec8-b2496fbf443b",
+        "lastExportFileName": "auralprint-capture-20261014-224253.webm",
+        "lastExportByteSize": 628295,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 12295.200000000012
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 9266.100000000035,
+        "stopMs": 12290.100000000035,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 10283.900000000023,
+            "bytes": 153588,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 11307.100000000035,
+            "bytes": 240105,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 12292.600000000035,
+            "bytes": 234602,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 12292.700000000012,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-a324bf51-01a0-4c2c-b575-f08a693ca6fe",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "8zJKBRnsxMv+bQSpgZVT0T1gDeZZ9OPfXW58e/p+Pu2nZoRITI5zTvuzGf+aU9XXmMS+PHJBRiLUdPix1c6WLA=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 12887324,
+        "JSHeapTotalSize": 24342528
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 9074644,
+        "JSHeapTotalSize": 24604672
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 9242736,
+        "JSHeapTotalSize": 24604672
+      }
+    },
+    {
+      "name": "stream-codec-video/webm;codecs=vp9,opus",
+      "requestedSeconds": 3,
+      "beforeExportBytes": 628295,
+      "retained": {
+        "same": true,
+        "previousFetchable": 628295
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 12340,
+        "stoppedAtMs": null,
+        "elapsedMs": 3000,
+        "chunkCount": 2,
+        "lastExportUrl": "blob:http://localhost/cea69c2e-b7c4-4297-8ec8-b2496fbf443b",
+        "lastExportFileName": "auralprint-capture-20261014-224253.webm",
+        "lastExportByteSize": 628295,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 15340.400000000023
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 12340,
+        "stoppedAtMs": 15362.5,
+        "elapsedMs": 3023,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/6664efbd-3290-4d46-a294-910e891cc84b",
+        "lastExportFileName": "auralprint-capture-20261014-224256.webm",
+        "lastExportByteSize": 580924,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 15367.200000000012
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 12340,
+        "stopMs": 15362.5,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 13358.900000000023,
+            "bytes": 124570,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 14378.700000000012,
+            "bytes": 225462,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 15365.400000000023,
+            "bytes": 230892,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 15365.5,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "umgKnBLBRLdh+vFuHwbl4DBkXTNv5CTrzsvc16LOHjZ+dXww2qI+oedAGv9MhjWJEpWD2Udfk6glc0L92wtffg=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 9411156,
+        "JSHeapTotalSize": 24604672
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 12241156,
+        "JSHeapTotalSize": 24604672
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 12505092,
+        "JSHeapTotalSize": 24604672
+      }
+    },
+    {
+      "name": "stream-codec-video/webm;codecs=vp8,opus",
+      "requestedSeconds": 3,
+      "beforeExportBytes": 580924,
+      "retained": {
+        "same": true,
+        "previousFetchable": 580924
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp8,opus",
+        "resolvedMimeType": "video/webm;codecs=vp8,opus",
+        "startedAtMs": 15396,
+        "stoppedAtMs": null,
+        "elapsedMs": 3000,
+        "chunkCount": 2,
+        "lastExportUrl": "blob:http://localhost/6664efbd-3290-4d46-a294-910e891cc84b",
+        "lastExportFileName": "auralprint-capture-20261014-224256.webm",
+        "lastExportByteSize": 580924,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 18396.29999999999
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp8,opus",
+        "resolvedMimeType": "video/webm;codecs=vp8,opus",
+        "startedAtMs": 15396,
+        "stoppedAtMs": 18416.400000000023,
+        "elapsedMs": 3020,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/d49cf8d6-c519-4be5-9c6e-804023a7e777",
+        "lastExportFileName": "auralprint-capture-20261014-224259.webm",
+        "lastExportByteSize": 1003708,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 18423.20000000001
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp8,opus"
+        },
+        "mime": "video/webm;codecs=vp8,opus",
+        "startMs": 15396,
+        "stopMs": 18416.400000000023,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 16409.400000000023,
+            "bytes": 240471,
+            "mime": "video/webm;codecs=vp8,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 17428.70000000001,
+            "bytes": 372129,
+            "mime": "video/webm;codecs=vp8,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 18421.600000000035,
+            "bytes": 391108,
+            "mime": "video/webm;codecs=vp8,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 18421.79999999999,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "fE6rHVSYY2YjvgIMSLyBbhooRoQQCHJsnHK2WbcvQvjPkRNTbLTR/sznHPxlpKlFl/DBgA9TUNaIsTTy029z/w=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp8,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 12517552,
+        "JSHeapTotalSize": 24604672
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 10947248,
+        "JSHeapTotalSize": 23498752
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 11415180,
+        "JSHeapTotalSize": 23498752
+      }
+    },
+    {
+      "name": "stream-codec-video/webm",
+      "requestedSeconds": 3,
+      "beforeExportBytes": 1003708,
+      "retained": {
+        "same": true,
+        "previousFetchable": 1003708
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm",
+        "resolvedMimeType": "video/webm",
+        "startedAtMs": 18449,
+        "stoppedAtMs": null,
+        "elapsedMs": 3000,
+        "chunkCount": 2,
+        "lastExportUrl": "blob:http://localhost/d49cf8d6-c519-4be5-9c6e-804023a7e777",
+        "lastExportFileName": "auralprint-capture-20261014-224259.webm",
+        "lastExportByteSize": 1003708,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 21449.400000000023
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm",
+        "resolvedMimeType": "video/webm",
+        "startedAtMs": 18449,
+        "stoppedAtMs": 21475.5,
+        "elapsedMs": 3027,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/253c7c6d-a4d7-4940-a6b9-c345b7efc47d",
+        "lastExportFileName": "auralprint-capture-20261014-224302.webm",
+        "lastExportByteSize": 993282,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 21479.5
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm"
+        },
+        "mime": "video/webm",
+        "startMs": 18449,
+        "stopMs": 21475.5,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 19473.20000000001,
+            "bytes": 233187,
+            "mime": "video/webm;codecs=vp8,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 20491.400000000023,
+            "bytes": 392327,
+            "mime": "video/webm;codecs=vp8,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 21477.400000000023,
+            "bytes": 367768,
+            "mime": "video/webm;codecs=vp8,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 21477.5,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "ZsUbNFktodvsRF/eoNJUZ4yq14RfzM30IMxZHJVR6IhxpgCJjsUA40SWRgr0oc5xRf4fQdzH5RlY1BpvEJt78w=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp8,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 11427840,
+        "JSHeapTotalSize": 23498752
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 6203288,
+        "JSHeapTotalSize": 23498752
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 6316664,
+        "JSHeapTotalSize": 23498752
+      }
+    },
+    {
+      "name": "stream-codec-video/mp4",
+      "requestedSeconds": 3,
+      "beforeExportBytes": 993282,
+      "retained": {
+        "same": true,
+        "previousFetchable": 993282
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/mp4",
+        "resolvedMimeType": "video/mp4",
+        "startedAtMs": 21495.29999999999,
+        "stoppedAtMs": null,
+        "elapsedMs": 3000,
+        "chunkCount": 0,
+        "lastExportUrl": "blob:http://localhost/253c7c6d-a4d7-4940-a6b9-c345b7efc47d",
+        "lastExportFileName": "auralprint-capture-20261014-224302.webm",
+        "lastExportByteSize": 993282,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 24495.70000000001
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/mp4",
+        "resolvedMimeType": "video/mp4",
+        "startedAtMs": 21495.29999999999,
+        "stoppedAtMs": 24523.70000000001,
+        "elapsedMs": 3028,
+        "chunkCount": 2,
+        "lastExportUrl": "blob:http://localhost/91592920-9e79-4d13-b041-e8edcc93613c",
+        "lastExportFileName": "auralprint-capture-20261014-224305.mp4",
+        "lastExportByteSize": 697106,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 24531.899999999965
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/mp4"
+        },
+        "mime": "video/mp4",
+        "startMs": 21495.29999999999,
+        "stopMs": 24523.70000000001,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 24529.100000000035,
+            "bytes": 1200,
+            "mime": "video/mp4;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 24529.29999999999,
+            "bytes": 695906,
+            "mime": "video/mp4;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 24529.29999999999,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "TJsThC/i2+bxTBmDE1qv01Nqc5CtdAm6Vp0X2i65iDQp98dra6TepmFpXUB/aZRUqyipMWL8BXS8DkORmki1hg=="
+            }
+          }
+        ],
+        "finalMime": "video/mp4;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 6480880,
+        "JSHeapTotalSize": 23498752
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 7329724,
+        "JSHeapTotalSize": 22712320
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 7603952,
+        "JSHeapTotalSize": 22712320
+      }
+    },
+    {
+      "name": "stream-longer-safe-60s",
+      "requestedSeconds": 60,
+      "beforeExportBytes": 697106,
+      "retained": {
+        "same": true,
+        "previousFetchable": 697106
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 24559.600000000035,
+        "stoppedAtMs": null,
+        "elapsedMs": 60000,
+        "chunkCount": 58,
+        "lastExportUrl": "blob:http://localhost/91592920-9e79-4d13-b041-e8edcc93613c",
+        "lastExportFileName": "auralprint-capture-20261014-224305.mp4",
+        "lastExportByteSize": 697106,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 84560.00000000006
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 24559.600000000035,
+        "stoppedAtMs": 84580.89999999997,
+        "elapsedMs": 60021,
+        "chunkCount": 59,
+        "lastExportUrl": "blob:http://localhost/0e8a08ca-9288-4efb-bae9-2aa77f8544b2",
+        "lastExportFileName": "auralprint-capture-20261014-224405.webm",
+        "lastExportByteSize": 14470681,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 84603.10000000003
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 24559.600000000035,
+        "stopMs": 84580.89999999997,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 25579.399999999965,
+            "bytes": 204175,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 26599.600000000035,
+            "bytes": 250903,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 27623.899999999965,
+            "bytes": 240694,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 28643.70000000001,
+            "bytes": 250031,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 29658.50000000006,
+            "bytes": 235129,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 30679.899999999965,
+            "bytes": 234534,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 31698.79999999999,
+            "bytes": 240183,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 32723.20000000001,
+            "bytes": 263409,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 33740.50000000006,
+            "bytes": 228653,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 34758.100000000035,
+            "bytes": 279979,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 35778.29999999999,
+            "bytes": 224254,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 36813.00000000006,
+            "bytes": 243188,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 37823.20000000001,
+            "bytes": 230840,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 38862.29999999999,
+            "bytes": 201616,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 39878.50000000006,
+            "bytes": 220866,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 40898.899999999965,
+            "bytes": 238359,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 41922.50000000006,
+            "bytes": 264933,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 42939.899999999965,
+            "bytes": 237381,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 43958.29999999999,
+            "bytes": 232219,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 44978.70000000001,
+            "bytes": 238649,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 45998.100000000035,
+            "bytes": 270797,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 47022.29999999999,
+            "bytes": 239098,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 48041.399999999965,
+            "bytes": 232488,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 49058.29999999999,
+            "bytes": 284872,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 50078.79999999999,
+            "bytes": 225967,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 51099.100000000035,
+            "bytes": 242235,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 52123.79999999999,
+            "bytes": 296419,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 53140.70000000001,
+            "bytes": 236643,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 54158.29999999999,
+            "bytes": 234999,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 55180.600000000035,
+            "bytes": 235094,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 56198.29999999999,
+            "bytes": 270045,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 57221.70000000001,
+            "bytes": 236083,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 58242.70000000001,
+            "bytes": 233944,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 59258.100000000035,
+            "bytes": 278752,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 60279.00000000006,
+            "bytes": 229020,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 61299.100000000035,
+            "bytes": 242503,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 62322.20000000001,
+            "bytes": 277090,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 63342.70000000001,
+            "bytes": 235890,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 64359.50000000006,
+            "bytes": 240572,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 65380.50000000006,
+            "bytes": 233532,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 66407.39999999997,
+            "bytes": 254251,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 67423.70000000001,
+            "bytes": 236916,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 68441.79999999999,
+            "bytes": 233978,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 69458.10000000003,
+            "bytes": 314551,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 70480.89999999997,
+            "bytes": 237033,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 71498.50000000006,
+            "bytes": 230702,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 72520.70000000001,
+            "bytes": 287677,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 73542.10000000003,
+            "bytes": 230355,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 74558.79999999999,
+            "bytes": 241189,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 75578.00000000006,
+            "bytes": 268435,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 76605.00000000006,
+            "bytes": 238200,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 77620.79999999999,
+            "bytes": 234519,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 78639.39999999997,
+            "bytes": 236298,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 79658.29999999999,
+            "bytes": 282504,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 80679.00000000006,
+            "bytes": 237320,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 81698.89999999997,
+            "bytes": 234030,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 82721.50000000006,
+            "bytes": 284875,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 83739.29999999999,
+            "bytes": 230296,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 84597.60000000003,
+            "bytes": 221514,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 84597.79999999999,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "UAWMjNyGF4SinxLN84Ky+etnLbQDCIKZ4zHjZMQA7gWjErAE1sDkpRQFxuyQ2BcocjDgPa7cuMuv9E9OjOMBpA=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 7641464,
+        "JSHeapTotalSize": 22712320
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 6852600,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 7717560,
+        "JSHeapTotalSize": 22974464
+      }
+    },
+    {
+      "name": "repeat-1",
+      "requestedSeconds": 2,
+      "beforeExportBytes": 14470681,
+      "retained": {
+        "same": true,
+        "previousFetchable": 14470681
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 84628.70000000001,
+        "stoppedAtMs": null,
+        "elapsedMs": 2000,
+        "chunkCount": 1,
+        "lastExportUrl": "blob:http://localhost/0e8a08ca-9288-4efb-bae9-2aa77f8544b2",
+        "lastExportFileName": "auralprint-capture-20261014-224405.webm",
+        "lastExportByteSize": 14470681,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 86629.00000000006
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 84628.70000000001,
+        "stoppedAtMs": 86661.79999999999,
+        "elapsedMs": 2033,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/14aab208-7417-4265-ae09-6f62df366d95",
+        "lastExportFileName": "auralprint-capture-20261014-224407.webm",
+        "lastExportByteSize": 460342,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 86670.70000000001
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 84628.70000000001,
+        "stopMs": 86661.79999999999,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 85648.70000000001,
+            "bytes": 207980,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 86664.29999999999,
+            "bytes": 240720,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 86664.50000000006,
+            "bytes": 11642,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 86664.50000000006,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "ngpqhESUJ790/0Su0MrHMz+OThI3MJRbsyIK0K+0+Mnd5O2Kybsn8yaLRsThjNkxUFaJdqLWQc1THKT95wMWeQ=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 7729864,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 7377412,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 7860264,
+        "JSHeapTotalSize": 22974464
+      }
+    },
+    {
+      "name": "repeat-2",
+      "requestedSeconds": 2,
+      "beforeExportBytes": 460342,
+      "retained": {
+        "same": true,
+        "previousFetchable": 460342
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 86694.50000000006,
+        "stoppedAtMs": null,
+        "elapsedMs": 2000,
+        "chunkCount": 1,
+        "lastExportUrl": "blob:http://localhost/14aab208-7417-4265-ae09-6f62df366d95",
+        "lastExportFileName": "auralprint-capture-20261014-224407.webm",
+        "lastExportByteSize": 460342,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 88694.79999999999
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 86694.50000000006,
+        "stoppedAtMs": 88724.60000000003,
+        "elapsedMs": 2030,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/1225498e-371a-4ee4-961b-4e9b4592393c",
+        "lastExportFileName": "auralprint-capture-20261014-224409.webm",
+        "lastExportByteSize": 462756,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 88731.00000000006
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 86694.50000000006,
+        "stopMs": 88724.60000000003,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 87714.39999999997,
+            "bytes": 204310,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 88728.70000000001,
+            "bytes": 247351,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 88728.89999999997,
+            "bytes": 11095,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 88729.00000000006,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "sRnCBu+RQA1u9RtsLMsVlOx67NTb94PFSNHGM/Wmo3MF8JI4lFYbrvDQna+oDqvTF6QaRHG7gj6hc2nsxFV9Ug=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 7872568,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 10477068,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 10739168,
+        "JSHeapTotalSize": 22974464
+      }
+    },
+    {
+      "name": "repeat-3",
+      "requestedSeconds": 2,
+      "beforeExportBytes": 462756,
+      "retained": {
+        "same": true,
+        "previousFetchable": 462756
+      },
+      "active": {
+        "hooksEnabled": true,
+        "phase": "recording",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 88754.20000000001,
+        "stoppedAtMs": null,
+        "elapsedMs": 2001,
+        "chunkCount": 1,
+        "lastExportUrl": "blob:http://localhost/1225498e-371a-4ee4-961b-4e9b4592393c",
+        "lastExportFileName": "auralprint-capture-20261014-224409.webm",
+        "lastExportByteSize": 462756,
+        "lastAction": "start",
+        "lastCode": "recorder-input-audio-video",
+        "lastMessage": "Recording audio + video.",
+        "lastUpdatedAtMs": 90755.79999999999
+      },
+      "after": {
+        "hooksEnabled": true,
+        "phase": "complete",
+        "supportProbeStatus": "supported",
+        "isSupported": true,
+        "includePlaybackAudio": true,
+        "targetFps": 30,
+        "availableMimeTypes": [
+          "video/webm;codecs=vp9,opus",
+          "video/webm;codecs=vp8,opus",
+          "video/webm",
+          "video/mp4"
+        ],
+        "selectedMimeType": "video/webm;codecs=vp9,opus",
+        "resolvedMimeType": "video/webm;codecs=vp9,opus",
+        "startedAtMs": 88754.20000000001,
+        "stoppedAtMs": 90776.50000000006,
+        "elapsedMs": 2022,
+        "chunkCount": 3,
+        "lastExportUrl": "blob:http://localhost/316ba3c2-7196-44a2-bfd6-16a422e267a8",
+        "lastExportFileName": "auralprint-capture-20261014-224411.webm",
+        "lastExportByteSize": 458907,
+        "lastAction": "finalize",
+        "lastCode": "complete",
+        "lastMessage": "Recording export ready.",
+        "lastUpdatedAtMs": 90781.20000000001
+      },
+      "native": {
+        "requested": {
+          "mimeType": "video/webm;codecs=vp9,opus"
+        },
+        "mime": "video/webm;codecs=vp9,opus",
+        "startMs": 88754.20000000001,
+        "stopMs": 90776.50000000006,
+        "stopCalls": 1,
+        "events": [
+          {
+            "type": "dataavailable",
+            "ms": 89777.79999999999,
+            "bytes": 203397,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 90779.20000000001,
+            "bytes": 248431,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "dataavailable",
+            "ms": 90779.29999999999,
+            "bytes": 7079,
+            "mime": "video/webm;codecs=vp9,opus",
+            "error": null
+          },
+          {
+            "type": "stop",
+            "ms": 90779.29999999999,
+            "bytes": 0,
+            "mime": null,
+            "error": null
+          }
+        ],
+        "tracks": [
+          {
+            "kind": "audio",
+            "state": "live",
+            "settings": {
+              "channelCount": 2,
+              "deviceId": "WebAudio-eac9e3de-63d2-47d7-aa77-3ddfdd2f1934",
+              "latency": 0.01,
+              "sampleRate": 44100,
+              "sampleSize": 16
+            }
+          },
+          {
+            "kind": "video",
+            "state": "ended",
+            "settings": {
+              "deviceId": "vAU2DJVlbLiVPmxYxftZ9GD+AZwZ0uhxqnANpeoPiHN7qCj9x75tizX117ajUaGhz6cEd7ozSVcoTOvtNsLAUg=="
+            }
+          }
+        ],
+        "finalMime": "video/webm;codecs=vp9,opus",
+        "timeslice": 1000
+      },
+      "memoryBefore": {
+        "JSHeapUsedSize": 10939252,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryActive": {
+        "JSHeapUsedSize": 6592304,
+        "JSHeapTotalSize": 22974464
+      },
+      "memoryAfter": {
+        "JSHeapUsedSize": 7041768,
+        "JSHeapTotalSize": 22974464
+      }
+    }
+  ],
+  "memory": {
+    "measurement": "CDP Performance.getMetrics JSHeapUsedSize and JSHeapTotalSize for whole page at checkpoints",
+    "limitations": "Not recorder attribution, Blob backing/native/GPU/encoder/process memory, GC timing, or device safety."
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+    "canvas": {
+      "width": 960,
+      "height": 640
+    },
+    "dpr": 1,
+    "fps": 30,
+    "configuredMimes": [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+      "video/mp4"
+    ],
+    "supportedMimes": [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+      "video/mp4"
+    ]
+  },
+  "failedReplacement": {
+    "before": {
+      "hooksEnabled": true,
+      "phase": "complete",
+      "supportProbeStatus": "supported",
+      "isSupported": true,
+      "includePlaybackAudio": true,
+      "targetFps": 30,
+      "availableMimeTypes": [
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm",
+        "video/mp4"
+      ],
+      "selectedMimeType": "video/webm;codecs=vp9,opus",
+      "resolvedMimeType": "video/webm;codecs=vp9,opus",
+      "startedAtMs": 4164,
+      "stoppedAtMs": 9190.299999999988,
+      "elapsedMs": 5026,
+      "chunkCount": 5,
+      "lastExportUrl": "blob:http://localhost/fce50daa-5c5d-41e9-903a-baa0a4948bf9",
+      "lastExportFileName": "auralprint-capture-20261014-224250.webm",
+      "lastExportByteSize": 809855,
+      "lastAction": "finalize",
+      "lastCode": "complete",
+      "lastMessage": "Recording export ready.",
+      "lastUpdatedAtMs": 9197.700000000012
+    },
+    "after": {
+      "hooksEnabled": true,
+      "phase": "error",
+      "supportProbeStatus": "supported",
+      "isSupported": true,
+      "includePlaybackAudio": true,
+      "targetFps": 30,
+      "availableMimeTypes": [
+        "video/webm;codecs=vp9,opus",
+        "video/webm;codecs=vp8,opus",
+        "video/webm",
+        "video/mp4"
+      ],
+      "selectedMimeType": "video/webm;codecs=vp9,opus",
+      "resolvedMimeType": null,
+      "startedAtMs": null,
+      "stoppedAtMs": null,
+      "elapsedMs": 0,
+      "chunkCount": 0,
+      "lastExportUrl": "blob:http://localhost/fce50daa-5c5d-41e9-903a-baa0a4948bf9",
+      "lastExportFileName": "auralprint-capture-20261014-224250.webm",
+      "lastExportByteSize": 809855,
+      "lastAction": "start",
+      "lastCode": "render-capture-unavailable",
+      "lastMessage": "Canvas capture did not provide a video stream.",
+      "lastUpdatedAtMs": 9228.900000000023
+    },
+    "previousBytes": 809855
+  },
+  "micAfterStop": {
+    "source": "mic",
+    "active": true,
+    "tracks": [
+      "live"
+    ],
+    "stopCalls": 0
+  },
+  "micAfterSourceSwitch": {
+    "tracks": [
+      "ended"
+    ],
+    "stopCalls": 1
+  },
+  "streamAfterStop": {
+    "source": "stream",
+    "active": true,
+    "tracks": [
+      {
+        "kind": "audio",
+        "state": "live"
+      },
+      {
+        "kind": "video",
+        "state": "live"
+      }
+    ],
+    "stopCalls": 0
+  },
+  "download": {
+    "filename": "auralprint-capture-20261014-224411.webm",
+    "bytes": 458907,
+    "sha256": "aef7f0844fff52ecc5a99043bb40531a7a2c20815a93f203082201a127c910fb"
+  },
+  "replay": {
+    "width": 960,
+    "height": 640,
+    "currentTime": 0.443901,
+    "paused": false,
+    "readyState": 4
+  },
+  "ownership": {
+    "successfulExports": 11,
+    "revokedExports": 10,
+    "liveExports": 1
+  },
+  "streamAfterSourceSwitch": {
+    "tracks": [
+      "ended",
+      "ended"
+    ],
+    "stopCalls": 2
+  },
+  "errors": [],
+  "passed": true
+}

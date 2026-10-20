@@ -1,0 +1,209 @@
+{
+  "version": "v0.1.15m.i.g",
+  "browser": "151.0.7922.173",
+  "platform": "linux",
+  "architecture": "x64",
+  "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+  "method": "Native MutationObserver plus isolated function counters and native value/checked/disabled setter interception. RAF suppressed only in browser harness; production refresh called synchronously, native media and recorder timers active. Durations are JS UI refresh time, not FPS or whole-frame rendering.",
+  "scenarios": [
+    {
+      "name": "2-Orb idle, all panels visible",
+      "iterations": 2000,
+      "elapsedMs": 311.20000000001164,
+      "meanRefreshMs": 0.15560000000000582,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 3,
+        "nodeRemoval": 3
+      },
+      "totalMutationRecords": 242006,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "2-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "elapsedMs": 334,
+      "meanRefreshMs": 0.167,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 4,
+        "nodeRemoval": 4
+      },
+      "totalMutationRecords": 242008,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": false,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "16-Orb idle",
+      "iterations": 2000,
+      "elapsedMs": 678.1000000000058,
+      "meanRefreshMs": 0.3390500000000029,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 822000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 7,
+        "nodeRemoval": 7
+      },
+      "totalMutationRecords": 886014,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 822000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 411,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle",
+      "iterations": 2000,
+      "elapsedMs": 2194.2999999999884,
+      "meanRefreshMs": 1.097149999999994,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 22,
+        "nodeRemoval": 22
+      },
+      "totalMutationRecords": 3094044,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 3030000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "elapsedMs": 2168.2999999999884,
+      "meanRefreshMs": 1.0841499999999942,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 22,
+        "nodeRemoval": 22
+      },
+      "totalMutationRecords": 3094044,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 3030000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": false,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "Active playback",
+      "iterations": 2000,
+      "elapsedMs": 264.70000000001164,
+      "meanRefreshMs": 0.13235000000000582,
+      "changedState": "native stereo WAV loaded and playing; AnalysisFrame held stable in synchronous isolation",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 18000,
+        "nodeInsertion": 3,
+        "nodeRemoval": 3
+      },
+      "totalMutationRecords": 240006,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    }
+  ],
+  "errors": []
+}

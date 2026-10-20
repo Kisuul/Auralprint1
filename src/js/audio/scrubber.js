@@ -2,6 +2,9 @@ import { clamp, hexToRgb01, rgb01ToCss, lerpRgb01 } from "../core/utils.js";
 import { runtime } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { AudioEngine } from "./audio-engine.js";
+import { createWaveformAdmission } from "./waveform-admission.js";
+import { buildWaveformPeaks } from "./waveform-extractor.js";
+import { createWaveformControls } from "../ui/waveform-options.js";
 
 /* =============================================================================
    Scrubber
@@ -11,49 +14,28 @@ import { AudioEngine } from "./audio-engine.js";
    waveform renders when decode completes. Explicit states are shown for
    no-track, decoding, ready, and waveform-unavailable.
    ========================================================================== */
-function buildWaveformPeaks(audioBuffer, bucketCount = 512) {
-  const buckets = Math.max(1, Math.floor(bucketCount));
-  const peaks = new Float32Array(buckets);
-  const channelCount = Number.isInteger(audioBuffer && audioBuffer.numberOfChannels)
-    ? audioBuffer.numberOfChannels
-    : 0;
-  if (!channelCount) return peaks;
-
-  const channels = [];
-  for (let i = 0; i < channelCount; i++) channels.push(audioBuffer.getChannelData(i));
-
-  const sampleLength = channels[0] ? channels[0].length : 0;
-  if (!sampleLength) return peaks;
-
-  for (let b = 0; b < buckets; b++) {
-    let max = 0;
-    const start = Math.floor((b * sampleLength) / buckets);
-    const proportionalEnd = Math.floor(((b + 1) * sampleLength) / buckets);
-    const endExclusive = proportionalEnd > start
-      ? proportionalEnd
-      : Math.min(sampleLength, start + 1);
-    for (let sampleIndex = start; sampleIndex < endExclusive; sampleIndex++) {
-      for (const channel of channels) {
-        const abs = Math.abs(channel[sampleIndex]);
-        if (abs > max) max = abs;
-      }
-    }
-    peaks[b] = max;
-  }
-
-  return peaks;
-}
 
 const Scrubber = (() => {
   let _canvas = null;
   let _ctx2d = null;
   let _waveform = null;    // Float32Array of normalised peak samples, or null
   let _dragging = false;
-  let _decodeToken = 0;
-  let _decodeInFlight = false;
-  let _waveformStatus = "empty"; // empty | decoding | ready | unavailable
+  let _waveformStatus = "empty"; // empty | waiting | decoding | ready | unavailable
+  let _waveformDetail = null;
+  let _controls = null;
+  let _interactionCleanup = null;
+  const waveformAdmission = createWaveformAdmission({
+    onUpdate(status, peaks, detail) {
+      _waveformStatus = status;
+      _waveform = peaks;
+      _waveformDetail = detail;
+      _controls?.update(status, detail);
+      draw();
+    },
+  });
 
   function init(canvasEl) {
+    _interactionCleanup?.();
     _dragging = false;
     _canvas = canvasEl;
     _ctx2d = _canvas.getContext("2d");
@@ -64,53 +46,28 @@ const Scrubber = (() => {
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("touchcancel", onTouchEnd);
+    const interactionWindow = window;
+    _interactionCleanup = () => {
+      canvasEl.removeEventListener("mousedown", onMouseDown);
+      canvasEl.removeEventListener("touchstart", onTouchStart);
+      for (const [type,handler] of [["mousemove",onMouseMove],["mouseup",onMouseUp],["touchmove",onTouchMove],["touchend",onTouchEnd],["touchcancel",onTouchEnd]]) interactionWindow.removeEventListener(type,handler);
+    };
+    _controls?.dispose();
+    _controls = createWaveformControls({generate:waveformAdmission.generate});
+    _controls.update(_waveformStatus, _waveformDetail);
   }
 
-  // Called on every new file load. Decodes the file for the waveform overview,
-  // completely independently of the media element used for playback. Does not
-  // block — decode runs async; draw() will pick up _waveform once it is ready.
-  async function loadFile(file) {
+  // Playback never awaits optional extraction. The coordinator alone owns work
+  // admission; this module only presents the current result and seek timeline.
+  async function loadFile(file, identity = {}) {
     _dragging = false;
-    const decodeToken = ++_decodeToken;
-    _decodeInFlight = true;
-    _waveformStatus = "decoding";
-    _waveform = null; // clear old waveform immediately
-    draw();           // render explicit decoding state immediately
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      if (decodeToken !== _decodeToken) return;
-      // Use a throw-away AudioContext for offline decode — does not affect playback.
-      const offlineCtx = new OfflineAudioContext(1, 1, 44100);
-      const audioBuffer = await offlineCtx.decodeAudioData(arrayBuffer);
-      if (decodeToken !== _decodeToken) return;
-      _waveform = buildWaveformPeaks(audioBuffer, 512);
-      _waveformStatus = "ready";
-    } catch {
-      // 3.5 — Waveform decode error handling:
-      // decodeAudioData() can fail for corrupt files, unsupported codecs, or
-      // stream sources. _waveform stays null and status becomes unavailable.
-      // in the null branch — playback is completely unaffected because the
-      // Scrubber decode runs on a throw-away OfflineAudioContext that is
-      // entirely independent of the media element used for playback.
-      // DoD satisfied: decode failure degrades gracefully; no crash, no block.
-      if (decodeToken === _decodeToken) {
-        _waveform = null;
-        _waveformStatus = "unavailable";
-      }
-    } finally {
-      if (decodeToken === _decodeToken) _decodeInFlight = false;
-    }
-    if (decodeToken === _decodeToken) draw();
+    _waveform = null;
+    return waveformAdmission.loadFile(file, {media:getMediaEl(), ...identity});
   }
 
-  // Reset: clear waveform and redraw blank canvas. Called on queue clear.
   function reset() {
     _dragging = false;
-    _decodeToken++;
-    _decodeInFlight = false;
-    _waveformStatus = "empty";
-    _waveform = null;
-    draw();
+    waveformAdmission.reset();
   }
 
   // Get the <audio> element from AudioEngine internals. AudioEngine exposes
@@ -206,7 +163,7 @@ const Scrubber = (() => {
       }
     } else {
       // Flat centre-line fallback with explicit status styling.
-      const fallbackAlpha = _waveformStatus === "decoding" ? 0.48 : (_waveformStatus === "unavailable" ? 0.52 : 0.34);
+      const fallbackAlpha = (_waveformStatus === "decoding" || _waveformStatus === "waiting") ? 0.48 : (_waveformStatus === "unavailable" ? 0.52 : 0.34);
       c.strokeStyle = _waveformStatus === "unavailable" ? rgb01ToCss(unavailableColor, fallbackAlpha) : rgb01ToCss(waveUnplayed, fallbackAlpha);
       c.lineWidth = 1.5;
       c.beginPath();
@@ -215,7 +172,7 @@ const Scrubber = (() => {
       c.stroke();
 
       if (playedPx > 0) {
-        c.strokeStyle = _waveformStatus === "unavailable" ? rgb01ToCss(unavailableColor, 0.78) : rgb01ToCss(wavePlayed, _waveformStatus === "decoding" ? 0.78 : 0.65);
+        c.strokeStyle = _waveformStatus === "unavailable" ? rgb01ToCss(unavailableColor, 0.78) : rgb01ToCss(wavePlayed, (_waveformStatus === "decoding" || _waveformStatus === "waiting") ? 0.78 : 0.65);
         c.beginPath();
         c.moveTo(0, midY);
         c.lineTo(playedPx, midY);
@@ -235,20 +192,29 @@ const Scrubber = (() => {
       // Time display
       const timeEl = document.getElementById("scrubberTime");
       if (timeEl) {
-        const statusText = _waveformStatus === "decoding" ? " • decoding waveform"
-          : (_waveformStatus === "unavailable" ? " • waveform unavailable" : "");
-        timeEl.textContent = `${formatTime(el.currentTime)} / ${formatTime(el.duration)}${statusText}`;
+        const statusText = _waveformStatus === "metadata" ? " • waiting for metadata"
+          : _waveformStatus === "waiting" ? " • waiting for waveform"
+          : (_waveformStatus === "decoding" ? " • decoding waveform"
+          : (_waveformStatus === "unavailable" ? (_waveformDetail?.manualEligible ? " • waveform optional" : " • waveform unavailable") : ""));
+        const text = `${formatTime(el.currentTime)} / ${formatTime(el.duration)}${statusText}`;
+        if (timeEl.textContent !== text) timeEl.textContent = text;
       }
     } else if (hasLoadedTrack) {
       const timeEl = document.getElementById("scrubberTime");
       if (timeEl) {
-        const statusText = _waveformStatus === "decoding" ? " • decoding waveform"
-          : (_waveformStatus === "unavailable" ? " • waveform unavailable" : "");
-        timeEl.textContent = `--:-- / --:--${statusText}`;
+        const statusText = _waveformStatus === "metadata" ? " • waiting for metadata"
+          : _waveformStatus === "waiting" ? " • waiting for waveform"
+          : (_waveformStatus === "decoding" ? " • decoding waveform"
+          : (_waveformStatus === "unavailable" ? (_waveformDetail?.manualEligible ? " • waveform optional" : " • waveform unavailable") : ""));
+        const text = `--:-- / --:--${statusText}`;
+        if (timeEl.textContent !== text) timeEl.textContent = text;
       }
     } else {
       const timeEl = document.getElementById("scrubberTime");
-      if (timeEl) timeEl.textContent = readLiveSourceTimeText();
+      if (timeEl) {
+        const text = readLiveSourceTimeText();
+        if (timeEl.textContent !== text) timeEl.textContent = text;
+      }
     }
   }
 

@@ -29,6 +29,9 @@
   <div id="scrubberRow">
     <canvas id="scrubberCanvas" width="1" height="36"></canvas>
     <span id="scrubberTime" class="muted">--:-- / --:--</span>
+    <button id="btnGenerateWaveform" type="button" aria-label="Generate waveform for current track" hidden>Generate</button>
+    <button id="btnWaveformOptions" type="button" popovertarget="waveformOptions" aria-controls="waveformOptions" aria-expanded="false" aria-label="Waveform options">Waveforms</button>
+    <span id="waveformAnnouncement" class="waveform-announcement" role="status" aria-live="polite" aria-atomic="true"></span>
   </div>
 
   <div class="transport-controls">
@@ -69,6 +72,20 @@
   </div>
   <div id="audioStatus" class="muted track">No audio loaded.</div>
 </div>
+
+  <div id="waveformOptions" popover="auto" role="region" aria-labelledby="waveformOptionsTitle">
+    <div class="panel-header">
+      <h2 id="waveformOptionsTitle" class="panel-title">Large-file waveforms</h2>
+      <button id="btnCloseWaveformOptions" type="button" aria-label="Close waveform options">Close</button>
+    </div>
+    <p class="panel-description">Application settings · saved on this device, independent of scene presets.</p>
+    <div class="row"><label for="selWaveformProfile">Automatic waveform limit</label><select id="selWaveformProfile" aria-describedby="waveformProfileHelp"></select></div>
+    <p id="waveformProfileHelp" class="panel-description">Approximate stereo PCM workload, not a track-duration cutoff. Channel estimates can be incomplete for compressed audio.</p>
+    <div class="row"><label for="selWaveformBehavior">For tracks above the selected profile</label><select id="selWaveformBehavior"></select></div>
+    <p class="panel-description">Generation always respects the configured resource limits. Playback and seeking remain available without a waveform.</p>
+    <p id="waveformStatus" class="panel-status">Load a File to generate its waveform.</p>
+    <button id="btnGenerateWaveformOptions" type="button" hidden>Generate waveform</button>
+  </div>
 
   <!-- Queue panel — floats above the audio panel with extra scrubber clearance. Hidden by default.
        Populated dynamically by refreshQueuePanel() inside UI.wireControls(). -->
@@ -320,7 +337,7 @@
         <div class="sectionTitle">Recording / Capture Export</div>
         <div id="recordStatus" class="muted recordCopy" aria-live="polite">Checking recording support</div>
       </div>
-      <div class="recordTimerBlock" aria-live="polite">
+      <div class="recordTimerBlock">
         <div class="muted recordTimerLabel">Elapsed</div>
         <span id="recordTimer" class="val">00:00</span>
       </div>
@@ -337,9 +354,13 @@
     <div class="recordActions">
       <button id="btnRecordStart" disabled>Start Recording</button>
       <button id="btnRecordStop" disabled>Stop Recording</button>
+      <button id="btnRecordCancel" disabled aria-describedby="recordCancelNote">Cancel Current Capture</button>
       <button id="btnRecordDownloadLast" disabled>Download Latest Export</button>
     </div>
     <div id="recordExportMeta" class="muted recordCopy recordExportMeta">Latest export: none this session.</div>
+    <div id="recordCancelNote" class="muted recordCopy">Cancel discards the current unsaved capture and preserves the latest successful export.</div>
+    <div id="recordingProgress" class="muted recordCopy"></div>
+    <div id="recordingWarnings" class="muted recordCopy" aria-live="polite"></div>
     <div class="sectionTitle">Settings</div>
     <div class="row recordRow">
       <label for="chkRecordIncludeAudio">Include Audio</label>
@@ -356,6 +377,46 @@
       <select id="selRecordTargetFps" class="recordSelect"></select>
       <div id="valRecordTargetFps" class="val recordInlineValue">30 fps</div>
     </div>
+    <details id="recordingResources" class="recordResources">
+      <summary>Recording Resources</summary>
+      <label for="selRecordingProfile">Profile</label>
+      <select id="selRecordingProfile"><option value="balanced">Balanced</option><option value="custom">Custom</option><option value="unrestricted">Unrestricted</option></select>
+      <p id="recordingPolicySummary" class="muted recordCopy"></p>
+      <div id="recordingCustom" hidden>
+        <div class="resourceLimit">
+          <label for="recording-softBytes">Soft recording size (MB)</label>
+          <label class="resourceToggle"><input id="recording-softBytes-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-softBytes" type="number" step="any" inputmode="decimal" aria-describedby="recordingUnitsNote recording-softBytes-exact recordingPolicyError" />
+          <span id="recording-softBytes-exact" class="muted recordCopy"></span>
+        </div>
+        <div class="resourceLimit">
+          <label for="recording-aggregateBytes">Aggregate retained recording size (MB)</label>
+          <label class="resourceToggle"><input id="recording-aggregateBytes-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-aggregateBytes" type="number" step="any" inputmode="decimal" aria-describedby="recordingUnitsNote recording-aggregateBytes-exact recordingPolicyError" />
+          <span id="recording-aggregateBytes-exact" class="muted recordCopy"></span>
+        </div>
+        <div class="resourceLimit">
+          <label for="recording-maxChunks">Maximum retained chunks</label>
+          <label class="resourceToggle"><input id="recording-maxChunks-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-maxChunks" type="number" step="1" inputmode="numeric" aria-describedby="recordingUnitsNote recording-maxChunks-exact recordingPolicyError" />
+          <span id="recording-maxChunks-exact" class="muted recordCopy"></span>
+        </div>
+        <div class="resourceLimit">
+          <label for="recording-durationMs">Automatic elapsed Stop target (minutes)</label>
+          <label class="resourceToggle"><input id="recording-durationMs-enabled" type="checkbox" /> On (unchecked = Off)</label>
+          <input id="recording-durationMs" type="text" inputmode="decimal" aria-describedby="recordingUnitsNote recording-durationMs-exact recordingPolicyError" />
+          <span id="recording-durationMs-exact" class="muted recordCopy"></span>
+        </div>
+        <p id="recordingUnitsNote" class="muted recordCopy"></p>
+        <label><input id="recording-warnings" type="checkbox" /> <span id="recordingWarningsLabel">Nonblocking warnings</span></label>
+        <button id="btnApplyRecordingResources" type="button">Apply Custom Limits</button>
+      </div>
+      <p id="recordingPolicyError" class="recordCopy" role="status"></p>
+      <p id="recordingPolicyNext" class="muted recordCopy"></p>
+      <p id="recordingPolicyStorage" class="muted recordCopy" role="status"></p>
+      <p class="muted recordCopy">Encoded data limits use decimal bytes, not available RAM. Duration is a configured automatic-Stop target; browser throttling can delay action. Five minutes is not universally safe across devices.</p>
+      <button id="btnResetRecordingResources" type="button">Reset Recording Resources to Factory Defaults</button>
+    </details>
     <div id="recordSettingsNote" class="muted recordSettingsNote">Settings apply to new recordings only. Not saved to presets.</div>
   </div>
 

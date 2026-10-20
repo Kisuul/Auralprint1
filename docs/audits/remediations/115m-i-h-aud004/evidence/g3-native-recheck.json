@@ -1,0 +1,963 @@
+{
+  "baseline": false,
+  "browser": "151.0.7922.173",
+  "htmlSha256": "6b0e8b86cac82ec710df4350b6b70cd084d97655f1f79c65aa9f6a13e899ffb8",
+  "cases": [
+    {
+      "name": "original imported speed and trace: canonical/native/readout/renderer",
+      "passed": true,
+      "data": {
+        "canonicalSpeed": 0.123456,
+        "nativeSpeed": 0.123456,
+        "speedStep": "any",
+        "speedReadout": "0.123456 rad/s (7.1°/s)",
+        "canonicalLines": 16,
+        "nativeLines": 16,
+        "lineStep": "1",
+        "renderedLines": 16,
+        "bulkSpeed": 0.123456,
+        "bulkLines": 16
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence angular-speed",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.01,
+          "max": 3,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": 0.01,
+            "native": 0.01
+          },
+          {
+            "value": 0.010000299,
+            "native": 0.010000299
+          },
+          {
+            "value": 0.123456,
+            "native": 0.123456
+          },
+          {
+            "value": 2.999999701,
+            "native": 2.999999701
+          },
+          {
+            "value": 3,
+            "native": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence center-x",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": -0.95,
+          "max": 0.95,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": -0.95,
+            "native": -0.95
+          },
+          {
+            "value": -0.94999981,
+            "native": -0.94999981
+          },
+          {
+            "value": 0.123456,
+            "native": 0.123456
+          },
+          {
+            "value": 0.94999981,
+            "native": 0.94999981
+          },
+          {
+            "value": 0.95,
+            "native": 0.95
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence center-y",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": -0.95,
+          "max": 0.95,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": -0.95,
+            "native": -0.95
+          },
+          {
+            "value": -0.94999981,
+            "native": -0.94999981
+          },
+          {
+            "value": -0.123456,
+            "native": -0.123456
+          },
+          {
+            "value": 0.94999981,
+            "native": 0.94999981
+          },
+          {
+            "value": 0.95,
+            "native": 0.95
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence min-radius",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.01,
+          "max": 0.4,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": 0.01,
+            "native": 0.01
+          },
+          {
+            "value": 0.010000039,
+            "native": 0.010000039
+          },
+          {
+            "value": 0.123456,
+            "native": 0.123456
+          },
+          {
+            "value": 0.399999961,
+            "native": 0.399999961
+          },
+          {
+            "value": 0.4,
+            "native": 0.4
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence max-radius",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.3,
+          "max": 1,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": 0.3,
+            "native": 0.3
+          },
+          {
+            "value": 0.30000007,
+            "native": 0.30000007
+          },
+          {
+            "value": 0.654321,
+            "native": 0.654321
+          },
+          {
+            "value": 0.99999993,
+            "native": 0.99999993
+          },
+          {
+            "value": 1,
+            "native": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence waveform-displacement",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.01,
+          "max": 1,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": 0.01,
+            "native": 0.01
+          },
+          {
+            "value": 0.010000099,
+            "native": 0.010000099
+          },
+          {
+            "value": 0.123456,
+            "native": 0.123456
+          },
+          {
+            "value": 0.999999901,
+            "native": 0.999999901
+          },
+          {
+            "value": 1,
+            "native": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence emit-rate",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 10,
+          "max": 1000,
+          "step": 10
+        },
+        "rows": [
+          {
+            "value": 10,
+            "native": 10
+          },
+          {
+            "value": 10.000099,
+            "native": 10.000099
+          },
+          {
+            "value": 15.5,
+            "native": 15.5
+          },
+          {
+            "value": 999.999901,
+            "native": 999.999901
+          },
+          {
+            "value": 1000,
+            "native": 1000
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence size-min",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.5,
+          "max": 6,
+          "step": 0.1
+        },
+        "rows": [
+          {
+            "value": 0.5,
+            "native": 0.5
+          },
+          {
+            "value": 0.50000055,
+            "native": 0.50000055
+          },
+          {
+            "value": 1.23456,
+            "native": 1.23456
+          },
+          {
+            "value": 5.99999945,
+            "native": 5.99999945
+          },
+          {
+            "value": 6,
+            "native": 6
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence size-max",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 1,
+          "max": 12,
+          "step": 0.1
+        },
+        "rows": [
+          {
+            "value": 1,
+            "native": 1
+          },
+          {
+            "value": 1.0000011,
+            "native": 1.0000011
+          },
+          {
+            "value": 6.123456,
+            "native": 6.123456
+          },
+          {
+            "value": 11.9999989,
+            "native": 11.9999989
+          },
+          {
+            "value": 12,
+            "native": 12
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence size-decay",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.1,
+          "max": 120,
+          "step": 0.1
+        },
+        "rows": [
+          {
+            "value": 0.1,
+            "native": 0.1
+          },
+          {
+            "value": 0.10001199000000001,
+            "native": 0.10001199
+          },
+          {
+            "value": 2.34567,
+            "native": 2.34567
+          },
+          {
+            "value": 119.99998801,
+            "native": 119.99998801
+          },
+          {
+            "value": 120,
+            "native": 120
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence lifetime",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0.1,
+          "max": 600,
+          "step": 0.1
+        },
+        "rows": [
+          {
+            "value": 0.1,
+            "native": 0.1
+          },
+          {
+            "value": 0.10005999,
+            "native": 0.10005999
+          },
+          {
+            "value": 180.123456,
+            "native": 180.123456
+          },
+          {
+            "value": 599.99994001,
+            "native": 599.99994001
+          },
+          {
+            "value": 600,
+            "native": 600
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence min-placement-distance",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0,
+          "max": 10,
+          "step": 0.1
+        },
+        "rows": [
+          {
+            "value": 0,
+            "native": 0
+          },
+          {
+            "value": 0.000001,
+            "native": 0.000001
+          },
+          {
+            "value": 0.123456,
+            "native": 0.123456
+          },
+          {
+            "value": 9.999999,
+            "native": 9.999999
+          },
+          {
+            "value": 10,
+            "native": 10
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence line-alpha",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        },
+        "rows": [
+          {
+            "value": 0,
+            "native": 0
+          },
+          {
+            "value": 1e-7,
+            "native": 1e-7
+          },
+          {
+            "value": 0.123456,
+            "native": 0.123456
+          },
+          {
+            "value": 0.9999999,
+            "native": 0.9999999
+          },
+          {
+            "value": 1,
+            "native": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence line-width",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 1,
+          "max": 6,
+          "step": 1
+        },
+        "rows": [
+          {
+            "value": 1,
+            "native": 1
+          },
+          {
+            "value": 1.0000005,
+            "native": 1.0000005
+          },
+          {
+            "value": 2.34567,
+            "native": 2.34567
+          },
+          {
+            "value": 5.9999995,
+            "native": 5.9999995
+          },
+          {
+            "value": 6,
+            "native": 6
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native precision/boundaries/persistence hue",
+      "passed": true,
+      "data": {
+        "bounds": {
+          "min": 0,
+          "max": 360,
+          "step": 1
+        },
+        "rows": [
+          {
+            "value": 0,
+            "native": 0
+          },
+          {
+            "value": 0.000036,
+            "native": 0.000036
+          },
+          {
+            "value": 123.456789,
+            "native": 123.456789
+          },
+          {
+            "value": 359.999964,
+            "native": 359.999964
+          },
+          {
+            "value": 360,
+            "native": 360
+          }
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native individual explicit edits, CONFIG arrows and stable editor focus/drafts/scroll",
+      "passed": true,
+      "data": {
+        "focusAfterRefresh": true,
+        "draftPreserved": "0,not-an-index",
+        "scrollPreserved": true,
+        "speeds": [
+          0.345678,
+          0.234567
+        ],
+        "lines": [
+          27,
+          17
+        ]
+      }
+    },
+    {
+      "name": "AUD-009 native Bulk uniform/mixed, unrelated field edits and CONFIG increments",
+      "passed": true,
+      "data": {
+        "uniform": {
+          "speed": 0.123456,
+          "speedOutput": "0.123456 rad/s (7.1°/s)",
+          "lines": 16
+        },
+        "mixedBeforeEdit": [
+          0.123456,
+          0.234567
+        ],
+        "after": [
+          {
+            "id": "A",
+            "speed": 0.466789,
+            "lines": 27
+          },
+          {
+            "id": "B",
+            "speed": 0.466789,
+            "lines": 27
+          }
+        ],
+        "shareReload": true
+      }
+    },
+    {
+      "name": "AUD-009 native designed phase, G.1 action focus and G.2 active target response",
+      "passed": true,
+      "data": {
+        "focus": true,
+        "connected": true,
+        "phase": 0.123456,
+        "phaseCanonical": 0.123456,
+        "phaseStep": "any",
+        "targets": [
+          0,
+          255
+        ],
+        "energy": 0.1,
+        "dominant": 0
+      }
+    },
+    {
+      "name": "AUD-009 native bank-count refresh retains focused range, targets, exact draft and numeric values",
+      "passed": true,
+      "data": {
+        "same": true,
+        "connected": true,
+        "speed": 0.123456,
+        "lines": 16,
+        "targets": [
+          0,
+          255
+        ],
+        "count": 32,
+        "length": 32,
+        "draft": "invalid exact"
+      }
+    },
+    {
+      "name": "AUD-009 native pointer editing commits actual range value to only its Orb",
+      "passed": true,
+      "data": {
+        "native": 1.86979023972603,
+        "canonical": 1.86979023972603,
+        "other": 0.234567,
+        "focused": true
+      }
+    },
+    {
+      "name": "AUD-009 native all Bulk continuous fields display uniform imported precision",
+      "passed": true,
+      "data": [
+        {
+          "id": "rngOmega",
+          "canonical": 0.123456,
+          "native": 0.123456,
+          "output": "0.123456 rad/s (7.1°/s)",
+          "step": "any"
+        },
+        {
+          "id": "rngMinRad",
+          "canonical": 0.123456,
+          "native": 0.123456,
+          "output": "0.123456",
+          "step": "any"
+        },
+        {
+          "id": "rngMaxRad",
+          "canonical": 0.654321,
+          "native": 0.654321,
+          "output": "0.654321",
+          "step": "any"
+        },
+        {
+          "id": "rngWfDisp",
+          "canonical": 0.123456,
+          "native": 0.123456,
+          "output": "0.123456",
+          "step": "any"
+        },
+        {
+          "id": "rngEmit",
+          "canonical": 15.5,
+          "native": 15.5,
+          "output": "15.5/s",
+          "step": "any"
+        },
+        {
+          "id": "rngSizeMin",
+          "canonical": 1.23456,
+          "native": 1.23456,
+          "output": "1.23456px",
+          "step": "any"
+        },
+        {
+          "id": "rngSizeMax",
+          "canonical": 6.123456,
+          "native": 6.123456,
+          "output": "6.123456px",
+          "step": "any"
+        },
+        {
+          "id": "rngSizeToMin",
+          "canonical": 2.34567,
+          "native": 2.34567,
+          "output": "2.34567s",
+          "step": "any"
+        },
+        {
+          "id": "rngTTL",
+          "canonical": 180.123456,
+          "native": 180.123456,
+          "output": "180.123456s",
+          "step": "any"
+        },
+        {
+          "id": "rngMinPlacementDistance",
+          "canonical": 0.123456,
+          "native": 0.123456,
+          "output": "0.123456 px",
+          "step": "any"
+        }
+      ]
+    },
+    {
+      "name": "AUD-009 uninstrumented portable preset share/reload reflects native controls",
+      "passed": true,
+      "data": {
+        "speed": 0.123456,
+        "lines": 16,
+        "instrumented": false
+      }
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 3",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 1
+        }
+      ]
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 4",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            3.3341381242276124e-160,
+            22500
+          ],
+          "midpoint": 3.3341381242276124e-160,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            4.743416490252404e-152,
+            22500
+          ],
+          "midpoint": 4.743416490252404e-152,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            1.4999999999999912e-98,
+            22500
+          ],
+          "midpoint": 1.4999999999999912e-98,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            670.8203932499366,
+            22500
+          ],
+          "midpoint": 670.8203932499366,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22499.99999999995,
+            22500
+          ],
+          "midpoint": 22499.99999999995,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 2
+        }
+      ]
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 32",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            4.1279198126e-313,
+            3.4488781242798653e-302,
+            2.8815386093297697e-291
+          ],
+          "midpoint": 3.3341381242276124e-160,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            2.3900450328716928e-297,
+            5.712315259155432e-287,
+            1.3652690711341934e-276
+          ],
+          "midpoint": 4.743416490252404e-152,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            6.482453606026713e-194,
+            4.202220475429205e-187,
+            2.724069927426594e-180
+          ],
+          "midpoint": 1.4999999999999912e-98,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            25.2775559153712,
+            31.947741652735864,
+            40.37804129984322
+          ],
+          "midpoint": 670.8203932499366,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22499.99999999991,
+            22499.99999999991,
+            22499.99999999991
+          ],
+          "midpoint": 22499.99999999995,
+          "zeroBands": 26
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500,
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 30
+        }
+      ]
+    },
+    {
+      "name": "AUD-008 native built geometry/energy count 256",
+      "passed": true,
+      "data": [
+        {
+          "floor": 5e-324,
+          "firstEdges": [
+            5e-324,
+            9.4e-323,
+            1.877e-321,
+            3.6625e-320
+          ],
+          "midpoint": 3.3341381242276124e-160,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-307,
+          "firstEdges": [
+            1e-307,
+            1.681883826040502e-306,
+            2.8287332042963815e-305,
+            4.757600624489917e-304
+          ],
+          "midpoint": 4.743416490252404e-152,
+          "zeroBands": 0
+        },
+        {
+          "floor": 1e-200,
+          "firstEdges": [
+            1e-200,
+            6.375821525934474e-200,
+            4.065110013056799e-199,
+            2.5918415926539882e-198
+          ],
+          "midpoint": 1.4999999999999912e-98,
+          "zeroBands": 0
+        },
+        {
+          "floor": 20,
+          "firstEdges": [
+            20,
+            20.560913555188172,
+            21.137558311196038,
+            21.730375460212546
+          ],
+          "midpoint": 670.8203932499366,
+          "zeroBands": 0
+        },
+        {
+          "floor": 22499.9999999999,
+          "firstEdges": [
+            22499.9999999999,
+            22499.99999999991,
+            22499.99999999991,
+            22499.99999999991
+          ],
+          "midpoint": 22499.99999999995,
+          "zeroBands": 250
+        },
+        {
+          "floor": 22500,
+          "firstEdges": [
+            22500,
+            22500,
+            22500,
+            22500
+          ],
+          "midpoint": 22500,
+          "zeroBands": 254
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

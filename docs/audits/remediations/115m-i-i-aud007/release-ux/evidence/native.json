@@ -1,0 +1,1015 @@
+{
+  "cases": 17,
+  "passed": 17,
+  "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+  "rawEvidenceSha256": "ac2e473dfa83b58f84fe94e7f086274ab108e6a6e1658c11004bb165fa5a0ce6",
+  "details": {
+    "version": "v0.1.15m.i.k",
+    "browser": "151.0.7922.173",
+    "artifactSha256": "0b39d811ca8c7bb2a017f6d71743f7b02d5b86faf939f4c126f1cdfce6f2c375",
+    "hostedSha256": "7aac7b497b43f3b0c0298f7787498e3196236610968185b758061849f9f49409",
+    "environment": "Headless Linux Chromium / localhost. Small actual WAV/MP3/Opus; synthetic 540/3600s metadata and encoded-size inputs are admission-only served-memory hooks, not large PCM allocation or native long-file coverage. Held prefix delivery is explicit; native completion is recorded separately. No RSS/native reclamation/whole-browser safety claim.",
+    "cases": [
+      {
+        "name": "ordinary automatic waveform portable",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "ordinary.wav",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "ordinary.wav",
+              "bytes": 705644
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 705644,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 176400,
+              "sampleRate": 44100,
+              "pcmBytes": 1411200
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "ordinary.wav",
+          "status": "Waveform ready.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          },
+          "seek": {
+            "time": 2.020057,
+            "duration": 4,
+            "playing": true,
+            "error": ""
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "ordinary automatic waveform hosted-root",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "ordinary.wav",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "ordinary.wav",
+              "bytes": 705644
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 705644,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 176400,
+              "sampleRate": 44100,
+              "pcmBytes": 1411200
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "ordinary.wav",
+          "status": "Waveform ready.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          },
+          "seek": {
+            "time": 2.05779,
+            "duration": 4,
+            "playing": true,
+            "error": ""
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "ordinary automatic waveform hosted-nested",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "ordinary.wav",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "ordinary.wav",
+              "bytes": 705644
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 705644,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 176400,
+              "sampleRate": 44100,
+              "pcmBytes": 1411200
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "ordinary.wav",
+          "status": "Waveform ready.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          },
+          "seek": {
+            "time": 2.020057,
+            "duration": 4,
+            "playing": true,
+            "error": ""
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "nine-minute metadata / Ask and repeated manual Generate",
+        "pass": true,
+        "data": {
+          "before": {
+            "probes": [
+              {
+                "name": "ask.mp3",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [],
+            "decodes": [],
+            "maxProbes": 1,
+            "maxReads": 0,
+            "maxDecodes": 0,
+            "peaks": 0,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 3,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "ask.mp3",
+            "status": "Above the automatic workload profile. Generate a waveform for this track?",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "ask"
+            }
+          },
+          "after": {
+            "probes": [
+              {
+                "name": "ask.mp3",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [
+              {
+                "name": "ask.mp3",
+                "bytes": 128983
+              }
+            ],
+            "decodes": [
+              {
+                "bytes": 128983,
+                "injectedCorruptInput": false,
+                "channels": 2,
+                "frames": 352800,
+                "sampleRate": 44100,
+                "pcmBytes": 2822400
+              }
+            ],
+            "maxProbes": 1,
+            "maxReads": 1,
+            "maxDecodes": 1,
+            "peaks": 512,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 4,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "ask.mp3",
+            "status": "Waveform ready. Admission used estimated channel metadata.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "ask"
+            }
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "nine-minute metadata / 15m admits automatically",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "15m.mp3",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "15m.mp3",
+              "bytes": 128983
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 128983,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 352800,
+              "sampleRate": 44100,
+              "pcmBytes": 2822400
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "15m.mp3",
+          "status": "Waveform ready. Admission used estimated channel metadata.",
+          "settings": {
+            "selectedProfileId": "15m",
+            "aboveProfileBehavior": "ask"
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "above-profile automatic-if-permitted admits through UI",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "auto.mp3",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "auto.mp3",
+              "bytes": 128983
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 128983,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 352800,
+              "sampleRate": 44100,
+              "pcmBytes": 2822400
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "auto.mp3",
+          "status": "Waveform ready. Admission used estimated channel metadata.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "generate-if-permitted"
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "Skip UI retains manual override",
+        "pass": true,
+        "data": {
+          "before": {
+            "probes": [
+              {
+                "name": "skip.mp3",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [],
+            "decodes": [],
+            "maxProbes": 1,
+            "maxReads": 0,
+            "maxDecodes": 0,
+            "peaks": 0,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 3,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "skip.mp3",
+            "status": "Automatic generation skipped above the workload profile. You can generate this track manually.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "skip"
+            }
+          },
+          "after": {
+            "probes": [
+              {
+                "name": "skip.mp3",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [
+              {
+                "name": "skip.mp3",
+                "bytes": 128983
+              }
+            ],
+            "decodes": [
+              {
+                "bytes": 128983,
+                "injectedCorruptInput": false,
+                "channels": 2,
+                "frames": 352800,
+                "sampleRate": 44100,
+                "pcmBytes": 2822400
+              }
+            ],
+            "maxProbes": 1,
+            "maxReads": 1,
+            "maxDecodes": 1,
+            "peaks": 512,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 4,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "skip.mp3",
+            "status": "Waveform ready. Admission used estimated channel metadata.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "skip"
+            }
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "actual MP3 playback with explicit estimated channel metadata",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "actual.mp3",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "actual.mp3",
+              "bytes": 128983
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 128983,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 352800,
+              "sampleRate": 44100,
+              "pcmBytes": 2822400
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "actual.mp3",
+          "status": "Waveform ready. Admission used estimated channel metadata.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          },
+          "seek": {
+            "time": 4.008187,
+            "duration": 8,
+            "playing": true,
+            "error": ""
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "six-channel PCM WAV header and last-channel terminal peak",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "six.wav",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "six.wav",
+              "bytes": 1058444
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 1058444,
+              "injectedCorruptInput": false,
+              "channels": 6,
+              "frames": 88200,
+              "sampleRate": 44100,
+              "pcmBytes": 2116800
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": {
+            "first": 0,
+            "last": 0.89996337890625
+          },
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "six.wav",
+          "status": "Waveform ready.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "six-channel Opus honestly remains an underestimated stereo assumption",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "six.ogg",
+              "start": 0,
+              "end": 19417,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "six.ogg",
+              "bytes": 19417
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 19417,
+              "injectedCorruptInput": false,
+              "channels": 6,
+              "frames": 88199,
+              "sampleRate": 44100,
+              "pcmBytes": 2116776
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "six.ogg",
+          "status": "Waveform ready. Admission used estimated channel metadata.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          },
+          "estimatedPcmBytes": 707896,
+          "underestimationBytes": 1408880,
+          "confidence": "estimated",
+          "assumption": "configured-channel-fallback"
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "one-hour estimate refuses PCM while actual small MP3 plays/seeks",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "hour-estimate.mp3",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [],
+          "decodes": [],
+          "maxProbes": 1,
+          "maxReads": 0,
+          "maxDecodes": 0,
+          "peaks": 0,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "hour-estimate.mp3",
+          "status": "Waveform unavailable: estimated PCM exceeds the configured resource limit.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "generate-if-permitted"
+          },
+          "seek": {
+            "time": 3.996662,
+            "duration": 8,
+            "playing": true,
+            "error": ""
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "encoded ceiling refuses before prefix/full read while playback continues",
+        "pass": true,
+        "data": {
+          "probes": [],
+          "reads": [],
+          "decodes": [],
+          "maxProbes": 0,
+          "maxReads": 0,
+          "maxDecodes": 0,
+          "peaks": 0,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 2,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "ordinary.wav",
+          "status": "Waveform unavailable: encoded file exceeds the configured resource limit.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          },
+          "seek": {
+            "time": 2.044968,
+            "duration": 4,
+            "playing": true,
+            "error": ""
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "held native prefix A\u2192B\u2192C bounds probes and rejects stale metadata",
+        "pass": true,
+        "data": {
+          "blocked": {
+            "probes": [
+              {
+                "name": "A.wav",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [],
+            "decodes": [],
+            "maxProbes": 1,
+            "maxReads": 0,
+            "maxDecodes": 0,
+            "peaks": 0,
+            "ownership": {
+              "occupied": true,
+              "pending": true,
+              "generation": 9,
+              "activeGeneration": 3,
+              "pendingGeneration": 9
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "C.wav",
+            "status": "Waiting for the previous waveform operation to settle. Playback is available.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "ask"
+            }
+          },
+          "after": {
+            "probes": [
+              {
+                "name": "A.wav",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              },
+              {
+                "name": "C.wav",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [
+              {
+                "name": "C.wav",
+                "bytes": 705644
+              }
+            ],
+            "decodes": [
+              {
+                "bytes": 705644,
+                "injectedCorruptInput": false,
+                "channels": 2,
+                "frames": 176400,
+                "sampleRate": 44100,
+                "pcmBytes": 1411200
+              }
+            ],
+            "maxProbes": 1,
+            "maxReads": 1,
+            "maxDecodes": 1,
+            "peaks": 512,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 9,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "C.wav",
+            "status": "Waveform ready.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "ask"
+            }
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "preferences reload / corrupt storage / scene reset / unavailable storage",
+        "pass": true,
+        "data": {
+          "probes": [
+            {
+              "name": "ordinary.wav",
+              "start": 0,
+              "end": 65536,
+              "nativeCompleted": true
+            }
+          ],
+          "reads": [
+            {
+              "name": "ordinary.wav",
+              "bytes": 705644
+            }
+          ],
+          "decodes": [
+            {
+              "bytes": 705644,
+              "injectedCorruptInput": false,
+              "channels": 2,
+              "frames": 176400,
+              "sampleRate": 44100,
+              "pcmBytes": 1411200
+            }
+          ],
+          "maxProbes": 1,
+          "maxReads": 1,
+          "maxDecodes": 1,
+          "peaks": 512,
+          "ownership": {
+            "occupied": false,
+            "pending": false,
+            "generation": 3,
+            "activeGeneration": null,
+            "pendingGeneration": null
+          },
+          "playing": true,
+          "loaded": true,
+          "filename": "ordinary.wav",
+          "status": "Waveform ready.",
+          "settings": {
+            "selectedProfileId": "8m",
+            "aboveProfileBehavior": "ask"
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "narrow touch/keyboard options, focus return and unchanged announcements",
+        "pass": true,
+        "data": {
+          "box": {
+            "x": 20,
+            "y": 223.84375,
+            "width": 360,
+            "height": 357.15625
+          },
+          "stable": {
+            "mutations": 0
+          },
+          "summary": {
+            "probes": [
+              {
+                "name": "narrow.mp3",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [],
+            "decodes": [],
+            "maxProbes": 1,
+            "maxReads": 0,
+            "maxDecodes": 0,
+            "peaks": 0,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 3,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": false,
+            "loaded": true,
+            "filename": "narrow.mp3",
+            "status": "Above the automatic workload profile. Generate a waveform for this track?",
+            "settings": {
+              "selectedProfileId": "4m",
+              "aboveProfileBehavior": "ask"
+            }
+          }
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "genuine native waveform decoder rejection preserves active recording and playback",
+        "pass": true,
+        "data": {
+          "active": {
+            "phase": "recording",
+            "playing": true,
+            "filename": "failure-B.wav",
+            "error": ""
+          },
+          "seek": {
+            "time": 4.048907,
+            "duration": 8,
+            "playing": true,
+            "error": ""
+          },
+          "exported": {
+            "bytes": 31255,
+            "url": true
+          },
+          "summary": {
+            "probes": [
+              {
+                "name": "failure-A.wav",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              },
+              {
+                "name": "failure-B.wav",
+                "start": 0,
+                "end": 65536,
+                "nativeCompleted": true
+              }
+            ],
+            "reads": [
+              {
+                "name": "failure-A.wav",
+                "bytes": 1411244
+              },
+              {
+                "name": "failure-B.wav",
+                "bytes": 1411244
+              }
+            ],
+            "decodes": [
+              {
+                "bytes": 1411244,
+                "injectedCorruptInput": false,
+                "channels": 2,
+                "frames": 352800,
+                "sampleRate": 44100,
+                "pcmBytes": 2822400
+              },
+              {
+                "bytes": 1411244,
+                "injectedCorruptInput": true
+              }
+            ],
+            "maxProbes": 1,
+            "maxReads": 1,
+            "maxDecodes": 1,
+            "peaks": 0,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 6,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "failure-B.wav",
+            "status": "Waveform unavailable: optional reading or decoding failed.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "ask"
+            }
+          },
+          "injection": "Only optional native decode receives a 16-byte invalid encoded input; native File playback retains its valid WAV."
+        },
+        "pageErrors": []
+      },
+      {
+        "name": "native recorder capture through waveform refusal and File switching",
+        "pass": true,
+        "data": {
+          "active": {
+            "phase": "recording",
+            "readCount": 0,
+            "decodeCount": 0
+          },
+          "exported": {
+            "bytes": 6944,
+            "url": true
+          },
+          "summary": {
+            "probes": [],
+            "reads": [],
+            "decodes": [],
+            "maxProbes": 0,
+            "maxReads": 0,
+            "maxDecodes": 0,
+            "peaks": 0,
+            "ownership": {
+              "occupied": false,
+              "pending": false,
+              "generation": 4,
+              "activeGeneration": null,
+              "pendingGeneration": null
+            },
+            "playing": true,
+            "loaded": true,
+            "filename": "record-B.wav",
+            "status": "Waveform unavailable: encoded file exceeds the configured resource limit.",
+            "settings": {
+              "selectedProfileId": "8m",
+              "aboveProfileBehavior": "ask"
+            }
+          }
+        },
+        "pageErrors": []
+      }
+    ],
+    "fixtures": {
+      "mp3": {
+        "bytes": 128983,
+        "sha256": "e0943b5e9e72bb931bc1d656cf863c6991735b11157e7b12fe43949e6e041bbd"
+      },
+      "sixChannelOpus": {
+        "bytes": 19417,
+        "sha256": "da3a55add96b04c133457495c2546417bd38b886dab2a92e41d0a379a8bf444d"
+      }
+    },
+    "limitations": [
+      {
+        "name": "original portable file:// offline native playback and waveform",
+        "blocked": true,
+        "error": "page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///workspace/Auralprint1/dist/auralprint_0.1.15m.i.k.html\nCall log:\n\u001b[2m  - navigating to \"file:///workspace/Auralprint1/dist/auralprint_0.1.15m.i.k.html\", waiting until \"load\"\u001b[22m\n"
+      }
+    ]
+  }
+}

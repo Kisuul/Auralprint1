@@ -1,0 +1,371 @@
+{
+  "version": "v0.1.15m.i.h",
+  "browser": "151.0.7922.173",
+  "platform": "linux",
+  "architecture": "x64",
+  "htmlSha256": "6b0e8b86cac82ec710df4350b6b70cd084d97655f1f79c65aa9f6a13e899ffb8",
+  "method": "Native MutationObserver plus isolated function counters and native value/checked/disabled setter interception. RAF suppressed only in browser harness; production refresh called synchronously, native media and recorder timers active. Durations are JS UI refresh time, not FPS or whole-frame rendering.",
+  "scenarios": [
+    {
+      "name": "2-Orb idle, all panels visible",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [],
+      "recorderPhase": "idle",
+      "elapsedMs": 56.199999999953434,
+      "meanRefreshMs": 0.028099999999976717,
+      "changedState": "none",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "2-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [],
+      "recorderPhase": "idle",
+      "elapsedMs": 43.199999999953434,
+      "meanRefreshMs": 0.021599999999976718,
+      "changedState": "none",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 0,
+        "inventoryRefreshCalls": 0,
+        "ringEditorRefreshCalls": 0
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "16-Orb idle",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [],
+      "recorderPhase": "idle",
+      "elapsedMs": 25.300000000046566,
+      "meanRefreshMs": 0.012650000000023283,
+      "changedState": "none",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 411,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [],
+      "recorderPhase": "idle",
+      "elapsedMs": 22.199999999953434,
+      "meanRefreshMs": 0.011099999999976717,
+      "changedState": "none",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [],
+      "recorderPhase": "idle",
+      "elapsedMs": 55.199999999953434,
+      "meanRefreshMs": 0.027599999999976716,
+      "changedState": "none",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 0,
+        "inventoryRefreshCalls": 0,
+        "ringEditorRefreshCalls": 0
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "Active playback",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: n/a",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: n/a",
+      "mutationDetails": [],
+      "recorderPhase": "idle",
+      "elapsedMs": 20.300000000046566,
+      "meanRefreshMs": 0.010150000000023283,
+      "changedState": "native stereo WAV loaded and playing; AnalysisFrame held stable in synchronous isolation",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Active recording",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec 00:01",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec 00:01",
+      "mutationDetails": [],
+      "recorderPhase": "recording",
+      "elapsedMs": 21.200000000186265,
+      "meanRefreshMs": 0.010600000000093132,
+      "changedState": "native MediaRecorder recording; elapsed timer primed; no asynchronous callback runs inside synchronous batch",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Recorder finalization",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec finalizing",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec finalizing",
+      "mutationDetails": [],
+      "recorderPhase": "finalizing",
+      "elapsedMs": 32.699999999953434,
+      "meanRefreshMs": 0.016349999999976716,
+      "changedState": "native stop; phase held by synchronous batch: finalizing",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Preset apply / panel reopen",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Export ready",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Export ready",
+      "mutationDetails": [],
+      "recorderPhase": "complete",
+      "elapsedMs": 16.299999999813735,
+      "meanRefreshMs": 0.008149999999906867,
+      "changedState": "canonical preferences applied while hidden, then panel reopened",
+      "categories": {
+        "text": 0,
+        "title": 0,
+        "aria": 0,
+        "class": 0,
+        "otherAttributes": 0,
+        "nodeInsertion": 0,
+        "nodeRemoval": 0
+      },
+      "totalMutationRecords": 0,
+      "assignments": {
+        "value": 0,
+        "checked": 0,
+        "disabled": 0
+      },
+      "calls": {
+        "recorderProjections": 0,
+        "tooltipVisits": 0,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    }
+  ],
+  "errors": []
+}

@@ -31,7 +31,7 @@ All existing tracked blobs were already available; the missing blobs were the
 14 historical audit additions. API tree reconstruction matched the accepted
 root tree exactly. The requested working branch was then created at that commit.
 This provenance and protected-file verification are recorded in
-[baseline-results.json](baseline-results.json).
+[baseline-results.json](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-f-aud001-aud002/baseline-results.json).
 
 ## Independently observed current behavior
 
@@ -62,7 +62,7 @@ failure are different paths.
   concepts, awaits, destructive transfer, state/error writes, callbacks and cleanup.
 - [regression-contracts.md](regression-contracts.md): full matrix, exact required
   invariants, native versus internal reachability, and RC-02/03/04/05/06/19 risks.
-- [baseline-results.json](baseline-results.json): environment, provenance, validation,
+- [baseline-results.json](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-f-aud001-aud002/baseline-results.json): environment, provenance, validation,
   generated fixture hashes, 28 native scenario snapshots, recorder calls, element/
   File/entry/request identities, URL operations, rejection records and assertions.
 - [diagnostics/native.cjs](diagnostics/native.cjs): reproducible opt-in runner.

@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "kind": "decoded synthetic stereo signal; not perceptual/external-player fidelity",
+  "files": [
+    {
+      "file": "factory-five-minutes.webm",
+      "sha256": "1f03611b5b1364e38162f26ead38c518d87e357c99e2f8953503e8d1e3c1ae1f",
+      "channels": [
+        {
+          "samples": 80640,
+          "rms": 0.705301522332059,
+          "tone_amplitudes": {
+            "440": 0.995289118469647,
+            "880": 0.00014363344995660754
+          }
+        },
+        {
+          "samples": 80640,
+          "rms": 0.7075515726435853,
+          "tone_amplitudes": {
+            "440": 6.439530658652084e-05,
+            "880": 0.9984345756099184
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "file": "manual-file.webm",
+      "sha256": "73f290db2e7653a453c5607e8613a66ae27dc67333eab7ac61cb346f5e72eb99",
+      "channels": [
+        {
+          "samples": 74880,
+          "rms": 0.2149935157494016,
+          "tone_amplitudes": {
+            "440": 0.30329771858891125,
+            "880": 2.697524409092481e-05
+          }
+        },
+        {
+          "samples": 74880,
+          "rms": 0.21465890202166163,
+          "tone_amplitudes": {
+            "440": 5.2562306427861156e-05,
+            "880": 0.3028534188945005
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "file": "native-capacity.webm",
+      "sha256": "e2c580205a2724b7fa16185d87f1c306594c78ab0d0df5059a992fa124301900",
+      "channels": [
+        {
+          "samples": 40320,
+          "rms": 0.21515031248940086,
+          "tone_amplitudes": {
+            "440": 0.30292784816465884,
+            "880": 0.0002724446526201793
+          }
+        },
+        {
+          "samples": 40320,
+          "rms": 0.214280208555601,
+          "tone_amplitudes": {
+            "440": 0.00030947329717085915,
+            "880": 0.3017332595730627
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "file": "stream-mp4.mp4",
+      "sha256": "09e375f8d2a36ba070521b1db5f2745ea7e6f12ddc4fe711e11ee09ca546bd41",
+      "channels": [
+        {
+          "samples": 56640,
+          "rms": 0.7062644459158725,
+          "tone_amplitudes": {
+            "440": 0.9986544341788066,
+            "880": 0.0002143403848458667
+          }
+        },
+        {
+          "samples": 56640,
+          "rms": 0.7097812190670545,
+          "tone_amplitudes": {
+            "440": 0.00028518349241782613,
+            "880": 1.0037268296854018
+          }
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

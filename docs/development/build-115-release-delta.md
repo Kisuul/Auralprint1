@@ -1,6 +1,8 @@
 # Build 115 release-delta preparation — internal draft
 
-**For human editorial review during 115N. Not a canonical changelog entry or shipment claim.** Prospective Build 115 is `v0.1.15m.i.e`, schema 10, based on accepted `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N remains WITHHELD. No release number, published notes, or final comparison baseline is assigned here.
+**For human editorial review during 115N. Not a canonical changelog entry or shipment claim.** Prospective Build 115 candidate is `v0.1.15n` (115N RC), schema 10. AUD-007 I.2D (PR #55), the [AUD-011 watcher correction](../audits/remediations/115m-i-m-aud011/README.md) (PR #56), and the October 9 AUD-006 recorder corrections (PRs #57–#60) are merged; broader Build 115N acceptance remains separate. The earlier I.E reconciliation checkpoint was `a198b14b087da6b855041c3a23acb550a156ff4e`. Build 115N remains WITHHELD. No release number, published notes, or final comparison baseline is assigned here.
+
+Current development also provides resource-admitted optional waveforms: a single-flight pipeline, bounded metadata inspection, source-owned encoded/estimated-PCM ceilings, independent local 4/8/15m application choices and manual Generate. Playback and seeking remain primary. The [I.2D report](../audits/remediations/115m-i-i-aud007/final-acceptance/README.md) records corrections, owner-reported cross-browser/direct-file acceptance and residual estimate/offline uncertainty; it does not approve 115N or publish release notes.
 
 ## Baselines and method
 
@@ -21,6 +23,7 @@ This is a source/artifact comparison supported by existing current-build regress
 - **First-class visualizer lifecycle and inventory:** [AnalysisFrame](../../src/js/audio/analysis-frame.js) separates producer data from consumers; [VisualizerRuntime](../../src/js/render/visualizer-runtime.js) dispatches the singleton Spectral Ring and each Orb. [Visualizers UI](../../src/js/ui/visualizers-panel.js) manages the collection in one workspace, including valid zero-Orb scenes.
 - **Independent Orb design and editing:** [Orb](../../src/js/render/orb.js) reads its own motion, response, particles and trace rather than historical global behavior. [OrbEditor](../../src/js/ui/orb-editor.js) exposes source/targets, centers, designed phase, hue/color overrides and nested settings, with mixed-aware Bulk Edit. Add/Duplicate/Remove preserve surviving stable identities/history; duplication starts new runtime history.
 - **Configurable particle resource governance:** [governor](../../src/js/render/particle-governor.js), [trail](../../src/js/render/trail-system.js) and [Settings UI](../../src/js/ui/scene-panel.js) enforce selected scene-wide emission/retention budgets, fair allocation, oldest-first retirement and diagnostics. Placement distance prevents redundant same-Orb placements; it does not delete history.
+- **Recording resource settings:** Balanced uses a five-minute automatic Stop target and encoded-data limits; Custom allows independently disabled limits, and Unrestricted opts out of application size/chunk/duration ceilings. Failed replacements preserve the previous export. The limits do not bound browser memory.
 - **Two distribution editions:** [build](../../scripts/build.mjs) and [packaging contract](../../scripts/distribution.py) produce a versioned self-contained portable HTML and a complete relocatable hosted package from shared bundles. Hosted metadata stays inside its deployment prefix; portable favicon is embedded.
 
 ### Meaningfully altered existing systems
@@ -49,13 +52,13 @@ These defects are present in inspected Build 113 control flow and absent from th
 
 ### Deliberately absent or deferred
 
-Camera/projection, 3D, richer frequency/band-table tooling, local preset-file import/export, broader constrained-hardware/long-panel optimization, hosted offline caching and service-worker installation remain absent. Real devices/permissions, exported fidelity, physical accessibility/touch and actual direct-file launch require [115N evidence](../../ROADMAP.md#build-115n-acceptance-gates). Recording and the five band distributions already exist in Build 113 and are not new Build 115 public capabilities.
+Camera/projection, 3D, richer frequency/band-table tooling, local preset-file import/export, broader constrained-hardware/long-panel optimization, hosted offline caching and service-worker installation remain absent. Real devices/permissions, exported fidelity, physical accessibility/touch and demonstrably network-disabled direct-file operation require [115N evidence](../../ROADMAP.md#build-115n-acceptance-gates). Recording and the five band distributions already exist in Build 113 and are not new Build 115 public capabilities.
 
 ## B · Internal Build 114 → prospective Build 115
 
 ### New systems and capabilities
 
-The net additions are the analysis-consumer/lifecycle seam, runtime-backed Visualizers inventory, stable-ID collection operations with complete independent Orb editing/Bulk Edit, dedicated Analysis and shared Scene ownership, selected particle budgets/placement controls, and portable/hosted distribution contracts described above. Build 114 already contains Mic/Stream and source-aware recording; do not list them as new for this engineering comparison. Its source is already modularized inside the canonical single HTML; modularization itself is not a new Build 115 system.
+The net additions are the analysis-consumer/lifecycle seam, runtime-backed Visualizers inventory, stable-ID collection operations with complete independent Orb editing/Bulk Edit, dedicated Analysis and shared Scene ownership, selected particle budgets/placement controls, portable/hosted distribution contracts, and configurable recording resource policy described above. Build 114 already contains Mic/Stream and source-aware recording; do not list them as new for this engineering comparison. Its source is already modularized inside the canonical single HTML; modularization itself is not a new Build 115 system.
 
 ### Meaningfully altered existing systems
 

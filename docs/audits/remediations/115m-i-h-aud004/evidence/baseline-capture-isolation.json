@@ -1,0 +1,310 @@
+{
+  "version": "v0.1.15m.i.g",
+  "browser": "151.0.7922.173",
+  "platform": "linux",
+  "architecture": "x64",
+  "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+  "method": "Native MutationObserver plus isolated function counters and native value/checked/disabled setter interception. RAF suppressed only in browser harness; production refresh called synchronously, native media and recorder timers active. Durations are JS UI refresh time, not FPS or whole-frame rendering.",
+  "scenarios": [
+    {
+      "name": "2-Orb idle, all panels visible",
+      "iterations": 2000,
+      "elapsedMs": 344.9000000000233,
+      "meanRefreshMs": 0.17245000000001165,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 3,
+        "nodeRemoval": 3
+      },
+      "totalMutationRecords": 242006,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "2-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "elapsedMs": 332,
+      "meanRefreshMs": 0.166,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 4,
+        "nodeRemoval": 4
+      },
+      "totalMutationRecords": 242008,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": false,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "16-Orb idle",
+      "iterations": 2000,
+      "elapsedMs": 616.2999999999884,
+      "meanRefreshMs": 0.3081499999999942,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 822000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 6,
+        "nodeRemoval": 6
+      },
+      "totalMutationRecords": 886012,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 822000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 411,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle",
+      "iterations": 2000,
+      "elapsedMs": 2093.5999999999767,
+      "meanRefreshMs": 1.0467999999999884,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 21,
+        "nodeRemoval": 21
+      },
+      "totalMutationRecords": 3094042,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 3030000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "elapsedMs": 2133,
+      "meanRefreshMs": 1.0665,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 22,
+        "nodeRemoval": 22
+      },
+      "totalMutationRecords": 3094044,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 3030000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": false,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "Active playback",
+      "iterations": 2000,
+      "elapsedMs": 285.3999999999942,
+      "meanRefreshMs": 0.14269999999999708,
+      "changedState": "native stereo WAV loaded and playing; AnalysisFrame held stable in synchronous isolation",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 12000,
+        "nodeInsertion": 3,
+        "nodeRemoval": 3
+      },
+      "totalMutationRecords": 238006,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Active recording",
+      "iterations": 2000,
+      "elapsedMs": 202.29999999998836,
+      "meanRefreshMs": 0.10114999999999418,
+      "changedState": "native MediaRecorder recording; elapsed timer primed; no asynchronous callback runs inside synchronous batch",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 30000,
+        "nodeInsertion": 2,
+        "nodeRemoval": 2
+      },
+      "totalMutationRecords": 256004,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Recorder finalization",
+      "iterations": 2000,
+      "elapsedMs": 198,
+      "meanRefreshMs": 0.099,
+      "changedState": "native phase after stop: finalizing; measurement phase: error",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 12000,
+        "nodeInsertion": 1,
+        "nodeRemoval": 1
+      },
+      "totalMutationRecords": 238002,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Preset apply / panel reopen",
+      "iterations": 2000,
+      "elapsedMs": 176.29999999998836,
+      "meanRefreshMs": 0.08814999999999418,
+      "changedState": "canonical preferences applied while hidden, then panel reopened",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 12000,
+        "nodeInsertion": 1,
+        "nodeRemoval": 1
+      },
+      "totalMutationRecords": 238002,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    }
+  ],
+  "errors": [
+    "[RecorderEngine] no-captured-chunks Error: Recording finished without any captured data.\n    at createRecorderError (http://127.0.0.1:34851/:5010:19)\n    at assembleCompletedRecordingExport (http://127.0.0.1:34851/:5305:15)\n    at finalizeStoppedRecorder (http://127.0.0.1:34851/:5574:33)\n    at runtime2.mediaRecorder.onstop (http://127.0.0.1:34851/:5730:47)"
+  ]
+}

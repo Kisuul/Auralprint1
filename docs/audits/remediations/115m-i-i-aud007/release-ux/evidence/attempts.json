@@ -1,0 +1,37 @@
+[
+  {
+    "check": "Initial shell git fetch",
+    "observed": "Sandbox could not connect to configured proxy. GitHub connector independently identified current main.",
+    "resolution": "Authorized unsandboxed git fetch succeeded through the same configured path; exact main SHA and ancestry verified before branch creation."
+  },
+  {
+    "check": "First application test import",
+    "observed": "Fixture named nonexistent resetPreferences export.",
+    "resolution": "Uses actual replacePreferences(CONFIG.defaults) scene-reset operation; all final tests pass."
+  },
+  {
+    "check": "First complete npm test",
+    "observed": "4 legacy Scrubber fixture failures because its mock lacked DOM removeEventListener.",
+    "resolution": "Added genuine matching-handler removal to test canvas/window mocks; assertions unchanged. Full final suite passes."
+  },
+  {
+    "check": "Initial native Scene Reset",
+    "observed": "Diagnostic did not expand collapsed Presets section, so button was not visible.",
+    "resolution": "Diagnostic now uses the existing Presets summary before Reset. Production behavior unchanged."
+  },
+  {
+    "check": "Review of duration readiness",
+    "observed": "NaN duration with readyState > 0 was still labeled pending.",
+    "resolution": "Uses native readiness to distinguish pending from invalid available duration; permanent unavailable/recovery test added. Complete sequence and native matrix rerun on resulting artifact."
+  },
+  {
+    "check": "Original portable file:// offline launch",
+    "observed": "Chromium returned net::ERR_BLOCKED_BY_ADMINISTRATOR before document navigation.",
+    "resolution": "Recorded as environmental limitation, not successful direct-file acceptance. No browser policy bypass. Portable over localhost, hosted root and nested are validated."
+  },
+  {
+    "check": "Intermediate PR CI at 8f5c9ccd4da54a438fb829f80acbfe67d7f136fa",
+    "observed": "Ubuntu and Windows failed the same legacy test DOM cleanup fixture before the final correction commit.",
+    "resolution": "Final evidence commit includes real removeEventListener fixture support; exact final-head CI must pass independently after push."
+  }
+]

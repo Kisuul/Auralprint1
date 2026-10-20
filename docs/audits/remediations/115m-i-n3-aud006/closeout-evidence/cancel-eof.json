@@ -1,0 +1,106 @@
+{
+  "version": "v0.1.15m.i.n",
+  "artifact": "dist/auralprint_0.1.15m.i.n.html",
+  "browser": "151.0.7922.173",
+  "results": [
+    {
+      "mode": "cancel-finalizing",
+      "evidence": {
+        "events": [
+          {
+            "event": "native-ended",
+            "phase": "finalizing",
+            "cursor": 0,
+            "filename": "A.wav",
+            "ended": true,
+            "transitions": 1
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "track-change-start",
+            "requestId": 2,
+            "filename": "B.wav"
+          }
+        ],
+        "queue": {
+          "items": [
+            {
+              "index": 0,
+              "name": "A.wav",
+              "active": false
+            },
+            {
+              "index": 1,
+              "name": "B.wav",
+              "active": true
+            }
+          ],
+          "cursor": 1,
+          "length": 2
+        },
+        "audio": {
+          "isLoaded": true,
+          "isPlaying": true,
+          "filename": "B.wav",
+          "transportError": ""
+        },
+        "recording": {
+          "hooksEnabled": true,
+          "phase": "cancelled",
+          "supportProbeStatus": "supported",
+          "isSupported": true,
+          "includePlaybackAudio": true,
+          "targetFps": 30,
+          "availableMimeTypes": [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm",
+            "video/mp4"
+          ],
+          "selectedMimeType": "video/webm;codecs=vp9,opus",
+          "resolvedMimeType": "video/webm;codecs=vp9,opus",
+          "startedAtMs": 1009.0999999996275,
+          "stoppedAtMs": 2114,
+          "elapsedMs": 1105,
+          "chunkCount": 2,
+          "recorderEnabled": true,
+          "sessionPolicy": {
+            "profile": "balanced",
+            "softBytes": 130000000,
+            "aggregateBytes": 270000000,
+            "reserveBytes": 10000000,
+            "maxChunks": 1200,
+            "durationMs": 300000,
+            "warningFraction": 0.8,
+            "previousExportBytes": 0,
+            "effectiveSoftBytes": 130000000
+          },
+          "deliveredBytes": 14428,
+          "admittedBytes": 14428,
+          "rejectedBytes": 0,
+          "rejectedEvents": 0,
+          "retainedChunkCount": 0,
+          "previousExportBytes": 0,
+          "stopReason": "manual-stop",
+          "secondaryStopReason": null,
+          "terminalOutcome": "cancelled",
+          "finalExportBytes": null,
+          "nativeShutdown": "confirmed-stopped",
+          "warnings": [],
+          "lastExportUrl": null,
+          "lastExportFileName": "",
+          "lastExportByteSize": 0,
+          "lastAction": "cancel",
+          "lastCode": "capture-cancelled",
+          "lastMessage": "Current unsaved capture cancelled and discarded. Native recorder confirmed stopped; another recording may begin.",
+          "lastUpdatedAtMs": 2262.2000000001863
+        },
+        "exportBytes": 0,
+        "mediaEnded": false,
+        "nativeRecorderState": "inactive"
+      },
+      "errors": []
+    }
+  ]
+}

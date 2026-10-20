@@ -1,0 +1,789 @@
+{
+  "auditedSha": "18d47e32e40d79d48f48409d0efa1bacce0f53fe",
+  "browser": "151.0.7922.173",
+  "version": "v0.1.15m.i.g",
+  "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+  "cases": [
+    {
+      "name": "A: extreme-log 3-band mixed inactive targets, actual FFT extraction and Orb response",
+      "passed": true,
+      "data": {
+        "geometry": {
+          "low": [
+            0,
+            5e-324,
+            22500
+          ],
+          "high": [
+            5e-324,
+            22500
+          ],
+          "summary": "1 active target · 1 inactive target (255). Raise the band count to reactivate.",
+          "choices": 3
+        },
+        "responses": [
+          {
+            "channel": "L",
+            "selected": 0.7,
+            "dominant": 0,
+            "radius": 563
+          },
+          {
+            "channel": "R",
+            "selected": 0.2,
+            "dominant": 0,
+            "radius": 168
+          },
+          {
+            "channel": "C",
+            "selected": 0.55,
+            "dominant": 0,
+            "radius": 444.50000000000006
+          }
+        ]
+      }
+    },
+    {
+      "name": "B: precision/count reactivation with stable editor and exact action focus",
+      "passed": true,
+      "data": {
+        "canonical": 0.123456,
+        "lines": 16,
+        "transitions": [
+          {
+            "count": 32,
+            "active": [
+              5
+            ],
+            "energy": 0.9,
+            "dominant": 5,
+            "stability": {
+              "root": true,
+              "control": true,
+              "focus": true,
+              "connected": true,
+              "value": 0.123456,
+              "open": true
+            }
+          },
+          {
+            "count": 3,
+            "active": [],
+            "energy": 0,
+            "dominant": null,
+            "stability": {
+              "root": true,
+              "control": true,
+              "focus": true,
+              "connected": true,
+              "value": 0.123456,
+              "open": true
+            }
+          },
+          {
+            "count": 256,
+            "active": [
+              5,
+              100,
+              255
+            ],
+            "energy": 0.6,
+            "dominant": 5,
+            "stability": {
+              "root": true,
+              "control": true,
+              "focus": true,
+              "connected": true,
+              "value": 0.123456,
+              "open": true
+            }
+          }
+        ],
+        "actionFocus": {
+          "same": true,
+          "connected": true,
+          "sameRow": true,
+          "action": "duplicate",
+          "id": "A"
+        }
+      }
+    },
+    {
+      "name": "D: mixed Bulk edits, inventory reorder/count changes and stable logical focus",
+      "passed": true,
+      "data": {
+        "order": [
+          "A",
+          "B",
+          "spectral-ring"
+        ],
+        "speeds": [
+          0.123456,
+          0.234567,
+          0.345678
+        ],
+        "targets": [
+          [
+            5,
+            100,
+            255
+          ],
+          [
+            255
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "bulkTtl": [
+          35.123456,
+          35.123456,
+          35.123456
+        ],
+        "focus": {
+          "same": true,
+          "connected": true,
+          "sameRow": true,
+          "action": "remove",
+          "id": "spectral-ring"
+        }
+      }
+    },
+    {
+      "name": "E: idle refresh performs no inventory/editor reconstruction, listener growth or preference writes",
+      "passed": true,
+      "data": {
+        "iterations": 2000,
+        "elapsedMs": 240.90000000037253,
+        "presentationMutationRecords": 92000,
+        "detachedStructural": 0,
+        "allIdentitiesConnected": true,
+        "preferencesUnchanged": true,
+        "sameSettings": true,
+        "sameCollection": true,
+        "focus": true,
+        "duplicateDelta": 1
+      }
+    },
+    {
+      "name": "independent target domains, L/R/C and first-active ties across both transition sequences",
+      "passed": true,
+      "data": {
+        "samples": 105,
+        "examples": [
+          {
+            "ids": [],
+            "count": 3,
+            "channel": "R",
+            "energy": null,
+            "dominant": null
+          },
+          {
+            "ids": [],
+            "count": 3,
+            "channel": "R",
+            "energy": null,
+            "dominant": null
+          },
+          {
+            "ids": [],
+            "count": 3,
+            "channel": "R",
+            "energy": null,
+            "dominant": null
+          },
+          {
+            "ids": [
+              255
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0,
+            "dominant": null
+          },
+          {
+            "ids": [
+              255
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0,
+            "dominant": null
+          },
+          {
+            "ids": [
+              255
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0,
+            "dominant": null
+          },
+          {
+            "ids": [
+              0,
+              255
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0.06666666666666667,
+            "dominant": 0
+          },
+          {
+            "ids": [
+              0,
+              255
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0.06666666666666667,
+            "dominant": 0
+          },
+          {
+            "ids": [
+              0,
+              255
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0.06666666666666667,
+            "dominant": 0
+          },
+          {
+            "ids": [
+              0,
+              2
+            ],
+            "count": 3,
+            "channel": "R",
+            "energy": 0.13333333333333333,
+            "dominant": 2
+          }
+        ],
+        "firstActiveTie": 2
+      }
+    },
+    {
+      "name": "independent geometry matrix: real controller/bank/extraction and Nyquist",
+      "passed": true,
+      "data": {
+        "logMatrices": [
+          {
+            "count": 3,
+            "floor": 5e-324,
+            "midpoint": 5e-324,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 3,
+            "floor": 1e-307,
+            "midpoint": 1e-307,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 3,
+            "floor": 20,
+            "midpoint": 20,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 3,
+            "floor": 22499.9999999999,
+            "midpoint": 22499.9999999999,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 3,
+            "floor": 22500,
+            "midpoint": 22500,
+            "equalInteriorEdges": 1,
+            "zeroBands": 1
+          },
+          {
+            "count": 4,
+            "floor": 5e-324,
+            "midpoint": 3.3341381242276124e-160,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 4,
+            "floor": 1e-307,
+            "midpoint": 4.743416490252404e-152,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 4,
+            "floor": 20,
+            "midpoint": 670.8203932499366,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 4,
+            "floor": 22499.9999999999,
+            "midpoint": 22499.99999999995,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 4,
+            "floor": 22500,
+            "midpoint": 22500,
+            "equalInteriorEdges": 2,
+            "zeroBands": 2
+          },
+          {
+            "count": 32,
+            "floor": 5e-324,
+            "midpoint": 3.3341381242276124e-160,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 32,
+            "floor": 1e-307,
+            "midpoint": 4.743416490252404e-152,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 32,
+            "floor": 20,
+            "midpoint": 670.8203932499366,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 32,
+            "floor": 22499.9999999999,
+            "midpoint": 22499.99999999995,
+            "equalInteriorEdges": 26,
+            "zeroBands": 26
+          },
+          {
+            "count": 32,
+            "floor": 22500,
+            "midpoint": 22500,
+            "equalInteriorEdges": 30,
+            "zeroBands": 30
+          },
+          {
+            "count": 256,
+            "floor": 5e-324,
+            "midpoint": 3.3341381242276124e-160,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 256,
+            "floor": 1e-307,
+            "midpoint": 4.743416490252404e-152,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 256,
+            "floor": 20,
+            "midpoint": 670.8203932499366,
+            "equalInteriorEdges": 0,
+            "zeroBands": 0
+          },
+          {
+            "count": 256,
+            "floor": 22499.9999999999,
+            "midpoint": 22499.99999999995,
+            "equalInteriorEdges": 250,
+            "zeroBands": 250
+          },
+          {
+            "count": 256,
+            "floor": 22500,
+            "midpoint": 22500,
+            "equalInteriorEdges": 254,
+            "zeroBands": 254
+          }
+        ],
+        "nyquistNonLogModes": [
+          "linear",
+          "mel",
+          "bark",
+          "erb"
+        ],
+        "nyquistCap": 16000
+      }
+    },
+    {
+      "name": "native action identity, type collision, cancellation, remove fallback and action dispatch",
+      "passed": true,
+      "data": {
+        "actions": [
+          {
+            "action": "edit",
+            "retained": {
+              "same": true,
+              "connected": true,
+              "sameRow": true,
+              "action": "edit",
+              "id": "spectral-ring"
+            }
+          },
+          {
+            "action": "duplicate",
+            "retained": {
+              "same": true,
+              "connected": true,
+              "sameRow": true,
+              "action": "duplicate",
+              "id": "spectral-ring"
+            }
+          },
+          {
+            "action": "remove",
+            "retained": {
+              "same": true,
+              "connected": true,
+              "sameRow": true,
+              "action": "remove",
+              "id": "spectral-ring"
+            }
+          },
+          {
+            "action": "edit-ring",
+            "retained": {
+              "same": true,
+              "connected": true,
+              "sameRow": true,
+              "action": "edit-ring",
+              "id": null
+            }
+          }
+        ],
+        "collisionTypeSafe": true,
+        "cancelledRemoveUnchanged": true,
+        "duplicateId": "ORB0",
+        "nearestSurvivor": "ORB0",
+        "unrelatedRemovalFocus": true,
+        "addedId": "ORB0"
+      }
+    },
+    {
+      "name": "native numeric keyboard boundaries, modified combinations and exactly one commit",
+      "passed": true,
+      "data": {
+        "speedKeys": [
+          {
+            "key": "ArrowRight",
+            "native": 0.133456,
+            "canonical": 0.133456,
+            "inputCount": 1,
+            "focus": true,
+            "last": {
+              "key": "ArrowRight",
+              "ctrl": false,
+              "shift": false,
+              "prevented": true
+            },
+            "other": 0.234567
+          },
+          {
+            "key": "Home",
+            "native": 0.01,
+            "canonical": 0.01,
+            "inputCount": 2,
+            "focus": true,
+            "last": {
+              "key": "Home",
+              "ctrl": false,
+              "shift": false,
+              "prevented": false
+            },
+            "other": 0.234567
+          },
+          {
+            "key": "End",
+            "native": 3,
+            "canonical": 3,
+            "inputCount": 3,
+            "focus": true,
+            "last": {
+              "key": "End",
+              "ctrl": false,
+              "shift": false,
+              "prevented": false
+            },
+            "other": 0.234567
+          },
+          {
+            "key": "Control+ArrowLeft",
+            "native": 2.9701,
+            "canonical": 2.9701,
+            "inputCount": 4,
+            "focus": true,
+            "last": {
+              "key": "ArrowLeft",
+              "ctrl": true,
+              "shift": false,
+              "prevented": false
+            },
+            "other": 0.234567
+          },
+          {
+            "key": "Shift+ArrowLeft",
+            "native": 2.9601,
+            "canonical": 2.9601,
+            "inputCount": 5,
+            "focus": true,
+            "last": {
+              "key": "ArrowLeft",
+              "ctrl": false,
+              "shift": true,
+              "prevented": true
+            },
+            "other": 0.234567
+          }
+        ],
+        "modifiedNativeReference": "2.99",
+        "integralCounts": [
+          11,
+          15,
+          16,
+          39
+        ],
+        "tenLineIncrement": 49,
+        "home": 10,
+        "end": 1000
+      }
+    },
+    {
+      "name": "independent inactive picker/exact drafts, focused count transition and explicit full spectrum",
+      "passed": true,
+      "data": {
+        "checkboxPreserved": [
+          255,
+          0
+        ],
+        "rangePreserved": [
+          1,
+          2,
+          255
+        ],
+        "invalidDraft": "0, 256, invalid",
+        "countTransitionFocus": true,
+        "fullSpectrum": []
+      }
+    },
+    {
+      "name": "independent native/canonical/rendered integral count in combined reduced-bank scene",
+      "passed": true,
+      "data": [
+        {
+          "imported": 15.5,
+          "canonical": 16,
+          "runtime": 16,
+          "native": 16,
+          "step": "1",
+          "readout": "16",
+          "rendered": 16
+        },
+        {
+          "imported": 11,
+          "canonical": 11,
+          "runtime": 11,
+          "native": 11,
+          "step": "1",
+          "readout": "11",
+          "rendered": 11
+        },
+        {
+          "imported": 15,
+          "canonical": 15,
+          "runtime": 15,
+          "native": 15,
+          "step": "1",
+          "readout": "15",
+          "rendered": 15
+        },
+        {
+          "imported": 16,
+          "canonical": 16,
+          "runtime": 16,
+          "native": 16,
+          "step": "1",
+          "readout": "16",
+          "rendered": 16
+        },
+        {
+          "imported": 39,
+          "canonical": 39,
+          "runtime": 39,
+          "native": 39,
+          "step": "1",
+          "readout": "39",
+          "rendered": 39
+        }
+      ]
+    },
+    {
+      "name": "C: precise focused editor during delayed actual File completion, source/AnalysisFrame readiness and interactive shortcut suppression",
+      "passed": true,
+      "data": {
+        "before": {
+          "prefs": {
+            "id": "A",
+            "chanId": "L",
+            "bandIds": [
+              0,
+              255
+            ],
+            "chirality": -1,
+            "startAngleRad": 0.123456,
+            "hueOffsetDeg": 37,
+            "colorSource": "inherit",
+            "centerXFrac": 0,
+            "centerYFrac": 0,
+            "motion": {
+              "angularSpeedRadPerSec": 0.123456
+            },
+            "response": {
+              "minRadiusFrac": 0.01,
+              "maxRadiusFrac": 0.8,
+              "waveformRadialDisplaceFrac": 0.1
+            },
+            "particles": {
+              "emitPerSecond": 13.5,
+              "sizeMaxPx": 8,
+              "sizeMinPx": 1,
+              "sizeToMinSec": 3,
+              "ttlSec": 6,
+              "minPlacementDistancePx": 0.5
+            },
+            "trace": {
+              "lines": true,
+              "numLines": 16,
+              "lineAlpha": 0.35,
+              "lineWidthPx": 2,
+              "lineColorMode": "dominantBand"
+            }
+          },
+          "native": 0.123456,
+          "analysisReady": false,
+          "focus": true
+        },
+        "after": {
+          "prefs": {
+            "id": "A",
+            "chanId": "L",
+            "bandIds": [
+              0,
+              255
+            ],
+            "chirality": -1,
+            "startAngleRad": 0.123456,
+            "hueOffsetDeg": 37,
+            "colorSource": "inherit",
+            "centerXFrac": 0,
+            "centerYFrac": 0,
+            "motion": {
+              "angularSpeedRadPerSec": 0.123456
+            },
+            "response": {
+              "minRadiusFrac": 0.01,
+              "maxRadiusFrac": 0.8,
+              "waveformRadialDisplaceFrac": 0.1
+            },
+            "particles": {
+              "emitPerSecond": 13.5,
+              "sizeMaxPx": 8,
+              "sizeMinPx": 1,
+              "sizeToMinSec": 3,
+              "ttlSec": 6,
+              "minPlacementDistancePx": 0.5
+            },
+            "trace": {
+              "lines": true,
+              "numLines": 16,
+              "lineAlpha": 0.35,
+              "lineWidthPx": 2,
+              "lineColorMode": "dominantBand"
+            }
+          },
+          "native": 0.123456,
+          "focus": true,
+          "connected": true,
+          "sameRoot": true,
+          "inputEvents": 0,
+          "analysisReady": true,
+          "channelLengths": {
+            "L": 3,
+            "R": 3,
+            "C": 3
+          },
+          "sampleRate": 44100,
+          "source": "file"
+        }
+      }
+    },
+    {
+      "name": "uninstrumented hosted smoke /hosted/",
+      "passed": true,
+      "data": {
+        "native": "0.123456",
+        "resources": {
+          "manifest": 200,
+          "url": "http://127.0.0.1:35343/hosted/site.webmanifest",
+          "icons": [
+            {
+              "url": "/hosted/web-app-manifest-192x192.png",
+              "status": 200,
+              "bytes": 22773
+            },
+            {
+              "url": "/hosted/web-app-manifest-512x512.png",
+              "status": 200,
+              "bytes": 105356
+            }
+          ],
+          "instrumented": false
+        },
+        "shareReload": true
+      }
+    },
+    {
+      "name": "uninstrumented hosted smoke /nested/auralprint/",
+      "passed": true,
+      "data": {
+        "native": "0.123456",
+        "resources": {
+          "manifest": 200,
+          "url": "http://127.0.0.1:35343/nested/auralprint/site.webmanifest",
+          "icons": [
+            {
+              "url": "/nested/auralprint/web-app-manifest-192x192.png",
+              "status": 200,
+              "bytes": 22773
+            },
+            {
+              "url": "/nested/auralprint/web-app-manifest-512x512.png",
+              "status": 200,
+              "bytes": 105356
+            }
+          ],
+          "instrumented": false
+        },
+        "shareReload": true
+      }
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0
+  }
+}

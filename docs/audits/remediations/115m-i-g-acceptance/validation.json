@@ -1,0 +1,196 @@
+{
+  "phase": "G.4",
+  "scope": "independent integrated acceptance and evidence only",
+  "auditedApplicationSha": "18d47e32e40d79d48f48409d0efa1bacce0f53fe",
+  "evidenceCommitSha": "commit containing this record; exact evidence-head SHA and CI run in PR description/final handoff",
+  "acceptedHistory": [
+    "0b8ddc43c36c941c51b3dbce25a1d50e7fb8692d",
+    "bf43c45137b1851d568a4d6644f59047bacabc76",
+    "6506ff588c7250dafaba5a4618f948dadd418fb0",
+    "18d47e32e40d79d48f48409d0efa1bacce0f53fe"
+  ],
+  "acceptedBuild115Main": "230610bc33ab7e3a4842e53e5be48c9170222739",
+  "currentMainIdenticalTreeMerge": "c37e65116aa67ea837fa8468a71da4ad1ae5b5bd",
+  "pr": 48,
+  "branch": "codex/115m-i-g-aud005",
+  "initialCleanTree": true,
+  "prOpenDraftVerified": true,
+  "version": "v0.1.15m.i.g",
+  "presetSchema": 10,
+  "build115N": "WITHHELD",
+  "dispositions": {
+    "AUD-003": "CLOSE",
+    "AUD-005": "CLOSE",
+    "AUD-008": "CLOSE",
+    "AUD-009": "CLOSE"
+  },
+  "implementationDefectsDemonstrated": 0,
+  "specificMaterialEvidenceGaps": [],
+  "correctiveLifecycle": "complete; recommend human merge approval; no new G phase",
+  "broaderBuild115ReleaseAcceptance": "separate and withheld",
+  "changedFiles": [
+    "docs/audits/remediations/115m-i-g-acceptance/README.md",
+    "docs/audits/remediations/115m-i-g-acceptance/acceptance-matrix.md",
+    "docs/audits/remediations/115m-i-g-acceptance/diagnostics/integrated.cjs",
+    "docs/audits/remediations/115m-i-g-acceptance/diagnostics/recheck.py",
+    "docs/audits/remediations/115m-i-g-acceptance/evidence/distribution.json",
+    "docs/audits/remediations/115m-i-g-acceptance/evidence/integrated-native.json",
+    "docs/audits/remediations/115m-i-g-acceptance/evidence/negative-controls.json",
+    "docs/audits/remediations/115m-i-g-acceptance/evidence/probe-calibration.json",
+    "docs/audits/remediations/115m-i-g-acceptance/evidence/regression-native.json",
+    "docs/audits/remediations/115m-i-g-acceptance/evidence/source-integrity.json",
+    "docs/audits/remediations/115m-i-g-acceptance/validation.json"
+  ],
+  "productionChanges": [],
+  "permanentTestChanges": [],
+  "dependencyChanges": [],
+  "versionSchemaChanges": [],
+  "acceptedTrackedBlobsUnchanged": 788,
+  "priorEvidencePreserved": [
+    {
+      "record": "115m-i-g-aud005",
+      "files": 11,
+      "unchanged": true,
+      "gitBlobInventorySha256": "308bfdc9354f0d2cb413c7863548f79125cb830066dcbe9c0397ace9b47d42a0"
+    },
+    {
+      "record": "115m-i-g-aud003",
+      "files": 11,
+      "unchanged": true,
+      "gitBlobInventorySha256": "9e1d7730f2a88bde77670bc989d1ccc72db5ae305b3b0e38f2c9fc383035ce47"
+    },
+    {
+      "record": "115m-i-g-aud008-aud009",
+      "files": 19,
+      "unchanged": true,
+      "gitBlobInventorySha256": "f12f0c20ce10c4db4b268bcd30284564fa9caa9b9118506f1a257402f6e92975"
+    }
+  ],
+  "commands": [
+    {
+      "command": "npm ci --offline --cache /workspace/auralprint-environment/npm-cache --no-audit --no-fund",
+      "exitCode": 0,
+      "substitution": "established locked-cache sandbox fallback; dependency and lock files unchanged"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": 793,
+      "passed": 792,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "portableAndHosted": true
+    },
+    {
+      "command": "python scripts/verify_distribution.py",
+      "exitCode": 0,
+      "file": "evidence/distribution.json"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    {
+      "command": "node --test tests/band-bank.test.js tests/band-count-coverage.test.js tests/analysis-frame.test.js tests/visualizer-runtime.test.js tests/visualizers-panel.test.js tests/orb-band-picker.test.js tests/orb-editor.test.js tests/orb-numeric-contract.test.js tests/rc16-band-references.test.js tests/rc17-designed-phase.test.js tests/rc17-phase-editor.test.js tests/rc21-band-picker-help.test.js tests/targeted-audit.test.js tests/input-source-manager.test.js tests/live-source-ownership.test.js tests/rc19-recorder-disposal.test.js tests/recording-export.test.js",
+      "exitCode": 0,
+      "passed": 470,
+      "failed": 0
+    },
+    {
+      "command": "node --test tests/fft-coordinate.test.js",
+      "exitCode": 0,
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "command": "node docs/audits/remediations/115m-i-g-acceptance/diagnostics/integrated.cjs --output docs/audits/remediations/115m-i-g-acceptance/evidence/integrated-native.json",
+      "exitCode": 0,
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "command": "python docs/audits/remediations/115m-i-g-acceptance/diagnostics/recheck.py",
+      "exitCode": 0,
+      "nativeSuites": [
+        38,
+        31,
+        27
+      ],
+      "rc17Scenarios": 6,
+      "negativeControlsDetected": 27
+    }
+  ],
+  "independentNative": {
+    "passed": 13,
+    "failed": 0,
+    "channelTargetTransitionSamples": 105,
+    "logGeometryMatrices": 20,
+    "scenarios": [
+      "A extreme geometry plus inactive targets and actual Orb response",
+      "B precision/count reactivation with editor/action identity",
+      "C actual delayed File completion while precise range focused",
+      "D mixed Bulk edit plus reordered inventory and changed count",
+      "E repeated idle refresh, structural identity and delegated action count"
+    ],
+    "homeEndModifiedKeyboardSingleInputVerified": true,
+    "ordinaryAndShiftArrowsUseConfig": true,
+    "ctrlModifiedArrowMatchesNativeReference": true,
+    "traceNativeCanonicalRendererCounts": [
+      16,
+      11,
+      15,
+      16,
+      39
+    ],
+    "hostedDeployments": [
+      "/hosted/",
+      "/nested/auralprint/"
+    ],
+    "pageConsoleAndUnhandledRejectionChecks": "all final cases pass",
+    "file": "evidence/integrated-native.json",
+    "instrumentation": "README discloses in-memory module observation, producer fixtures, counting canvas/trace points and delayed native resume; hosted smoke is uninstrumented"
+  },
+  "regressionNative": {
+    "g1": 38,
+    "g2": 31,
+    "g3": 27,
+    "rc17Scenarios": 6,
+    "failed": 0,
+    "file": "evidence/regression-native.json"
+  },
+  "negativeControls": {
+    "detected": 27,
+    "total": 27,
+    "harnessFailuresCounted": 0,
+    "file": "evidence/negative-controls.json"
+  },
+  "environment": {
+    "node": "24.19.0",
+    "npm": "11.9.0",
+    "python": "3.12.14",
+    "chromium": "151.0.7922.173",
+    "playwright": "externally provisioned; no dependency added",
+    "nativeMode": "Linux headless Chromium; localhost portable and hosted root/nested paths",
+    "networkPolicy": "current enforced unrestricted proxy; no VPN; no browser downloads",
+    "toolEscalation": "native browser/Node workers and remote GitHub use approved process/network execution"
+  },
+  "portableHtmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+  "ci": {
+    "requirement": "Linux/Windows on exact final G.4 evidence head",
+    "reportLocation": "PR #48 checks/description and final handoff after publication",
+    "prepublicationSuccessClaim": false
+  },
+  "limitations": [
+    "binary64 equal adjacent edges and shared FFT bins remain valid",
+    "native range number serialization tolerance; persisted precision separately exact",
+    "general refresh presentation writes observed and left out of AUD-004 scope",
+    "indices remain current bank positions; Build 118 frequency/taxonomy architecture deferred",
+    "not a universal browser/hardware/screen-reader/artistic or direct-file release certification",
+    "physical audio/capture/device release acceptance remains Build 115N scope"
+  ],
+  "probeCalibration": "evidence/probe-calibration.json"
+}

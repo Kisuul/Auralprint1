@@ -1,0 +1,1372 @@
+[
+  {
+    "id": "video-only",
+    "original_bytes": 387347,
+    "reproduced_bytes": 377679,
+    "change_percent": -2.4959532408925345,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 2108.600000000035,
+        "bytes": 69105,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 3109.7999999999884,
+        "bytes": 159512,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 4110.5,
+        "bytes": 154250,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 4129.600000000035,
+        "bytes": 4480,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 1820.4000000000015,
+        "bytes": 66023,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 2849.5,
+        "bytes": 161964,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 3808.600000000006,
+        "bytes": 149692,
+        "mime": "video/webm;codecs=vp9",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "file-audio",
+    "original_bytes": 809855,
+    "reproduced_bytes": 806412,
+    "change_percent": -0.4251378333158362,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 5179.799999999988,
+        "bytes": 121986,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 6197.299999999988,
+        "bytes": 175921,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 7226.799999999988,
+        "bytes": 167525,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 8242.5,
+        "bytes": 170407,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 9195,
+        "bytes": 174016,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 4852.200000000004,
+        "bytes": 121882,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 5882.200000000004,
+        "bytes": 176238,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 6915,
+        "bytes": 171785,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 7921.100000000006,
+        "bytes": 170114,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 8854.5,
+        "bytes": 166393,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "synthetic-mic",
+    "original_bytes": 628295,
+    "reproduced_bytes": 572359,
+    "change_percent": -8.902824310236435,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 10283.900000000023,
+        "bytes": 153588,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 11307.100000000035,
+        "bytes": 240105,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 12292.600000000035,
+        "bytes": 234602,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 9933.900000000001,
+        "bytes": 101723,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 10954.100000000006,
+        "bytes": 239187,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 11938.300000000003,
+        "bytes": 231449,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "stream-codec-video/webm;codecs=vp9,opus",
+    "original_bytes": 580924,
+    "reproduced_bytes": 608712,
+    "change_percent": 4.783414009405695,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 13358.900000000023,
+        "bytes": 124570,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 14378.700000000012,
+        "bytes": 225462,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 15365.400000000023,
+        "bytes": 230892,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 12989,
+        "bytes": 150501,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 14009.400000000009,
+        "bytes": 218792,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 15003.100000000006,
+        "bytes": 239419,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "stream-codec-video/webm;codecs=vp8,opus",
+    "original_bytes": 1003708,
+    "reproduced_bytes": 993461,
+    "change_percent": -1.0209144492222877,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 16409.400000000023,
+        "bytes": 240471,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 17428.70000000001,
+        "bytes": 372129,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 18421.600000000035,
+        "bytes": 391108,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 16042.800000000003,
+        "bytes": 250983,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 17081.199999999997,
+        "bytes": 386509,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 18039.199999999997,
+        "bytes": 355969,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "stream-codec-video/webm",
+    "original_bytes": 993282,
+    "reproduced_bytes": 990907,
+    "change_percent": -0.23910631623245138,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 19473.20000000001,
+        "bytes": 233187,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 20491.400000000023,
+        "bytes": 392327,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 21477.400000000023,
+        "bytes": 367768,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 19085.800000000003,
+        "bytes": 245471,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 20098.699999999997,
+        "bytes": 375730,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 21091.699999999997,
+        "bytes": 369706,
+        "mime": "video/webm;codecs=vp8,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "stream-codec-video/mp4",
+    "original_bytes": 697106,
+    "reproduced_bytes": 693980,
+    "change_percent": -0.44842534707777437,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 24529.100000000035,
+        "bytes": 1200,
+        "mime": "video/mp4;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 24529.29999999999,
+        "bytes": 695906,
+        "mime": "video/mp4;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 24153.800000000003,
+        "bytes": 1200,
+        "mime": "video/mp4;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 24153.90000000001,
+        "bytes": 692780,
+        "mime": "video/mp4;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "stream-longer-safe-60s",
+    "original_bytes": 14470681,
+    "reproduced_bytes": 14507040,
+    "change_percent": 0.25125977139568434,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 25579.399999999965,
+        "bytes": 204175,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 26599.600000000035,
+        "bytes": 250903,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 27623.899999999965,
+        "bytes": 240694,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 28643.70000000001,
+        "bytes": 250031,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 29658.50000000006,
+        "bytes": 235129,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 30679.899999999965,
+        "bytes": 234534,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 31698.79999999999,
+        "bytes": 240183,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 32723.20000000001,
+        "bytes": 263409,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 33740.50000000006,
+        "bytes": 228653,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 34758.100000000035,
+        "bytes": 279979,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 35778.29999999999,
+        "bytes": 224254,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 36813.00000000006,
+        "bytes": 243188,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 37823.20000000001,
+        "bytes": 230840,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 38862.29999999999,
+        "bytes": 201616,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 39878.50000000006,
+        "bytes": 220866,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 40898.899999999965,
+        "bytes": 238359,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 41922.50000000006,
+        "bytes": 264933,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 42939.899999999965,
+        "bytes": 237381,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 43958.29999999999,
+        "bytes": 232219,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 44978.70000000001,
+        "bytes": 238649,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 45998.100000000035,
+        "bytes": 270797,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 47022.29999999999,
+        "bytes": 239098,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 48041.399999999965,
+        "bytes": 232488,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 49058.29999999999,
+        "bytes": 284872,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 50078.79999999999,
+        "bytes": 225967,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 51099.100000000035,
+        "bytes": 242235,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 52123.79999999999,
+        "bytes": 296419,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 53140.70000000001,
+        "bytes": 236643,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 54158.29999999999,
+        "bytes": 234999,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 55180.600000000035,
+        "bytes": 235094,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 56198.29999999999,
+        "bytes": 270045,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 57221.70000000001,
+        "bytes": 236083,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 58242.70000000001,
+        "bytes": 233944,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 59258.100000000035,
+        "bytes": 278752,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 60279.00000000006,
+        "bytes": 229020,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 61299.100000000035,
+        "bytes": 242503,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 62322.20000000001,
+        "bytes": 277090,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 63342.70000000001,
+        "bytes": 235890,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 64359.50000000006,
+        "bytes": 240572,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 65380.50000000006,
+        "bytes": 233532,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 66407.39999999997,
+        "bytes": 254251,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 67423.70000000001,
+        "bytes": 236916,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 68441.79999999999,
+        "bytes": 233978,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 69458.10000000003,
+        "bytes": 314551,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 70480.89999999997,
+        "bytes": 237033,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 71498.50000000006,
+        "bytes": 230702,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 72520.70000000001,
+        "bytes": 287677,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 73542.10000000003,
+        "bytes": 230355,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 74558.79999999999,
+        "bytes": 241189,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 75578.00000000006,
+        "bytes": 268435,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 76605.00000000006,
+        "bytes": 238200,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 77620.79999999999,
+        "bytes": 234519,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 78639.39999999997,
+        "bytes": 236298,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 79658.29999999999,
+        "bytes": 282504,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 80679.00000000006,
+        "bytes": 237320,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 81698.89999999997,
+        "bytes": 234030,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 82721.50000000006,
+        "bytes": 284875,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 83739.29999999999,
+        "bytes": 230296,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 84597.60000000003,
+        "bytes": 221514,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 25190.40000000001,
+        "bytes": 213002,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 26209.800000000003,
+        "bytes": 241524,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 27232.5,
+        "bytes": 241582,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 28252.199999999997,
+        "bytes": 242064,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 29269,
+        "bytes": 238096,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 30289.199999999997,
+        "bytes": 230819,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 31314.800000000003,
+        "bytes": 248053,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 32331.199999999997,
+        "bytes": 257340,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 33349.2,
+        "bytes": 232924,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 34368.90000000001,
+        "bytes": 271852,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 35389.100000000006,
+        "bytes": 228249,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 36413.2,
+        "bytes": 236947,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 37431.3,
+        "bytes": 234685,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 38449.5,
+        "bytes": 260311,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 39469.3,
+        "bytes": 237319,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 40488.90000000001,
+        "bytes": 233467,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 41513.2,
+        "bytes": 272725,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 42531.3,
+        "bytes": 240080,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 43548.90000000001,
+        "bytes": 233792,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 44569,
+        "bytes": 276124,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 45588.8,
+        "bytes": 229039,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 46615.600000000006,
+        "bytes": 238577,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 47630.100000000006,
+        "bytes": 234625,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 48650.8,
+        "bytes": 272484,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 49668.8,
+        "bytes": 260470,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 50689.2,
+        "bytes": 236833,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 51712.3,
+        "bytes": 272680,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 52729.90000000001,
+        "bytes": 239588,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 53749.7,
+        "bytes": 230581,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 54769.600000000006,
+        "bytes": 283752,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 55789.100000000006,
+        "bytes": 228751,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 56813.100000000006,
+        "bytes": 243815,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 57830.5,
+        "bytes": 234627,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 58848.8,
+        "bytes": 267507,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 59869.2,
+        "bytes": 235236,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 60889.100000000006,
+        "bytes": 233017,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 61915.2,
+        "bytes": 265904,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 62931.100000000006,
+        "bytes": 242692,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 63949.600000000006,
+        "bytes": 229824,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 64968.7,
+        "bytes": 264810,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 65990,
+        "bytes": 228284,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 67013,
+        "bytes": 264043,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 68028.7,
+        "bytes": 277408,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 69049.7,
+        "bytes": 232186,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 70069.5,
+        "bytes": 234823,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 71089.2,
+        "bytes": 237702,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 72114.5,
+        "bytes": 276009,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 73130.90000000001,
+        "bytes": 242324,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 74149.3,
+        "bytes": 227209,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 75168.8,
+        "bytes": 291479,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 76189.2,
+        "bytes": 227915,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 77212.40000000001,
+        "bytes": 236283,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 78234.8,
+        "bytes": 275270,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 79250.59999999999,
+        "bytes": 232601,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 80269.2,
+        "bytes": 237267,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 81288.8,
+        "bytes": 237208,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 82311.2,
+        "bytes": 273735,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 83329.2,
+        "bytes": 261342,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 84188.90000000001,
+        "bytes": 198185,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "repeat-1",
+    "original_bytes": 460342,
+    "reproduced_bytes": 463716,
+    "change_percent": 0.7329333408639727,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 85648.70000000001,
+        "bytes": 207980,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 86664.29999999999,
+        "bytes": 240720,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 86664.50000000006,
+        "bytes": 11642,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 85239.00000000001,
+        "bytes": 208099,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 86257.59999999999,
+        "bytes": 243774,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 86257.7,
+        "bytes": 11843,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "repeat-2",
+    "original_bytes": 462756,
+    "reproduced_bytes": 453949,
+    "change_percent": -1.9031627898935977,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 87714.39999999997,
+        "bytes": 204310,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 88728.70000000001,
+        "bytes": 247351,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 88728.89999999997,
+        "bytes": 11095,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 87300.7,
+        "bytes": 208319,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 88299.50000000001,
+        "bytes": 245630,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "repeat-3",
+    "original_bytes": 458907,
+    "reproduced_bytes": 466077,
+    "change_percent": 1.5624080696088782,
+    "original_events": [
+      {
+        "type": "dataavailable",
+        "ms": 89777.79999999999,
+        "bytes": 203397,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 90779.20000000001,
+        "bytes": 248431,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 90779.29999999999,
+        "bytes": 7079,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ],
+    "reproduced_events": [
+      {
+        "type": "dataavailable",
+        "ms": 89340.50000000001,
+        "bytes": 216407,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 90350.59999999999,
+        "bytes": 238481,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      },
+      {
+        "type": "dataavailable",
+        "ms": 90350.7,
+        "bytes": 11189,
+        "mime": "video/webm;codecs=vp9,opus",
+        "error": null
+      }
+    ]
+  }
+]

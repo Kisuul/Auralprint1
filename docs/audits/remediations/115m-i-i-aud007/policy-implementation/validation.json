@@ -1,0 +1,77 @@
+{
+  "version": "v0.1.15m.i.j",
+  "schema": 10,
+  "policyIntegrated": false,
+  "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431",
+  "install": {
+    "command": "npm ci",
+    "pass": true,
+    "fallbackUsed": false
+  },
+  "fullSuite": {
+    "command": "npm test",
+    "total": 891,
+    "passed": 890,
+    "failed": 0,
+    "skipped": 1,
+    "skip": "opt-in AP_MILLION_STRESS million-particle stress; unchanged",
+    "rawOutputSha256": "54be14450a7a70d033ddcf9a2abaec475797721b7fe3bc3ff1558bf0ab24db90"
+  },
+  "focusedPolicy": {
+    "tests": 65,
+    "passed": 65
+  },
+  "protectedFocused": {
+    "passed": 573,
+    "rawOutputSha256": "f946bece37288316fe00e47fed7a03b9c4aa07df06d5e40cd8a25d021765e1cc"
+  },
+  "negativeControls": {
+    "passed": 7,
+    "intendedAssertions": 7,
+    "harnessCrashesCounted": 0
+  },
+  "nativeCalibration": {
+    "passed": 8,
+    "compressedCoverage": [
+      "MP3/libmp3lame stereo",
+      "Ogg Opus stereo",
+      "Ogg Opus six-channel"
+    ],
+    "memoryMeasured": "returned AudioBuffer dimensions only; no native scratch/process-memory measurements"
+  },
+  "protectedNative": {
+    "i2a": {
+      "passed": 12,
+      "total": 12,
+      "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431"
+    },
+    "f": {
+      "passed": 21,
+      "total": 21,
+      "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431"
+    },
+    "g": {
+      "passed": 13,
+      "total": 13,
+      "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431"
+    },
+    "h": {
+      "passed": 9,
+      "total": 9,
+      "artifactSha256": "2cc45be9d75be21483d44cb89e379359fe6fc271c3b484419be5cdca704de431"
+    }
+  },
+  "build": {
+    "command": "npm run build",
+    "pass": true
+  },
+  "distribution": {
+    "command": "python scripts/verify_distribution.py",
+    "pass": true
+  },
+  "whitespace": {
+    "command": "git diff --check",
+    "pass": true
+  },
+  "exactHeadCI": "Verified after final push and recorded in draft PR body/handoff; no self-referential tracked commit SHA."
+}

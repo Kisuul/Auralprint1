@@ -1,0 +1,56 @@
+{
+  "provenance": "Human-reported cross-browser functional acceptance, supplied by the project owner in the I.2D assignment. Not Codex-executed automation.",
+  "browsers": [
+    "Google Chrome",
+    "Opera",
+    "Microsoft Edge",
+    "Mozilla Firefox"
+  ],
+  "executionModesReported": [
+    "Direct local-file execution",
+    "Locally hosted using Python HTTP server"
+  ],
+  "scenarios": [
+    {
+      "input": "5-minute mono",
+      "profile": "Approx. 4m",
+      "result": "Waveform generated"
+    },
+    {
+      "input": "6-minute stereo",
+      "profile": "Approx. 4m",
+      "result": "Waveform withheld"
+    },
+    {
+      "input": "6-minute stereo",
+      "profile": "Approx. 8m",
+      "result": "Waveform generated"
+    },
+    {
+      "input": "9-minute track",
+      "profile": "Approx. 15m",
+      "result": "Waveform generated"
+    },
+    {
+      "input": "1:12:24 stereo",
+      "profile": "4 / 8 / 15m",
+      "result": "Waveform withheld"
+    },
+    {
+      "input": "Waveform withheld, applicable tested cases",
+      "profile": "Applicable tested profiles",
+      "result": "Seek remains functional"
+    }
+  ],
+  "notProvided": [
+    "Exact codec",
+    "Bitrate",
+    "Sample rate",
+    "File hash",
+    "Exact build or browser version",
+    "Resource refusal code",
+    "Complete browser-by-case-by-mode matrix",
+    "Explicit networking-disabled operation"
+  ],
+  "qualification": "Meaningful direct-file functional coverage supplements managed Chromium administrator-blocked navigation; network-disabled offline operation remains a separate narrower 115N evidence gap."
+}

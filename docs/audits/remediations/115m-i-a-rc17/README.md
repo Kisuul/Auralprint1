@@ -51,7 +51,7 @@ said 360°. Negative 90° showed -90° while the thumb was at zero.
 
 The original unbounded-persistence assertion now fails with `AssertionError`:
 actual zero, expected 12.566370614359172. See
-[former-defect-assertion.log](former-defect-assertion.log).
+[former-defect-assertion.log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-a-rc17/former-defect-assertion.log).
 
 ## Canonical half-open contract
 
@@ -162,7 +162,7 @@ audio targeting, waveform formula and color policy code are unchanged.
 
 - [Dedicated model/lifecycle suite](../../../../tests/rc17-designed-phase.test.js)
   and [generated-editor suite](../../../../tests/rc17-phase-editor.test.js):
-  **33 pass**, zero failures; [focused output](focused-tests.log).
+  **33 pass**, zero failures; [focused output](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-a-rc17/focused-tests.log).
 - [Mutation runner](mutation-check.py) uses isolated temporary copies and restores
   each modified copy. **9/9 detected by assertion failures**, not syntax/import
   failures: unbounded persistence, clamp, negative remainder, dropped zero,
@@ -182,10 +182,10 @@ audio targeting, waveform formula and color policy code are unchanged.
   fixed during motion and stops, at both DPRs. Zero page errors.
 - `npm ci --offline --cache /workspace/auralprint-environment/npm-cache`: initial
   sandbox child-process `EPERM`; permitted retry succeeds, **2 packages** installed.
-  [Install evidence](npm-ci.log). Dependencies/lockfile unchanged.
+  [Install evidence](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-a-rc17/npm-ci.log). Dependencies/lockfile unchanged.
 - `npm test` then `npm run build`, sequentially: **573 pass, 0 fail, 1 existing
-  opt-in million-particle stress skip**; [full test output](npm-test.log),
-  [build output](build.log). Existing RC-01–RC-16 and RC-18 regressions pass.
+  opt-in million-particle stress skip**; [full test output](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-a-rc17/npm-test.log),
+  [build output](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-a-rc17/build.log). Existing RC-01–RC-16 and RC-18 regressions pass.
 - `git diff --check`: **PASS**. Final untracked standalone
   **`dist/auralprint_0.1.15m.i.a.html`**, with corrected implementation and schema 10
   verified in the assembled bundle. [Byte count/hash/inspection](artifact.json).

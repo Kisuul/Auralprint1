@@ -21,9 +21,11 @@ import { UI, readSourceUiModel, shouldShowActiveQueueItem } from "../src/js/ui/u
 import { paths } from "../scripts/build.mjs";
 import { prepareWatchBuild } from "../scripts/watch.mjs";
 
-test("development version metadata and schema remain aligned", () => {
-  assert.equal(readFileSync(new URL("../version", import.meta.url), "utf8").trim(), "v0.1.15m.i.f");
-  assert.match(readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8"), /Auralprint\s+0\.1\.15m\.i\.f\s/);
+test("version metadata and schema remain aligned", () => {
+  const version = readFileSync(new URL("../version", import.meta.url), "utf8").trim();
+  const constants = readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  assert.match(version, /^v[0-9][A-Za-z0-9.\-]*$/);
+  assert.ok(constants.includes(`   Auralprint\n   ${version.slice(1)}\n`), "Source header must match root version");
   assert.equal(PRESET_SCHEMA_VERSION, 10);
 });
 
@@ -76,6 +78,9 @@ function createScrubberHarness() {
     addEventListener(type, handler) {
       canvasListeners.set(type, handler);
     },
+    removeEventListener(type, handler) {
+      if (canvasListeners.get(type) === handler) canvasListeners.delete(type);
+    },
     getBoundingClientRect() {
       return { left: 10, width: 100 };
     },
@@ -87,6 +92,9 @@ function createScrubberHarness() {
   globalThis.window = {
     addEventListener(type, handler) {
       windowListeners.set(type, handler);
+    },
+    removeEventListener(type, handler) {
+      if (windowListeners.get(type) === handler) windowListeners.delete(type);
     },
   };
   globalThis.document = {
@@ -550,6 +558,7 @@ function createRecorderHarness() {
     start() {
       this.state = "recording";
     }
+    stop() { this.state = "inactive"; }
   }
 
   globalThis.MediaStream = FakeMediaStream;
@@ -641,6 +650,8 @@ function createStubUiElement(tagName = "div") {
     style: { display: "block" },
     dataset: {},
     children: [],
+    get firstElementChild() { return this.children[0] || null; },
+    get nextElementSibling() { return this.parentNode?.children[this.parentNode.children.indexOf(this) + 1] || null; },
     parentNode: null,
     options: [],
     hidden: false,
@@ -3095,7 +3106,7 @@ test("preset sanitation uses Scene color and Spectral Ring line limit owners", (
   assert.match(source, /CONFIG\.limits\.bands\.overlayLineWidthPx/);
 });
 
-async function withSettingsActionHarness(t, run) {
+async function withSettingsActionHarness(t, run, coordinator = UI) {
   const harness = createUiWireHarness();
   const previousPrefs = structuredClone(preferences);
   const previousSettings = runtime.settings;
@@ -3118,8 +3129,8 @@ async function withSettingsActionHarness(t, run) {
     BandBankController.syncFromSettings();
     BandBankController.rebuildNow();
     initOrbs();
-    UI.wireControls();
-    UI.applyPrefs(null);
+    coordinator.wireControls();
+    coordinator.applyPrefs(null);
     const statusWrites = {};
     for (const [id, initial] of Object.entries({
       visualizerEditStatus: "Choose a visualizer to shape its response.",
@@ -3455,6 +3466,8 @@ function visualizerAction(action, id) {
 function clickVisualizerAction(action, id) {
   const button = visualizerAction(action, id);
   assert.ok(button, `${action} for ${id || "Spectral Ring"}`);
+  // A user pointer/keyboard action focuses its button before delegated dispatch.
+  button.focus();
   state.ui.visualizerList.dispatch("click", { target: button });
 }
 
@@ -4013,13 +4026,13 @@ test("RC-05: no-next/repeat-off clears pending ownership before reentrant and re
   });
 });
 
-test("RC-05: export failure still releases EOF without overwriting recording error", async t => {
+for (const phase of ["error", "cancelled"]) test(`RC-05: ${phase} settlement releases EOF without overwriting recorder outcome`, async t => {
   await withRc02FileWorkflow(t, {}, async ({ audio, ingest, scrubberLoads }) => {
     await ingest(["A.wav", "B.wav"]);
     preferences.audio.repeatMode = "none";
     state.recording.phase = "finalizing";
     rc05End(audio);
-    Object.assign(state.recording, { phase: "error", lastCode: "finalize-failed", lastMessage: "export failure" });
+    Object.assign(state.recording, { phase, lastCode: phase === "error" ? "finalize-failed" : "capture-cancelled", lastMessage: phase === "error" ? "export failure" : "capture cancelled" });
     const error = structuredClone(state.recording);
     UI.refreshRecordingUi();
     await rc05Settle();
@@ -4464,3 +4477,244 @@ for (const path of ["picker", "drop"]) {
     });
   });
 }
+
+function assertInventoryActionSurvives(button, action, id, row) {
+  assert.equal(document.activeElement, button);
+  assert.equal(state.ui.visualizerList.contains(button), true, 'surviving action stays connected to inventory');
+  assert.equal(visualizerAction(action, id), button);
+  assert.equal(button.closest('.visualizer-item'), row);
+  assert.equal(button.dataset.action, action);
+  if (action !== 'edit-ring') assert.equal(button.dataset.orbId, id);
+}
+
+for (const [action, control, event] of [
+  ['edit', 'rngVol', 'input'], ['duplicate', 'chkMute', 'change'],
+  ['remove', 'chkMute', 'change'], ['edit-ring', 'rngVol', 'input'],
+]) {
+  test(`AUD-005 integration: production ${control} handler preserves focused ${action}`, async t => {
+    await withSettingsActionHarness(t, async ({ getElement }) => {
+      hostVisualizerEditors(); UI.refreshAllUiText();
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const beforeSettings = runtime.settings, beforeCollection = VisualizerRuntime.getVisualizers();
+      getElement(control).value = '0.37'; getElement(control).checked = true;
+      await getElement(control).dispatch(event); UI.refreshAllUiText();
+      assert.notEqual(runtime.settings, beforeSettings);
+      assert.equal(VisualizerRuntime.getVisualizers(), beforeCollection);
+      assertInventoryActionSurvives(button, action, id, row);
+      UI.applyPrefs(null); UI.refreshAllUiText(); assertInventoryActionSurvives(button, action, id, row);
+      assert.equal(runtime.settings.audio.volume, control === 'rngVol' ? 0.37 : CONFIG.defaults.audio.volume);
+      assert.equal(runtime.settings.audio.muted, control === 'chkMute' ? true : CONFIG.defaults.audio.muted);
+    });
+  });
+}
+
+for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
+  test(`AUD-005 integration: pending File completion retains focused ${action}`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    await withRc02FileWorkflow(t, { contextState: 'suspended', onResume: () => { entered.resolve(); return resume.promise; } }, async ({ ingest, waitForCompletions }) => {
+      initOrbs(); hostVisualizerEditors(); UI.refreshAllUiText();
+      const pending = ingest(['focus.wav']); await entered.promise;
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const settings = runtime.settings; resume.resolve(); await pending; await waitForCompletions(1); UI.refreshAllUiText();
+      assert.equal(state.audio.filename, 'focus.wav'); assert.equal(state.source.status, 'active');
+      assert.notEqual(runtime.settings, settings); assertInventoryActionSurvives(button, action, id, row);
+    });
+  });
+}
+
+for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
+  test(`AUD-003 integration: bank-count preset changes retain G.1 ${action} identity/focus`, async t => {
+    await withSettingsActionHarness(t, ({ location, getElement }) => {
+      hostVisualizerEditors(); UI.refreshAllUiText();
+      const id = preferences.orbs[0].id, button = visualizerAction(action, id), row = button.closest('.visualizer-item'); button.focus();
+      const authored = structuredClone(preferences); authored.orbs[0].bandIds = [5, 100, 255];
+      for (const count of [32, 3, 256]) {
+        authored.bands.count = count; location.hash = settingsPresetHash(authored); getElement('btnApplyUrl').click(); UI.refreshAllUiText();
+        assertInventoryActionSurvives(button, action, id, row);
+        assert.equal(state.bands.channels.C.energies01.length, count);
+        assert.deepEqual(preferences.orbs[0].bandIds, [5, 100, 255]);
+      }
+    });
+  });
+}
+
+for (const bulk of [false, true]) {
+  test(`AUD-009: real UI ${bulk ? 'Bulk' : 'individual'} commits share one numeric normalization boundary`, async (t) => {
+    await withSettingsActionHarness(t, () => {
+      preferences.orbs.forEach(orb => { orb.motion.angularSpeedRadPerSec = .123456; orb.trace.numLines = 15.5; orb.bandIds = [0, 255]; });
+      preferences.bands.count = 3; UI.applyPrefs(null); hostVisualizerEditors(); UI.refreshAllUiText();
+      assert.ok(preferences.orbs.every(orb => orb.trace.numLines === 16));
+      const root = state.ui.orbEditorList.children[0], controls = root.querySelectorAll('input');
+      const speed = bulk ? state.ui.rngOmega : controls.find(control => control.id?.endsWith('-angular-speed'));
+      const count = bulk ? state.ui.rngNumLines : controls.find(control => control.id?.endsWith('-line-count'));
+      const runtimeOrbs = [...state.orbs]; speed.focus(); root.open = true;
+      preferences.audio.playbackVolume = .4; UI.applyPrefs(null);
+      assert.ok(document.activeElement === speed); assert.ok(state.ui.orbEditorList.children[0] === root); assert.equal(root.open, true);
+      assert.equal(speed.value, '0.123456'); assert.ok(preferences.orbs.every(orb => orb.motion.angularSpeedRadPerSec === .123456));
+      speed.value = '.234567'; speed.dispatch('input');
+      assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec, .234567);
+      assert.equal(preferences.orbs[1].motion.angularSpeedRadPerSec, bulk ? .234567 : .123456);
+      // The Node mock intentionally allows fractional range input: the canonical
+      // consumer, not native snapping, must establish the integral contract.
+      count.value = '17.1'; count.dispatch('input');
+      for (const source of [preferences.orbs, runtime.settings.orbs, state.orbs]) {
+        assert.equal(source[0].trace.numLines, 18); assert.equal(source[1].trace.numLines, bulk ? 18 : 16);
+        assert.deepEqual(source.map(orb => orb.bandIds), [[0, 255], [0, 255]]);
+      }
+      assert.ok(state.orbs.every((orb, i) => orb === runtimeOrbs[i]));
+      UI.refreshAllUiText(); assert.equal(Number(count.value), 18);
+    });
+  });
+}
+
+// AUD-004: setter observations complement native MutationObserver evidence.
+function observeUiProperty(control, key) {
+  let value = control[key];
+  const writes = [];
+  Object.defineProperty(control, key, { configurable: true,
+    get: () => value, set(next) { writes.push(next); value = next; } });
+  return writes;
+}
+function discoverAuditTooltips() {
+  document.querySelectorAll = selector => {
+    if (selector === 'label[for]') return state.ui.orbEditorList.querySelectorAll('label');
+    if (selector === '#visualizersPanel input') return state.ui.orbEditorList.querySelectorAll('input');
+    if (selector === '#visualizersPanel select') return state.ui.orbEditorList.querySelectorAll('select');
+    return [];
+  };
+  state.ui.btnVisualizersAddOrb.click(); // Real structural discovery/invalidation path.
+  UI.refreshAllUiText();
+}
+
+test('AUD-004 idle source selectors, transport and launchers perform no redundant writes', async t => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors(); UI.refreshAllUiText();
+    const controls = ['btnSourceFile','btnSourceMic','btnSourceStream','btnOpenAudio','btnOpenAnalysis','btnOpenVisualizers','btnOpenScene','btnOpenRecord','openAudio','openAnalysis','openVisualizers','openScene','openRecord'];
+    const attributes = controls.map(id => t.mock.method(state.ui[id], 'setAttribute'));
+    const properties = ['audioStatus','btnPlay','btnRepeat','valVol'].map(id => observeUiProperty(state.ui[id], 'textContent'));
+    for (const id of ['btnLoad','btnPlay','btnStop','btnPrev','btnNext','btnRepeat','btnShuffle','btnToggleQueue','btnClearQueue','btnSourceFile','btnSourceMic','btnSourceStream']) properties.push(observeUiProperty(state.ui[id], 'disabled'));
+    properties.push(observeUiProperty(state.ui.rngVol,'value'), observeUiProperty(state.ui.chkMute,'checked'));
+    const before=JSON.stringify(preferences), settings=runtime.settings;
+    for(let i=0;i<50;i++) UI.refreshAllUiText();
+    assert.ok(attributes.every(mock => mock.mock.callCount() === 0), 'unchanged selectors/launcher ARIA writes');
+    assert.ok(properties.every(writes => writes.length === 0), 'unchanged text/control setters');
+    assert.equal(JSON.stringify(preferences),before); assert.equal(runtime.settings,settings);
+  });
+});
+
+test('AUD-004 source errors and permission status propagate without settings replacement', async t => {
+  t.mock.method(performance,'now',()=>1e12); // Expire prior transport toasts in this shared coordinator.
+  const previous=structuredClone(state.source);
+  try { await withSettingsActionHarness(t, () => {
+    const settings=runtime.settings;
+    Object.assign(state.source,{kind:'mic',status:'requesting',sessionActive:false,errorMessage:''});
+    UI.refreshAllUiText(); assert.match(state.ui.audioStatus.textContent,/Waiting for microphone/);
+    assert.equal(state.ui.btnSourceMic.getAttribute('aria-pressed'),'true');
+    Object.assign(state.source,{status:'error',errorMessage:'Microphone permission denied.'});
+    UI.refreshAllUiText(); assert.match(state.ui.audioStatus.textContent,/Microphone permission denied/);
+    assert.equal(state.ui.btnPlay.disabled,true); assert.equal(runtime.settings,settings);
+    Object.assign(state.source,{kind:'stream',status:'active',sessionActive:true,label:'Shared audio',errorMessage:'',streamMeta:{audioChannelCount:1}});
+    UI.refreshAllUiText({ready:true,monoLike:true});
+    assert.match(state.ui.audioStatus.textContent,/mono \(1ch\).*mono-ish/);
+    UI.refreshAllUiText({ready:true,monoLike:false}); assert.match(state.ui.audioStatus.textContent,/stereo/);
+  }); } finally { Object.assign(state.source,previous); }
+});
+
+test('AUD-004 tooltip titles are idempotent on idle, focus and unrelated settings', async t => {
+  await withSettingsActionHarness(t, async () => {
+    hostVisualizerEditors(); discoverAuditTooltips();
+    const root=state.ui.orbEditorList.children[0];
+    const control=root.querySelectorAll('input').find(node=>node.id?.endsWith('angular-speed'));
+    const writes=observeUiProperty(control,'title');control.focus();
+    for(let i=0;i<50;i++)UI.refreshAllUiText();
+    await control.dispatch('focus'); await control.dispatch('mouseenter');
+    assert.deepEqual(writes,[], 'unchanged tooltip title writes');
+    preferences.visuals.backgroundColor='#123456';UI.applyPrefs(null);UI.refreshAllUiText();
+    assert.deepEqual(writes,[], 'unrelated setting must not rewrite this tooltip');
+    control.value='.123456';await control.dispatch('input');
+    assert.match(control.title,/0\.123456 rad\/s/);assert.match(control.getAttribute('aria-valuetext'),/0\.123456 rad\/s/);
+    assert.equal(document.activeElement,control);
+  });
+});
+
+test('AUD-004 tooltip discovery retains listeners and removes deleted controls from feedback', async t => {
+  await withSettingsActionHarness(t, async () => {
+    hostVisualizerEditors(); discoverAuditTooltips();
+    const root=state.ui.orbEditorList.children.at(-1), id=root.dataset.orbId;
+    const control=root.querySelectorAll('input').find(node=>node.id?.endsWith('angular-speed'));
+    assert.match(control.title,/Angular Speed/);
+    const register=t.mock.method(control,'addEventListener'), release=t.mock.method(control,'removeEventListener');
+    state.ui.btnVisualizersAddOrb.click();UI.refreshAllUiText();
+    assert.equal(register.mock.callCount(),0,'surviving controls must not register duplicate tooltip listeners');
+    window.confirm=()=>true;await clickVisualizerAction('remove',id);UI.refreshAllUiText();
+    assert.equal(state.ui.configTooltipByControl.has(control),false);
+    assert.deepEqual(release.mock.calls.map(call=>call.arguments[0]).sort(),['focus','input','mouseenter']);
+    const writes=observeUiProperty(control,'title');await control.dispatch('focus');await control.dispatch('input');
+    assert.deepEqual(writes,[],'removed controls no longer have active tooltip feedback');
+  });
+});
+
+test('AUD-004 hidden Visualizers reveal refreshes values, titles and focus before a frame', async t => {
+  await withSettingsActionHarness(t, () => {
+    hostVisualizerEditors();discoverAuditTooltips();
+    const root=state.ui.orbEditorList.children[0], control=root.querySelectorAll('input').find(node=>node.id?.endsWith('angular-speed'));
+    control.focus();state.ui.btnHideVisualizers.click();assert.equal(document.activeElement,state.ui.btnOpenVisualizers);
+    preferences.orbs[0].motion.angularSpeedRadPerSec=.234567;resolveSettings();
+    for(let i=0;i<20;i++)UI.refreshAllUiText();
+    assert.notEqual(control.value,'0.234567','hidden editor is deferred');
+    state.ui.btnOpenVisualizers.click();
+    assert.equal(control.value,'0.234567','reveal must refresh canonical values synchronously');
+    assert.match(control.title,/0\.234567 rad\/s/);assert.equal(document.activeElement,state.ui.btnHideVisualizers);
+    assert.equal(state.ui.orbEditorList.children[0],root);
+  });
+});
+
+test('AUD-004 recorder projects once on change and never duplicates unchanged projection', async t => {
+  const sourceUrl=new URL('../src/js/ui/ui.js',import.meta.url);
+  let source=readFileSync(sourceUrl,'utf8').replace(/from "(\.\.?\/[^\"]+)"/g,(_,path)=>`from "${new URL(path,sourceUrl)}"`);
+  let projections=0;globalThis.__aud004Projection=()=>projections++;
+  source=source.replace('function getRecordingUiModel() {','function getRecordingUiModel() { globalThis.__aud004Projection();');
+  const {UI:coordinator}=await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+  const previous=structuredClone(state.recording);
+  try {await withSettingsActionHarness(t,()=>{
+    coordinator.refreshAllUiText();projections=0;
+    for(let i=0;i<30;i++)coordinator.refreshAllUiText();
+    assert.equal(projections,0,'unchanged recorder must not project');
+    state.recording.phase='finalizing';coordinator.refreshAllUiText();
+    assert.equal(projections,1,'a transition must project exactly once');
+    assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'true');assert.equal(state.ui.btnLoad.disabled,true);
+    state.recording.phase='error';state.recording.lastMessage='Native capture failed';state.recording.lastCode='native-error';coordinator.refreshAllUiText();
+    assert.equal(projections,2);assert.equal(state.ui.recordStatus.textContent,'Native capture failed');
+    assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'false');assert.equal(state.ui.btnLoad.disabled,false);
+  },coordinator);}finally{Object.assign(state.recording,previous);delete globalThis.__aud004Projection;}
+});
+
+test('AUD-004 recorder timer, completion, retained export and finalization accessibility stay current',async t=>{
+  const previous=structuredClone(state.recording);
+  try{await withSettingsActionHarness(t,()=>{
+    Object.assign(state.recording,{hooksEnabled:true,isSupported:true,phase:'recording',elapsedMs:999});
+    UI.refreshAllUiText();assert.equal(state.ui.recordTimer.textContent,'00:00');
+    state.recording.elapsedMs=1000;UI.refreshAllUiText();assert.equal(state.ui.recordTimer.textContent,'00:01');
+    Object.assign(state.recording,{phase:'finalizing',elapsedMs:2000});UI.refreshAllUiText();
+    assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'true');assert.equal(state.ui.btnSourceFile.disabled,true);
+    assert.match(state.ui.btnLoad.getAttribute('aria-label'),/finalizes/);
+    Object.assign(state.recording,{phase:'complete',lastExportUrl:'blob:last-good',lastExportFileName:'good.webm',lastExportByteSize:123});UI.refreshAllUiText();
+    assert.equal(state.ui.btnRecordDownloadLast.disabled,false);assert.equal(state.ui.recordStatus.textContent,'Latest export ready');
+    assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'false');assert.equal(state.ui.btnSourceFile.disabled,false);
+    Object.assign(state.recording,{phase:'error',lastCode:'native-error',lastMessage:'Capture failed'});UI.refreshAllUiText();
+    assert.equal(state.ui.recordStatus.textContent,'Capture failed');assert.equal(state.ui.btnRecordDownloadLast.disabled,false);
+    assert.match(state.ui.recordExportMeta.textContent,/good\.webm \(123 bytes\)/);
+  });}finally{Object.assign(state.recording,previous);}
+});
+
+test('AUD-004 recorder finalization alone updates busy/status and completion unlocks transport',async t=>{
+  const previous=structuredClone(state.recording);
+  try{await withSettingsActionHarness(t,()=>{
+    Object.assign(state.recording,{hooksEnabled:true,isSupported:true,phase:'idle',elapsedMs:0});UI.refreshAllUiText();
+    state.recording.phase='finalizing';UI.refreshAllUiText();
+    assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'true','finalization busy accessibility must update promptly');
+    assert.equal(state.ui.recordStatus.textContent,'Finalizing export');
+    state.recording.phase='complete';UI.refreshAllUiText();
+    assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'false');assert.equal(state.ui.btnLoad.disabled,false);
+  });}finally{Object.assign(state.recording,previous);}
+});

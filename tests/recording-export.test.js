@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { RecorderEngine } from "../src/js/recording/recorder-engine.js";
+import { createRecorderEngine } from "../src/js/recording/recorder-engine.js";
 import { CONFIG } from "../src/js/core/config.js";
 import { createRecordingState, state } from "../src/js/core/state.js";
 
+let RecorderEngine;
 function createHarness(t) {
+  RecorderEngine = createRecorderEngine();
   const globals = { window: globalThis.window, MediaRecorder: globalThis.MediaRecorder, MediaStream: globalThis.MediaStream, Blob: globalThis.Blob };
   const previousAudio = { ...state.audio };
   const createUrl = URL.createObjectURL;
@@ -130,7 +132,7 @@ for (const [fault, code] of [
     assert.equal(h.recording.lastCode, code);
     assert.equal(h.recording.phase, "error");
     assert.equal(h.recording.chunkCount, 0);
-    assert.equal(h.recording.startedAtMs, null);
+    assert.equal(h.recording.startedAtMs, fault === "start" ? 1234 : null);
     await assertRetained(h, previous);
     assert.deepEqual(h.created, [previous.lastExportUrl]);
     assert.deepEqual(h.revoked, []);

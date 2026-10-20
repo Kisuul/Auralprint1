@@ -1,0 +1,470 @@
+{
+  "auditedSha": "18d47e32e40d79d48f48409d0efa1bacce0f53fe",
+  "suites": [
+    {
+      "suite": "115m-i-g-aud005",
+      "driverSha256": "e9904efde2e3868391ced2efc507a09b02361c569ef563bce60fb308efad770f",
+      "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+      "browser": "151.0.7922.173",
+      "total": 38,
+      "passed": 38,
+      "cases": [
+        {
+          "name": "edit: unrelated volume via production input handler",
+          "passed": true
+        },
+        {
+          "name": "edit: unrelated mute via production change handler",
+          "passed": true
+        },
+        {
+          "name": "edit: native H shortcut suppression",
+          "passed": true
+        },
+        {
+          "name": "duplicate: unrelated volume via production input handler",
+          "passed": true
+        },
+        {
+          "name": "duplicate: unrelated mute via production change handler",
+          "passed": true
+        },
+        {
+          "name": "duplicate: native H shortcut suppression",
+          "passed": true
+        },
+        {
+          "name": "remove: unrelated volume via production input handler",
+          "passed": true
+        },
+        {
+          "name": "remove: unrelated mute via production change handler",
+          "passed": true
+        },
+        {
+          "name": "remove: native H shortcut suppression",
+          "passed": true
+        },
+        {
+          "name": "edit-ring: unrelated volume via production input handler",
+          "passed": true
+        },
+        {
+          "name": "edit-ring: unrelated mute via production change handler",
+          "passed": true
+        },
+        {
+          "name": "edit-ring: native H shortcut suppression",
+          "passed": true
+        },
+        {
+          "name": "edit: delayed real File activation completion",
+          "passed": true
+        },
+        {
+          "name": "edit: native transport/launcher keys suppressed after File completion",
+          "passed": true
+        },
+        {
+          "name": "duplicate: delayed real File activation completion",
+          "passed": true
+        },
+        {
+          "name": "duplicate: native transport/launcher keys suppressed after File completion",
+          "passed": true
+        },
+        {
+          "name": "remove: delayed real File activation completion",
+          "passed": true
+        },
+        {
+          "name": "remove: native transport/launcher keys suppressed after File completion",
+          "passed": true
+        },
+        {
+          "name": "edit-ring: delayed real File activation completion",
+          "passed": true
+        },
+        {
+          "name": "edit-ring: native transport/launcher keys suppressed after File completion",
+          "passed": true
+        },
+        {
+          "name": "edit: native focused Orb reorder via schema-10 preset",
+          "passed": true
+        },
+        {
+          "name": "edit: reordered numbering and accessible name",
+          "passed": true
+        },
+        {
+          "name": "edit: summary-only update retains native node/focus",
+          "passed": true
+        },
+        {
+          "name": "duplicate: native focused Orb reorder via schema-10 preset",
+          "passed": true
+        },
+        {
+          "name": "duplicate: reordered numbering and accessible name",
+          "passed": true
+        },
+        {
+          "name": "duplicate: summary-only update retains native node/focus",
+          "passed": true
+        },
+        {
+          "name": "remove: native focused Orb reorder via schema-10 preset",
+          "passed": true
+        },
+        {
+          "name": "remove: reordered numbering and accessible name",
+          "passed": true
+        },
+        {
+          "name": "remove: summary-only update retains native node/focus",
+          "passed": true
+        },
+        {
+          "name": "Ring visibility updates without native focus loss",
+          "passed": true
+        },
+        {
+          "name": "Ring truthful hidden status and Enter edit activation",
+          "passed": true
+        },
+        {
+          "name": "native Enter Add then Space Duplicate focus the new Edit actions",
+          "passed": true
+        },
+        {
+          "name": "cancelled native Remove leaves exact focus and collection",
+          "passed": true
+        },
+        {
+          "name": "native focused Remove uses nearest Orb Edit then final removal Add fallback",
+          "passed": true
+        },
+        {
+          "name": "removing another Orb preserves native focused survivor Duplicate",
+          "passed": true
+        },
+        {
+          "name": "native external focus stays external during inventory updates",
+          "passed": true
+        },
+        {
+          "name": "native Orb ID spectral-ring survives independently",
+          "passed": true
+        },
+        {
+          "name": "type-safe native collision Edit/Remove dispatch leaves Ring",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "115m-i-g-aud003",
+      "driverSha256": "ca862a7b6d15fb994dc777c71b6e37c02040866a59c3f508a414893c84933cc8",
+      "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+      "browser": "151.0.7922.173",
+      "total": 31,
+      "passed": 31,
+      "cases": [
+        {
+          "name": "count 3, targets [255]: production picker and persistence",
+          "passed": true
+        },
+        {
+          "name": "count 3, [255], L: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [255], R: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [255], C: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, targets [0,255]: production picker and persistence",
+          "passed": true
+        },
+        {
+          "name": "count 3, [0,255], L: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [0,255], R: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [0,255], C: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, targets [0,2]: production picker and persistence",
+          "passed": true
+        },
+        {
+          "name": "count 3, [0,2], L: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [0,2], R: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [0,2], C: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 32, targets [5,100,255]: production picker and persistence",
+          "passed": true
+        },
+        {
+          "name": "count 32, [5,100,255], L: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 32, [5,100,255], R: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 32, [5,100,255], C: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 256, targets [5,100,255]: production picker and persistence",
+          "passed": true
+        },
+        {
+          "name": "count 256, [5,100,255], L: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 256, [5,100,255], R: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 256, [5,100,255], C: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, targets []: production picker and persistence",
+          "passed": true
+        },
+        {
+          "name": "count 3, [], L: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [], R: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "count 3, [], C: real runtime energy/radius/color",
+          "passed": true
+        },
+        {
+          "name": "256 \u2192 32 \u2192 3 \u2192 256 preserves targets, native editor focus/roots/drafts and reactivates",
+          "passed": true
+        },
+        {
+          "name": "G.1 edit exact native focus survives bank changes",
+          "passed": true
+        },
+        {
+          "name": "G.1 duplicate exact native focus survives bank changes",
+          "passed": true
+        },
+        {
+          "name": "G.1 remove exact native focus survives bank changes",
+          "passed": true
+        },
+        {
+          "name": "G.1 edit-ring exact native focus survives bank changes",
+          "passed": true
+        },
+        {
+          "name": "unmodified portable: checkbox/range edits keep inactive targets; Full spectrum clears all",
+          "passed": true
+        },
+        {
+          "name": "native exact authored inactive entry and invalid draft remain truthful and independent",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "115m-i-g-aud008-aud009",
+      "driverSha256": "f618e4604e863302c9fdc23895eba4b7e70bf665a29e4d927c5c239eccec42bd",
+      "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+      "browser": "151.0.7922.173",
+      "total": 27,
+      "passed": 27,
+      "cases": [
+        {
+          "name": "original imported speed and trace: canonical/native/readout/renderer",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence angular-speed",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence center-x",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence center-y",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence min-radius",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence max-radius",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence waveform-displacement",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence emit-rate",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence size-min",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence size-max",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence size-decay",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence lifetime",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence min-placement-distance",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence line-alpha",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence line-width",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native precision/boundaries/persistence hue",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native individual explicit edits, CONFIG arrows and stable editor focus/drafts/scroll",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native Bulk uniform/mixed, unrelated field edits and CONFIG increments",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native designed phase, G.1 action focus and G.2 active target response",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native bank-count refresh retains focused range, targets, exact draft and numeric values",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native pointer editing commits actual range value to only its Orb",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 native all Bulk continuous fields display uniform imported precision",
+          "passed": true
+        },
+        {
+          "name": "AUD-009 uninstrumented portable preset share/reload reflects native controls",
+          "passed": true
+        },
+        {
+          "name": "AUD-008 native built geometry/energy count 3",
+          "passed": true
+        },
+        {
+          "name": "AUD-008 native built geometry/energy count 4",
+          "passed": true
+        },
+        {
+          "name": "AUD-008 native built geometry/energy count 32",
+          "passed": true
+        },
+        {
+          "name": "AUD-008 native built geometry/energy count 256",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "RC-17",
+      "driverSha256": "084eefb1a5f4d6bcd781198524d8397fe1d6dcc80b6d147d16ea3fda86a3a2b5",
+      "browser": "151.0.7922.173",
+      "scenarios": 6,
+      "pageErrors": [],
+      "coverage": [
+        {
+          "dpr": 1,
+          "standalone": false
+        },
+        {
+          "dpr": 1,
+          "standalone": true
+        },
+        {
+          "dpr": 1,
+          "standalone": true,
+          "normalScheduling": true,
+          "verified": [
+            "unmodified standalone boot/import",
+            "Reset Visuals button",
+            "stereo WAV decode/playback",
+            "advancing scrubber",
+            "designed readout stays fixed during motion",
+            "stop"
+          ]
+        },
+        {
+          "dpr": 2,
+          "standalone": false
+        },
+        {
+          "dpr": 2,
+          "standalone": true
+        },
+        {
+          "dpr": 2,
+          "standalone": true,
+          "normalScheduling": true,
+          "verified": [
+            "unmodified standalone boot/import",
+            "Reset Visuals button",
+            "stereo WAV decode/playback",
+            "advancing scrubber",
+            "designed readout stays fixed during motion",
+            "stop"
+          ]
+        }
+      ]
+    }
+  ]
+}

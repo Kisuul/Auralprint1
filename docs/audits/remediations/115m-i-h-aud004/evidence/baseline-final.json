@@ -1,0 +1,830 @@
+{
+  "version": "v0.1.15m.i.g",
+  "browser": "151.0.7922.173",
+  "platform": "linux",
+  "architecture": "x64",
+  "htmlSha256": "5b35b05a075bc11406f436adef302d03625d1a9c4e81f6343f938c70317b57b1",
+  "method": "Native MutationObserver plus isolated function counters and native value/checked/disabled setter interception. RAF suppressed only in browser harness; production refresh called synchronously, native media and recorder timers active. Durations are JS UI refresh time, not FPS or whole-frame rendering.",
+  "scenarios": [
+    {
+      "name": "2-Orb idle, all panels visible",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnStop"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "idle",
+      "elapsedMs": 394.89999999990687,
+      "meanRefreshMs": 0.19744999999995344,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 4,
+        "nodeRemoval": 4
+      },
+      "totalMutationRecords": 242008,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "2-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnStop"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "idle",
+      "elapsedMs": 357.39999999990687,
+      "meanRefreshMs": 0.17869999999995342,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 4,
+        "nodeRemoval": 4
+      },
+      "totalMutationRecords": 242008,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "16-Orb idle",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnStop"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "idle",
+      "elapsedMs": 808.3000000000466,
+      "meanRefreshMs": 0.40415000000002327,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 822000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 8,
+        "nodeRemoval": 8
+      },
+      "totalMutationRecords": 886016,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 822000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 411,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnStop"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "idle",
+      "elapsedMs": 2163,
+      "meanRefreshMs": 1.0815,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 22,
+        "nodeRemoval": 22
+      },
+      "totalMutationRecords": 3094044,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 3030000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "64-Orb idle, Visualizers hidden",
+      "iterations": 2000,
+      "audioStatusBefore": "File mode ready. Load audio files to begin analysis.",
+      "audioStatusAfter": "File mode ready. Load audio files to begin analysis.",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnStop"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "idle",
+      "elapsedMs": 2229.9000000001397,
+      "meanRefreshMs": 1.1149500000000698,
+      "changedState": "none",
+      "categories": {
+        "text": 10000,
+        "title": 3030000,
+        "aria": 34000,
+        "class": 0,
+        "otherAttributes": 20000,
+        "nodeInsertion": 22,
+        "nodeRemoval": 22
+      },
+      "totalMutationRecords": 3094044,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 3030000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 1515,
+      "hiddenVisualizers": true
+    },
+    {
+      "name": "Active playback",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: n/a",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: n/a",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "class",
+          "target": "loadHint"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-hidden",
+          "target": "loadHint"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "idle",
+      "elapsedMs": 261.19999999995343,
+      "meanRefreshMs": 0.1305999999999767,
+      "changedState": "native stereo WAV loaded and playing; AnalysisFrame held stable in synchronous isolation",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 12000,
+        "nodeInsertion": 2,
+        "nodeRemoval": 2
+      },
+      "totalMutationRecords": 238004,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Active recording",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec 00:01",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec 00:01",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "class",
+          "target": "loadHint"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-hidden",
+          "target": "loadHint"
+        }
+      ],
+      "recorderPhase": "recording",
+      "elapsedMs": 240.89999999990687,
+      "meanRefreshMs": 0.12044999999995343,
+      "changedState": "native MediaRecorder recording; elapsed timer primed; no asynchronous callback runs inside synchronous batch",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 30000,
+        "nodeInsertion": 2,
+        "nodeRemoval": 2
+      },
+      "totalMutationRecords": 256004,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Recorder finalization",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec finalizing",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Rec finalizing",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "class",
+          "target": "loadHint"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-hidden",
+          "target": "loadHint"
+        }
+      ],
+      "recorderPhase": "finalizing",
+      "elapsedMs": 260.69999999995343,
+      "meanRefreshMs": 0.1303499999999767,
+      "changedState": "native stop; phase held by synchronous batch: finalizing",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 36000,
+        "nodeInsertion": 2,
+        "nodeRemoval": 2
+      },
+      "totalMutationRecords": 262004,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    },
+    {
+      "name": "Preset apply / panel reopen",
+      "iterations": 2000,
+      "audioStatusBefore": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Export ready",
+      "audioStatusAfter": "File [1/1]: h-stereo.wav - Playing - Bands: stereo (L≠R) | Export ready",
+      "mutationDetails": [
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "audioStatus"
+        },
+        {
+          "type": "attributes",
+          "attribute": "data-source-mode",
+          "target": "audioPanel"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceFile"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceMic"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-pressed",
+          "target": "btnSourceStream"
+        },
+        {
+          "type": "attributes",
+          "attribute": "class",
+          "target": "loadHint"
+        },
+        {
+          "type": "attributes",
+          "attribute": "aria-hidden",
+          "target": "loadHint"
+        },
+        {
+          "type": "childList",
+          "attribute": null,
+          "target": "btnPlay"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnPrev"
+        },
+        {
+          "type": "attributes",
+          "attribute": "disabled",
+          "target": "btnNext"
+        }
+      ],
+      "recorderPhase": "complete",
+      "elapsedMs": 201,
+      "meanRefreshMs": 0.1005,
+      "changedState": "canonical preferences applied while hidden, then panel reopened",
+      "categories": {
+        "text": 10000,
+        "title": 178000,
+        "aria": 36000,
+        "class": 2000,
+        "otherAttributes": 10000,
+        "nodeInsertion": 2,
+        "nodeRemoval": 2
+      },
+      "totalMutationRecords": 236004,
+      "assignments": {
+        "value": 6000,
+        "checked": 4000,
+        "disabled": 42000
+      },
+      "calls": {
+        "recorderProjections": 2000,
+        "tooltipVisits": 178000,
+        "editorRefreshCalls": 2000,
+        "inventoryRefreshCalls": 2000,
+        "ringEditorRefreshCalls": 2000
+      },
+      "detachedStructural": 0,
+      "identitiesConnected": true,
+      "focusPreserved": true,
+      "preferencesUnchanged": true,
+      "settingsIdentityPreserved": true,
+      "tooltipSpecs": 89,
+      "hiddenVisualizers": false
+    }
+  ],
+  "errors": []
+}

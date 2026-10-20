@@ -1,0 +1,91 @@
+{
+  "control": "native reorder without focus restoration",
+  "detected": true,
+  "browser": "151.0.7922.173",
+  "alteredHtmlSha256": "1bda51b63ac738e739c09c24fb707eff94d431f2653737c3e009c7b7f0734664",
+  "summary": {
+    "total": 38,
+    "passed": 32,
+    "failed": 6
+  },
+  "relevantFailures": [
+    {
+      "name": "edit: native focused Orb reorder via schema-10 preset",
+      "before": {
+        "tag": "BUTTON",
+        "action": "edit",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BODY",
+          "action": null,
+          "id": null
+        },
+        "sameFocus": false,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": false,
+      "failure": "Expected values to be strictly equal:\n\nfalse !== true\n",
+      "pageErrors": []
+    },
+    {
+      "name": "duplicate: native focused Orb reorder via schema-10 preset",
+      "before": {
+        "tag": "BUTTON",
+        "action": "duplicate",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BODY",
+          "action": null,
+          "id": null
+        },
+        "sameFocus": false,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": false,
+      "failure": "Expected values to be strictly equal:\n\nfalse !== true\n",
+      "pageErrors": []
+    },
+    {
+      "name": "remove: native focused Orb reorder via schema-10 preset",
+      "before": {
+        "tag": "BUTTON",
+        "action": "remove",
+        "id": "ORB1"
+      },
+      "after": {
+        "active": {
+          "tag": "BODY",
+          "action": null,
+          "id": null
+        },
+        "sameFocus": false,
+        "connected": true,
+        "sameRow": true,
+        "sameNode": true,
+        "stableId": "ORB1",
+        "actionAvailable": true
+      },
+      "passed": false,
+      "failure": "Expected values to be strictly equal:\n\nfalse !== true\n",
+      "pageErrors": []
+    }
+  ],
+  "dependentFailures": [
+    "edit: summary-only update retains native node/focus",
+    "duplicate: summary-only update retains native node/focus",
+    "remove: summary-only update retains native node/focus"
+  ],
+  "harnessFailures": 0
+}

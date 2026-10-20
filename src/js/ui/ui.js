@@ -1,3 +1,4 @@
+import { createRecordingResourcesControls } from "./recording-resources.js";
 import { clamp, fmt, deepClone } from "../core/utils.js";
 import { CONFIG } from "../core/config.js";
 import { preferences, runtime, resolveSettings, replacePreferences, normalizeOrbDef } from "../core/preferences.js";
@@ -319,8 +320,8 @@ const UI = (() => {
 
   function syncLoadHintVisibility(sourceState = state.source) {
     if (!ui.loadHint || !hasMeaningfullyActiveSource(sourceState)) return;
-    ui.loadHint.classList.add("hidden");
-    ui.loadHint.setAttribute("aria-hidden", "true");
+    syncClass(ui.loadHint, "hidden", true);
+    syncAttribute(ui.loadHint, "aria-hidden", "true");
   }
 
 
@@ -336,7 +337,18 @@ const UI = (() => {
   let _audioStatusToastText = "";
   let _audioStatusToastUntilMs = 0;
   let queuePanelRefresher = () => {};
-  const workspace = createWorkspaceUi({ ui, readRecordLauncherLabel: readRecordingLauncherLabel });
+  // Presentation invalidation only; settings, source and recorder remain canonical.
+  const tooltipGroups = new Map();
+  let tooltipSettingsRef = null;
+  let tooltipBandEdgesRef = null;
+  let latestAnalysisFrame = null; // Producer-owned frame, retained only for immediate reveal.
+  const workspace = createWorkspaceUi({ ui, readRecordLauncherLabel: readRecordingLauncherLabel,
+    onPanelShown: (panel) => {
+      invalidateConfigTooltips(panel);
+      if (panel === ui.analysisPanel) analysisPanelUi.refresh(latestAnalysisFrame, true);
+      refreshAllUiText(latestAnalysisFrame); // Settle presentation before restoring focus.
+    },
+  });
   const scenePanelUi = createScenePanelUi({ ui, preferences, getSettings: () => runtime.settings, getParticleStats: () => VisualizerRuntime.getParticleStats(), commitPreferences: (reason) => applyPrefs(reason, { showStatus: sceneStatusToast }) });
   const analysisPanelUi = createAnalysisPanelUi({
     ui,
@@ -551,8 +563,20 @@ const UI = (() => {
       staticTitle: (control.getAttribute("title") || "").trim(),
     }));
 
+    const retained = new Set(controls);
+    for (const spec of existingSpecs?.values() || []) {
+      if (retained.has(spec.control)) continue;
+      for (const [event, handler] of spec.feedbackHandlers || []) spec.control.removeEventListener(event, handler);
+    }
+    tooltipGroups.clear();
     ui.configTooltipByControl = new Map();
-    for (const spec of ui.configTooltipSpecs) ui.configTooltipByControl.set(spec.control, spec);
+    for (const spec of ui.configTooltipSpecs) {
+      ui.configTooltipByControl.set(spec.control, spec);
+      const panel = [ui.audioPanel, ui.analysisPanel, ui.visualizersPanel, ui.scenePanel, ui.recordPanel]
+        .find(candidate => candidate?.contains(spec.control)) || null;
+      if (!tooltipGroups.has(panel)) tooltipGroups.set(panel, { specs: [], dirty: true });
+      tooltipGroups.get(panel).specs.push(spec);
+    }
   }
 
   function getConfigTooltipLiveValue(spec) {
@@ -571,12 +595,20 @@ const UI = (() => {
 
     const liveValue = getConfigTooltipLiveValue(spec);
     const liveTitle = `${spec.label}: ${liveValue}`;
-    control.title = spec.staticTitle ? `${spec.staticTitle}\n${liveTitle}` : liveTitle;
+    const title = spec.staticTitle ? `${spec.staticTitle}\n${liveTitle}` : liveTitle;
+    if (control.title !== title) control.title = title;
   }
 
   function refreshConfigTooltips() {
-    const specs = Array.isArray(ui.configTooltipSpecs) ? ui.configTooltipSpecs : [];
-    for (const spec of specs) refreshConfigTooltipForControl(spec.control);
+    for (const [panel, group] of tooltipGroups) {
+      if (!group.dirty || (panel && !workspace.isPanelVisible(panel))) continue;
+      group.dirty = false;
+      for (const spec of group.specs) refreshConfigTooltipForControl(spec.control);
+    }
+  }
+
+  function invalidateConfigTooltips(panel = null) {
+    for (const [owner, group] of tooltipGroups) if (!panel || owner === panel) group.dirty = true;
   }
 
   function wireConfigTooltipFeedbackEvents() {
@@ -586,13 +618,14 @@ const UI = (() => {
       if (!control || spec.feedbackEventsWired) continue;
       spec.feedbackEventsWired = true;
       const eventName = (control.type === "checkbox" || control.tagName === "SELECT") ? "change" : "input";
-      control.addEventListener(eventName, () => {
-        // Apply handlers run in the same event turn. Queue after them so titles
-        // reflect the same formatted value text that .val readouts display.
-        queueMicrotask(() => refreshConfigTooltipForControl(control));
-      });
-      control.addEventListener("focus", () => refreshConfigTooltipForControl(control));
-      control.addEventListener("mouseenter", () => refreshConfigTooltipForControl(control));
+      // Named handlers allow removed controls to release feedback listeners.
+      // Apply handlers finish in this event turn before the formatted readout is read.
+      spec.feedbackHandlers = [
+        [eventName, () => queueMicrotask(() => refreshConfigTooltipForControl(control))],
+        ["focus", () => refreshConfigTooltipForControl(control)],
+        ["mouseenter", () => refreshConfigTooltipForControl(control)],
+      ];
+      for (const [event, handler] of spec.feedbackHandlers) control.addEventListener(event, handler);
     }
   }
 
@@ -635,8 +668,9 @@ const UI = (() => {
 
   function shouldSurfaceRecordingLastMessage(recording) {
     if (!recording || !recording.lastMessage) return false;
-    if (recording.phase === "error") return true;
+    if (["error", "cancelled"].includes(recording.phase) || recording.recorderEnabled === false) return true;
     return [
+      "policy-start-refused",
       "already-recording",
       "not-recording",
       "invalid-mime-type",
@@ -668,6 +702,8 @@ const UI = (() => {
     return !hasRecordableSource();
   }
 
+  let recordingResourceControls = null;
+  const wiredRecordingControls = new WeakSet();
   function formatRecordingPrimaryStatus(recording) {
     if (!recording || !recording.hooksEnabled) return "Recording disabled";
     if (shouldSurfaceRecordingLastMessage(recording)) return recording.lastMessage;
@@ -684,8 +720,12 @@ const UI = (() => {
         if (isRecordingAudioCurrentlyUnavailable(recording)) return "Recording continues without an active audio source.";
         return includeAudio ? `Recording ${sourceLabel} + video` : "Recording video only";
       case "finalizing":
+        if (recording.stopReason === "capacity-stop") return "Capacity threshold reached; finalizing export";
+        if (recording.stopReason === "duration-stop") return "Configured duration reached; finalizing export";
         return "Finalizing export";
       case "complete":
+        if (recording.stopReason === "capacity-stop") return "Completed automatically at capacity threshold";
+        if (recording.stopReason === "duration-stop") return "Completed automatically at configured duration";
         return "Latest export ready";
       case "idle":
         if (recording.isSupported !== true) return "Checking recording support";
@@ -700,6 +740,7 @@ const UI = (() => {
     if (!recording || !recording.hooksEnabled || recording.phase === "disabled") {
       return "Recording is disabled by configuration.";
     }
+    if (recording.recorderEnabled === false) return recording.lastMessage;
     if (isRecordingAudioCurrentlyUnavailable(recording)) {
       return "Recording continues while no audio source is active.";
     }
@@ -776,9 +817,8 @@ const UI = (() => {
       ui.recordMimeOptionsKey = optionsKey;
     }
 
-    ui.selRecordMime.value = availableMimeTypes.includes(selectedMimeType)
-      ? selectedMimeType
-      : (availableMimeTypes[0] || "");
+    syncProperty(ui.selRecordMime, "value", availableMimeTypes.includes(selectedMimeType)
+      ? selectedMimeType : (availableMimeTypes[0] || ""));
   }
 
   function syncRecordingTargetFpsOptions(model) {
@@ -799,9 +839,8 @@ const UI = (() => {
       ui.recordTargetFpsOptionsKey = optionsKey;
     }
 
-    ui.selRecordTargetFps.value = options.includes(selectedValue)
-      ? String(selectedValue)
-      : String(options[0] || "");
+    syncProperty(ui.selRecordTargetFps, "value", options.includes(selectedValue)
+      ? String(selectedValue) : String(options[0] || ""));
   }
 
   function downloadLastRecording() {
@@ -826,13 +865,15 @@ const UI = (() => {
       && recording.phase !== "finalizing";
     const canStartPhase = recording.phase === "idle"
       || recording.phase === "complete"
-      || recording.phase === "error";
+      || recording.phase === "error"
+      || recording.phase === "cancelled";
     return {
       config: CONFIG.recording,
       recording,
       includeAudio,
       panelVisible: !!ui.recordingPanelVisible,
-      canStart: recording.hooksEnabled
+      canCancel: ["starting", "recording", "finalizing"].includes(recording.phase),
+      canStart: recording.recorderEnabled !== false && recording.hooksEnabled
         && recording.isSupported === true
         && hasRecordableSource()
         && canStartPhase,
@@ -856,6 +897,18 @@ const UI = (() => {
     };
   }
 
+  function syncProperty(el, key, value) {
+    if (el && el[key] !== value) el[key] = value;
+  }
+
+  function syncAttribute(el, key, value) {
+    if (el && el.getAttribute(key) !== value) el.setAttribute(key, value);
+  }
+
+  function syncClass(el, key, enabled) {
+    if (el && el.classList.contains(key) !== enabled) el.classList.toggle(key, enabled);
+  }
+
   function syncControlCopy(el, text) {
     if (!el) return;
     if (el.title !== text) el.title = text;
@@ -875,18 +928,18 @@ const UI = (() => {
     const sourceSelectorCopy = sourceUi.sourceSelectorCopy || readSourceSelectorCopy();
 
     if (ui.btnSourceFile) {
-      ui.btnSourceFile.setAttribute("aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
-      ui.btnSourceFile.disabled = sourceSwitchLocked;
+      syncAttribute(ui.btnSourceFile, "aria-pressed", sourceUi.pressedSources.file ? "true" : "false");
+      syncProperty(ui.btnSourceFile, "disabled", sourceSwitchLocked);
       syncControlCopy(ui.btnSourceFile, sourceSelectorCopy.fileText);
     }
     if (ui.btnSourceMic) {
-      ui.btnSourceMic.setAttribute("aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
-      ui.btnSourceMic.disabled = sourceSwitchLocked || !sourceSelectorCopy.micSupported;
+      syncAttribute(ui.btnSourceMic, "aria-pressed", sourceUi.pressedSources.mic ? "true" : "false");
+      syncProperty(ui.btnSourceMic, "disabled", sourceSwitchLocked || !sourceSelectorCopy.micSupported);
       syncControlCopy(ui.btnSourceMic, sourceSelectorCopy.micText);
     }
     if (ui.btnSourceStream) {
-      ui.btnSourceStream.setAttribute("aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
-      ui.btnSourceStream.disabled = sourceSwitchLocked || !sourceSelectorCopy.streamSupported;
+      syncAttribute(ui.btnSourceStream, "aria-pressed", sourceUi.pressedSources.stream ? "true" : "false");
+      syncProperty(ui.btnSourceStream, "disabled", sourceSwitchLocked || !sourceSelectorCopy.streamSupported);
       syncControlCopy(ui.btnSourceStream, sourceSelectorCopy.streamText);
     }
   }
@@ -968,6 +1021,19 @@ const UI = (() => {
     return [
       recording.lastUpdatedAtMs == null ? "null" : String(recording.lastUpdatedAtMs),
       recording.phase || "",
+      recording.hooksEnabled ? "1" : "0",
+      String(recording.isSupported),
+      recording.supportProbeStatus || "",
+      recording.lastCode || "",
+      recording.lastMessage || "",
+      recording.lastExportByteSize || 0,
+      recording.deliveredBytes || 0,
+      recording.admittedBytes || 0,
+      recording.retainedChunkCount || 0,
+      recording.recorderEnabled === false ? "blocked" : "enabled",
+      (recording.warnings || []).join(","),
+      (recording.availableMimeTypes || []).join(","),
+      readRecordingTimerText(recording),
       recording.includePlaybackAudio ? "1" : "0",
       Number.isFinite(recording.targetFps) ? String(recording.targetFps) : "na",
       recording.selectedMimeType || "",
@@ -1008,8 +1074,12 @@ const UI = (() => {
   }
 
   function refreshRecordingUi() {
-    // Canonical phase unlocks playback after either export completion or error.
+    // Explicit actions also settle EOF before projecting canonical recorder state.
     maybeConsumePendingTrackEnd();
+    projectRecordingUi();
+  }
+
+  function projectRecordingUi() {
     const model = getRecordingUiModel();
     const recording = model.recording;
     syncSourceSelectorUi();
@@ -1018,11 +1088,11 @@ const UI = (() => {
     if (ui.recordPanel && ui.recordPanel.dataset.recordingPhase !== recording.phase) {
       ui.recordPanel.dataset.recordingPhase = recording.phase;
     }
-    if (ui.recordPanel) ui.recordPanel.setAttribute("aria-busy", recording.phase === "finalizing" ? "true" : "false");
+    syncAttribute(ui.recordPanel, "aria-busy", recording.phase === "finalizing" ? "true" : "false");
     if (ui.openRecord && ui.openRecord.dataset.recordingPhase !== recording.phase) {
       ui.openRecord.dataset.recordingPhase = recording.phase;
     }
-    if (ui.openRecord) ui.openRecord.classList.toggle("is-recording", recording.phase === "recording");
+    syncClass(ui.openRecord, "is-recording", recording.phase === "recording");
     if (ui.btnOpenRecord) {
       if (ui.btnOpenRecord.title !== model.launcherLabel) ui.btnOpenRecord.title = model.launcherLabel;
       if (ui.btnOpenRecord.getAttribute("aria-label") !== model.launcherLabel) {
@@ -1034,45 +1104,32 @@ const UI = (() => {
     syncRecordingMimeOptions(model);
     syncRecordingTargetFpsOptions(model);
 
-    if (ui.recordTimer && ui.recordTimer.textContent !== model.timerText) {
-      ui.recordTimer.textContent = model.timerText;
-    }
-    if (ui.valRecordMime && ui.valRecordMime.textContent !== model.resolvedMimeLabel) {
-      ui.valRecordMime.textContent = model.resolvedMimeLabel;
-    }
-    if (ui.valRecordPreferredMime && ui.valRecordPreferredMime.textContent !== model.selectedMimeLabel) {
-      ui.valRecordPreferredMime.textContent = model.selectedMimeLabel;
-    }
-    if (ui.valRecordIncludeAudio && ui.valRecordIncludeAudio.textContent !== model.includeAudioLabel) {
-      ui.valRecordIncludeAudio.textContent = model.includeAudioLabel;
-    }
-    if (ui.valRecordTargetFps && ui.valRecordTargetFps.textContent !== model.targetFpsLabel) {
-      ui.valRecordTargetFps.textContent = model.targetFpsLabel;
-    }
+    syncProperty(ui.recordTimer, "textContent", model.timerText);
+    syncProperty(ui.valRecordMime, "textContent", model.resolvedMimeLabel);
+    syncProperty(ui.valRecordPreferredMime, "textContent", model.selectedMimeLabel);
+    syncProperty(ui.valRecordIncludeAudio, "textContent", model.includeAudioLabel);
+    syncProperty(ui.valRecordTargetFps, "textContent", model.targetFpsLabel);
 
-    if (ui.recordStatus && ui.recordStatus.textContent !== model.primaryStatusText) {
-      ui.recordStatus.textContent = model.primaryStatusText;
-    }
+    syncProperty(ui.recordStatus, "textContent", model.primaryStatusText);
 
-    if (ui.recordSupport && ui.recordSupport.textContent !== model.supportText) {
-      ui.recordSupport.textContent = model.supportText;
-    }
+    syncProperty(ui.recordSupport, "textContent", model.supportText);
 
-    if (ui.recordExportMeta && ui.recordExportMeta.textContent !== model.exportMetaText) {
-      ui.recordExportMeta.textContent = model.exportMetaText;
-    }
+    syncProperty(ui.recordExportMeta, "textContent", model.exportMetaText);
 
     if (ui.chkRecordIncludeAudio) {
-      ui.chkRecordIncludeAudio.checked = !!recording.includePlaybackAudio;
-      ui.chkRecordIncludeAudio.disabled = !model.canToggleIncludeAudio;
+      syncProperty(ui.chkRecordIncludeAudio, "checked", !!recording.includePlaybackAudio);
+      syncProperty(ui.chkRecordIncludeAudio, "disabled", !model.canToggleIncludeAudio);
     }
-    if (ui.btnRecordStart) ui.btnRecordStart.disabled = !model.canStart;
-    if (ui.btnRecordStop) ui.btnRecordStop.disabled = !model.canStop;
-    if (ui.btnRecordDownloadLast) ui.btnRecordDownloadLast.disabled = !model.canDownload;
-    if (ui.selRecordMime) ui.selRecordMime.disabled = !model.canSelectMime;
-    if (ui.selRecordTargetFps) ui.selRecordTargetFps.disabled = !model.canSelectTargetFps;
+    if (ui.btnRecordStart) syncProperty(ui.btnRecordStart, "disabled", !model.canStart);
+    recordingResourceControls?.refresh(recording);
+    if (ui.btnRecordCancel) syncProperty(ui.btnRecordCancel, "disabled", !model.canCancel);
+    if (ui.btnRecordStop) syncProperty(ui.btnRecordStop, "disabled", !model.canStop);
+    if (ui.btnRecordDownloadLast) syncProperty(ui.btnRecordDownloadLast, "disabled", !model.canDownload);
+    if (ui.selRecordMime) syncProperty(ui.selRecordMime, "disabled", !model.canSelectMime);
+    if (ui.selRecordTargetFps) syncProperty(ui.selRecordTargetFps, "disabled", !model.canSelectTargetFps);
     syncVisibleQueuePanel();
     ui.recordingUiSyncKey = buildRecordingUiSyncKey();
+    invalidateConfigTooltips(ui.recordPanel);
   }
 
   function maybeRefreshRecordingUi() {
@@ -1080,7 +1137,7 @@ const UI = (() => {
     maybeConsumePendingTrackEnd();
     const syncKey = buildRecordingUiSyncKey();
     if (ui.recordingUiSyncKey === syncKey) return;
-    refreshRecordingUi();
+    projectRecordingUi();
   }
 
   function dispatchRecordingAction(action, options = {}) {
@@ -1092,6 +1149,9 @@ const UI = (() => {
         break;
       case "start":
         result = RecorderEngine.start(options);
+        break;
+      case "cancel":
+        result = RecorderEngine.cancel();
         break;
       case "stop":
         result = RecorderEngine.stop();
@@ -1127,6 +1187,7 @@ const UI = (() => {
   }
 
   function refreshAllUiText(analysisFrame) {
+    if (analysisFrame) latestAnalysisFrame = analysisFrame;
     const p = preferences;
     maybeRefreshRecordingUi();
 
@@ -1149,40 +1210,50 @@ const UI = (() => {
     const fileControlsDisabled = sourceUi.disableFileControls;
     const fileTransportMutationLocked = !!sourceUi.fileTransportMutationLocked;
 
-    ui.audioStatus.textContent = sourceUi.audioStatusText;
-    if (ui.audioPanel) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
+    syncProperty(ui.audioStatus, "textContent", sourceUi.audioStatusText);
+    if (ui.audioPanel && ui.audioPanel.dataset.sourceMode !== sourceUi.audioPanelSourceMode) ui.audioPanel.dataset.sourceMode = sourceUi.audioPanelSourceMode;
     syncSourceSelectorUi(sourceUi);
     syncLoadHintVisibility(state.source);
 
-    ui.btnLoad.disabled = fileControlsDisabled || fileTransportMutationLocked;
-    ui.btnPlay.disabled = fileControlsDisabled || !state.audio.isLoaded;
-    ui.btnStop.disabled = fileControlsDisabled || !state.audio.isLoaded;
-    ui.btnPlay.textContent = state.audio.isPlaying ? "Pause" : "Play";
+    syncProperty(ui.btnLoad, "disabled", fileControlsDisabled || fileTransportMutationLocked);
+    syncProperty(ui.btnPlay, "disabled", fileControlsDisabled || !state.audio.isLoaded);
+    syncProperty(ui.btnStop, "disabled", fileControlsDisabled || !state.audio.isLoaded);
+    syncProperty(ui.btnPlay, "textContent", state.audio.isPlaying ? "Pause" : "Play");
 
     // Manual transport buttons: boundary-aware by default; wrap at boundaries when Repeat=All.
     const repeatAllWrap = preferences.audio.repeatMode === "all" && Queue.length > 1;
-    ui.btnPrev.disabled = fileControlsDisabled || fileTransportMutationLocked || !(Queue.canPrev() || repeatAllWrap);
-    ui.btnNext.disabled = fileControlsDisabled || fileTransportMutationLocked || !(Queue.canNext() || repeatAllWrap);
+    syncProperty(ui.btnPrev, "disabled", fileControlsDisabled || fileTransportMutationLocked || !(Queue.canPrev() || repeatAllWrap));
+    syncProperty(ui.btnNext, "disabled", fileControlsDisabled || fileTransportMutationLocked || !(Queue.canNext() || repeatAllWrap));
 
-    ui.btnRepeat.textContent = `Repeat: ${p.audio.repeatMode === "one" ? "One" : (p.audio.repeatMode === "all" ? "All" : "Off")}`;
-    ui.btnRepeat.disabled = fileControlsDisabled;
-    ui.btnShuffle.disabled = fileControlsDisabled || Queue.length < 3;
-    ui.btnToggleQueue.disabled = fileControlsDisabled;
-    ui.btnClearQueue.disabled = fileControlsDisabled || fileTransportMutationLocked || Queue.length === 0;
+    syncProperty(ui.btnRepeat, "textContent", `Repeat: ${p.audio.repeatMode === "one" ? "One" : (p.audio.repeatMode === "all" ? "All" : "Off")}`);
+    syncProperty(ui.btnRepeat, "disabled", fileControlsDisabled);
+    syncProperty(ui.btnShuffle, "disabled", fileControlsDisabled || Queue.length < 3);
+    syncProperty(ui.btnToggleQueue, "disabled", fileControlsDisabled);
+    syncProperty(ui.btnClearQueue, "disabled", fileControlsDisabled || fileTransportMutationLocked || Queue.length === 0);
     syncFileControlAffordances(sourceUi);
-    ui.chkMute.checked = !!p.audio.muted;
-    ui.rngVol.value = String(p.audio.volume);
-    ui.valVol.textContent = fmt(p.audio.volume, 2);
+    if (ui.chkMute.checked !== !!p.audio.muted || ui.rngVol.value !== String(p.audio.volume)
+      || ui.valVol.textContent !== fmt(p.audio.volume, 2)) invalidateConfigTooltips(ui.audioPanel);
+    syncProperty(ui.chkMute, "checked", !!p.audio.muted);
+    syncProperty(ui.rngVol, "value", String(p.audio.volume));
+    syncProperty(ui.valVol, "textContent", fmt(p.audio.volume, 2));
 
-    orbEditorUi.refresh(runtime.settings);
-    visualizersPanelUi.refresh();
-    spectralRingEditorUi.refresh(runtime.settings);
+    if (workspace.isPanelVisible(ui.visualizersPanel)) {
+      orbEditorUi.refresh(runtime.settings);
+      visualizersPanelUi.refresh();
+      spectralRingEditorUi.refresh(runtime.settings);
+    }
 
     analysisPanelUi.refresh(analysisFrame);
     scenePanelUi.refresh(runtime.settings);
 
+    // Settings/definition replacement invalidates meaning, not every animation frame.
+    // Comparing generated titles ensures unrelated changes do not rewrite controls.
+    if (tooltipSettingsRef !== runtime.settings || tooltipBandEdgesRef !== state.bands.lowHz) {
+      tooltipSettingsRef = runtime.settings;
+      tooltipBandEdgesRef = state.bands.lowHz;
+      invalidateConfigTooltips();
+    }
     refreshConfigTooltips();
-    refreshRecordingUi();
 
 
   }
@@ -1404,7 +1475,15 @@ const UI = (() => {
         refreshQueuePanel();
         return false;
       }
-      Scrubber.loadFile(file); // async — decode in background; playback may be play or paused by opts
+      // UI keeps Queue/request authority. Optional metadata/manual work must
+      // still target this activation and its exact media, even for the same File.
+      const waveformMedia = AudioEngine.getMediaEl();
+      Scrubber.loadFile(file, {
+        media: waveformMedia,
+        isCurrent: () => isCurrentFileRequest(requestId)
+          && state.source.kind === "file" && state.audio.isLoaded
+          && AudioEngine.getMediaEl() === waveformMedia,
+      });
       applyPrefs(null);
       RecorderEngine.onTransportMutation("track-change-complete", {
         requestId,
@@ -1619,8 +1698,17 @@ const UI = (() => {
     wireConfigTooltipFeedbackEvents();
     workspace.init({ onRefreshQueuePanel: refreshQueuePanel });
     analysisPanelUi.init();
+    recordingResourceControls = createRecordingResourcesControls();
     refreshRecordingUi();
 
+    if (ui.btnRecordStart && !wiredRecordingControls.has(ui.btnRecordStart)) {
+      wiredRecordingControls.add(ui.btnRecordStart);
+    if (ui.btnRecordCancel) ui.btnRecordCancel.addEventListener("click", () => {
+      dispatchRecordingAction("cancel");
+      // The terminal action is now disabled; keep keyboard focus in Record.
+      (state.recording.lastExportUrl ? ui.btnRecordDownloadLast
+        : state.recording.recorderEnabled !== false ? ui.btnRecordStart : ui.btnHideRecord)?.focus();
+    });
     if (ui.btnRecordStart) ui.btnRecordStart.addEventListener("click", () => {
       dispatchRecordingAction("start");
     });
@@ -1639,6 +1727,8 @@ const UI = (() => {
     if (ui.btnRecordDownloadLast) ui.btnRecordDownloadLast.addEventListener("click", () => {
       downloadLastRecording();
     });
+
+    }
 
     function toastFileModeOnlyAction() {
       audioStatusToast("Switch to File mode to use file playback controls.", 2500);

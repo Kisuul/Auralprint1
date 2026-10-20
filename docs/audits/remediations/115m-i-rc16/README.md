@@ -125,7 +125,7 @@ and Cartesian position formulas. Global spectrum remains the producer's C array,
 global dominant ownership remains unchanged, and consumers do not mutate arrays.
 Runtime reconciliation retains identity, phase and history; duplication copies
 independent configuration with fresh simulation history. See
-[focused regression output](focused-tests.log) and
+[focused regression output](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/focused-tests.log) and
 [native browser evidence](native-browser.json).
 
 ## RC-18 verification
@@ -140,7 +140,7 @@ Orb updates precede Ring lock.
 The isolated RC-18 block is adapted in [reproduce.mjs](reproduce.mjs).
 With `simPaused=true`, delta 1/30 and speed 2, Ring phase remains **1 → 1** and
 Orb phase remains fixed. The historical assertion expecting **1 → 1.0666667**
-fails with `AssertionError`; see [former assertion evidence](former-rc18-assertion.log).
+fails with `AssertionError`; see [former assertion evidence](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/former-rc18-assertion.log).
 The original whole audit scripts also assert unrelated already-corrected defects,
 so only the authorized RC-16/RC-18 blocks were adapted and rerun.
 
@@ -164,14 +164,14 @@ Commands ran sequentially where generated directories are shared:
 
 1. Focused RC-16/RC-18: `node --test --test-isolation=none tests/rc16-band-references.test.js tests/rc18-motion-pause.test.js` — **31 pass**.
 2. Relevant targeting/editor/collection/codec/analysis/runtime/Ring/RC-15 timing/
-   URL/build regressions — **322 pass**, zero failures; [log](relevant-tests.log).
+   URL/build regressions — **322 pass**, zero failures; [log](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/relevant-tests.log).
 3. `npm ci --offline --cache /workspace/auralprint-environment/npm-cache` — initial
    esbuild binary validation hit sandbox `EPERM`; permitted retry succeeded,
-   **2 packages installed**, no lockfile/dependency changes. [Install evidence](npm-ci.log).
+   **2 packages installed**, no lockfile/dependency changes. [Install evidence](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/npm-ci.log).
 4. `npm test` — **540 pass, 0 fail, 1 skip**. The pre-existing million-particle
    stress test remains opt-in via `AP_MILLION_STRESS`; it was not needed for this
-   targeting correction. [Full output](npm-test.log).
-5. `npm run build` — **PASS**; [build output](build.log). Verified untracked
+   targeting correction. [Full output](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/npm-test.log).
+5. `npm run build` — **PASS**; [build output](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/build.log). Verified untracked
    `dist/auralprint_0.1.15m.i.html`, **397,799 bytes**, embedded version/schema,
    strict sanitizer and explicit UI conversion; [SHA-256 and checks](artifact.json).
 6. `git diff --check` — **PASS**. Generated bundles, artifact, node_modules,
@@ -186,16 +186,16 @@ Commands ran sequentially where generated directories are shared:
 The scripts under this directory preserve original defect assertions as negative
 controls. Both `--expect-rc16-defect` and `--expect-rc18-defect` exit 1 with
 `AssertionError` against the corrected source; normal execution passes. See
-[after results](after.json) and [RC-16 former assertion](former-rc16-assertion.log).
+[after results](after.json) and [RC-16 former assertion](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/former-rc16-assertion.log).
 
 [mutation-check.py](mutation-check.py) copies source/tests into an isolated
 temporary checkout and restores each copy after execution. All four deliberate
 mutations are detected by assertion failures, not syntax/import failures:
 
-- [Restore permissive Number coercion](mutation-permissive-coercion.log).
-- [Drop valid Band 0](mutation-drop-valid-zero.log).
-- [Reject every target](mutation-reject-all-targets.log).
-- [Ignore free Ring pause](mutation-free-ring-pause-ignored.log).
+- [Restore permissive Number coercion](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/mutation-permissive-coercion.log).
+- [Drop valid Band 0](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/mutation-drop-valid-zero.log).
+- [Reject every target](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/mutation-reject-all-targets.log).
+- [Ignore free Ring pause](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-rc16/mutation-free-ring-pause-ignored.log).
 
 [Machine-readable mutation results](mutations.json) record exit code 1 for each.
 The suite therefore protects deliberate targeting as well as malformed-input

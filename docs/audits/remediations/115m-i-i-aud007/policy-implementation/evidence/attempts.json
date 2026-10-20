@@ -1,0 +1,12 @@
+[
+  {
+    "operation": "initial policy test setup",
+    "result": "preset-codec import used wrong core path",
+    "resolution": "correct existing presets/preset-codec path; full/focused pass"
+  },
+  {
+    "operation": "initial confidence mutation selection",
+    "result": "partial-header estimated assignment made mutation pattern ambiguous",
+    "resolution": "target unique configured-channel-fallback assignment; all seven semantic controls pass"
+  }
+]

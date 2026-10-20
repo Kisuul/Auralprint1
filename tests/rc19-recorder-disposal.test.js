@@ -13,6 +13,7 @@ const engineUrl = new URL("../src/js/recording/recorder-engine.js", import.meta.
 const source = readFileSync(engineUrl, "utf8")
   .replace('"../core/config.js"', JSON.stringify(new URL("../src/js/core/config.js", import.meta.url).href))
   .replace('"../core/state.js"', JSON.stringify(new URL("../src/js/core/state.js", import.meta.url).href))
+  .replace('"./recording-policy.js"', JSON.stringify(new URL("../src/js/recording/recording-policy.js", import.meta.url).href))
   .replace("    init,", `    inspect: () => ({ pendingChunks: runtime.pendingChunks.length,
       mediaRecorder: runtime.mediaRecorder, renderStream: runtime.renderStream,
       audioStream: runtime.audioStream, audioTap: runtime.audioTap,
@@ -23,10 +24,12 @@ const observedDir = mkdtempSync(join(tmpdir(), "rc19-"));
 const observedFile = join(observedDir, "recorder-engine.mjs");
 writeFileSync(observedFile, source);
 after(() => rmSync(observedDir, { recursive: true, force: true }));
-const { RecorderEngine: engine } = await import(pathToFileURL(observedFile).href);
+const { createRecorderEngine } = await import(pathToFileURL(observedFile).href);
+let engine = createRecorderEngine();
 let audioId = 0;
 
 async function harness(t, mode = "live") {
+  engine = createRecorderEngine();
   const saved = Object.fromEntries(["window", "MediaRecorder", "MediaStream", "setInterval", "clearInterval"].map(key => [key, globalThis[key]]));
   const oldAudio = { ...state.audio }, oldSource = { ...state.source };
   const urls = { create: URL.createObjectURL, revoke: URL.revokeObjectURL };
@@ -238,8 +241,12 @@ for (const inactiveOnThrow of [false, true]) {
     assert.equal(engine.getSupportStatus().code, "dispose-stop-failed");
     assert.equal(engine.dispose().ok, false); assert.equal(recorder.stops, 1);
     assert.equal(h.created.length, 0); h.faults.stop = false; h.init();
-    const next = h.start(); invokeOld(old); assert.equal(next.state, "recording");
-    assert.equal(h.recording.phase, "recording");
+    if (inactiveOnThrow) {
+      const next = h.start(); invokeOld(old); assert.equal(next.state, "recording");
+    } else {
+      assert.equal(engine.start().ok, false);
+      assert.equal(h.recorders.length, 1, "Init cannot reenable unresolved native shutdown");
+    }
   });
 }
 

@@ -1,0 +1,169 @@
+{
+  "phase": "115M.I.H / H.1",
+  "finding": "October 9 AUD-004 only",
+  "startingMainSha": "a2a92e0ed73acd57cc0ee782934a206024084328",
+  "branch": "codex/115m-i-h-aud004",
+  "draftPr": "https://github.com/cosmicdance-4-2-0/Auralprint1/pull/49",
+  "baselineCommit": "f7244555e24f1f5f5331bca341c8a0efa40356e4",
+  "implementationSha": "2dda1235d3272557b39cbdd961b076197cd8cc05",
+  "version": "v0.1.15m.i.h",
+  "schema": 10,
+  "build115N": "WITHHELD",
+  "commands": [
+    {
+      "command": "git fetch origin main",
+      "exitCode": 0
+    },
+    {
+      "command": "GitHub PR #48 and main branch API reads",
+      "result": "merged; main exact accepted SHA"
+    },
+    {
+      "command": "node --test --test-reporter=tap tests/targeted-audit.test.js tests/analysis-panel.test.js tests/workspace-ui.test.js tests/orb-editor.test.js tests/visualizers-panel.test.js tests/orb-numeric-contract.test.js tests/orb-band-picker.test.js tests/file-activation-ownership.test.js",
+      "exitCode": 0,
+      "passed": 341
+    },
+    {
+      "command": "npm ci",
+      "exitCode": 1,
+      "outputSummary": "npm warn tarball tarball data for @esbuild/linux-x64@https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.12.tgz (sha512-uqZMTLr/zR/ed4jIGnwSLkaHmPjOjJvnm6TVVitAa08SLS9Z0VM8wIRx7gWbJB5/J54YuIMInDquWyYvQLZkgw==) seems to be corrupted. Trying again.\nnpm warn tarball tarball data for @esbuild/linux-x64@https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.12.tgz (sha512-uqZMTLr/zR/ed4jIGnwSLkaHmPjOjJvnm6TVVitAa08SLS9Z0VM8wIRx7gWbJB5/J54YuIMInDquWyYvQLZkgw==) seems to be corrupted. Trying again.\nnpm error code ENOENT\nnpm error syscall mkdir\nnpm error path /home/agent/.npm/_cacache\nnpm error errno ENOENT\nnpm error enoent Invalid response body while trying to fetch https://registry.npmjs.org/esbuild: ENOENT: no such file or directory, mkdir '/home/agent/.npm/_cacache'\nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm notice\nnpm notice New major version of npm available! 11.9.0 -> 12.2.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0\nnpm notice To update run: npm install -g npm@12.2.0\nnpm notice\nnpm error Log files were not written due to an error writing to the directory: /home/agent/.npm/_logs\nnpm error You can rerun the command with `--loglevel=verbose` to see the logs in your terminal\n"
+    },
+    {
+      "command": "npm ci --offline --cache /workspace/auralprint-environment/npm-cache --ignore-scripts",
+      "exitCode": 0,
+      "outputSummary": "\nadded 2 packages in 509ms\n"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "outputSummary": "oving another Orb preserves surviving remove focus (0.334674ms)\n\u2714 AUD-005: removing another Orb preserves surviving edit-ring focus (0.229626ms)\n\u2714 AUD-005: cancelled removal preserves collection, node, focus and confirmation target (0.320462ms)\n\u2714 AUD-005: opaque Orb spectral-ring ID remains distinct from Ring across reconciliation and action dispatch (0.518592ms)\n\u2714 AUD-005: repeated refresh/init registers one delegated listener and one Add handler (0.502527ms)\n\u2714 AUD-005: updates and removal with focus outside inventory do not steal it (0.283797ms)\n\u2714 AUD-005: admission-refused callbacks preserve focused action and all row identities (0.264388ms)\n\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio visible (3.350829ms)\n\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio hidden (0.222656ms)\n\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio hidden with collapsed launcher (0.132599ms)\n\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio hidden attribute (0.139951ms)\n\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 Audio visible without Queue toggle (0.151027ms)\n\u2714 RC-13: Queue Hide preserves visible focus ownership \u2014 outside focus (0.107392ms)\n\u2714 RC-13: visible focus owns panel stacking and Queue Hide restores the real toggle (0.342897ms)\n\u2714 workspace owns deterministic visibility, restore, focus, record, collapse, and idempotent wiring (2.215148ms)\n\u2714 Record restore remains eligible only while hooks are enabled (0.273462ms)\n\u2139 tests 804\n\u2139 suites 0\n\u2139 pass 803\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 1\n\u2139 todo 0\n\u2139 duration_ms 15597.951702\nnpm notice\nnpm notice New major version of npm available! 11.9.0 -> 12.2.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0\nnpm notice To update run: npm install -g npm@12.2.0\nnpm notice\n",
+      "counts": {
+        "tests": 804,
+        "pass": 803,
+        "fail": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0,
+      "outputSummary": "\n> build\n> node scripts/build.mjs\n\n\n  .build/auralprint.css  25.3kb\n\n\u26a1 Done in 69ms\n\n  .build/auralprint.js  356.1kb\n\n\u26a1 Done in 105ms\nnpm notice\nnpm notice New major version of npm available! 11.9.0 -> 12.2.0\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0\nnpm notice To update run: npm install -g npm@12.2.0\nnpm notice\n"
+    },
+    {
+      "command": "python scripts/verify_distribution.py",
+      "exitCode": 0,
+      "outputSummary": "{\n  \"auralprint_0.1.15m.i.h.html\": {\n    \"bytes\": 414652,\n    \"sha256\": \"6b0e8b86cac82ec710df4350b6b70cd084d97655f1f79c65aa9f6a13e899ffb8\"\n  },\n  \"hosted/apple-touch-icon.png\": {\n    \"bytes\": 21085,\n    \"sha256\": \"d81a6025dd4b21484bcbe975c0bd2e6db2fdb61a1437e1112849ef58ab016bfc\"\n  },\n  \"hosted/favicon-96x96.png\": {\n    \"bytes\": 9034,\n    \"sha256\": \"63c77536989a01479a37f41930989232d589710e83a3e706b9b1fe7b02301817\"\n  },\n  \"hosted/favicon.ico\": {\n    \"bytes\": 15086,\n    \"sha256\": \"9800272423a8511e334311af34c9ca6e55aa4fa6051d6f4bf355af8189d7e92f\"\n  },\n  \"hosted/favicon.svg\": {\n    \"bytes\": 1121,\n    \"sha256\": \"f3e95bf3acd93122339066956ec52a048b36f176864255f84f4c45fefc22dd16\"\n  },\n  \"hosted/index.html\": {\n    \"bytes\": 413483,\n    \"sha256\": \"ac7a1ee4b952171c7dcfe05e5d0af32e021bbe2da619f9564e0fabc5193cb718\"\n  },\n  \"hosted/site.webmanifest\": {\n    \"bytes\": 517,\n    \"sha256\": \"73dd427c1ba3897e29ba69a325e1220520f6ff8fccd45f661a2365e656b23495\"\n  },\n  \"hosted/web-app-manifest-192x192.png\": {\n    \"bytes\": 22773,\n    \"sha256\": \"b73872f891fdb6cb32eb57c67beb9ea3e940b1722cf5912c60bcb9185a537991\"\n  },\n  \"hosted/web-app-manifest-512x512.png\": {\n    \"bytes\": 105356,\n    \"sha256\": \"451750c8f7eebabce053802ebf3e17e447f84daf339f09fa0d43288d7f773568\"\n  }\n}\n"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "outputSummary": ""
+    },
+    {
+      "command": "MEASUREMENT_VERSION=v0.1.15m.i.g NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-h-aud004/diagnostics/measure.cjs docs/audits/remediations/115m-i-h-aud004/evidence/baseline-final.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/baseline-final.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-h-aud004/diagnostics/measure.cjs docs/audits/remediations/115m-i-h-aud004/evidence/fixed.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/fixed.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-h-aud004/diagnostics/acceptance.cjs docs/audits/remediations/115m-i-h-aud004/evidence/native-acceptance.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/native-acceptance.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-h-aud004/diagnostics/recheck-f6.cjs --output docs/audits/remediations/115m-i-h-aud004/evidence/f6-native-recheck.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/f6-native-recheck.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-g-aud005/diagnostics/native.cjs --html dist/auralprint_0.1.15m.i.h.html --output docs/audits/remediations/115m-i-h-aud004/evidence/g1-native-recheck.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/g1-native-recheck.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-g-aud003/diagnostics/native.cjs --html dist/auralprint_0.1.15m.i.h.html --output docs/audits/remediations/115m-i-h-aud004/evidence/g2-native-recheck.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/g2-native-recheck.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-g-aud008-aud009/diagnostics/native.cjs --html dist/auralprint_0.1.15m.i.h.html --output docs/audits/remediations/115m-i-h-aud004/evidence/g3-native-recheck.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/g3-native-recheck.json"
+    },
+    {
+      "command": "NODE_PATH=/opt/codex/runtimes/cua/lib/node_modules node docs/audits/remediations/115m-i-g-acceptance/diagnostics/integrated.cjs --output docs/audits/remediations/115m-i-h-aud004/evidence/g-integrated-recheck.json",
+      "exitCode": 0,
+      "evidence": "docs/audits/remediations/115m-i-h-aud004/evidence/g-integrated-recheck.json"
+    },
+    {
+      "command": "python3 docs/audits/remediations/115m-i-h-aud004/diagnostics/negative-controls.py",
+      "exitCode": 0,
+      "positiveControls": 8,
+      "intendedFailures": 8
+    }
+  ],
+  "artifactSha256": "6b0e8b86cac82ec710df4350b6b70cd084d97655f1f79c65aa9f6a13e899ffb8",
+  "protectedHistoricalChanges": [],
+  "changedFiles": [
+    "docs/audits/remediations/115m-i-h-aud004/README.md",
+    "docs/audits/remediations/115m-i-h-aud004/diagnostics/acceptance.cjs",
+    "docs/audits/remediations/115m-i-h-aud004/diagnostics/measure.cjs",
+    "docs/audits/remediations/115m-i-h-aud004/diagnostics/negative-controls.py",
+    "docs/audits/remediations/115m-i-h-aud004/diagnostics/recheck-f6.cjs",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/baseline-capture-isolation.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/baseline-final.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/baseline-initial.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/baseline.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/environment.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/f6-native-recheck.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/fixed.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/full-validation.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/g-integrated-recheck.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/g1-native-recheck.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/g2-native-recheck.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/g3-native-recheck.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/implementation-ci.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/measurement-harness-check.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/native-acceptance.json",
+    "docs/audits/remediations/115m-i-h-aud004/evidence/negative-controls.json",
+    "docs/audits/remediations/115m-i-h-aud004/measurements.md",
+    "docs/audits/remediations/115m-i-h-aud004/validation.json",
+    "src/js/core/constants.js",
+    "src/js/ui/analysis-panel.js",
+    "src/js/ui/ui.js",
+    "src/js/ui/workspace.js",
+    "tests/analysis-panel.test.js",
+    "tests/rc20_packaging.py",
+    "tests/targeted-audit.test.js",
+    "version"
+  ],
+  "finalHeadCi": "Implementation exact-head Linux/Windows results in evidence/implementation-ci.json. Final evidence-only PR head is independently verified after push and linked in the PR/final handoff.",
+  "protectedHistoricalVerification": {
+    "acceptedTrackedDocOrArtifactPaths": 638,
+    "changed": 0,
+    "baselineEvidencePreserved": true
+  },
+  "regressionResults": {
+    "newDeterministicTests": 11,
+    "focusedPassed": 341,
+    "fullPassed": 803,
+    "fullFailed": 0,
+    "establishedSkip": 1,
+    "hNative": 9,
+    "f6Native": 21,
+    "g1Native": 38,
+    "g2Native": 31,
+    "g3Native": 27,
+    "gIntegrated": 13,
+    "negativeControlsDetected": 8
+  },
+  "measurementMethodNotes": [
+    "Baseline original evidence preserved; final comparable baseline/fixed use identical expanded counters.",
+    "Playback load toast is allowed to expire before measuring unchanged refreshes; appearance/expiry independently verified.",
+    "Hidden panel focus checks use visible launcher; rejected harness assumptions preserved separately."
+  ]
+}

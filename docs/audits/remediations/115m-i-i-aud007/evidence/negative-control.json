@@ -1,0 +1,9 @@
+{
+  "baselinePassed": true,
+  "mutation": "remove only post-decode stale-success guard in memory",
+  "mutantFailed": true,
+  "assertion": "stale decode must not overwrite newest waveform",
+  "actualPeakHeight": 29.807999210357668,
+  "expectedPeakHeight": 8.280000000000001,
+  "sourceFilesModified": false
+}

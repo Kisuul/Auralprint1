@@ -1,0 +1,2962 @@
+{
+  "f": {
+    "diagnostic": "accepted F.6 independent",
+    "actualBuildBaseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+    "browser": "151.0.7922.173",
+    "rawResultSha256": "f89772b5db93e688e8d5a5fe742a2e54a55cf7dc00628489ffb96d1a5355e874",
+    "summary": {
+      "total": 21,
+      "passed": 21
+    },
+    "cases": [
+      {
+        "name": "terminal cleanup at corrupt",
+        "passed": true,
+        "boundary": "corrupt",
+        "primaryFaultInjected": false,
+        "terminal": {
+          "serializedBytes": 5379,
+          "sha256OfCanonicalJson": "fd6e22ac3ca0650fed7e1beb72e99614e255c2185b2b8ee1ad1269e6e4d39521",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: unsupported or unreadable audio file.",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "corrupt.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "corrupt.wav",
+                "error": "Playback failed: unsupported or unreadable audio file."
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 22,
+            "src": "blob:http://127.0.0.1:41521/21c5e43d-0a85-4840-9132-b251a3dae659",
+            "time": 0.029025,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "recovery.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at before-transfer",
+        "passed": true,
+        "boundary": "before-transfer",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 3810,
+          "sha256OfCanonicalJson": "3eea3867e55844bb68a5ea233e2fb9bab1a04608ac64851bcdaffd063f6fccb8",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled before-transfer failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled before-transfer failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 13,
+            "src": "blob:http://127.0.0.1:41521/34d75b1a-df38-451c-b7a9-2643ffb25101",
+            "time": 0.029025,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at gain-first",
+        "passed": true,
+        "boundary": "gain-first",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 3882,
+          "sha256OfCanonicalJson": "3ec59d760598681fc6c2153119205327a8b9ffa4d5e569e822b990a56f8aa001",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled gain-first failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled gain-first failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 14,
+            "src": "blob:http://127.0.0.1:41521/4c02fb93-e7ac-4869-9ade-573d5e3bbb11",
+            "time": 0.037732,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at splitter",
+        "passed": true,
+        "boundary": "splitter",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 3986,
+          "sha256OfCanonicalJson": "c0e0f2128e44709547d8af09f11252681b4ee7027c3a5f2c9e84d3d447a47347",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled splitter failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled splitter failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 15,
+            "src": "blob:http://127.0.0.1:41521/0f4d8ade-8498-4bf1-a63a-e9dd734dd4cc",
+            "time": 0.037732,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at gain-partial",
+        "passed": true,
+        "boundary": "gain-partial",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 4345,
+          "sha256OfCanonicalJson": "1705fd84afa0236777a6c383e65ba8255901d0fc252fff4a7c470ec041b244ca",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled gain-partial failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled gain-partial failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 18,
+            "src": "blob:http://127.0.0.1:41521/17453a07-9d8f-4f44-9fe3-f01a2d48e013",
+            "time": 0.028926,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at analyser-first",
+        "passed": true,
+        "boundary": "analyser-first",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 4455,
+          "sha256OfCanonicalJson": "827bd0f4aa3b9696201f0474da9ea920ef9d3f2fbe6f59e31de36230ce6b1c0a",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled analyser-first failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled analyser-first failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 19,
+            "src": "blob:http://127.0.0.1:41521/637f2fa4-deb1-4e36-a359-d86b73e5a7e5",
+            "time": 0.029025,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at analyser-partial",
+        "passed": true,
+        "boundary": "analyser-partial",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 4710,
+          "sha256OfCanonicalJson": "d2808b76238de01f59c3f0553caf8af73ef2f53c4b6191c744c12e2d4420d187",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled analyser-partial failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled analyser-partial failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 21,
+            "src": "blob:http://127.0.0.1:41521/f37ebf0d-0262-4358-9a14-c84ffeadd4c5",
+            "time": 0.020317,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at analyser-config",
+        "passed": true,
+        "boundary": "analyser-config",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 4589,
+          "sha256OfCanonicalJson": "bd9356066000432dbc51dca4ca95e276bd63da9555de182c15c74d131c305b87",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled analyser-config failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled analyser-config failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 20,
+            "src": "blob:http://127.0.0.1:41521/1ba2041f-fb66-4dac-9d99-b7f6cd5d6fbb",
+            "time": 0.049342,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at partial-connect",
+        "passed": true,
+        "boundary": "partial-connect",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 4950,
+          "sha256OfCanonicalJson": "f7b33ba3447645fea350daf309814bd349800268866d1ebdb40dbe0aa1520b4f",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled partial-connect failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled partial-connect failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 22,
+            "src": "blob:http://127.0.0.1:41521/a9bf6e34-c344-4934-844c-4440196d2ec7",
+            "time": 0.047183,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "terminal cleanup at after-tap",
+        "passed": true,
+        "boundary": "after-tap",
+        "primaryFaultInjected": true,
+        "terminal": {
+          "serializedBytes": 5218,
+          "sha256OfCanonicalJson": "a51b02292f24e590feea638486e4df632cd6d5833dc3a603a8cdd818ce9486ea",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled after-tap failure",
+        "queuedCallbacks": {
+          "writes": [],
+          "notifications": [
+            {
+              "type": "track-change-start",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav"
+              }
+            },
+            {
+              "type": "track-change-failed",
+              "details": {
+                "requestId": 1,
+                "filename": "valid.wav",
+                "error": "Playback failed: audio source attachment failed: F6 controlled after-tap failure"
+              }
+            }
+          ]
+        },
+        "retry": {
+          "media": {
+            "id": 22,
+            "src": "blob:http://127.0.0.1:41521/a960b930-0217-4a33-98f7-fc9104796cfd",
+            "time": 0.067742,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "valid.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          },
+          "ready": true
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "installed File native error callback releases once",
+        "passed": true,
+        "before": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/c9855790-0c08-4c26-810f-275f90eb4e55",
+            "time": 0.046642,
+            "paused": false
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "A.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          }
+        },
+        "terminal": {
+          "serializedBytes": 5859,
+          "sha256OfCanonicalJson": "9c52e7b75045d4b5cb1cd91813fc644729821ebd0f6c9f361a8d02b766c5e13f",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "File mode ready. Last file error: Playback error: unsupported or unreadable audio file.",
+        "callbackInjection": "Synthetic error event on a committed native element; then captured queued callbacks",
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "obsolete Play completion and callbacks after file",
+        "passed": true,
+        "winner": "file",
+        "nativePlayPromiseHeld": true,
+        "pending": {
+          "request": {
+            "id": 2,
+            "entry": 22,
+            "pending": true,
+            "autoPlay": true
+          },
+          "media": {
+            "id": 21,
+            "src": "blob:http://127.0.0.1:41521/d84ca1f1-b7a4-4947-87de-164a480082d6",
+            "time": 0.018089,
+            "paused": false
+          }
+        },
+        "before": {
+          "serializedBytes": 10904,
+          "sha256OfCanonicalJson": "de261ffbab1014bbdcda683d59f81c8b7420beb902e00cfd575fa78cebff6297",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "after": {
+          "serializedBytes": 4471,
+          "sha256OfCanonicalJson": "da9c7463da32f53431f6a73406720afe377b6bed3c8f5fca3147a160f51e4d98",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "obsolete Play completion and callbacks after failed-file",
+        "passed": true,
+        "winner": "failed-file",
+        "nativePlayPromiseHeld": true,
+        "pending": {
+          "request": {
+            "id": 2,
+            "entry": 22,
+            "pending": true,
+            "autoPlay": true
+          },
+          "media": {
+            "id": 21,
+            "src": "blob:http://127.0.0.1:41521/24ef9587-968d-4021-8e8d-ff88a6feb3f5",
+            "time": 0.008707,
+            "paused": false
+          }
+        },
+        "before": {
+          "serializedBytes": 10334,
+          "sha256OfCanonicalJson": "f475958836786bb3206c7c40b3ad368fd70bd20ae6166f9b9766bb5912713d93",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "after": {
+          "serializedBytes": 4138,
+          "sha256OfCanonicalJson": "a196413d4ca54a528012782550f294d23784e85a3f16af0159d5c444089524db",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "obsolete Play completion and callbacks after clear",
+        "passed": true,
+        "winner": "clear",
+        "nativePlayPromiseHeld": true,
+        "pending": {
+          "request": {
+            "id": 2,
+            "entry": 22,
+            "pending": true,
+            "autoPlay": true
+          },
+          "media": {
+            "id": 21,
+            "src": "blob:http://127.0.0.1:41521/f613175a-0602-4a18-a76d-da733cd934cf",
+            "time": 0.015889,
+            "paused": false
+          }
+        },
+        "before": {
+          "serializedBytes": 8242,
+          "sha256OfCanonicalJson": "48d9e38981e41ebd8320aabbfac32f85e2be6da8305f22e3669c55e7b3db74af",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "after": {
+          "serializedBytes": 3359,
+          "sha256OfCanonicalJson": "a09062d1eb9479c3074a70008e9135024d855f621f37648bb2dea883ed7745ca",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "obsolete Play completion and callbacks after mic",
+        "passed": true,
+        "winner": "mic",
+        "nativePlayPromiseHeld": true,
+        "pending": {
+          "request": {
+            "id": 2,
+            "entry": 22,
+            "pending": true,
+            "autoPlay": true
+          },
+          "media": {
+            "id": 21,
+            "src": "blob:http://127.0.0.1:41521/ca7983b8-993f-426c-b58e-e0cee8b89b72",
+            "time": 0.008707,
+            "paused": false
+          }
+        },
+        "before": {
+          "serializedBytes": 10108,
+          "sha256OfCanonicalJson": "3ecb152b727caf84c9c2153a2fbd724b0fcd9564ae539e7a10bbf3fa77da4582",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "after": {
+          "serializedBytes": 4131,
+          "sha256OfCanonicalJson": "98bc681a2f77ca3ee6220a4d02979a472a65a1d65ee440889c783af6948f3c39",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "obsolete Play completion and callbacks after stream",
+        "passed": true,
+        "winner": "stream",
+        "nativePlayPromiseHeld": true,
+        "pending": {
+          "request": {
+            "id": 2,
+            "entry": 22,
+            "pending": true,
+            "autoPlay": true
+          },
+          "media": {
+            "id": 21,
+            "src": "blob:http://127.0.0.1:41521/95590eba-7a58-492c-a31d-672de5240c72",
+            "time": 0.008707,
+            "paused": false
+          }
+        },
+        "before": {
+          "serializedBytes": 10060,
+          "sha256OfCanonicalJson": "6f660e3d001aeefae44268e5f0110f8425850cf502e4605981bf4a4b0c5307c3",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "after": {
+          "serializedBytes": 4142,
+          "sha256OfCanonicalJson": "ecfb8465474e9672b8719d0f40e9dd100e81c65640ad7e0a7113241250be0d42",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "recoverable loaded Play resume",
+        "passed": true,
+        "mode": "resume",
+        "before": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/b85027e1-cd45-42ba-8584-1287f66ac0b0",
+            "time": 0.4,
+            "paused": true
+          },
+          "graph": {
+            "sourceNode": 2,
+            "outputGain": 9,
+            "splitter": 1,
+            "sumNode": 7,
+            "sumGainL": 5,
+            "sumGainR": 6,
+            "activeUpstream": 13,
+            "mediaStream": null,
+            "mediaElAbort": 14,
+            "recorderTapDestination": null,
+            "recorderTapConnectedOutputGain": null
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "A.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          }
+        },
+        "failure": {
+          "serializedBytes": 4791,
+          "sha256OfCanonicalJson": "e6c264de1ad0f48b311e829c7cc39aebaeed2ff8cf4ba3c83de0ea84c36b0552",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "retry": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/b85027e1-cd45-42ba-8584-1287f66ac0b0",
+            "time": 0.41161,
+            "paused": false
+          },
+          "audio": {
+            "isLoaded": true,
+            "isPlaying": true,
+            "filename": "A.wav",
+            "transportError": ""
+          }
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "recoverable loaded Play reject",
+        "passed": true,
+        "mode": "reject",
+        "before": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/60984164-7263-40d5-a69d-041483bdc462",
+            "time": 0.4,
+            "paused": true
+          },
+          "graph": {
+            "sourceNode": 2,
+            "outputGain": 9,
+            "splitter": 1,
+            "sumNode": 7,
+            "sumGainL": 5,
+            "sumGainR": 6,
+            "activeUpstream": 13,
+            "mediaStream": null,
+            "mediaElAbort": 14,
+            "recorderTapDestination": null,
+            "recorderTapConnectedOutputGain": null
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "A.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          }
+        },
+        "failure": {
+          "serializedBytes": 4759,
+          "sha256OfCanonicalJson": "771876543e7f21227b93d92156bc9a5182ba5f176a979bce32e15b0be6ddf47e",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "retry": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/60984164-7263-40d5-a69d-041483bdc462",
+            "time": 0.417925,
+            "paused": false
+          },
+          "audio": {
+            "isLoaded": true,
+            "isPlaying": true,
+            "filename": "A.wav",
+            "transportError": ""
+          }
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "recoverable loaded Play throw",
+        "passed": true,
+        "mode": "throw",
+        "before": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/fb821228-5ddb-43ee-a0e8-998bc67b4c05",
+            "time": 0.4,
+            "paused": true
+          },
+          "graph": {
+            "sourceNode": 2,
+            "outputGain": 9,
+            "splitter": 1,
+            "sumNode": 7,
+            "sumGainL": 5,
+            "sumGainR": 6,
+            "activeUpstream": 13,
+            "mediaStream": null,
+            "mediaElAbort": 14,
+            "recorderTapDestination": null,
+            "recorderTapConnectedOutputGain": null
+          },
+          "source": {
+            "kind": "file",
+            "status": "active",
+            "label": "A.wav",
+            "permission": {
+              "mic": "unknown",
+              "stream": "unknown"
+            },
+            "support": {
+              "mic": true,
+              "stream": true
+            },
+            "errorCode": "",
+            "errorMessage": "",
+            "sessionActive": true,
+            "streamMeta": {
+              "hasAudio": true,
+              "hasVideo": false,
+              "audioChannelCount": null
+            }
+          }
+        },
+        "failure": {
+          "serializedBytes": 4742,
+          "sha256OfCanonicalJson": "f3286bc034797a44afd112a106be43a0f3a490ef1f8591434e4b797d8cc3ae51",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "retry": {
+          "media": {
+            "id": 11,
+            "src": "blob:http://127.0.0.1:41521/fb821228-5ddb-43ee-a0e8-998bc67b4c05",
+            "time": 0.4,
+            "paused": false
+          },
+          "audio": {
+            "isLoaded": true,
+            "isPlaying": true,
+            "filename": "A.wav",
+            "transportError": ""
+          }
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "native recorder survives corrupt cleanup and retains export",
+        "passed": true,
+        "fault": "corrupt",
+        "start": {
+          "serializedBytes": 4670,
+          "sha256OfCanonicalJson": "5676a378c4e85fd0db076195251c5d86369d4c6aeec842b7ee2003cb67e4ca8e",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "terminal": {
+          "serializedBytes": 9332,
+          "sha256OfCanonicalJson": "161f639dba0a14a659e8d866642dc73b3c5714730b5c92ec6a0e3fdc60e43262",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: unsupported or unreadable audio file.",
+        "recovered": {
+          "media": {
+            "id": 39,
+            "src": "blob:http://127.0.0.1:41521/1e493bef-1689-4d8b-a3e5-5f214c973bc7",
+            "time": 0.031927,
+            "paused": false
+          },
+          "graph": {
+            "sourceNode": 31,
+            "outputGain": 38,
+            "splitter": 30,
+            "sumNode": 36,
+            "sumGainL": 34,
+            "sumGainR": 35,
+            "activeUpstream": 41,
+            "mediaStream": null,
+            "mediaElAbort": 42,
+            "recorderTapDestination": 12,
+            "recorderTapConnectedOutputGain": 38
+          },
+          "ready": true,
+          "recorder": {
+            "id": 16,
+            "state": "recording"
+          }
+        },
+        "complete": {
+          "serializedBytes": 12654,
+          "sha256OfCanonicalJson": "5f39db740ef5c4ed0f60b33b653ddb09aa24775c017f3401db4ca24525f8a708",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "retained": {
+          "recording": {
+            "hooksEnabled": true,
+            "phase": "complete",
+            "supportProbeStatus": "supported",
+            "isSupported": true,
+            "includePlaybackAudio": true,
+            "targetFps": 30,
+            "availableMimeTypes": [
+              "video/webm;codecs=vp9,opus",
+              "video/webm;codecs=vp8,opus",
+              "video/webm",
+              "video/mp4"
+            ],
+            "selectedMimeType": "video/webm;codecs=vp9,opus",
+            "resolvedMimeType": "video/webm;codecs=vp9,opus",
+            "startedAtMs": 668.4000000000233,
+            "stoppedAtMs": 2083.0999999999767,
+            "elapsedMs": 1415,
+            "chunkCount": 3,
+            "lastExportUrl": "blob:http://127.0.0.1:41521/213ffb86-b491-4235-a62e-4aa57e25865e",
+            "lastExportFileName": "auralprint-capture-20261013-210448.webm",
+            "lastExportByteSize": 79016,
+            "lastAction": "finalize",
+            "lastCode": "complete",
+            "lastMessage": "Recording export ready.",
+            "lastUpdatedAtMs": 2087.6999999999534
+          },
+          "audio": {
+            "isLoaded": false,
+            "isPlaying": false,
+            "filename": "",
+            "transportError": "Playback failed: unsupported or unreadable audio file."
+          }
+        },
+        "exported": {
+          "bytes": 79016,
+          "type": "video/webm",
+          "sha256": "788a2e80394e95a944406729455926403c6760d83dd8edafb83290e02694bb57"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      },
+      {
+        "name": "native recorder survives after-tap cleanup and retains export",
+        "passed": true,
+        "fault": "after-tap",
+        "start": {
+          "serializedBytes": 4669,
+          "sha256OfCanonicalJson": "23f7432db3564623eb5061cc7af2fe33fed58f0bc3b06adbc2091c8fd4604a85",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "terminal": {
+          "serializedBytes": 9179,
+          "sha256OfCanonicalJson": "4b12298d5426764ef6ceec9f62533200c114740bf60d7a5d7891c69c00275be9",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "projectedUiError": "Playback failed: audio source attachment failed: F6 controlled after-tap failure",
+        "recovered": {
+          "media": {
+            "id": 39,
+            "src": "blob:http://127.0.0.1:41521/73320af2-c3dc-44a9-9cf7-c26973de43c5",
+            "time": 0.020317,
+            "paused": false
+          },
+          "graph": {
+            "sourceNode": 31,
+            "outputGain": 38,
+            "splitter": 30,
+            "sumNode": 36,
+            "sumGainL": 34,
+            "sumGainR": 35,
+            "activeUpstream": 41,
+            "mediaStream": null,
+            "mediaElAbort": 42,
+            "recorderTapDestination": 12,
+            "recorderTapConnectedOutputGain": 38
+          },
+          "ready": true,
+          "recorder": {
+            "id": 16,
+            "state": "recording"
+          }
+        },
+        "complete": {
+          "serializedBytes": 12422,
+          "sha256OfCanonicalJson": "1a9a3ad58cb169c0ed55ae253f0160ff8b41183176a4aea5863bbc6820f9a95a",
+          "keys": [
+            "audio",
+            "source",
+            "queue",
+            "entry",
+            "request",
+            "media",
+            "graph",
+            "ready",
+            "bands",
+            "objectUrl",
+            "candidates",
+            "nodes",
+            "urls",
+            "operations",
+            "writes",
+            "notifications",
+            "errors",
+            "nativeErrors",
+            "failureBoundary",
+            "recorder",
+            "recording",
+            "capturedTracks",
+            "upstreamTracks",
+            "uiError"
+          ],
+          "detail": "large state observation omitted; source diagnostic asserts behavior"
+        },
+        "retained": {
+          "recording": {
+            "hooksEnabled": true,
+            "phase": "complete",
+            "supportProbeStatus": "supported",
+            "isSupported": true,
+            "includePlaybackAudio": true,
+            "targetFps": 30,
+            "availableMimeTypes": [
+              "video/webm;codecs=vp9,opus",
+              "video/webm;codecs=vp8,opus",
+              "video/webm",
+              "video/mp4"
+            ],
+            "selectedMimeType": "video/webm;codecs=vp9,opus",
+            "resolvedMimeType": "video/webm;codecs=vp9,opus",
+            "startedAtMs": 895.3999999999069,
+            "stoppedAtMs": 2377.6999999999534,
+            "elapsedMs": 1482,
+            "chunkCount": 3,
+            "lastExportUrl": "blob:http://127.0.0.1:41521/f6918785-fcb7-4ee9-a3e1-8b678f3e318f",
+            "lastExportFileName": "auralprint-capture-20261013-210450.webm",
+            "lastExportByteSize": 81913,
+            "lastAction": "finalize",
+            "lastCode": "complete",
+            "lastMessage": "Recording export ready.",
+            "lastUpdatedAtMs": 2381.79999999993
+          },
+          "audio": {
+            "isLoaded": false,
+            "isPlaying": false,
+            "filename": "",
+            "transportError": "Playback failed: audio source attachment failed: F6 controlled after-tap failure"
+          }
+        },
+        "exported": {
+          "bytes": 81913,
+          "type": "video/webm",
+          "sha256": "fe19b05e06535a0b86b9f50599c3d38735d7ddc8f0df5f598e206fbbdf9aeddd"
+        },
+        "exceptions": [],
+        "consoleErrors": []
+      }
+    ],
+    "format": "All case outcomes and small observations retained. State observations over 2000 serialized bytes are represented by size/digest/keys; full raw-result digest retained."
+  },
+  "g": {
+    "diagnostic": "accepted G.4 integrated",
+    "actualBuildBaseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+    "browser": "151.0.7922.173",
+    "rawResultSha256": "17ef4184b2ea327a1a0a73586cc9ea99c989474d0ff8bc2b79ddab7dd25c254a",
+    "summary": {
+      "total": 13,
+      "passed": 13
+    },
+    "cases": [
+      {
+        "name": "A: extreme-log 3-band mixed inactive targets, actual FFT extraction and Orb response",
+        "passed": true,
+        "data": {
+          "geometry": {
+            "low": [
+              0,
+              5e-324,
+              22500
+            ],
+            "high": [
+              5e-324,
+              22500
+            ],
+            "summary": "1 active target \u00b7 1 inactive target (255). Raise the band count to reactivate.",
+            "choices": 3
+          },
+          "responses": [
+            {
+              "channel": "L",
+              "selected": 0.7,
+              "dominant": 0,
+              "radius": 563
+            },
+            {
+              "channel": "R",
+              "selected": 0.2,
+              "dominant": 0,
+              "radius": 168
+            },
+            {
+              "channel": "C",
+              "selected": 0.55,
+              "dominant": 0,
+              "radius": 444.50000000000006
+            }
+          ]
+        }
+      },
+      {
+        "name": "B: precision/count reactivation with stable editor and exact action focus",
+        "passed": true,
+        "data": {
+          "canonical": 0.123456,
+          "lines": 16,
+          "transitions": [
+            {
+              "count": 32,
+              "active": [
+                5
+              ],
+              "energy": 0.9,
+              "dominant": 5,
+              "stability": {
+                "root": true,
+                "control": true,
+                "focus": true,
+                "connected": true,
+                "value": 0.123456,
+                "open": true
+              }
+            },
+            {
+              "count": 3,
+              "active": [],
+              "energy": 0,
+              "dominant": null,
+              "stability": {
+                "root": true,
+                "control": true,
+                "focus": true,
+                "connected": true,
+                "value": 0.123456,
+                "open": true
+              }
+            },
+            {
+              "count": 256,
+              "active": [
+                5,
+                100,
+                255
+              ],
+              "energy": 0.6,
+              "dominant": 5,
+              "stability": {
+                "root": true,
+                "control": true,
+                "focus": true,
+                "connected": true,
+                "value": 0.123456,
+                "open": true
+              }
+            }
+          ],
+          "actionFocus": {
+            "same": true,
+            "connected": true,
+            "sameRow": true,
+            "action": "duplicate",
+            "id": "A"
+          }
+        }
+      },
+      {
+        "name": "D: mixed Bulk edits, inventory reorder/count changes and stable logical focus",
+        "passed": true,
+        "data": {
+          "order": [
+            "A",
+            "B",
+            "spectral-ring"
+          ],
+          "speeds": [
+            0.123456,
+            0.234567,
+            0.345678
+          ],
+          "targets": [
+            [
+              5,
+              100,
+              255
+            ],
+            [
+              255
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "bulkTtl": [
+            35.123456,
+            35.123456,
+            35.123456
+          ],
+          "focus": {
+            "same": true,
+            "connected": true,
+            "sameRow": true,
+            "action": "remove",
+            "id": "spectral-ring"
+          }
+        }
+      },
+      {
+        "name": "E: idle refresh performs no inventory/editor reconstruction, listener growth or preference writes",
+        "passed": true,
+        "data": {
+          "iterations": 2000,
+          "elapsedMs": 82.59999999997672,
+          "presentationMutationRecords": 0,
+          "detachedStructural": 0,
+          "allIdentitiesConnected": true,
+          "preferencesUnchanged": true,
+          "sameSettings": true,
+          "sameCollection": true,
+          "focus": true,
+          "duplicateDelta": 1
+        }
+      },
+      {
+        "name": "independent target domains, L/R/C and first-active ties across both transition sequences",
+        "passed": true,
+        "data": {
+          "samples": 105,
+          "examples": [
+            {
+              "ids": [],
+              "count": 3,
+              "channel": "R",
+              "energy": null,
+              "dominant": null
+            },
+            {
+              "ids": [],
+              "count": 3,
+              "channel": "R",
+              "energy": null,
+              "dominant": null
+            },
+            {
+              "ids": [],
+              "count": 3,
+              "channel": "R",
+              "energy": null,
+              "dominant": null
+            },
+            {
+              "ids": [
+                255
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0,
+              "dominant": null
+            },
+            {
+              "ids": [
+                255
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0,
+              "dominant": null
+            },
+            {
+              "ids": [
+                255
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0,
+              "dominant": null
+            },
+            {
+              "ids": [
+                0,
+                255
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0.06666666666666667,
+              "dominant": 0
+            },
+            {
+              "ids": [
+                0,
+                255
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0.06666666666666667,
+              "dominant": 0
+            },
+            {
+              "ids": [
+                0,
+                255
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0.06666666666666667,
+              "dominant": 0
+            },
+            {
+              "ids": [
+                0,
+                2
+              ],
+              "count": 3,
+              "channel": "R",
+              "energy": 0.13333333333333333,
+              "dominant": 2
+            }
+          ],
+          "firstActiveTie": 2
+        }
+      },
+      {
+        "name": "independent geometry matrix: real controller/bank/extraction and Nyquist",
+        "passed": true,
+        "data": {
+          "logMatrices": [
+            {
+              "count": 3,
+              "floor": 5e-324,
+              "midpoint": 5e-324,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 3,
+              "floor": 1e-307,
+              "midpoint": 1e-307,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 3,
+              "floor": 20,
+              "midpoint": 20,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 3,
+              "floor": 22499.9999999999,
+              "midpoint": 22499.9999999999,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 3,
+              "floor": 22500,
+              "midpoint": 22500,
+              "equalInteriorEdges": 1,
+              "zeroBands": 1
+            },
+            {
+              "count": 4,
+              "floor": 5e-324,
+              "midpoint": 3.3341381242276124e-160,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 4,
+              "floor": 1e-307,
+              "midpoint": 4.743416490252404e-152,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 4,
+              "floor": 20,
+              "midpoint": 670.8203932499366,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 4,
+              "floor": 22499.9999999999,
+              "midpoint": 22499.99999999995,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 4,
+              "floor": 22500,
+              "midpoint": 22500,
+              "equalInteriorEdges": 2,
+              "zeroBands": 2
+            },
+            {
+              "count": 32,
+              "floor": 5e-324,
+              "midpoint": 3.3341381242276124e-160,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 32,
+              "floor": 1e-307,
+              "midpoint": 4.743416490252404e-152,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 32,
+              "floor": 20,
+              "midpoint": 670.8203932499366,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 32,
+              "floor": 22499.9999999999,
+              "midpoint": 22499.99999999995,
+              "equalInteriorEdges": 26,
+              "zeroBands": 26
+            },
+            {
+              "count": 32,
+              "floor": 22500,
+              "midpoint": 22500,
+              "equalInteriorEdges": 30,
+              "zeroBands": 30
+            },
+            {
+              "count": 256,
+              "floor": 5e-324,
+              "midpoint": 3.3341381242276124e-160,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 256,
+              "floor": 1e-307,
+              "midpoint": 4.743416490252404e-152,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 256,
+              "floor": 20,
+              "midpoint": 670.8203932499366,
+              "equalInteriorEdges": 0,
+              "zeroBands": 0
+            },
+            {
+              "count": 256,
+              "floor": 22499.9999999999,
+              "midpoint": 22499.99999999995,
+              "equalInteriorEdges": 250,
+              "zeroBands": 250
+            },
+            {
+              "count": 256,
+              "floor": 22500,
+              "midpoint": 22500,
+              "equalInteriorEdges": 254,
+              "zeroBands": 254
+            }
+          ],
+          "nyquistNonLogModes": [
+            "linear",
+            "mel",
+            "bark",
+            "erb"
+          ],
+          "nyquistCap": 16000
+        }
+      },
+      {
+        "name": "native action identity, type collision, cancellation, remove fallback and action dispatch",
+        "passed": true,
+        "data": {
+          "actions": [
+            {
+              "action": "edit",
+              "retained": {
+                "same": true,
+                "connected": true,
+                "sameRow": true,
+                "action": "edit",
+                "id": "spectral-ring"
+              }
+            },
+            {
+              "action": "duplicate",
+              "retained": {
+                "same": true,
+                "connected": true,
+                "sameRow": true,
+                "action": "duplicate",
+                "id": "spectral-ring"
+              }
+            },
+            {
+              "action": "remove",
+              "retained": {
+                "same": true,
+                "connected": true,
+                "sameRow": true,
+                "action": "remove",
+                "id": "spectral-ring"
+              }
+            },
+            {
+              "action": "edit-ring",
+              "retained": {
+                "same": true,
+                "connected": true,
+                "sameRow": true,
+                "action": "edit-ring",
+                "id": null
+              }
+            }
+          ],
+          "collisionTypeSafe": true,
+          "cancelledRemoveUnchanged": true,
+          "duplicateId": "ORB0",
+          "nearestSurvivor": "ORB0",
+          "unrelatedRemovalFocus": true,
+          "addedId": "ORB0"
+        }
+      },
+      {
+        "name": "native numeric keyboard boundaries, modified combinations and exactly one commit",
+        "passed": true,
+        "data": {
+          "speedKeys": [
+            {
+              "key": "ArrowRight",
+              "native": 0.133456,
+              "canonical": 0.133456,
+              "inputCount": 1,
+              "focus": true,
+              "last": {
+                "key": "ArrowRight",
+                "ctrl": false,
+                "shift": false,
+                "prevented": true
+              },
+              "other": 0.234567
+            },
+            {
+              "key": "Home",
+              "native": 0.01,
+              "canonical": 0.01,
+              "inputCount": 2,
+              "focus": true,
+              "last": {
+                "key": "Home",
+                "ctrl": false,
+                "shift": false,
+                "prevented": false
+              },
+              "other": 0.234567
+            },
+            {
+              "key": "End",
+              "native": 3,
+              "canonical": 3,
+              "inputCount": 3,
+              "focus": true,
+              "last": {
+                "key": "End",
+                "ctrl": false,
+                "shift": false,
+                "prevented": false
+              },
+              "other": 0.234567
+            },
+            {
+              "key": "Control+ArrowLeft",
+              "native": 2.9701,
+              "canonical": 2.9701,
+              "inputCount": 4,
+              "focus": true,
+              "last": {
+                "key": "ArrowLeft",
+                "ctrl": true,
+                "shift": false,
+                "prevented": false
+              },
+              "other": 0.234567
+            },
+            {
+              "key": "Shift+ArrowLeft",
+              "native": 2.9601,
+              "canonical": 2.9601,
+              "inputCount": 5,
+              "focus": true,
+              "last": {
+                "key": "ArrowLeft",
+                "ctrl": false,
+                "shift": true,
+                "prevented": true
+              },
+              "other": 0.234567
+            }
+          ],
+          "modifiedNativeReference": "2.99",
+          "integralCounts": [
+            11,
+            15,
+            16,
+            39
+          ],
+          "tenLineIncrement": 49,
+          "home": 10,
+          "end": 1000
+        }
+      },
+      {
+        "name": "independent inactive picker/exact drafts, focused count transition and explicit full spectrum",
+        "passed": true,
+        "data": {
+          "checkboxPreserved": [
+            255,
+            0
+          ],
+          "rangePreserved": [
+            1,
+            2,
+            255
+          ],
+          "invalidDraft": "0, 256, invalid",
+          "countTransitionFocus": true,
+          "fullSpectrum": []
+        }
+      },
+      {
+        "name": "independent native/canonical/rendered integral count in combined reduced-bank scene",
+        "passed": true,
+        "data": [
+          {
+            "imported": 15.5,
+            "canonical": 16,
+            "runtime": 16,
+            "native": 16,
+            "step": "1",
+            "readout": "16",
+            "rendered": 16
+          },
+          {
+            "imported": 11,
+            "canonical": 11,
+            "runtime": 11,
+            "native": 11,
+            "step": "1",
+            "readout": "11",
+            "rendered": 11
+          },
+          {
+            "imported": 15,
+            "canonical": 15,
+            "runtime": 15,
+            "native": 15,
+            "step": "1",
+            "readout": "15",
+            "rendered": 15
+          },
+          {
+            "imported": 16,
+            "canonical": 16,
+            "runtime": 16,
+            "native": 16,
+            "step": "1",
+            "readout": "16",
+            "rendered": 16
+          },
+          {
+            "imported": 39,
+            "canonical": 39,
+            "runtime": 39,
+            "native": 39,
+            "step": "1",
+            "readout": "39",
+            "rendered": 39
+          }
+        ]
+      },
+      {
+        "name": "C: precise focused editor during delayed actual File completion, source/AnalysisFrame readiness and interactive shortcut suppression",
+        "passed": true,
+        "data": {
+          "before": {
+            "prefs": {
+              "id": "A",
+              "chanId": "L",
+              "bandIds": [
+                0,
+                255
+              ],
+              "chirality": -1,
+              "startAngleRad": 0.123456,
+              "hueOffsetDeg": 37,
+              "colorSource": "inherit",
+              "centerXFrac": 0,
+              "centerYFrac": 0,
+              "motion": {
+                "angularSpeedRadPerSec": 0.123456
+              },
+              "response": {
+                "minRadiusFrac": 0.01,
+                "maxRadiusFrac": 0.8,
+                "waveformRadialDisplaceFrac": 0.1
+              },
+              "particles": {
+                "emitPerSecond": 13.5,
+                "sizeMaxPx": 8,
+                "sizeMinPx": 1,
+                "sizeToMinSec": 3,
+                "ttlSec": 6,
+                "minPlacementDistancePx": 0.5
+              },
+              "trace": {
+                "lines": true,
+                "numLines": 16,
+                "lineAlpha": 0.35,
+                "lineWidthPx": 2,
+                "lineColorMode": "dominantBand"
+              }
+            },
+            "native": 0.123456,
+            "analysisReady": false,
+            "focus": true
+          },
+          "after": {
+            "prefs": {
+              "id": "A",
+              "chanId": "L",
+              "bandIds": [
+                0,
+                255
+              ],
+              "chirality": -1,
+              "startAngleRad": 0.123456,
+              "hueOffsetDeg": 37,
+              "colorSource": "inherit",
+              "centerXFrac": 0,
+              "centerYFrac": 0,
+              "motion": {
+                "angularSpeedRadPerSec": 0.123456
+              },
+              "response": {
+                "minRadiusFrac": 0.01,
+                "maxRadiusFrac": 0.8,
+                "waveformRadialDisplaceFrac": 0.1
+              },
+              "particles": {
+                "emitPerSecond": 13.5,
+                "sizeMaxPx": 8,
+                "sizeMinPx": 1,
+                "sizeToMinSec": 3,
+                "ttlSec": 6,
+                "minPlacementDistancePx": 0.5
+              },
+              "trace": {
+                "lines": true,
+                "numLines": 16,
+                "lineAlpha": 0.35,
+                "lineWidthPx": 2,
+                "lineColorMode": "dominantBand"
+              }
+            },
+            "native": 0.123456,
+            "focus": true,
+            "connected": true,
+            "sameRoot": true,
+            "inputEvents": 0,
+            "analysisReady": true,
+            "channelLengths": {
+              "L": 3,
+              "R": 3,
+              "C": 3
+            },
+            "sampleRate": 44100,
+            "source": "file"
+          }
+        }
+      },
+      {
+        "name": "uninstrumented hosted smoke /hosted/",
+        "passed": true,
+        "data": {
+          "native": "0.123456",
+          "resources": {
+            "manifest": 200,
+            "url": "http://127.0.0.1:45301/hosted/site.webmanifest",
+            "icons": [
+              {
+                "url": "/hosted/web-app-manifest-192x192.png",
+                "status": 200,
+                "bytes": 22773
+              },
+              {
+                "url": "/hosted/web-app-manifest-512x512.png",
+                "status": 200,
+                "bytes": 105356
+              }
+            ],
+            "instrumented": false
+          },
+          "shareReload": true
+        }
+      },
+      {
+        "name": "uninstrumented hosted smoke /nested/auralprint/",
+        "passed": true,
+        "data": {
+          "native": "0.123456",
+          "resources": {
+            "manifest": 200,
+            "url": "http://127.0.0.1:45301/nested/auralprint/site.webmanifest",
+            "icons": [
+              {
+                "url": "/nested/auralprint/web-app-manifest-192x192.png",
+                "status": 200,
+                "bytes": 22773
+              },
+              {
+                "url": "/nested/auralprint/web-app-manifest-512x512.png",
+                "status": 200,
+                "bytes": 105356
+              }
+            ],
+            "instrumented": false
+          },
+          "shareReload": true
+        }
+      }
+    ],
+    "format": "All case outcomes and small observations retained. State observations over 2000 serialized bytes are represented by size/digest/keys; full raw-result digest retained."
+  },
+  "h": {
+    "diagnostic": "accepted H.1 acceptance",
+    "actualBuildBaseline": "704bf13d3a3dfb76032343226bad7240191ef6c6",
+    "browser": "151.0.7922.173",
+    "rawResultSha256": "48f5e715000e2a16f3193e2fcc1cbaa4510e48ca1f7b9529946c8bfbd74520eb",
+    "summary": {
+      "total": 9,
+      "passed": 9
+    },
+    "cases": [
+      {
+        "name": "idle mutation absence, focused inventory identity, tooltip listeners and canonical state",
+        "pass": true,
+        "details": {
+          "iterations": 2000,
+          "mutations": 0,
+          "focusedNodePreserved": true,
+          "canonicalStatePreserved": true,
+          "listenersStable": true
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "tooltips, off-step values, new/removed controls, reorder, drafts and immediate feedback",
+        "pass": true,
+        "details": {
+          "offStep": "0.123456",
+          "title": "Angular Speed: 0.123456 rad/s (7.1\u00b0/s)",
+          "accessible": "0.123456 rad/s (7.1\u00b0/s)",
+          "invalidDraft": "bad target",
+          "newTooltip": "Angular Speed: 1.5707963267948966 rad/s (90.0\u00b0/s)",
+          "survivingListenerAdds": 5,
+          "removed": {
+            "indexed": false,
+            "connected": false,
+            "listeners": {
+              "adds": 5,
+              "removes": 3
+            }
+          }
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "hidden panel reveal refreshes canonical values, targets, tooltips and restores focus immediately",
+        "pass": true,
+        "details": {
+          "value": "0.234567",
+          "title": "Angular Speed: 0.234567 rad/s (13.4\u00b0/s)",
+          "targets": [
+            0,
+            255
+          ],
+          "bandCount": 3,
+          "focusRecovered": true
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "asynchronous source status and mono/stereo diagnostics stay truthful without preference edits",
+        "pass": true,
+        "details": {
+          "statuses": [
+            "Waiting for microphone permission.",
+            "Microphone permission denied.",
+            "Stream live: Fixture stream - Capture: mono (1ch) - Bands: mono-ish (L\u2248R)",
+            "Stream live: Fixture stream - Capture: mono (1ch) - Bands: stereo (L\u2260R)"
+          ],
+          "fixture": "canonical source projection and producer diagnostics, same settings reference"
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "native File play/pause/stop, toast expiry, repeat, previous/next, removal and Clear",
+        "pass": true,
+        "details": {
+          "verified": [
+            "pause",
+            "resume",
+            "stop",
+            "next",
+            "previous",
+            "repeat",
+            "toast appearance/expiration",
+            "queue removal",
+            "Clear"
+          ]
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "native pending File activation cancellation settles identity before delayed resume completion",
+        "pass": true,
+        "details": {
+          "queue": 0,
+          "source": "none",
+          "status": "idle",
+          "loaded": false,
+          "media": false,
+          "disabled": true
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "native File to fake-device Mic and rejected Stream settles source selector errors",
+        "pass": true,
+        "details": {
+          "fakeDeviceMicActive": true,
+          "streamStatus": "Stream share was cancelled or denied.",
+          "fileReturn": true
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      },
+      {
+        "name": "native recorder timer, held finalization, natural EOF settlement, download and transport unlock",
+        "pass": true,
+        "details": {
+          "held": {
+            "phase": "finalizing",
+            "file": "A.wav",
+            "index": 0,
+            "busy": "true",
+            "loadDisabled": true,
+            "sourceDisabled": true,
+            "status": "Finalizing export"
+          },
+          "complete": {
+            "phase": "complete",
+            "index": 1,
+            "bytes": 80193,
+            "busy": "false",
+            "url": true
+          },
+          "retainedExportOnError": true,
+          "errorFixture": "error event delivered to native MediaRecorder; RecorderEngine handles its normal callback and retains prior successful export"
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [
+          "[RecorderEngine] recorder-error Error: Injected native recorder failure\n    at eval (eval at evaluate (:311:30), <anonymous>:1:74)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)"
+        ],
+        "unhandledRejections": []
+      },
+      {
+        "name": "uninstrumented portable playback and recording smoke",
+        "pass": true,
+        "details": {
+          "nativePlayback": true,
+          "nativeRecording": true,
+          "exportAvailable": true
+        },
+        "pageErrors": [],
+        "expectedInjectedConsoleErrors": [],
+        "unhandledRejections": []
+      }
+    ],
+    "format": "All case outcomes and small observations retained. State observations over 2000 serialized bytes are represented by size/digest/keys; full raw-result digest retained."
+  }
+}

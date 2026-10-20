@@ -1,0 +1,12 @@
+{
+  "applicationDefectsDemonstrated": 0,
+  "discardedProbeAssumptions": [
+    {"assumption": "idle refresh must have zero presentation mutations", "observation": "92000 attribute/text records across 2000 calls, but zero row/control detachments", "correction": "assert actual G.1 identity/focus and preference/listener contracts; do not introduce AUD-004 zero-write requirement"},
+    {"assumption": "uniform FFT averages imply bit-identical band energies", "observation": "different bin counts can produce small accumulation differences", "correction": "supply identical .375 producer-array energies for first-active exact-tie assertion"},
+    {"assumption": "duplicate is appended last", "observation": "canonical duplication inserts alongside its source", "correction": "identify new duplicate by persistent ID rather than position"},
+    {"assumption": "picker action named Apply Range", "observation": "production action is Use range", "correction": "use actual production accessible action text"},
+    {"assumption": "inventory is already current immediately after preset handler returns", "observation": "inventory presentation refresh belongs to normal animation-frame scheduling", "correction": "wait two unchanged application animation frames before asserting completed reconciliation/focus; no source scheduling changes"}
+  ],
+  "finalIndependentCases": {"passed": 13, "failed": 0},
+  "harnessErrorsCreditedAsNegativeDetection": 0
+}

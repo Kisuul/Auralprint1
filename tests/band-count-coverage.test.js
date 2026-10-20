@@ -70,3 +70,44 @@ test("RC-07: every supported count/distribution covers 0 through Nyquist, includ
     }
   }
 }));
+
+const { createAnalysisFrame, updateAnalysisFrame } = await import('../src/js/audio/analysis-frame.js');
+const { selectOrbAnalysis } = await import('../src/js/render/visualizer-runtime.js');
+const { decodePresetPayload } = await import('../src/js/presets/preset-codec.js');
+const { duplicateOrb } = await import('../src/js/core/orb-collection.js');
+const { sanitizeOrbBandIds, BAND_NAMES } = await import('../src/js/core/preferences.js');
+
+for (const counts of [[256, 32, 256], [256, 3, 256], [3, 32, 3]]) {
+  test(`AUD-003: ${counts.join(' → ')} retains and reactivates authored targets through bank rebuild/share`, () => withSettings(() => {
+    for (const raw of [[], [0, 2], [5, 100, 255], [255], [255, 5, 100], [5, '7', 5, 1.5, -1, 100, 255]]) {
+      const canonical = sanitizeOrbBandIds(raw);
+      replacePreferences(sanitizePreset({ schema: 10, prefs: { bands: { count: counts[0] }, orbs: [{ id: 'A', chanId: 'R', bandIds: raw, hueOffsetDeg: 42 }] } }));
+      const originalOrb = structuredClone(preferences.orbs[0]);
+      for (const count of counts) {
+        preferences.bands.count = count; resolveSettings(); BandBank.rebuild(22500, 48000);
+        for (const channel of ['L', 'R', 'C']) {
+          assert.equal(state.bands.channels[channel].energies01.length, count);
+          state.bands.channels[channel].energies01.fill(.5);
+        }
+        assert.deepEqual(preferences.orbs[0], originalOrb, 'count changes do not rewrite Orb configuration');
+        assert.deepEqual(runtime.settings.orbs[0].bandIds, canonical);
+        const analysis = updateAnalysisFrame(createAnalysisFrame(), { ready: true, bands: {} }, state.bands);
+        const active = canonical.filter(index => index < count), selected = selectOrbAnalysis(runtime.settings.orbs[0], analysis);
+        assert.equal(selected.energyOverride01, canonical.length ? (active.length ? .5 : 0) : null);
+        assert.equal(selected.selectedDominantBandIndex, active[0] ?? null);
+        const encoded = encodePresetPayload(preferences);
+        assert.equal(encoded.schema, 10); assert.deepEqual(sanitizePreset(decodePresetPayload(encoded)).orbs[0], originalOrb);
+        globalThis.location = { hash: '#p=' + Buffer.from(JSON.stringify(encoded)).toString('base64url') };
+        assert.equal(UrlPreset.applyFromLocationHash(), true); assert.deepEqual(preferences.orbs[0], originalOrb);
+      }
+      const copy = duplicateOrb(preferences.orbs, 'A');
+      assert.deepEqual(copy.bandIds, canonical); assert.notEqual(copy.bandIds, preferences.orbs[0].bandIds);
+    }
+  }));
+}
+
+test('AUD-003: original schema-10 count-3 scene persists inactive 255; legacy name migration stays canonical', () => withSettings(() => {
+  const prefs = sanitizePreset({ schema: 10, prefs: { bands: { count: 3 }, orbs: [{ id: 'A', bandIds: [255] }, { id: 'legacy', bandNames: [BAND_NAMES[7], BAND_NAMES[0]] }] } });
+  assert.deepEqual(prefs.orbs[0].bandIds, [255]); assert.deepEqual(prefs.orbs[1].bandIds, [7, 0]);
+  assert.deepEqual(sanitizePreset(decodePresetPayload(encodePresetPayload(prefs))).orbs.map(o => o.bandIds), [[255], [7, 0]]);
+}));

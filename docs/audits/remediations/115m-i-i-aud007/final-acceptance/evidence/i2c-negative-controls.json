@@ -1,0 +1,102 @@
+{
+  "originalSourceModified": false,
+  "passed": 6,
+  "cases": [
+    {
+      "name": "encoded-read-bypass",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "encoded admission must precede full read",
+      "mutation": [
+        [
+          "    // Size/policy gates run BEFORE",
+          "    intent.file.arrayBuffer();\n    // Size/policy gates run BEFORE"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 hard encoded refusal performs neither prefix nor full read (2.979249ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 23.597117\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:51:1\n\u2716 AUD-007 hard encoded refusal performs neither prefix nor full read (2.979249ms)\n  AssertionError [ERR_ASSERTION]: encoded admission must precede full read\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2c-mutations-stmfkv4i/encoded-read-bypass/tests/waveform-admission.test.js:53:93)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "pcm-admission-bypass",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "hard PCM refusal must precede full read",
+      "mutation": [
+        [
+          "function evaluate(intent) { return evaluateWaveformPolicy(input(intent), policy); }",
+          "function evaluate(intent) { const r=evaluateWaveformPolicy(input(intent), policy); return r.reason === \"pcm-budget\" ? {...r,decision:\"admit\"} : r; }"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 hard PCM refusal under ask reads/decodes nothing and remains seek independent (4.692341ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 25.44511\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:45:62\n\u2716 AUD-007 hard PCM refusal under ask reads/decodes nothing and remains seek independent (4.692341ms)\n  AssertionError [ERR_ASSERTION]: hard PCM refusal must precede full read\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2c-mutations-stmfkv4i/pcm-admission-bypass/tests/waveform-admission.test.js:48:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "repeated-probe",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "metadata refresh must not repeat probe work",
+      "mutation": [
+        [
+          "if (!intent.probed)",
+          "if (true)"
+        ],
+        [
+          "(intent.probed && decision.decision !== \"admit\")",
+          "(false && intent.probed && decision.decision !== \"admit\")"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 pending duration waits once and metadata events do not repeat probes (6.706352ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 29.228047\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:63:1\n\u2716 AUD-007 pending duration waits once and metadata events do not repeat probes (6.706352ms)\n  AssertionError [ERR_ASSERTION]: metadata refresh must not repeat probe work\n  \n  51 !== 1\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2c-mutations-stmfkv4i/repeated-probe/tests/waveform-admission.test.js:65:58)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 51,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "wrong-source-manual",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "manual generation must reject wrong-source identity",
+      "mutation": [
+        [
+          "current === intent && intent.isCurrent()",
+          "current === intent"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 wrong-source manual action revalidates UI identity before requesting coordinator (4.713443ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 26.023618\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:95:1\n\u2716 AUD-007 wrong-source manual action revalidates UI identity before requesting coordinator (4.713443ms)\n  AssertionError [ERR_ASSERTION]: manual generation must reject wrong-source identity\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2c-mutations-stmfkv4i/wrong-source-manual/tests/waveform-admission.test.js:97:38)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "stale-duration-activation",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "stale duration must not activate old File",
+      "mutation": [
+        [
+          "current.media?.removeEventListener?.(type, current.listener);",
+          "void type;"
+        ],
+        [
+          "current.file = current.media = null;",
+          "/* mutant retains old source */"
+        ],
+        [
+          "      if (!valid(intent)) return;\n      if (event.type",
+          "      current = intent;\n      if (event.type"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 delayed duration and old media callbacks cannot activate stale File (8.288439ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 28.160631\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:91:1\n\u2716 AUD-007 delayed duration and old media callbacks cannot activate stale File (8.288439ms)\n  AssertionError [ERR_ASSERTION]: stale duration must not activate old File\n  \n  1 !== 0\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2c-mutations-stmfkv4i/stale-duration-activation/tests/waveform-admission.test.js:93:9)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 1,\n    expected: 0,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "premature-probe-release",
+      "pass": true,
+      "positiveExit": 0,
+      "mutantExit": 1,
+      "expectedAssertion": "reset must retain unsettled prepare occupancy",
+      "mutation": [
+        [
+          "function reset() {\n    generation++;",
+          "function reset() {\n    active = null;\n    generation++;"
+        ]
+      ],
+      "mutantOutput": "\u2716 AUD-007 coordinator prepare retains occupancy until actual probe settlement after Reset (2.576258ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 19.387476\n\n\u2716 failing tests:\n\ntest at tests/waveform-admission.test.js:115:1\n\u2716 AUD-007 coordinator prepare retains occupancy until actual probe settlement after Reset (2.576258ms)\n  AssertionError [ERR_ASSERTION]: reset must retain unsettled prepare occupancy\n  + actual - expected\n  \n    [\n      'A',\n  +   'B'\n    ]\n  \n      at TestContext.<anonymous> (file:///tmp/auralprint-i2c-mutations-stmfkv4i/premature-probe-release/tests/waveform-admission.test.js:118:67)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: [Array],\n    expected: [Array],\n    operator: 'deepStrictEqual',\n    diff: 'simple'\n  }\n"
+    }
+  ]
+}

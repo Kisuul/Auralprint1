@@ -1,8 +1,10 @@
 # Build 115 development history
 
-Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current development revision: **`v0.1.15m.i.e`**, preset schema **10**.
+Build 115 — **Visualizer Architecture + Orb Overhaul v1** — is unshipped and noncanonical. This record separates engineering chronology from the [README milestone](../../README.md#build-115--v0115-visualizer-architecture--orb-overhaul-v1), [current roadmap](../../ROADMAP.md), [binding policy](../../agents.md), and immutable audit evidence. Current release-candidate revision: **`v0.1.15n` (Build 115N)**, preset schema **10**. This promotion changes version/documentation metadata only; final acceptance and shipment remain withheld.
 
-The accepted starting main for reconciliation is [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge are complete at that baseline. **115N final acceptance remains WITHHELD.** “Closed” below describes the accepted corrective disposition; it does not claim shipment, universal performance, or completion of independent artistic/device acceptance.
+Current accepted main includes watcher correction PR #56 and the October 9 AUD-006 recorder investigation, calibration, governor and Custom-units closeout through merged PRs #57–#60 (`1bd8ef65b3589f0d1ef321edaf07e177d94ced01`). The recorder's corrective implementation is merged; Build 115N final acceptance remains WITHHELD, and device/browser acceptance is separate. Historical reports retain their original checkpoint status.
+
+The historical I.E documentation reconciliation started from [`a198b14b087da6b855041c3a23acb550a156ff4e`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/a198b14b087da6b855041c3a23acb550a156ff4e), merged [PR #43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43), `v0.1.15m.i.d`. RC-01–RC-22 corrective review and merge are complete at that baseline. **115N final acceptance remains WITHHELD.** “Closed” below describes the accepted corrective disposition; it does not claim shipment, universal performance, or completion of independent artistic/device acceptance.
 
 ## Intent and original architecture
 
@@ -85,9 +87,32 @@ The synthetic 16-Orb history exceeds a rotation under its documented speed/TTL/c
 
 I.A normalizes designed phase into `[0, TAU)` while retaining canonical fractional precision. Native range uses `step=any` with one-degree Arrow increments; 360° commits zero and refreshes thumb/readout/ARIA together. Live phase/history stay independent until Reset Visuals. I.B makes public recorder disposal terminal: invalidate session before native stop, fence callbacks/timer, release only owned resources, discard chunks/exports. AudioEngine owns file taps; InputSourceManager owns live tracks; merged references convey no ownership. Native shutdown/cleanup failure remains truthful and disabled until explicit reinitialization; ordinary Stop finalizes exports.
 
-I.C corrects channel-specific band-picker help and type-plus-ID Remove confirmation without reserving `spectral-ring` against valid Orb IDs. I.D addresses metadata packaging after canonical asset intake [`f5bbf2a`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/f5bbf2a25ffbf8b122e81bd9f54e3639a53a6243): shared template/bundles produce portable embedded-SVG HTML and a relocatable hosted package with six unchanged icons and a generated package-relative manifest. Root/subdirectory HTTP probes pass; direct `file://` remains blocked/unverified. Maskable-safe art is not certified; unrelated OG artwork is unused. Watch tracks JS/CSS, not branding/template/version-only changes. No PWA/service-worker or hosted caching subsystem is introduced.
+I.C corrects channel-specific band-picker help and type-plus-ID Remove confirmation without reserving `spectral-ring` against valid Orb IDs. I.D addresses metadata packaging after canonical asset intake [`f5bbf2a`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/f5bbf2a25ffbf8b122e81bd9f54e3639a53a6243): shared template/bundles produce portable embedded-SVG HTML and a relocatable hosted package with six unchanged icons and a generated package-relative manifest. Root/subdirectory HTTP probes pass; direct `file://` remains blocked/unverified. Maskable-safe art is not certified; unrelated OG artwork is unused. At that historical checkpoint, watch tracked JS/CSS only; I.M below corrects template/version/branding monitoring. No PWA/service-worker or hosted caching subsystem is introduced.
 
 I.E advances development metadata only, restores product/plan/history separation, and creates an internal [release-delta preparation draft](build-115-release-delta.md). It does not change application behavior, schema, canonical artifacts, audit evidence, release numbering or acceptance.
+
+## Subsequent F/G/H and AUD-007 waveform governance
+
+F (`v0.1.15m.i.f`, PR #46) corrected demonstrated File/source identity and cleanup; G (`v0.1.15m.i.g`, PR #48) accepted focus/target/numeric corrections; H (`v0.1.15m.i.h`, PR #49) eliminated unchanged UI writes. Their evidence remains immutable. These October 9 AUD IDs are separate from the older October 6 RC index below.
+
+| AUD-007 phase | Revision / accepted checkpoint | Scope and disposition |
+| --- | --- | --- |
+| I.1 | v0.1.15m.i.h; PR #50 | Design/investigation: demonstrated overlapping whole-file optional work; no implementation authorization at that checkpoint |
+| I.2A | v0.1.15m.i.i; PR #51 | One unsettled whole pipeline and one replaceable latest intent; extractor/presentation split |
+| I.2B | v0.1.15m.i.j; PR #52 | Pure CONFIG encoded/estimated-PCM policy and bounded metadata adapter; production activation still deferred at that checkpoint |
+| Foundation integration | PR #53; main 56f8f8e | Accepted I.1/I.2A/I.2B work integrated into main |
+| I.2C | v0.1.15m.i.k; PR #54; accepted main 45cbf55 | Production admission, bounded probe ownership, application-only choices and contextual manual Generate; direct-file automation restriction explicitly reported |
+| I.2D | v0.1.15m.i.l; merged PR #55 / main a2f484b | Independent hostile acceptance, two demonstrated admission callback-order corrections, permanent controls, native/resource calibration and current documentation reconciliation; closure recommendation requires human review/merge |
+
+[Final review package](../audits/remediations/115m-i-i-aud007/final-acceptance/README.md) owns the current recommendation and evidence. The owner supplies cross-browser functional acceptance in Chrome, Opera, Edge and Firefox using direct local files and Python hosting; exact codecs and a complete browser/mode/case matrix are not inferred. This supplements managed Chromium automation, whose file:// navigation remains administrator-blocked. Networking-disabled offline execution remains a narrower 115N portability gap.
+
+AUD-007 closure review is distinct from Build 115N acceptance and shipment. Waveforms remain optional; playback/seek/source/recording ownership is primary. Source ceilings govern encoded bytes and estimated PCM, not total native/browser memory. Prior phase statements remain accurate historical checkpoints and are not overwritten.
+
+## 115M.I.M — AUD-011 watcher correctness
+
+The accepted starting point is main `a2f484b845df69e717ebd3998cabb7db640eb6c6`, merged PR #55, root `v0.1.15m.i.l`, schema 10. I.M advances development metadata to `v0.1.15m.i.m` and corrects only builder/watcher integration. JS/CSS dependencies, template, root version and flat branding inputs trigger coherent staged assembly; version metadata is selected afresh for each candidate. Assemblers remain serialized, superseded snapshots are discarded, and errors retain prior successful artifacts. Earlier versioned portable HTML is retained until an explicit developer cleanup.
+
+The [remediation report](../audits/remediations/115m-i-m-aud011/README.md) records original reproductions, permanent integration coverage, hostile testing, recovery/lifecycle behavior and Linux/Windows evidence. **AUD-011 corrective implementation was merged via PR #56 (`a85ed8d7`); broader 115N release acceptance remains separate.** The October 9 audit/materials and prior remediation evidence are immutable. This is separate from AUD-006/013/014 and Build 116; **115N remains WITHHELD**.
 
 ## Audit disposition index
 
@@ -114,9 +139,15 @@ Original IDs/priorities/titles come from the immutable [October 6 audit](../audi
 | RC-17 | P3 · Designed phase and control disagree | Closed corrective review/merge | M.I.A `fb0b8c0`; [#40](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/40) | [Report](../audits/remediations/115m-i-a-rc17/README.md); floating-point remainder limits disclosed, wider browsers/touch unverified. |
 | RC-18 | P3 · Free Ring ignores motion pause | Closed; correction independently verified | M.H.V `1987bed`; M.I `ad00367`, [#38](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/38), [#39](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/39) | [Verification](../audits/remediations/115m-i-rc16/README.md#rc-18-verification); no new pause fix in I. |
 | RC-19 | P3 · Public disposal leaves native recorder active | Closed corrective review/merge | M.I.B `1d160c6`; [#41](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/41) | [Report](../audits/remediations/115m-i-b-rc19/README.md); failed native shutdown is truthfully failed, not guaranteed recovery; upstream tracks remain owned by source. |
-| RC-20 | P3 · Missing root-relative distribution metadata | Closed corrective review/merge | M.I.D `8f94fc9`; [#43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43) | [Report](../audits/remediations/115m-i-d-rc20/README.md); direct file blocked/unverified, maskable artwork review and server MIME setup remain. |
+| RC-20 | P3 · Missing root-relative distribution metadata | Closed corrective review/merge | M.I.D `8f94fc9`; [#43](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/43) | [Report](../audits/remediations/115m-i-d-rc20/README.md); owner-reported direct-file functional coverage is in I.2D; managed file:// remains blocked and network-disabled execution, maskable artwork review and server MIME setup remain separate gates. |
 | RC-21 | P3 · Picker help describes wrong channel | Closed corrective review/merge | M.I.C `2d45956`; [#42](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/42) | [Report](../audits/remediations/115m-i-c-rc21-rc22/README.md); actual selected-channel response protected. |
 | RC-22 | P3 · ID collision misnames Remove target | Closed corrective review/merge | M.I.C `2d45956`; [#42](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/42) | [Report](../audits/remediations/115m-i-c-rc21-rc22/README.md); type-plus-ID lookup; native confirm intercepted for deterministic evidence, OS dialog presentation not accepted. |
+
+### October 9 AUD-007 disposition
+
+| Finding | Accepted implementation | Current review recommendation | Residual limits |
+| --- | --- | --- | --- |
+| AUD-007 · uncontrolled optional waveform reads/decodes | I.1–I.2C / PR #50–#54, accepted main 45cbf55 | I.2D / PR #55 recommends closure for human review after two narrow callback-order corrections; not yet closure approved | Estimated compressed channels can understate actual PCM; unresolved native work blocks optional availability; total browser memory is not bounded. Owner-reported direct-file functional coverage supplements managed automation; network-disabled portability remains a separate 115N gate. |
 
 ## Diagnostics and evidence
 
@@ -134,6 +165,25 @@ Version-specific counts, mutation outcomes, CI run IDs, native results and inter
 
 ## Remaining 115N acceptance work
 
-The [115N gates](../../ROADMAP.md#build-115n-acceptance-gates) require independent applicable browser/media/device/accessibility/performance/artistic evidence and explicit approval to ship. The human 16-Orb preset, real capture/suspension behavior, direct-file launch, external-player fidelity, constrained-hardware limits and maskable artwork remain review items. The final public changelog baseline must distinguish public Build 113 from internal Build 114; this record and the [release-delta draft](build-115-release-delta.md) decide no release number or published notes.
+The [115N gates](../../ROADMAP.md#build-115n-acceptance-gates) require independent applicable browser/media/device/accessibility/performance/artistic evidence and explicit approval to ship. The human 16-Orb preset, real capture/suspension behavior, demonstrably network-disabled direct-file operation, external-player fidelity, constrained-hardware limits and maskable artwork remain review items. The final public changelog baseline must distinguish public Build 113 from internal Build 114; this record and the [release-delta draft](build-115-release-delta.md) decide no release number or published notes.
 
 The [editorial integrity report](115m-i-e-documentation-review.md) records this pass's scope and validation. Canonical distributions, canonical changelog, original audit, remediation reports and evidence logs remain unchanged.
+
+## 115M.I.N.3 — October 9 AUD-006 corrective implementation
+
+Accepted baseline is `302173917ed9b337a9d1df9a3f93d083248fe51f`, merged PR #58,
+including required N.2 calibration head `3e6a01bc5453307d0b4d64db844d9dc0ce0518cf`.
+N.1/PR #57 and N.2 are immutable evidence-only checkpoints. The owner separately
+authorized N.3 production implementation and exact provisional factory values.
+Revision `v0.1.15m.i.n` adds Balanced/Custom/Unrestricted recorder policy, five-minute
+Stop target, whole-event admission and monotonic Stop scheduling, preserve-export
+Cancel and unresolved-backend fencing, independent versioned local settings and
+Record progress/accessibility. Schema remains 10. Earlier audit/remediation files
+and protected presets/branding remain byte-identical.
+
+The [N.3 package](../audits/remediations/115m-i-n3-aud006/README.md) owns validation,
+native evidence, negative controls, gaps and the independent-review recommendation.
+N.2's high-resolution VP8 resource guard and broader browser/device uncertainties
+remain real; encoded payload is not total native memory. Build 117 retains broader
+resource/encoder/performance optimization. AUD-006 closure requires independent
+review; **Build 115N remains WITHHELD**. No merge or shipment is authorized here.

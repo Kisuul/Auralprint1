@@ -1,0 +1,13 @@
+{
+  "main": "45cbf558afa8b437e39af6e006b22d0db9d703c0",
+  "acceptedHeads": {
+    "50": "b2d84e9122991affea5c8525a07c5f755a52a3ce",
+    "51": "b237857a3ec21e4ba7a0cd13f8e0bcff3e58122d",
+    "52": "574cc85c33a973a4f8025eb0488f9bbd654b06b3",
+    "53": "56f8f8e805d0a10ba7df7f155d153c7d25e00f9d",
+    "54": "d321f38cd491145712d5de16c49ba6ed72a798c9"
+  },
+  "pr54Merged": true,
+  "requiredModulesPresent": true,
+  "version": "v0.1.15m.i.k"
+}

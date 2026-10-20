@@ -304,6 +304,47 @@ const CONFIG = deepFreeze({
     volume: { min: 0, max: 1, step: 0.01 },
   },
 
+  // Application-only waveform policy and choices; never scene/preset defaults.
+  waveform: {
+    decodeSampleRateHz: 44100,
+    peakBucketCount: 512,
+    automaticProfiles: [
+      { id: "4m", approximateMinutes: 4 },
+      { id: "8m", approximateMinutes: 8 },
+      { id: "15m", approximateMinutes: 15 },
+    ],
+    defaultProfileId: "8m",
+    defaultAboveProfileBehavior: "ask",
+    aboveProfileBehaviors: [
+      { id: "ask", label: "Ask before generating" },
+      { id: "generate-if-permitted", label: "Generate automatically if permitted" },
+      { id: "skip", label: "Skip automatic generation" },
+    ],
+    // Provisional source defaults, not a total browser-memory guarantee.
+    maxEncodedBytes: 64 * 1024 * 1024,
+    maxEstimatedDecodedPcmBytes: 512 * 1024 * 1024,
+    fallbackEstimatedChannels: 2,
+    metadataProbe: { maxBytes: 64 * 1024, maxChunks: 128 },
+  },
+
+  // Application policy only: decimal bytes and milliseconds, outside Scene presets.
+  recordingResources: {
+    defaultProfile: "balanced",
+    profiles: ["balanced", "custom", "unrestricted"],
+    factory: {
+      softBytes: 130_000_000,
+      aggregateBytes: 270_000_000,
+      reserveBytes: 10_000_000,
+      maxChunks: 1_200,
+      durationMs: 300_000,
+      warningFraction: 0.80,
+    },
+    // Representation constraints, not substitute resource ceilings.
+    integer: { min: 1, max: Number.MAX_SAFE_INTEGER },
+    reserveDivisor: 10,
+    storage: { key: "auralprint.recording-resources", version: 1 },
+  },
+
   recording: {
     // Build 113 recording feature gate.
     hooksEnabled: true,

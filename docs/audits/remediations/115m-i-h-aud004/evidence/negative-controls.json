@@ -1,0 +1,200 @@
+{
+  "method": "Eight disposable source copies. Original tests retained. Detection requires intended observable assertion, not harness crash.",
+  "results": [
+    {
+      "name": "tooltip-title",
+      "mutation": {
+        "file": "src/js/ui/ui.js",
+        "before": "if (control.title !== title) control.title = title;",
+        "after": "control.title = title;"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 tooltip titles are idempotent",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "unchanged tooltip title writes",
+      "failures": [
+        "not ok 1 - AUD-004 tooltip titles are idempotent on idle, focus and unrelated settings"
+      ],
+      "assertionExcerpt": "  error: |-\n    unchanged tooltip title writes\n    + actual - expected\n    \n    + [\n    +   'Angular Speed: 1.5707963267948966 rad/s (90.0\u00b0/s)',\n    +   'Angular Speed: 1.5707963267948966 rad/s (90.0\u00b0/s)'\n    + ]\n    - []\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual:\n    0: 'Angular Speed: 1.5707963267948966 rad/s (90.0\u00b0/s)'\n    1: 'Angular Speed: 1.5707963267948966 rad/s (90.0\u00b0/s)'\n  operator: 'deepStrictEqual'\n"
+    },
+    {
+      "name": "duplicate-recorder",
+      "mutation": {
+        "file": "src/js/ui/ui.js",
+        "before": "    refreshConfigTooltips();\n",
+        "after": "    refreshConfigTooltips();\n    refreshRecordingUi();\n"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 recorder projects once",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "unchanged recorder must not project",
+      "failures": [
+        "not ok 1 - AUD-004 recorder projects once on change and never duplicates unchanged projection"
+      ],
+      "assertionExcerpt": "  error: |-\n    unchanged recorder must not project\n    \n    30 !== 0\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 0\n  actual: 30\n  operator: 'strictEqual'\n"
+    },
+    {
+      "name": "selector-aria",
+      "mutation": {
+        "file": "src/js/ui/ui.js",
+        "before": "if (el && el.getAttribute(key) !== value) el.setAttribute(key, value);",
+        "after": "if (el) el.setAttribute(key, value);"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 idle source selectors",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "unchanged selectors/launcher ARIA writes",
+      "failures": [
+        "not ok 1 - AUD-004 idle source selectors, transport and launchers perform no redundant writes"
+      ],
+      "assertionExcerpt": "  error: 'unchanged selectors/launcher ARIA writes'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: '=='\n"
+    },
+    {
+      "name": "source-error-stale",
+      "mutation": {
+        "file": "src/js/ui/ui.js",
+        "before": "    syncProperty(ui.audioStatus, \"textContent\", sourceUi.audioStatusText);",
+        "after": "    if (ui.audioPanel.dataset.sourceMode !== sourceUi.audioPanelSourceMode) syncProperty(ui.audioStatus, \"textContent\", sourceUi.audioStatusText);"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 source errors and permission",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "Microphone permission denied",
+      "failures": [
+        "not ok 1 - AUD-004 source errors and permission status propagate without settings replacement"
+      ],
+      "assertionExcerpt": "  error: |-\n    The input did not match the regular expression /Microphone permission denied/. Input:\n    \n    'Waiting for microphone permission.'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual: 'Waiting for microphone permission.'\n  operator: 'match'\n"
+    },
+    {
+      "name": "finalization-stale",
+      "mutation": {
+        "file": "src/js/ui/ui.js",
+        "before": "if (ui.recordingUiSyncKey === syncKey) return;",
+        "after": "if (ui.recordingUiSyncKey) return;"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 recorder finalization alone",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "finalization busy accessibility must update promptly",
+      "failures": [
+        "not ok 1 - AUD-004 recorder finalization alone updates busy/status and completion unlocks transport"
+      ],
+      "assertionExcerpt": "  error: |-\n    finalization busy accessibility must update promptly\n    \n    'false' !== 'true'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 'true'\n  actual: 'false'\n  operator: 'strictEqual'\n"
+    },
+    {
+      "name": "hidden-reveal-stale",
+      "mutation": {
+        "file": "src/js/ui/workspace.js",
+        "before": "onPanelShown(ui.visualizersPanel);",
+        "after": "/* presentation refresh omitted */"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 hidden Visualizers reveal",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "reveal must refresh canonical values synchronously",
+      "failures": [
+        "not ok 1 - AUD-004 hidden Visualizers reveal refreshes values, titles and focus before a frame"
+      ],
+      "assertionExcerpt": "  error: |-\n    reveal must refresh canonical values synchronously\n    + actual - expected\n    \n    + '1.5707963267948966'\n    - '0.234567'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: '0.234567'\n  actual: '1.5707963267948966'\n  operator: 'strictEqual'\n"
+    },
+    {
+      "name": "focused-inventory",
+      "mutation": {
+        "file": "src/js/ui/visualizers-panel.js",
+        "before": "    const focused = list.contains(document.activeElement) ? document.activeElement : null;",
+        "after": "    list.replaceChildren();\n    const focused = list.contains(document.activeElement) ? document.activeElement : null;"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-005: new settings snapshot",
+        "tests/visualizers-panel.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "exact focused node",
+      "failures": [
+        "not ok 1 - AUD-005: new settings snapshot and new equivalent collection preserve focused edit",
+        "not ok 2 - AUD-005: new settings snapshot and new equivalent collection preserve focused duplicate",
+        "not ok 3 - AUD-005: new settings snapshot and new equivalent collection preserve focused remove",
+        "not ok 4 - AUD-005: new settings snapshot and new equivalent collection preserve focused edit-ring"
+      ],
+      "assertionExcerpt": "  error: |-\n    edit B: exact focused node\n    \n    false !== true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'\n"
+    },
+    {
+      "name": "duplicate-tooltip-listeners",
+      "mutation": {
+        "file": "src/js/ui/ui.js",
+        "before": "if (!control || spec.feedbackEventsWired) continue;",
+        "after": "if (!control) continue;"
+      },
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=AUD-004 tooltip discovery retains listeners",
+        "tests/targeted-audit.test.js"
+      ],
+      "positiveControlExitCode": 0,
+      "exitCode": 1,
+      "detected": true,
+      "assertionFailure": true,
+      "expectedEvidence": "surviving controls must not register duplicate tooltip listeners",
+      "failures": [
+        "not ok 1 - AUD-004 tooltip discovery retains listeners and removes deleted controls from feedback"
+      ],
+      "assertionExcerpt": "  error: |-\n    surviving controls must not register duplicate tooltip listeners\n    \n    3 !== 0\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 0\n  actual: 3\n  operator: 'strictEqual'\n"
+    }
+  ]
+}

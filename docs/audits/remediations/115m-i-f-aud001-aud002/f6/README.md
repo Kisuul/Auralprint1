@@ -96,7 +96,7 @@ The preliminary runner caught observation-timing assumptions: source/resources c
 | Actual encoded A/B capture | **2/2** |
 | Semantic controls | **28/28 meaningful detections** |
 
-RC-02/03/04/05/06/19/20 protections remain green in the complete suite and relevant native integration. [Acceptance matrix](acceptance-matrix.md), [machine-readable validation](validation.json), [commands](evidence/commands.json), [full suite](evidence/default-suite.log).
+RC-02/03/04/05/06/19/20 protections remain green in the complete suite and relevant native integration. [Acceptance matrix](acceptance-matrix.md), [machine-readable validation](validation.json), [commands](evidence/commands.json), [full suite](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/remediations/115m-i-f-aud001-aud002/f6/evidence/default-suite.log).
 
 ```sh
 source /workspace/auralprint-environment/activate.sh

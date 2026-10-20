@@ -18,6 +18,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
@@ -35,11 +37,16 @@ jobs:
       - name: Verify portable and hosted packaging contracts
         run: python scripts/verify_distribution.py
       - name: Verify versioned artifact and untracked generated output
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         shell: node {0}
         run: |
           const assert = require('node:assert/strict');
           const fs = require('node:fs');
           const { execFileSync } = require('node:child_process');
+          const actualHead = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+          assert.equal(actualHead, process.env.EXPECTED_HEAD_SHA, 'CI did not check out the requested head');
+          console.log(`Verified exact head ${actualHead}`);
           const version = fs.readFileSync('version', 'utf8').trim();
           assert.match(version, /^v.+/);
           const artifact = `dist/auralprint_${version.slice(1)}.html`;

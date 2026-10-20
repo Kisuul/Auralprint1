@@ -1,0 +1,331 @@
+{
+  "assignment": "115M.I.N.1",
+  "finding": "October 9 AUD-006 (recorder retention); related October 6 AUD-009, distinct from October 6 AUD-006 source/load",
+  "baseline": "a85ed8d7cf0d670a30b5763e8576d955f7c2d285",
+  "branch": "codex/115m-i-n-aud006-recorder-capacity",
+  "version": "v0.1.15m.i.m",
+  "schema": 10,
+  "build_115n": "WITHHELD",
+  "verdict": "AUD-006 \u2014 NARROW CORRECTIVE POLICY RECOMMENDED BEFORE 115N.",
+  "outcome": "B",
+  "recommended_option": "E, hybrid, subject to explicit policy authorization and workload/device calibration",
+  "production_implementation": false,
+  "factory_limits_selected": false,
+  "checks": [
+    {
+      "command": [
+        "npm",
+        "ci",
+        "--cache",
+        "/workspace/auralprint-environment/npm-cache"
+      ],
+      "exit_code": 0,
+      "log": "npm-ci.log",
+      "note": "Completed before modeled/native experiments, focused/full tests and final build."
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "tests/recording-export.test.js",
+        "tests/rc19-recorder-disposal.test.js",
+        "tests/targeted-audit.test.js",
+        "tests/transport-ownership.test.js",
+        "tests/live-source-ownership.test.js",
+        "tests/input-source-manager.test.js",
+        "tests/file-activation-ownership.test.js",
+        "tests/queue-entry-ownership.test.js",
+        "tests/stream-graph.test.js"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.097,
+      "log": "focused.log"
+    },
+    {
+      "command": [
+        "npm",
+        "test"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 18.967,
+      "log": "npm-test.log"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.305,
+      "log": "build.log"
+    },
+    {
+      "command": [
+        "python",
+        "scripts/verify_distribution.py"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.073,
+      "log": "distribution.log"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.007,
+      "log": "diff-check.log"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/validate-recording-export.cjs"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 4.283,
+      "log": "rc06-native.log"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/validate-finalizing-eof.cjs"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 21.364,
+      "log": "rc05-native.log"
+    }
+  ],
+  "modeled": {
+    "passed": true,
+    "cases": 23,
+    "native_memory_evidence": false,
+    "future_policy_mutations_installed_or_run": false
+  },
+  "native": {
+    "browser": "Chromium 151.0.7922.173, Linux headless",
+    "capacity_cases": 11,
+    "passed": true,
+    "render_dimensions": [
+      960,
+      640
+    ],
+    "requested_fps": 30,
+    "dpr": 1,
+    "longer_capture_ms": 60021,
+    "longer_capture_bytes": 14470681,
+    "actual_codecs": [
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/mp4;codecs=vp9,opus"
+    ],
+    "download_and_native_replay": true,
+    "previous_export_preservation": true,
+    "source_switch_during_capture": "UI locked, tested attempted switch; no forced bypass",
+    "source_owned_track_survival_then_source_teardown": true,
+    "memory_metric": "CDP whole-page JSHeapUsedSize/JSHeapTotalSize checkpoints; no recorder attribution/native/process peak claim",
+    "initial_harness_failure_preserved": "native-initial.json: incorrect source.kind=file expectation for idle File workflow; 11 recordings/download/replay had completed; corrected assertion follows source teardown contract",
+    "unmodified_export_probe": "rc06-native.json",
+    "native_eof_probes": {
+      "passed": 6,
+      "evidence": "rc05-native.json"
+    }
+  },
+  "tests": {
+    "focused": {
+      "total": 347,
+      "passed": 347,
+      "failed": 0
+    },
+    "full": {
+      "total": 973,
+      "passed": 972,
+      "failed": 0,
+      "skipped": 1,
+      "skip": "existing AP_MILLION_STRESS opt-in"
+    }
+  },
+  "unverified": [
+    "Firefox/Safari/mobile and constrained hardware capacity",
+    "real microphone/display/system-audio permissions and audio fidelity",
+    "native background/suspension, stop refusal/hang, long-duration resource envelope",
+    "recorder-attributable native/process physical-memory measurement",
+    "external-player replay/audio fidelity",
+    "network-disabled portable file:// execution",
+    "remote CI for this investigative branch (not claimed)"
+  ],
+  "human_decisions_before_implementation": [
+    "bounded interactive versus long/unattended persistent recording expectation",
+    "supported browser/device/workload envelope and safe calibration",
+    "explicit S/H/C values, units and admission headroom after evidence",
+    "oversized-event failure, soft-limit tail retention and no generic partial salvage",
+    "preserve-export cancellation, unconfirmed-native failure/reinitialization and transport unlock",
+    "duration warning versus explicitly authorized automatic stop/deadline",
+    "canonical progress/reason/UI wording and residual browser-process risk acceptance"
+  ],
+  "scope_report": "evidence/scope.json",
+  "evidence_hashes": {
+    "README.md": {
+      "bytes": 3091,
+      "sha256": "05f3da29f3eb6f7d436fceb16e996fc624342fcef0644401c9ec057b80f1f841"
+    },
+    "evidence/README.md": {
+      "bytes": 1281,
+      "sha256": "9eef8ba5de65546be13c09099bc18cf22386a75d653a4f201242f4b006b3db2b"
+    },
+    "evidence/baseline.json": {
+      "bytes": 660,
+      "sha256": "6a9fa8202c9725e712dfbe5da69aadef49acb406eeca86c5876db8c44ec83b42"
+    },
+    "evidence/build.log": {
+      "bytes": 137,
+      "sha256": "e7f999d31b9f79312cf289f69c3ae658ffe5f3cc57b8422fa15f72c4955243c4"
+    },
+    "evidence/commands.json": {
+      "bytes": 1740,
+      "sha256": "7d6d59c4afd4fc8236b7a3aeb3df13fb62d6b6d0fe97465ac13775af2d611e21"
+    },
+    "evidence/diff-check.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "evidence/distribution.log": {
+      "bytes": 1252,
+      "sha256": "79c93271d54f6f1393a2e797504c1185368a218adefa94abbf526bf8a4c3ac16"
+    },
+    "evidence/focused.log": {
+      "bytes": 50782,
+      "sha256": "32a2e105a371409f83a4fe903e5154a79d772b97e791eca4720ce342a6184005"
+    },
+    "evidence/modeled.json": {
+      "bytes": 19150,
+      "sha256": "29a652cb9bce718448e1838380f695cd91b1d73ebe128cb73ec6b62b68d51fc2"
+    },
+    "evidence/modeled.mjs": {
+      "bytes": 12474,
+      "sha256": "07ca167c4c33861d173b490954de0f3931112f23209ca0f5a7b6dabfa3fe02fb"
+    },
+    "evidence/native-initial.json": {
+      "bytes": 56497,
+      "sha256": "ef16098d1785d1080c960399cf2c267eaff76a3f27dc9699032fde4579432a1a"
+    },
+    "evidence/native-summary.json": {
+      "bytes": 8866,
+      "sha256": "47a33d32fa8f0ced8fc940c6750eb8bcc6647628d1e9147aaa286d7922f89fc3"
+    },
+    "evidence/native.cjs": {
+      "bytes": 12413,
+      "sha256": "d03777a007ede76c51c5924d71c0e34f67b32c9e9c317ee077d41d130f416223"
+    },
+    "evidence/native.json": {
+      "bytes": 62036,
+      "sha256": "34489ad6a41d8372c3a26d98b265f7193bf1489861333edf209c8e4d343a8418"
+    },
+    "evidence/npm-ci.log": {
+      "bytes": 235,
+      "sha256": "b02550619ebf4785f4e984b503bcdbe2c3638401a240c0b20721087e1666d93a"
+    },
+    "evidence/npm-test.log": {
+      "bytes": 114424,
+      "sha256": "d57b021f749b8d38d8c9007df64ec9e97d477a9d696fcbfc8ed6128a554bf07d"
+    },
+    "evidence/rc05-native.json": {
+      "bytes": 16776,
+      "sha256": "fa72a433f9ce10779e3167a5006ae3953db725c7b685cbce558e16a7c39cd907"
+    },
+    "evidence/rc05-native.log": {
+      "bytes": 153,
+      "sha256": "de45055b0d4b61369dd1cf6780a3fe7d59aacfb577a8b572ff0eb38ea4c8278d"
+    },
+    "evidence/rc06-native.json": {
+      "bytes": 1540,
+      "sha256": "500f9f50b2241de6e528c8cda131cfca90d5348da5fe4d7f3f478613d39bb179"
+    },
+    "evidence/rc06-native.log": {
+      "bytes": 1540,
+      "sha256": "500f9f50b2241de6e528c8cda131cfca90d5348da5fe4d7f3f478613d39bb179"
+    },
+    "evidence/scope.json": {
+      "bytes": 2347,
+      "sha256": "8791c7ceeb6dd5b0060ef14141888c6abf8e95582f160f1eda992bdda1a6855d"
+    },
+    "evidence/verify-scope.py": {
+      "bytes": 1965,
+      "sha256": "701cf180f73de1d18b504a73b9e3840ea91ad4c4a48a5af833d8110663528d85"
+    },
+    "implementation-contract.md": {
+      "bytes": 9438,
+      "sha256": "bc3c555effa1314fd75b016b5548d694529406cd0833670086d1d553a7aca785"
+    },
+    "ownership-model.md": {
+      "bytes": 7499,
+      "sha256": "f61d51df9e40448d9d09711252fa2b5af1107647ecebe824a22345ea69890a2c"
+    },
+    "policy-options.md": {
+      "bytes": 9060,
+      "sha256": "f22758507b15d02cc401287168ebd9f8dbaf9e528cccb16f8801e2884ee1d717"
+    },
+    "release-disposition.md": {
+      "bytes": 5806,
+      "sha256": "23211c8299b57c4319a3c3af5207cea958ff650732e6f1d1a12230f4eb0524a1"
+    },
+    "resource-characterization.md": {
+      "bytes": 14182,
+      "sha256": "7fbcad98c55b96eb969ab585b3a70d513818bfa88af35fcacffc7ad562c648eb"
+    }
+  },
+  "final_fetched_main": "a85ed8d7cf0d670a30b5763e8576d955f7c2d285",
+  "scope_verified": {
+    "passed": true,
+    "baseline_tracked_files_byte_identical": 976,
+    "outside_package_changes": 0,
+    "runtime_config_presets_schema_version_releases_roadmap_and_protected_fixtures_changed": false
+  },
+  "distribution": {
+    "auralprint_0.1.15m.i.m.html": {
+      "bytes": 448610,
+      "sha256": "7ca224e26b120acecbb219485e009db93dc020340223c4d87a896999854de678"
+    },
+    "hosted/apple-touch-icon.png": {
+      "bytes": 21085,
+      "sha256": "d81a6025dd4b21484bcbe975c0bd2e6db2fdb61a1437e1112849ef58ab016bfc"
+    },
+    "hosted/favicon-96x96.png": {
+      "bytes": 9034,
+      "sha256": "63c77536989a01479a37f41930989232d589710e83a3e706b9b1fe7b02301817"
+    },
+    "hosted/favicon.ico": {
+      "bytes": 15086,
+      "sha256": "9800272423a8511e334311af34c9ca6e55aa4fa6051d6f4bf355af8189d7e92f"
+    },
+    "hosted/favicon.svg": {
+      "bytes": 1121,
+      "sha256": "f3e95bf3acd93122339066956ec52a048b36f176864255f84f4c45fefc22dd16"
+    },
+    "hosted/index.html": {
+      "bytes": 447441,
+      "sha256": "1c3c69bec5cade5324a2f6c61c1e6dd4cc235768b80c54c102cd09af27baa9e6"
+    },
+    "hosted/site.webmanifest": {
+      "bytes": 517,
+      "sha256": "73dd427c1ba3897e29ba69a325e1220520f6ff8fccd45f661a2365e656b23495"
+    },
+    "hosted/web-app-manifest-192x192.png": {
+      "bytes": 22773,
+      "sha256": "b73872f891fdb6cb32eb57c67beb9ea3e940b1722cf5912c60bcb9185a537991"
+    },
+    "hosted/web-app-manifest-512x512.png": {
+      "bytes": 105356,
+      "sha256": "451750c8f7eebabce053802ebf3e17e447f84daf339f09fa0d43288d7f773568"
+    }
+  },
+  "additional_checks": {
+    "staged_and_worktree_whitespace": "passed",
+    "package_markdown_file_links": "passed",
+    "native_and_modeled_node_syntax": "passed",
+    "scope_verifier_python_syntax": "passed"
+  }
+}

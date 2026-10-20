@@ -35,9 +35,15 @@ state (ephemeral runtime: audio, UI, bands, etc.)
 
 **Rules**
 - `CONFIG` MUST NEVER be mutated.
-- `preferences` is the only writable long-lived state.
+- `preferences` is the writable long-lived **Scene** configuration; application-only preferences are separate.
 - `runtime.settings` MUST be derived via `resolveSettings()`.
 - `state` is volatile and must be safe to reset at any time.
+
+Application-only settings are not Scene preferences: waveform choices use
+`application-preferences.js` (`auralprint.waveform-preferences`, format 1);
+Recording Resources uses `recording-policy.js` (`auralprint.recording-resources`,
+format 1). Both derive defaults from CONFIG, remain outside presets/URL schema 10,
+and have independent UI controls. Recording policy is frozen on Start.
 
 Violation of this hierarchy = architectural bug.
 
@@ -178,9 +184,19 @@ Violation results in:
   recorder tap release through `releaseStream()`; live source tracks remain owned
   by InputSourceManager. An audio-owner cleanup failure never authorizes stopping
   upstream tracks.
-- Disposal remains disabled if native shutdown or handler cleanup fails, with a
-  truthful failed status that persists until explicit reinitialization. Do not
-  infer native inactivity from dropping the application reference.
+- Ordinary Stop is a one-shot native finalization request with durable manual,
+  capacity or duration reason. Admission rejects whole events before retention.
+  Candidate Blob/URL plus required cleanup precede successful replacement and
+  revocation of the previous URL.
+- `cancel()` is a preserve-export application abort, distinct from Dispose. Fence
+  before native cleanup, discard new chunks, release only owned resources and
+  unlock primary transport. Unconfirmed native shutdown or required cleanup leaves
+  a bounded ownership tombstone and recording disabled until page reload. Init
+  cannot reenable an unresolved backend. Never infer inactivity from dropping a
+  reference; advise downloading the retained export before reload.
+- Dispose retains destructive export disposal and terminal semantics. After
+  confirmed normal disposal explicit Init may create a fresh backend; unresolved
+  shutdown/cleanup remains blocked. There is no automatic finalization watchdog.
 
 ---
 
@@ -368,6 +384,27 @@ Avoid:
 - L, R, and C are first-class analysis channels. An Orb's `chanId` selects its waveform, full-spectrum energy, and selected-band spectral-energy source; empty `bandIds` uses that channel's full-spectrum energy, while nonempty `bandIds` averages selected energies from that channel.
 - `AnalysisFrame` exposes producer-owned channel band-energy arrays as read-only-by-contract references. Band definitions and metadata remain shared, and the global spectrum/dominant remains the real combined C channel unless a future deliberate contract changes it.
 
+## 5.5 Spectral Ring Ownership (Build 115K)
+
+- Spectral Ring is a first-class singleton `VisualizerRuntime` participant; its runtime ID and type are `spectral-ring`.
+- Visualizers owns its sole writable presentation editor. Analysis does not own presentation, and the transitional color panel must not duplicate it.
+- Spectral Ring consumes the global combined C spectrum and C waveform.
+- Schema-10 persistence intentionally remains under `bands.overlay` until a deliberate future schema revision.
+- Free-run phase resets independently to zero. Explicit Orb-lock may synchronize/reset to the first Orb and remains safe when no Orb exists.
+- Visualizer-specific configuration has exactly one writable UI owner.
+- Shared color/palette ownership is Scene-level and separate from Spectral Ring geometry.
+
+## 5.6 Scene Appearance Ownership (Build 115L)
+
+- Scene Appearance is the sole writable UI owner of shared visual color policy; this does not create a persisted `scene` object.
+- Persistence remains in schema-10 `visuals.*`, `bands.*`, and `orbs.*` paths.
+- Scene owns canvas background, Scene fixed particle color, default Orb color policy, and the shared band palette.
+- The palette is consumed by multiple visualizers and Analysis diagnostics; no individual visualizer owns it, and Spectral Ring has no independent color state.
+- Orb `colorSource=inherit` resolves through Scene default policy. Inherited dominant is target-aware for targeted Orbs; explicit dominant remains global combined-C.
+- Orb hue offset affects only that Orb's palette-derived colors. Trace color mode remains Orb-local.
+- Scene fixed particle color supplies current Orb/trace fixed modes and the last-particle fallback.
+- Every color setting has exactly one writable UI owner.
+
 ---
 
 ## 6. Queue System (Runtime Only)
@@ -417,6 +454,13 @@ Before implementing any change, an agent must:
 - No state leaks
 - No duplicate listeners
 - Presets round-trip
+
+### Documentation discipline
+- Document the **current implementation**, configuration, interfaces, developer workflows, and known limitations. Be brief and verifiable; no marketing copy or development diary.
+- Correct stale code comments. Update an existing authoritative document before creating another; avoid repeating the same facts across files.
+- Keep test logs, investigations, failed approaches, and transient pre-release fixes in PRs or scoped evidence, not permanent operational documentation.
+- The changelog compares **shipped public releases**. Report fixes only when the defect existed in the previous public release; do not list defects introduced and corrected solely during unpublished development.
+- Historical audit evidence stays historical unless explicitly authorized for archival or deletion. Do not rewrite its original findings.
 
 ---
 
@@ -493,26 +537,5 @@ When in doubt:
 > Choose the option that preserves invariants over the one that feels cleaner.
 
 ---
-
-## 5.5 Spectral Ring Ownership (Build 115K)
-
-- Spectral Ring is a first-class singleton `VisualizerRuntime` participant; its runtime ID and type are `spectral-ring`.
-- Visualizers owns its sole writable presentation editor. Analysis does not own presentation, and the transitional color panel must not duplicate it.
-- Spectral Ring consumes the global combined C spectrum and C waveform.
-- Schema-10 persistence intentionally remains under `bands.overlay` until a deliberate future schema revision.
-- Free-run phase resets independently to zero. Explicit Orb-lock may synchronize/reset to the first Orb and remains safe when no Orb exists.
-- Visualizer-specific configuration has exactly one writable UI owner.
-- Shared color/palette ownership is Scene-level and separate from Spectral Ring geometry.
-
-## 5.6 Scene Appearance Ownership (Build 115L)
-
-- Scene Appearance is the sole writable UI owner of shared visual color policy; this does not create a persisted `scene` object.
-- Persistence remains in schema-10 `visuals.*`, `bands.*`, and `orbs.*` paths.
-- Scene owns canvas background, Scene fixed particle color, default Orb color policy, and the shared band palette.
-- The palette is consumed by multiple visualizers and Analysis diagnostics; no individual visualizer owns it, and Spectral Ring has no independent color state.
-- Orb `colorSource=inherit` resolves through Scene default policy. Inherited dominant is target-aware for targeted Orbs; explicit dominant remains global combined-C.
-- Orb hue offset affects only that Orb's palette-derived colors. Trace color mode remains Orb-local.
-- Scene fixed particle color supplies current Orb/trace fixed modes and the last-particle fallback.
-- Every color setting has exactly one writable UI owner.
 
 **End of Contract**
