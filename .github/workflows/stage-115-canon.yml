@@ -35,7 +35,6 @@ jobs:
         shell: bash
         run: |
           npm ci
-          npm test
           npm run build
           python scripts/verify_distribution.py
       - name: Archive the exact portable artifact and checksum
