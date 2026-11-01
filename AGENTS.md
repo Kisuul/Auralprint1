@@ -39,7 +39,7 @@ Auralprint is an offline-capable FFT audio-analysis application with playback, v
 ### 2.1 Schema Discipline
 
 - Schemas **2–13** retain their meanings; **12** owns authored Scene camera and **13** its frozen compact baseline.
-  The candidate writes **16**, with a separate frozen baseline for Queue policy and numeric Trace fade.
+  Build 116 / Release 5 writes **16**, with a separate frozen baseline for Queue policy and numeric Trace fade.
   Experimental **14/15** remain reserved and are rejected atomically. Never reinterpret wire versions or
   mutate the schema-13 literal/fingerprint/DEFLATE contract.
 - Update the **complete pipeline**: CONFIG defaults/limits, `sanitizePreset()`, `normalize*()`,
