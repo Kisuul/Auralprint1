@@ -114,7 +114,7 @@ async function audioControls(page) {
         assert.equal(links.find(l => l.rel === 'canonical')?.href, siteOrigin);
         for (const link of links) {
           if (link.rel === 'canonical') continue;
-          assert.ok(link.href.startsWith('/') && !link.href.startsWith('//'));
+          assert.ok(link.href.startsWith('./'));
           const result = await page.evaluate(async link => {
             const response = await fetch(link.resolved);
             const result = { ...link, status: response.status, mime: response.headers.get('content-type') };
