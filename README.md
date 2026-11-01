@@ -36,11 +36,11 @@ Before the native browser checks, install Playwright's matching Chromium headles
 Build outputs:
 
 - **Portable:** `dist/auralprint_<version-without-leading-v>.html`, derived from the root [version](version) file (this checkout: `dist/auralprint_0.1.16.html`); application JS/CSS and favicon embedded. The immutable [Release 5 / Build 116 HTML](docs/Canon/0.1.16/auralprint_0.1.16.html) is archived separately.
-- **Hosted:** `dist/hosted/index.html` plus the included icons and `site.webmanifest`. Deploy the whole directory, including at subdirectory paths, with appropriate MIME types.
+- **Hosted (official site only):** deploy the contents of `dist/hosted/` at `https://auralprint.idiw.net/`. Includes `index.html`, favicon/touch icons, `site.webmanifest` and the versioned OG preview in `og/`. The build emits site-root icon/manifest paths and absolute canonical, Open Graph and X/Twitter metadata from `src/assets/branding/hosted-site.json`. Other hosting origins or subdirectories require editing that branding configuration and its root-path assumptions.
 
 `npm run watch` watches JS/CSS, the HTML template, root `version`, and branding inputs. Build and watch share the distribution contract. CI runs Node tests, build and distribution verification on Ubuntu and Windows; the three standard Chromium browser checks and focused Queue/Trace and accessibility checks are mandatory on Ubuntu. Chromium CI uses local HTTP and does not certify Windows browser interaction, Firefox, Safari, physical devices, native audio permissions, direct `file://` operation or offline launch.
 
-The portable file is designed to run without adjacent assets. Direct local-file usage has owner-reported browser coverage, but fully network-disabled operation remains an open acceptance check. Hosted packaging does not provide a service worker or offline caching.
+The portable file is designed to run without adjacent assets. Direct local-file usage has owner-reported browser coverage, but fully network-disabled operation remains an open acceptance check. Hosted packaging does not provide a service worker or offline caching. When preparing a new release, replace the version-specific OG artwork and update the `image`/`image_alt` entries in the hosted-site configuration; the assembler updates the HTML automatically.
 
 ## Sharing in Build 116
 
