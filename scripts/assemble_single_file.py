@@ -9,6 +9,7 @@ from html import escape
 from pathlib import Path
 
 from distribution import load_branding, metadata, require, validate_html
+from hosted_site import load_hosted_site
 
 CSS_MARKER = "<!-- AURALPRINT_INLINE_CSS -->"
 JS_MARKER = "<!-- AURALPRINT_INLINE_JS -->"
@@ -33,15 +34,15 @@ def inline_script(js: str) -> str:
     return "<script>\n" + safe_js + "</script>"
 
 
-def assemble(template: str, css: str, js: str, version: str, assets: dict) -> tuple[str, str]:
+def assemble(template: str, css: str, js: str, version: str, assets: dict, site: dict) -> tuple[str, str]:
     for label, marker in (("CSS", CSS_MARKER), ("JS", JS_MARKER), ("version", VERSION_MARKER), ("head metadata", HEAD_MARKER)):
         require(template.count(marker) == 1, f"Missing or duplicate {label} marker in template")
     require(bool(re.fullmatch(r"v[0-9][A-Za-z0-9.\-]*", version)), "Invalid version tag")
     shared = template.replace(VERSION_MARKER, escape(version))
     shared = shared.replace(CSS_MARKER, inline_style(css)).replace(JS_MARKER, inline_script(js))
-    outputs = tuple(shared.replace(HEAD_MARKER, metadata(edition, assets)) for edition in ("portable", "hosted"))
+    outputs = tuple(shared.replace(HEAD_MARKER, metadata(edition, assets, site)) for edition in ("portable", "hosted"))
     for edition, output in zip(("portable", "hosted"), outputs):
-        validate_html(output, edition, version, assets)
+        validate_html(output, edition, version, assets, site)
     return outputs
 
 
@@ -57,7 +58,8 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv[1:])
     try:
         assets, manifest = load_branding(args.branding)
-        portable, hosted = assemble(read_text(args.template), read_text(args.css), read_text(args.js), args.version.strip(), assets)
+        site = load_hosted_site(args.branding)
+        portable, hosted = assemble(read_text(args.template), read_text(args.css), read_text(args.js), args.version.strip(), assets, site)
         # Validate all inputs and both HTML variants before writing any output.
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(portable, encoding="utf-8", newline="\n")
@@ -67,6 +69,9 @@ def main(argv: list[str]) -> int:
             for name, data in assets.items():
                 (args.hosted_dir / name).write_bytes(data)
             (args.hosted_dir / "site.webmanifest").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+            preview = args.hosted_dir / site["image"]
+            preview.parent.mkdir(parents=True, exist_ok=True)
+            preview.write_bytes((args.branding / site["image"]).read_bytes())
     except (ValueError, OSError) as error:
         parser.exit(1, f"Distribution packaging failed: {error}\n")
     return 0
