@@ -66,7 +66,7 @@ class Packaging(unittest.TestCase):
         expected = json.loads(json.dumps(source))
         expected['start_url'], expected['scope'] = self.site['origin'], self.site['origin']
         for icon in expected['icons']:
-            icon['src'] = icon['src']
+            icon['src'] = '.' + icon['src']
         self.assertEqual(json.loads((self.hosted / 'site.webmanifest').read_text(encoding="utf-8")), expected)
         self.assertNotIn('og:image', self.portable.read_text(encoding="utf-8"))
         hosted_doc = Document((self.hosted / "index.html").read_text(encoding="utf-8"))
@@ -90,7 +90,7 @@ class Packaging(unittest.TestCase):
             validate_html(bad, 'portable', VERSION, self.assets, self.site)
         hosted = assemble(self.template, CSS, JS, VERSION, self.assets, self.site)[1]
         with self.assertRaisesRegex(ValueError, 'Hosted metadata links differ'):
-            validate_html(hosted.replace('/favicon.ico', './favicon.ico'), 'hosted', VERSION, self.assets, self.site)
+            validate_html(hosted.replace('./favicon.ico', '/favicon.ico'), 'hosted', VERSION, self.assets, self.site)
 
     def test_build_missing_og_image(self):
         (self.branding / self.site['image']).unlink()
@@ -241,7 +241,7 @@ class Packaging(unittest.TestCase):
     def test_artifact_root_only_hosted_metadata(self):
         self.build()
         file = self.hosted / 'index.html'
-        file.write_text(file.read_text(encoding="utf-8").replace('href="/', 'href="./'), encoding="utf-8")
+        file.write_text(file.read_text(encoding="utf-8").replace('href="./', 'href="/'), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, 'Hosted metadata links differ'):
             self.verify()
 
