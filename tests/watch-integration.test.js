@@ -183,6 +183,19 @@ syncBuiltinESMExports();
       assert.deepEqual(readFileSync(`${dir}/dist/hosted/favicon.svg`), readFileSync(svg));
       verify(dir);
     });
+    await t.test("nested OG branding changes are staged, published and verified", async () => {
+      const count = watch.successes;
+      const source = `${dir}/src/assets/branding/og/auralprint-116-release5-og.jpg`;
+      const target = `${dir}/dist/hosted/og/auralprint-116-release5-og.jpg`;
+      const portableBefore = readFileSync(`${dir}/dist/auralprint_${version.slice(1)}.html`);
+      const original = readFileSync(source);
+      // Insert a valid JPEG comment after SOI: different bytes, same 1200x630 image.
+      const changed = Buffer.concat([original.subarray(0, 2), Buffer.from([0xff, 0xfe, 0, 6, 65, 85, 68, 49]), original.subarray(2)]);
+      writeFileSync(source, changed);
+      await watch.wait(() => watch.successes > count && existsSync(target) && readFileSync(target).equals(changed), "nested OG publication");
+      assert.deepEqual(readFileSync(`${dir}/dist/auralprint_${version.slice(1)}.html`), portableBefore);
+      verify(dir);
+    });
     await t.test("branding removal fails without damaging output and replacement recovers", async () => {
       const svg = `${dir}/src/assets/branding/favicon.svg`;
       await preserved(() => renameSync(svg, `${dir}/favicon.saved`));

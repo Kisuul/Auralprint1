@@ -10,7 +10,7 @@ import zlib
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from hosted_site import OG_DIMENSIONS, jpeg_dimensions, load_hosted_site, social_metadata
 
 ICONS = {
     "favicon.ico": ("image/x-icon", None),
@@ -98,8 +98,8 @@ def parse_manifest(data: bytes) -> dict:
     return manifest
 
 
-def hosted_manifest(source: dict) -> dict:
-    # Copy metadata; only deployment URLs and the previously absent scope change.
+def hosted_manifest(source: dict, origin: str) -> dict:
+    # Hosted is deployed at the official HTTPS root, unlike portable HTML.
     manifest = json.loads(json.dumps(source))
     require(manifest.get("name") == "Auralprint - Waveform Analysis Tool", "Incorrect manifest application name")
     require(manifest.get("short_name") == "Auralprint", "Incorrect manifest short_name")
@@ -118,8 +118,8 @@ def hosted_manifest(source: dict) -> dict:
         require(icon.get("sizes") == f"{dimensions[0]}x{dimensions[1]}", f"Manifest dimensions mismatch: {name}")
         require(icon.get("purpose", "any") in ("any", "maskable", "any maskable"), f"Invalid icon purpose: {name}")
         icon["src"] = f"./{name}"
-    manifest["start_url"] = "./index.html"
-    manifest["scope"] = "./"
+    manifest["start_url"] = origin
+    manifest["scope"] = origin
     return manifest
 
 
@@ -127,15 +127,16 @@ def load_branding(root: Path) -> tuple[dict[str, bytes], dict]:
     assets = {name: read_asset(root, name) for name in ICONS}
     for name, data in assets.items():
         validate_image(name, data)
-    manifest = hosted_manifest(parse_manifest(read_asset(root, "site.webmanifest")))
+    site = load_hosted_site(root)
+    manifest = hosted_manifest(parse_manifest(read_asset(root, "site.webmanifest")), site["origin"])
     return assets, manifest
 
 
-def metadata(edition: str, assets: dict[str, bytes]) -> str:
+def metadata(edition: str, assets: dict[str, bytes], site: dict | None = None) -> str:
     if edition == "portable":
         encoded = base64.b64encode(assets["favicon.svg"]).decode("ascii")
         return f'<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,{encoded}">'
-    require(edition == "hosted", f"Unknown distribution edition: {edition}")
+    require(edition == "hosted" and site is not None, f"Missing hosted metadata configuration: {edition}")
     return '\n  '.join([
         '<link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">',
         '<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">',
@@ -143,6 +144,7 @@ def metadata(edition: str, assets: dict[str, bytes]) -> str:
         '<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">',
         '<meta name="apple-mobile-web-app-title" content="Auralprint">',
         '<link rel="manifest" href="./site.webmanifest">',
+        social_metadata(site),
     ])
 
 
@@ -186,16 +188,7 @@ class Document(HTMLParser):
             self.title += data
 
 
-def relative_url(value: str) -> None:
-    require(isinstance(value, str) and value.startswith("./") and "\\" not in value,
-            f"Hosted URL must be package-relative: {value}")
-    parsed = urlsplit(value)
-    require(not parsed.scheme and not parsed.netloc and not parsed.query and not parsed.fragment,
-            f"Invalid hosted resource URL: {value}")
-    require(".." not in parsed.path.split("/"), f"Hosted URL escapes package: {value}")
-
-
-def validate_html(html: str, edition: str, version: str, assets: dict[str, bytes]) -> Document:
+def validate_html(html: str, edition: str, version: str, assets: dict[str, bytes], site: dict | None = None) -> Document:
     require(bool(html), f"Empty {edition} HTML")
     require(not re.search(r"<!--\s*AURALPRINT_|__AURALPRINT_[A-Z_]+__", html), "Unresolved assembly marker")
     doc = Document(html)
@@ -207,7 +200,9 @@ def validate_html(html: str, edition: str, version: str, assets: dict[str, bytes
     require(len(doc.styles) == 1 and bool(doc.styles[0].strip()), "Missing embedded application CSS")
     require(not re.search(r"@import|url\(\s*(?![\"']?data:)", doc.styles[0]), "External stylesheet resource dependency")
     if edition == "portable":
-        require(len(doc.links) == 1 and doc.links[0].get("rel") == "icon", "Portable must have one embedded favicon and no external metadata")
+        require(len(doc.links) == 1 and doc.links[0].get("rel") == "icon" and
+                not any(m.get("property", "").startswith("og:") or m.get("name", "").startswith("twitter:") for m in doc.metas),
+                "Portable must have one embedded favicon and no external metadata")
         icon = doc.links[0]
         require(icon.get("type") == "image/svg+xml", "Portable favicon MIME mismatch")
         prefix = "data:image/svg+xml;base64,"
@@ -219,20 +214,16 @@ def validate_html(html: str, edition: str, version: str, assets: dict[str, bytes
         require(decoded == assets["favicon.svg"], "Embedded favicon differs from canonical source")
         validate_image("favicon.svg", decoded)
     else:
-        expected = [("shortcut icon", "./favicon.ico"), ("icon", "./favicon-96x96.png"),
-                    ("icon", "./favicon.svg"), ("apple-touch-icon", "./apple-touch-icon.png"),
-                    ("manifest", "./site.webmanifest")]
-        for link in doc.links:
-            relative_url(link.get("href", ""))
-        require([(link.get("rel"), link.get("href")) for link in doc.links] == expected,
-                "Hosted metadata links differ from packaging contract")
-        for link in doc.links:
-            name = link["href"][2:]
-            if name in ICONS and "type" in link:
-                require(link["type"] == ICONS[name][0], f"HTML icon MIME mismatch: {name}")
-            if name in ICONS and "sizes" in link:
-                dimensions = ICONS[name][1]
-                require(link["sizes"] == f"{dimensions[0]}x{dimensions[1]}", f"HTML icon dimensions mismatch: {name}")
+        require(site is not None, "Hosted validation requires site configuration")
+        expected = Document(metadata("hosted", assets, site))
+        require(doc.links == expected.links, "Hosted metadata links differ from official root contract")
+        def social_tags(metas):
+            return [m for m in metas if m.get("property", "").startswith("og:") or
+                    m.get("name", "").startswith("twitter:") or m.get("name") == "apple-mobile-web-app-title"]
+        require(social_tags(doc.metas) == social_tags(expected.metas),
+                "Hosted social metadata differs from official site contract")
+        require(all(link.get("href", "").startswith("./") for link in doc.links if link.get("rel") != "canonical"),
+                "Hosted resources must use package-relative paths")
     return doc
 
 
@@ -240,11 +231,12 @@ def verify_distribution(dist: Path, branding: Path, version: str, css: str, js: 
     # Import lazily so assembler and verifier share the exact safe inline block policy.
     from assemble_single_file import inline_script, inline_style
     assets, manifest = load_branding(branding)
+    site = load_hosted_site(branding)
     portable_path = dist / f"auralprint_{version.removeprefix('v')}.html"
     hosted = dist / "hosted"
     documents = []
     for edition, file in (("portable", portable_path), ("hosted", hosted / "index.html")):
-        doc = validate_html(file.read_text(encoding="utf-8"), edition, version, assets)
+        doc = validate_html(file.read_text(encoding="utf-8"), edition, version, assets, site)
         require(doc.scripts[0] == Document(inline_script(js)).scripts[0], f"{edition} JS differs from shared bundle")
         require(doc.styles[0] == Document(inline_style(css)).styles[0], f"{edition} CSS differs from shared bundle")
         documents.append(doc)
@@ -253,12 +245,18 @@ def verify_distribution(dist: Path, branding: Path, version: str, css: str, js: 
     for name, data in assets.items():
         require(read_asset(hosted, name) == data, f"Hosted icon differs from canonical source: {name}")
     generated = parse_manifest(read_asset(hosted, "site.webmanifest"))
-    for value in [generated.get("start_url"), generated.get("scope")] + [i.get("src") for i in generated.get("icons", [])]:
-        relative_url(value)
-        for base in ("https://example.test/site.webmanifest", "https://example.test/apps/auralprint/site.webmanifest"):
-            package = urljoin(base, "./")
-            require(urljoin(base, value).startswith(package), f"Manifest URL escapes deployment prefix: {value}")
-    require(generated == manifest, "Generated manifest differs from documented URL transformation")
-    require({p.name for p in hosted.iterdir()} == {"index.html", "site.webmanifest", *ICONS}, "Unexpected or missing hosted package files")
-    files = [portable_path, *sorted(hosted.iterdir())]
+    require(generated == manifest, "Generated manifest differs from official root contract")
+    require(generated["start_url"] == site["origin"] and generated["scope"] == site["origin"],
+            "Hosted manifest must target the official site origin")
+    require(all(icon["src"].startswith("./") for icon in generated["icons"]),
+            "Hosted manifest icons must be package-relative")
+    preview = read_asset(hosted, site["image"])
+    require(preview == read_asset(branding, site["image"]),
+            "Hosted OG image differs from canonical branding")
+    require(jpeg_dimensions(preview) == OG_DIMENSIONS, "Hosted OG image dimensions mismatch")
+    require({p.name for p in hosted.iterdir()} == {"index.html", "site.webmanifest", "og", *ICONS},
+            "Unexpected or missing hosted package files")
+    require({p.name for p in (hosted / "og").iterdir()} == {Path(site["image"]).name},
+            "Unexpected or missing hosted OG files")
+    files = [portable_path, *sorted(p for p in hosted.rglob("*") if p.is_file())]
     return {str(p.relative_to(dist)).replace("\\", "/"): {"bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for p in files}

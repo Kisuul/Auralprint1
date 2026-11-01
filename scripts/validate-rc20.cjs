@@ -12,7 +12,9 @@ const root = path.resolve(__dirname, '..');
 const version = fs.readFileSync(path.join(root, 'version'), 'utf8').trim();
 const portable = path.join(root, 'dist', `auralprint_${version.slice(1)}.html`);
 const hosted = path.join(root, 'dist/hosted');
-const mime = { '.html': 'text/html', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+const site = JSON.parse(fs.readFileSync(path.join(root, 'src/assets/branding/hosted-site.json'), 'utf8'));
+const siteOrigin = site.origin;
+const mime = { '.html': 'text/html', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' };
 
 function wav() {
   const rate = 44100, frames = rate * 12, bytes = frames * 4, b = Buffer.alloc(44 + bytes);
@@ -59,13 +61,9 @@ async function audioControls(page) {
   const serverRequests = [];
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost').pathname;
-    const prefix = '/apps/auralprint/';
     let file;
     if (url === '/portable.html') file = portable;
-    else {
-      const relative = url.startsWith(prefix) ? url.slice(prefix.length) : url.slice(1);
-      file = path.resolve(hosted, relative || 'index.html');
-    }
+    else file = path.resolve(hosted, url.slice(1) || 'index.html');
     const permitted = file === portable || file.startsWith(hosted + path.sep);
     const ok = permitted && fs.existsSync(file) && fs.statSync(file).isFile();
     const type = ok ? mime[path.extname(file)] || 'application/octet-stream' : 'text/plain';
@@ -75,7 +73,7 @@ async function audioControls(page) {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const report = { version, modes: [], scope: 'Unmodified final artifacts; local HTTP root/subdirectory and actual file launch. No installability or hosted offline-cache claim.' };
+  const report = { version, modes: [], scope: 'Unmodified final artifacts; hosted root and portable HTTP/file. No relocation, installability or hosted offline-cache claim.' };
   let browser;
   try {
     browser = await chromium.launch({ executablePath: process.env.RC20_CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
@@ -83,7 +81,6 @@ async function audioControls(page) {
     const modes = [
       { name: 'portable-http', url: origin + '/portable.html', portable: true },
       { name: 'hosted-root', url: origin + '/index.html' },
-      { name: 'hosted-subdirectory', url: origin + '/apps/auralprint/index.html' },
       { name: 'portable-file', url: pathToFileURL(portable).href, portable: true },
     ];
     for (const mode of modes) {
@@ -114,7 +111,9 @@ async function audioControls(page) {
         assert.ok(row.embeddedFavicon.width > 0);
       } else {
         row.linkProbes = [];
+        assert.equal(links.find(l => l.rel === 'canonical')?.href, siteOrigin);
         for (const link of links) {
+          if (link.rel === 'canonical') continue;
           assert.ok(link.href.startsWith('./'));
           const result = await page.evaluate(async link => {
             const response = await fetch(link.resolved);
@@ -131,19 +130,29 @@ async function audioControls(page) {
         const packageUrl = new URL('./', mode.url).href;
         row.manifestResolution = { url: declared.resolved, startUrl: new URL(declared.manifest.start_url, declared.resolved).href,
           scope: new URL(declared.manifest.scope, declared.resolved).href, icons: [] };
-        assert.equal(row.manifestResolution.startUrl, packageUrl + 'index.html');
-        assert.equal(row.manifestResolution.scope, packageUrl);
+        assert.equal(row.manifestResolution.startUrl, siteOrigin);
+        assert.equal(row.manifestResolution.scope, siteOrigin);
         for (const icon of declared.manifest.icons) {
           const url = new URL(icon.src, declared.resolved).href;
-          assert.ok(url.startsWith(packageUrl));
+          assert.ok(url.startsWith(origin + '/'));
           const result = await page.evaluate(async url => { const r = await fetch(url); const i = new Image(); i.src = url; await i.decode(); return { url, status: r.status, mime: r.headers.get('content-type'), dimensions: [i.naturalWidth, i.naturalHeight] }; }, url);
           assert.equal(result.status, 200); assert.equal(result.mime, icon.type); assert.equal(result.dimensions.join('x'), icon.sizes);
           row.manifestResolution.icons.push(result);
         }
         const cdp = await context.newCDPSession(page);
+        row.ogImage = await page.evaluate(async imagePath => {
+          const response = await fetch('/' + imagePath);
+          const image = new Image();
+          image.src = '/' + imagePath;
+          await image.decode();
+          return { status: response.status, mime: response.headers.get('content-type'), dimensions: [image.naturalWidth, image.naturalHeight] };
+        }, site.image);
+        assert.deepEqual(row.ogImage, { status: 200, mime: 'image/jpeg', dimensions: [1200, 630] });
         row.chromiumManifest = await cdp.send('Page.getAppManifest');
         assert.equal(row.chromiumManifest.url, declared.resolved);
-        assert.deepEqual(row.chromiumManifest.errors, []);
+        // localhost cannot certify a manifest whose start_url is intentionally the production origin.
+        if (new URL(mode.url).origin === new URL(siteOrigin).origin) assert.deepEqual(row.chromiumManifest.errors, []);
+        else row.manifestQualification = 'Local HTTP test: production-origin installability is not asserted';
         await cdp.detach();
       }
       row.application = await audioControls(page);
@@ -151,7 +160,7 @@ async function audioControls(page) {
       assert.ok(row.responses.every(r => r.status < 400));
       const network = row.requests.filter(r => /^https?:/.test(r.url));
       if (mode.portable) assert.deepEqual(network.map(r => r.url), mode.name === 'portable-file' ? [] : [mode.url]);
-      else assert.ok(network.every(r => r.url.startsWith(new URL('./', mode.url).href)), 'Request escaped hosted deployment prefix');
+      else assert.ok(network.every(r => r.url.startsWith(origin + '/')), 'Request escaped hosted site root');
       await context.close();
     }
     report.serverRequests = serverRequests;

@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from assemble_single_file import HEAD_MARKER, CSS_MARKER, JS_MARKER, VERSION_MARKER, assemble, main
 from distribution import Document, ICONS, load_branding, parse_manifest, validate_html, verify_distribution
+from hosted_site import load_hosted_site
 
 VERSION = "v0.1.15m.i.l"
 CSS = "body { color: red; }\n"
@@ -30,6 +31,7 @@ class Packaging(unittest.TestCase):
         self.portable = self.dist / f"auralprint_{VERSION[1:]}.html"
         self.hosted = self.dist / "hosted"
         self.assets, self.manifest = load_branding(self.branding)
+        self.site = load_hosted_site(self.branding)
         for filename, text in (("template.html", self.template), ("app.css", CSS), ("app.js", JS)):
             (self.root / filename).write_text(text, encoding="utf-8")
         self.args = [str(ROOT / "scripts/assemble_single_file.py"), str(self.root / "template.html"),
@@ -52,20 +54,27 @@ class Packaging(unittest.TestCase):
         originals = {p.relative_to(self.branding): p.read_bytes() for p in self.branding.rglob('*') if p.is_file()}
         self.build()
         artifacts = self.verify()
-        self.assertEqual(len(artifacts), 9)
+        self.assertEqual(len(artifacts), 10)
         doc = Document(self.portable.read_text(encoding="utf-8"))
         self.assertEqual(len(doc.links), 1)
         self.assertEqual(base64.b64decode(doc.links[0]['href'].split(',', 1)[1]), originals[Path('favicon.svg')])
-        self.assertEqual(set(p.name for p in self.hosted.iterdir()), {'index.html', 'site.webmanifest', *ICONS})
+        self.assertEqual(set(p.name for p in self.hosted.iterdir()), {'index.html', 'site.webmanifest', 'og', *ICONS})
+        self.assertEqual((self.hosted / self.site['image']).read_bytes(), originals[Path(self.site['image'])])
         for name in ICONS:
             self.assertEqual((self.hosted / name).read_bytes(), originals[Path(name)])
         source = parse_manifest(originals[Path('site.webmanifest')])
         expected = json.loads(json.dumps(source))
-        expected['start_url'], expected['scope'] = './index.html', './'
+        expected['start_url'], expected['scope'] = self.site['origin'], self.site['origin']
         for icon in expected['icons']:
             icon['src'] = '.' + icon['src']
         self.assertEqual(json.loads((self.hosted / 'site.webmanifest').read_text(encoding="utf-8")), expected)
         self.assertNotIn('og:image', self.portable.read_text(encoding="utf-8"))
+        hosted_doc = Document((self.hosted / "index.html").read_text(encoding="utf-8"))
+        social = {m.get("property") or m.get("name"): m.get("content") for m in hosted_doc.metas}
+        self.assertEqual(social["og:url"], self.site["origin"])
+        self.assertEqual(social["og:image"], self.site["origin"] + self.site["image"])
+        self.assertEqual(social["twitter:card"], "summary_large_image")
+        self.assertEqual(next(l["href"] for l in hosted_doc.links if l["rel"] == "canonical"), self.site["origin"])
         self.assertFalse((self.hosted / 'assets').exists())
         self.build()
         self.assertEqual(self.verify(), artifacts, 'Repeated assembly changes distributable bytes')
@@ -73,15 +82,52 @@ class Packaging(unittest.TestCase):
 
     def test_old_declarations_are_a_preserved_negative_control(self):
         old = json.loads((ROOT / 'docs/audits/evidence/2026-10-06_214431_PDT/packaging-results.json').read_text(encoding="utf-8"))
-        portable, _ = assemble(self.template, CSS, JS, VERSION, self.assets)
+        portable, _ = assemble(self.template, CSS, JS, VERSION, self.assets, self.site)
         icon = Document(portable).links[0]['href']
         declarations = '\n'.join(f'<link rel="{link["rel"]}" href="{link["href"]}">' for link in old['rootRelativeMissingResources'])
         bad = portable.replace(f'<link rel="icon" type="image/svg+xml" href="{icon}">', declarations)
         with self.assertRaisesRegex(ValueError, 'Portable must have one embedded favicon'):
-            validate_html(bad, 'portable', VERSION, self.assets)
-        hosted = assemble(self.template, CSS, JS, VERSION, self.assets)[1]
-        with self.assertRaisesRegex(ValueError, 'package-relative'):
-            validate_html(hosted.replace('./favicon.ico', '/favicon.ico'), 'hosted', VERSION, self.assets)
+            validate_html(bad, 'portable', VERSION, self.assets, self.site)
+        hosted = assemble(self.template, CSS, JS, VERSION, self.assets, self.site)[1]
+        with self.assertRaisesRegex(ValueError, 'Hosted metadata links differ'):
+            validate_html(hosted.replace('./favicon.ico', '/favicon.ico'), 'hosted', VERSION, self.assets, self.site)
+
+    def test_build_missing_og_image(self):
+        (self.branding / self.site['image']).unlink()
+        self.cli_failure('Missing hosted OG image')
+
+    def test_build_invalid_og_jpeg(self):
+        image = self.branding / self.site['image']
+        data = image.read_bytes()
+        image.write_bytes(b"not a JPEG" + data[10:])
+        self.cli_failure('Invalid hosted OG JPEG')
+
+    def test_build_invalid_official_origin(self):
+        config = self.branding / 'hosted-site.json'
+        site = json.loads(config.read_text(encoding='utf-8'))
+        site['origin'] = 'http://example.test/app/'
+        config.write_text(json.dumps(site), encoding='utf-8')
+        self.cli_failure('Hosted origin must be an HTTPS root URL')
+
+    def test_artifact_og_image_missing_or_changed(self):
+        self.build()
+        preview = self.hosted / self.site['image']
+        preview.unlink()
+        with self.assertRaisesRegex(ValueError, 'Missing required branding asset'):
+            self.verify()
+        preview.parent.mkdir(parents=True, exist_ok=True)
+        preview.write_bytes(b'not the source image')
+        with self.assertRaisesRegex(ValueError, 'Hosted OG image differs'):
+            self.verify()
+
+    def test_artifact_social_metadata_tampering(self):
+        self.build()
+        path = self.hosted / 'index.html'
+        text = path.read_text(encoding='utf-8')
+        path.write_text(text.replace('property="og:title" content="', 'property="og:title" content="changed-', 1),
+                        encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'Hosted social metadata differs'):
+            self.verify()
 
     def test_build_missing_favicon(self):
         (self.branding / 'favicon.svg').unlink()
@@ -131,10 +177,10 @@ class Packaging(unittest.TestCase):
         for marker in (HEAD_MARKER, CSS_MARKER, JS_MARKER, VERSION_MARKER):
             with self.subTest(marker=marker, mutation='missing'):
                 with self.assertRaisesRegex(ValueError, 'Missing or duplicate'):
-                    assemble(self.template.replace(marker, ''), CSS, JS, VERSION, self.assets)
+                    assemble(self.template.replace(marker, ''), CSS, JS, VERSION, self.assets, self.site)
             with self.subTest(marker=marker, mutation='duplicate'):
                 with self.assertRaisesRegex(ValueError, 'Missing or duplicate'):
-                    assemble(self.template.replace(marker, marker + marker), CSS, JS, VERSION, self.assets)
+                    assemble(self.template.replace(marker, marker + marker), CSS, JS, VERSION, self.assets, self.site)
         (self.root / 'template.html').write_text(self.template.replace(HEAD_MARKER, ''), encoding="utf-8")
         self.cli_failure('Missing or duplicate head metadata marker')
 
@@ -163,9 +209,9 @@ class Packaging(unittest.TestCase):
         for key in ('start_url', 'scope'):
             with self.subTest(key=key):
                 manifest = dict(self.manifest)
-                manifest[key] = '/index.html' if key == 'start_url' else '/'
+                manifest[key] = './index.html' if key == 'start_url' else './'
                 (self.hosted / 'site.webmanifest').write_text(json.dumps(manifest), encoding="utf-8")
-                with self.assertRaisesRegex(ValueError, 'package-relative'):
+                with self.assertRaisesRegex(ValueError, 'Generated manifest differs'):
                     self.verify()
 
     def test_artifact_malformed_manifest(self):
@@ -196,7 +242,7 @@ class Packaging(unittest.TestCase):
         self.build()
         file = self.hosted / 'index.html'
         file.write_text(file.read_text(encoding="utf-8").replace('href="./', 'href="/'), encoding="utf-8")
-        with self.assertRaisesRegex(ValueError, 'package-relative'):
+        with self.assertRaisesRegex(ValueError, 'Hosted metadata links differ'):
             self.verify()
 
     def test_artifact_shared_runtime_divergence(self):
@@ -210,7 +256,7 @@ class Packaging(unittest.TestCase):
         for injection in ('<script src="https://example.test/app.js"></script>', '<link rel="stylesheet" href="https://example.test/app.css">'):
             with self.subTest(injection=injection):
                 with self.assertRaisesRegex(ValueError, 'External application script|Portable must have'):
-                    assemble(self.template.replace('</head>', injection + '</head>'), CSS, JS, VERSION, self.assets)
+                    assemble(self.template.replace('</head>', injection + '</head>'), CSS, JS, VERSION, self.assets, self.site)
 
 
 if __name__ == '__main__':

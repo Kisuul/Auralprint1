@@ -33,12 +33,26 @@ function fingerprint(inputs) {
 }
 
 function assemblyInputs() {
-  // The assembler owns flat branding files; the unused assets/OG subtree is not
-  // packaged. Directory observation also detects deletion/creation/rename.
+  // Capture exactly the flat branding files and first-party OG directory.
+  // The legacy assets/ SVG subtree is not a deployed input.
   const brandingFiles = readdirSync(paths.branding, { withFileTypes: true })
     .filter(entry => entry.isFile()).map(entry => path.join(paths.branding, entry.name));
-  return new Map([paths.versionFile, paths.template, ...brandingFiles]
+  const ogDir = path.join(paths.branding, "og");
+  const ogFiles = readdirSync(ogDir, { withFileTypes: true })
+    .filter(entry => entry.isFile()).map(entry => path.join(ogDir, entry.name));
+  return new Map([paths.versionFile, paths.template, ...brandingFiles, ...ogFiles]
     .map(file => [file, readFileSync(file)]));
+}
+
+function stagedHostedFiles(directory, targetDirectory) {
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const from = path.join(directory, entry.name);
+    const to = path.join(targetDirectory, entry.name);
+    if (entry.isDirectory()) files.push(...stagedHostedFiles(from, to));
+    else if (entry.isFile()) files.push([to, readFileSync(from)]);
+  }
+  return files;
 }
 
 function watchPlugin(kind, session = activeSession) {
@@ -141,7 +155,12 @@ async function main() {
       await mkdir(branding);
       await writeFile(template, extra.get(paths.template));
       for (const [file, bytes] of extra) {
-        if (path.dirname(file) === paths.branding) await writeFile(path.join(branding, path.basename(file)), bytes);
+        const relative = path.relative(paths.branding, file);
+        if (relative && !relative.startsWith("..") && !path.isAbsolute(relative)) {
+          const destination = path.join(branding, relative);
+          await mkdir(path.dirname(destination), { recursive: true });
+          await writeFile(destination, bytes);
+        }
       }
       await writeFile(jsBundle, js.result.outputFiles[0].contents);
       await writeFile(cssBundle, css.result.outputFiles[0].contents);
@@ -165,7 +184,7 @@ async function main() {
         [paths.jsBundle, readFileSync(jsBundle)],
         [paths.cssBundle, readFileSync(cssBundle)],
         [paths.metafile, Buffer.from(JSON.stringify({ generatedAt: new Date().toISOString(), js: js.result.metafile, css: css.result.metafile }, null, 2) + "\n")],
-        ...readdirSync(hostedDir).map(name => [path.join(paths.hostedDir, name), readFileSync(path.join(hostedDir, name))]),
+        ...stagedHostedFiles(hostedDir, paths.hostedDir),
       ]);
       publish(files);
       lastSuccess = signature;
@@ -215,7 +234,7 @@ async function main() {
   process.on("message", onMessage);
 
   try {
-    for (const [directory, name] of [[paths.projectRoot, "version"], [path.dirname(paths.template), path.basename(paths.template)], [paths.branding, null]]) {
+    for (const [directory, name] of [[paths.projectRoot, "version"], [path.dirname(paths.template), path.basename(paths.template)], [paths.branding, null], [path.join(paths.branding, "og"), null]]) {
       const watcher = watch(directory, (_event, filename) => {
         if (filename == null || name === null || filename.toString() === name) session.queue();
       });
@@ -234,7 +253,7 @@ async function main() {
     }
     if (stopping) return { close: shutdown };
     await Promise.all(contexts.map(context => context.watch()));
-    console.log("[watch] watching JS/CSS dependencies, template, version and flat branding inputs");
+    console.log("[watch] watching JS/CSS dependencies, template, version and hosted branding inputs");
   } catch (error) {
     const cancelled = stopping;
     await shutdown();
