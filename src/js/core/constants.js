@@ -1,15 +1,15 @@
 /* =============================================================================
    Auralprint
-   0.1.16-rc.2
+   0.1.16
 
-   Build 116 RC #2 — Queue policy, Trace fade and accessible playback controls
+   Build 116 / Release 5 — Queue policy, Trace fade and accessible playback controls
    Canonical Scene configuration; frozen deltas; ordered band ranges.
    ========================================================================== */
 
 const TAU = Math.PI * 2;
 const RAD_TO_DEG = 180 / Math.PI;
 
-// Published schema 10 and accepted development schema 11 remain immutable.
+// Previously published schemas and accepted development schema 11 retain their decoding semantics.
 const PRESET_SCHEMA_VERSION = 16; // 14/15 remain reserved experimental formats
 const LEGACY_SCHEMA_V2 = 2;
 const LEGACY_SCHEMA_V3 = 3;
