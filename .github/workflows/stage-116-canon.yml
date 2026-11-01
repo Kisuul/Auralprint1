@@ -1,0 +1,53 @@
+# Temporary release-branch artifact staging workflow; remove from final PR diff.
+name: Stage Build 116 canon artifact
+on:
+  push:
+    branches: [release/116-release-5-canonization]
+    paths: ['.github/workflows/stage-116-canon.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  stage-canon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: true
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Confirm version and canonical archive boundary
+        shell: bash
+        run: |
+          test "$(cat version)" = "v0.1.16"
+          test ! -e docs/Canon/0.1.16/auralprint_0.1.16.html
+      - name: Build and verify distribution
+        shell: bash
+        run: |
+          npm ci
+          npm run build
+          python scripts/verify_distribution.py
+      - name: Archive exact portable artifact and checksum
+        shell: bash
+        run: |
+          mkdir -p docs/Canon/0.1.16
+          cp dist/auralprint_0.1.16.html docs/Canon/0.1.16/auralprint_0.1.16.html
+          cmp dist/auralprint_0.1.16.html docs/Canon/0.1.16/auralprint_0.1.16.html
+          (cd docs/Canon/0.1.16 && sha256sum auralprint_0.1.16.html > SHA256SUMS && sha256sum -c SHA256SUMS)
+      - name: Commit canonical files to release branch only
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- docs/Canon/0.1.16/auralprint_0.1.16.html docs/Canon/0.1.16/SHA256SUMS
+          git diff --cached --quiet && { echo "Missing new Canon artifact"; exit 1; }
+          git commit -m "release(canon): archive verified Build 116 portable HTML"
+          git push origin HEAD:refs/heads/release/116-release-5-canonization
