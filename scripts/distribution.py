@@ -117,7 +117,7 @@ def hosted_manifest(source: dict, origin: str) -> dict:
         require(icon.get("type") == mime, f"Manifest MIME mismatch: {name}")
         require(icon.get("sizes") == f"{dimensions[0]}x{dimensions[1]}", f"Manifest dimensions mismatch: {name}")
         require(icon.get("purpose", "any") in ("any", "maskable", "any maskable"), f"Invalid icon purpose: {name}")
-        icon["src"] = f"/{name}"
+        icon["src"] = f"./{name}"
     manifest["start_url"] = origin
     manifest["scope"] = origin
     return manifest
@@ -138,12 +138,12 @@ def metadata(edition: str, assets: dict[str, bytes], site: dict | None = None) -
         return f'<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,{encoded}">'
     require(edition == "hosted" and site is not None, f"Missing hosted metadata configuration: {edition}")
     return '\n  '.join([
-        '<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">',
-        '<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">',
-        '<link rel="icon" type="image/svg+xml" href="/favicon.svg">',
-        '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">',
+        '<link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">',
+        '<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">',
+        '<link rel="icon" type="image/svg+xml" href="./favicon.svg">',
+        '<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">',
         '<meta name="apple-mobile-web-app-title" content="Auralprint">',
-        '<link rel="manifest" href="/site.webmanifest">',
+        '<link rel="manifest" href="./site.webmanifest">',
         social_metadata(site),
     ])
 
@@ -222,9 +222,8 @@ def validate_html(html: str, edition: str, version: str, assets: dict[str, bytes
                     m.get("name", "").startswith("twitter:") or m.get("name") == "apple-mobile-web-app-title"]
         require(social_tags(doc.metas) == social_tags(expected.metas),
                 "Hosted social metadata differs from official site contract")
-        require(all(link.get("href", "").startswith("/") and not link["href"].startswith("//")
-                    for link in doc.links if link.get("rel") != "canonical"),
-                "Hosted resources must use site-root paths")
+        require(all(link.get("href", "").startswith("./") for link in doc.links if link.get("rel") != "canonical"),
+                "Hosted resources must use package-relative paths")
     return doc
 
 
@@ -249,8 +248,8 @@ def verify_distribution(dist: Path, branding: Path, version: str, css: str, js: 
     require(generated == manifest, "Generated manifest differs from official root contract")
     require(generated["start_url"] == site["origin"] and generated["scope"] == site["origin"],
             "Hosted manifest must target the official site origin")
-    require(all(icon["src"] == "/" + icon["src"].lstrip("/") for icon in generated["icons"]),
-            "Hosted manifest icons must use root paths")
+    require(all(icon["src"].startswith("./") for icon in generated["icons"]),
+            "Hosted manifest icons must be package-relative")
     preview = read_asset(hosted, site["image"])
     require(preview == read_asset(branding, site["image"]),
             "Hosted OG image differs from canonical branding")
