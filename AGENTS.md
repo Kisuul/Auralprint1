@@ -29,7 +29,7 @@ Auralprint is an offline-capable FFT audio-analysis application with playback, v
   controls: [application-preferences.js](src/js/core/application-preferences.js),
   [recording-policy.js](src/js/recording/recording-policy.js). Recording policy freezes on Start; never
   silently persist runtime state.
-- Preserve self-contained portable HTML and the first-party, root-scoped hosted edition from the same
+- Preserve self-contained portable HTML and the first-party hosted edition with an official-origin manifest from the same
   implementation/template/bundles, with shared runtime/schema and their distinct metadata/resource
   contracts. The hosted origin/social branding is owned by `src/assets/branding/hosted-site.json`;
   the portable edition remains location-independent. Do not modify immutable Canon artifacts. Build scripts own packaging. New build steps require approval; dependencies require critical
