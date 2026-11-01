@@ -150,7 +150,9 @@ async function audioControls(page) {
         assert.deepEqual(row.ogImage, { status: 200, mime: 'image/jpeg', dimensions: [1200, 630] });
         row.chromiumManifest = await cdp.send('Page.getAppManifest');
         assert.equal(row.chromiumManifest.url, declared.resolved);
-        assert.deepEqual(row.chromiumManifest.errors, []);
+        // localhost cannot certify a manifest whose start_url is intentionally the production origin.
+        if (new URL(mode.url).origin === new URL(siteOrigin).origin) assert.deepEqual(row.chromiumManifest.errors, []);
+        else row.manifestQualification = 'Local HTTP test: production-origin installability is not asserted';
         await cdp.detach();
       }
       row.application = await audioControls(page);
