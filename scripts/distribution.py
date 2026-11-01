@@ -10,7 +10,7 @@ import zlib
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from hosted_site import OG_DIMENSIONS, jpeg_dimensions, load_hosted_site, social_metadata
 
 ICONS = {
     "favicon.ico": ("image/x-icon", None),
@@ -98,8 +98,8 @@ def parse_manifest(data: bytes) -> dict:
     return manifest
 
 
-def hosted_manifest(source: dict) -> dict:
-    # Copy metadata; only deployment URLs and the previously absent scope change.
+def hosted_manifest(source: dict, origin: str) -> dict:
+    # Hosted is deployed at the official HTTPS root, unlike portable HTML.
     manifest = json.loads(json.dumps(source))
     require(manifest.get("name") == "Auralprint - Waveform Analysis Tool", "Incorrect manifest application name")
     require(manifest.get("short_name") == "Auralprint", "Incorrect manifest short_name")
@@ -117,9 +117,9 @@ def hosted_manifest(source: dict) -> dict:
         require(icon.get("type") == mime, f"Manifest MIME mismatch: {name}")
         require(icon.get("sizes") == f"{dimensions[0]}x{dimensions[1]}", f"Manifest dimensions mismatch: {name}")
         require(icon.get("purpose", "any") in ("any", "maskable", "any maskable"), f"Invalid icon purpose: {name}")
-        icon["src"] = f"./{name}"
-    manifest["start_url"] = "./index.html"
-    manifest["scope"] = "./"
+        icon["src"] = f"/{name}"
+    manifest["start_url"] = origin
+    manifest["scope"] = origin
     return manifest
 
 
@@ -127,22 +127,24 @@ def load_branding(root: Path) -> tuple[dict[str, bytes], dict]:
     assets = {name: read_asset(root, name) for name in ICONS}
     for name, data in assets.items():
         validate_image(name, data)
-    manifest = hosted_manifest(parse_manifest(read_asset(root, "site.webmanifest")))
+    site = load_hosted_site(root)
+    manifest = hosted_manifest(parse_manifest(read_asset(root, "site.webmanifest")), site["origin"])
     return assets, manifest
 
 
-def metadata(edition: str, assets: dict[str, bytes]) -> str:
+def metadata(edition: str, assets: dict[str, bytes], site: dict | None = None) -> str:
     if edition == "portable":
         encoded = base64.b64encode(assets["favicon.svg"]).decode("ascii")
         return f'<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,{encoded}">'
-    require(edition == "hosted", f"Unknown distribution edition: {edition}")
+    require(edition == "hosted" and site is not None, f"Missing hosted metadata configuration: {edition}")
     return '\n  '.join([
-        '<link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">',
-        '<link rel="icon" type="image/png" sizes="96x96" href="./favicon-96x96.png">',
-        '<link rel="icon" type="image/svg+xml" href="./favicon.svg">',
-        '<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">',
+        '<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">',
+        '<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">',
+        '<link rel="icon" type="image/svg+xml" href="/favicon.svg">',
+        '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">',
         '<meta name="apple-mobile-web-app-title" content="Auralprint">',
-        '<link rel="manifest" href="./site.webmanifest">',
+        '<link rel="manifest" href="/site.webmanifest">',
+        social_metadata(site),
     ])
 
 
