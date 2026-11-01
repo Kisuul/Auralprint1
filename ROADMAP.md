@@ -62,6 +62,8 @@ The owner accepted the available Windows/Android Camera experience and requested
 
 ## Build 117: UX and performance hardening
 
+**Approved separate packaging pass:** For future builds, target the official `https://auralprint.idiw.net/` root in the hosted edition, generate complete social metadata from source branding, and package/verify its OG image. Keep portable HTML location-independent and do not alter Build 116 Canon. This is independent of the rendering optimization passes.
+
 **Status: planned; targeted fixes may accompany their owning milestone.**
 
 Measure rendering and analysis on constrained hardware, reduce unnecessary hidden-panel updates, and address interaction problems found during Build 115/116 use. Preserve useful tooltips, reset behavior, and recoverable panel visibility.
