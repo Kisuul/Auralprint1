@@ -10,7 +10,7 @@ The historical I.E documentation reconciliation started from [`a198b14b087da6b85
 
 Build 115 establishes an analysis-consumer boundary and independent visualizer ownership before Camera work. The approved direction is source/audio analysis → AnalysisFrame → visualizers → renderer, with Camera/projection deferred to Build 116. It does not turn Auralprint into a decorative visualizer with analysis bolted on.
 
-Earlier Scene-node/compositor experiments were superseded by the current smaller runtime and workspace boundaries. Their schema-9 payloads still matter for compatibility: the codec recovers supported Orb and Band Overlay configuration, prefers explicit top-level data, and discards abandoned Scene bounds, anchors, editor/order/visibility and camera semantics. It does not restore that architecture. The [schema policy](../../agents.md#21-schema-discipline) defines the surviving contract.
+Earlier Scene-node/compositor experiments were superseded by the current smaller runtime and workspace boundaries. Their schema-9 payloads still matter for compatibility: the codec recovers supported Orb and Band Overlay configuration, prefers explicit top-level data, and discards abandoned Scene bounds, anchors, editor/order/visibility and camera semantics. It does not restore that architecture. The [schema policy](../../AGENTS.md#21-schema-discipline) defines the surviving contract.
 
 ## Early architecture stages 115A–115L
 
@@ -37,7 +37,7 @@ All PR links here refer to merged repository history, not public releases.
 | M.C | Orb content refresh preserves editor card position instead of moving cards during editing. | [PR #20](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/20) |
 | M.D | Settings consolidates Scene appearance/presets, preserves local overrides and panel-owned feedback; generic synchronization is silent. | [PR #21](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/21) |
 | M.E | Prefer stereo Stream acquisition and expose actual returned channel metadata; validate stereo/left-only/right-only/dual-mono and file/stream graphs. Native permission/device breadth remained outside that probe. | [PR #22](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/22), [diagnostic](../../scripts/validate-stream-stereo.cjs) |
-| M.F | Pure codec owns sanitation/migration on encoding and decoding; URL transport replaces preferences, callers resolve/synchronize. Both schema-9 layouts recover supported equivalents; runtime/session state cannot leak into presets. | [PR #23](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/23), [schema contracts](../../tests/preset-schema-10.test.js) |
+| M.F | Pure codec owns sanitation/migration on encoding and decoding; URL transport replaces preferences, callers resolve/synchronize. Both schema-9 layouts recover supported equivalents; runtime/session state cannot leak into presets. | [PR #23](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/23), [schema-10 contracts at the merged M.F revision](https://github.com/cosmicdance-4-2-0/Auralprint1/blob/e501398784a55838bd1d2553375bb0e98ddcde7c/tests/preset-schema-10.test.js); [current successor](../../tests/preset-schema-12.test.js) |
 | M.G | Visualizers absorbs Orb editors and Bulk Edit; the separate Orbs workspace is retired. Inventory/edit actions use existing editors rather than duplicate configuration owners. | [PR #24](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/24) |
 | M.H | Pre-RC status ownership, portable invocation/tests and repository hygiene. This was implementation closure, not proof of release readiness. | [PR #25](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/25), audited [commit `0cd7995`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/0cd79958d3f0156d52c4f68e36458298d6accd9b) |
 
@@ -77,7 +77,7 @@ The [M.H.O stop report](../audits/remediations/115m-h-o-rc15-stop/README.md) pre
 
 The early fixed ceilings and “all visual time capped at 1/30 s” descriptions are **superseded** by H.U/H.V. The current contract preserves bounded emission while restoring ordinary slow-frame angular motion. No cross-Orb proximity search, cached coordinate index, interpolation, second expiry index, batching, adaptive quality system, or Camera change was adopted.
 
-Schema 10 remains unpublished. H.Q removal, H.T placement, H.U resource selections and later I.A phase normalization are narrowly approved pre-release exceptions, not permission to reuse a shipped schema incompatibly. [agents.md](../../agents.md#21-schema-discipline) retains their precise authority.
+Schema 10 remains unpublished. H.Q removal, H.T placement, H.U resource selections and later I.A phase normalization are narrowly approved pre-release exceptions, not permission to reuse a shipped schema incompatibly. [AGENTS.md](../../AGENTS.md#21-schema-discipline) retains their precise authority.
 
 The synthetic 16-Orb history exceeds a rotation under its documented speed/TTL/capacity; the Trace suffix can cover less than the retained particle history. The exact human preset was unavailable. Heavy Canvas/UI work, large synchronous trim/expiry, sparse low-FPS placement, uncertain dense-callback attribution and full-million visual usability remain limitations or unverified acceptance. Closure of the corrective sequence does not erase these observations or promise constrained-device FPS; broader optimization remains Build 117.
 
@@ -151,7 +151,9 @@ Original IDs/priorities/titles come from the immutable [October 6 audit](../audi
 
 ## Diagnostics and evidence
 
-Version-specific counts, mutation outcomes, CI run IDs, native results and intermediate failures live in the reports above, not the ordinary README. Their links retain the observations without duplicating large logs. Optional browser probes require externally provisioned Playwright/Chromium, not new project dependencies. Run after building; report paths should target new scratch output, never overwrite historical evidence.
+Commit [`c7604b8`](https://github.com/cosmicdance-4-2-0/Auralprint1/commit/c7604b838b09617d7f24daafc20ebbcbdd0c467a) deliberately removed 344 generated diagnostic logs. Files named in the original inventories but absent from the current tree remain available at its parent, `bda0ea9d0a27d32c2b6a1ac558bedfc63525db06`: [October 9 results](https://github.com/cosmicdance-4-2-0/Auralprint1/tree/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/20261009-004238_materials/results) and [October 6 evidence](https://github.com/cosmicdance-4-2-0/Auralprint1/tree/bda0ea9d0a27d32c2b6a1ac558bedfc63525db06/docs/audits/evidence/2026-10-06_214431_PDT). The original reports, manifests and recorded hashes are unchanged; retrieve archived files from that revision rather than regenerating them.
+
+Version-specific counts, mutation outcomes, CI run IDs, native results and intermediate failures live in the reports above. Optional historical browser probes can use the project's locked Playwright dependency and an installed Chromium, with the tooling overrides listed below. Check each probe's baseline-specific expectations before running it after a build; write new results to scratch output, never over historical evidence. [README](../../README.md#developer-bootstrap) owns current required checks.
 
 | Historical diagnostic | Owning evidence / tooling selectors |
 | --- | --- |
@@ -167,7 +169,7 @@ Version-specific counts, mutation outcomes, CI run IDs, native results and inter
 
 The owner accepted Build 115 as Release 4 on October 20, 2026 following extended local testing and public RC feedback. The [roadmap qualifications](../../ROADMAP.md#build-115-release-acceptance-and-qualifications) record limits of that acceptance, including Firefox Stream audio. The [release comparison](build-115-release-delta.md) distinguishes public Build 113 from internal Build 114; the canonical changelog follows the existing `v114 → v115` chronological format.
 
-The [editorial integrity report](115m-i-e-documentation-review.md) records this pass's scope and validation. Canonical distributions, canonical changelog, original audit, remediation reports and evidence logs remain unchanged.
+The [I.E editorial integrity report](115m-i-e-documentation-review.md) records the earlier documentation checkpoint's scope and validation. Canonical distributions, changelog, audits and remediation evidence were unchanged in that pass.
 
 ## 115M.I.N.3 — October 9 AUD-006 corrective implementation
 
@@ -187,3 +189,5 @@ N.2's high-resolution VP8 resource guard and broader browser/device uncertaintie
 remain real; encoded payload is not total native memory. Build 117 retains broader
 resource/encoder/performance optimization. AUD-006 closure requires independent
 review; **Build 115N was withheld at this October 9 checkpoint**. This report did not authorize merge or shipment; final owner acceptance came later.
+
+The subsequent [N.3F closeout](../audits/remediations/115m-i-n3-aud006/closeout-n3f.md), merged in PR #60, records lossless Custom settings entry and its validation without changing the recorder policy or schema.

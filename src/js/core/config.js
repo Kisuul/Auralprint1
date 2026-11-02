@@ -2,12 +2,14 @@ import { TAU, RAD_TO_DEG } from "./constants.js";
 import { deepFreeze } from "./utils.js";
 
 const SIMULATION_MAX_DELTA_TIME_SEC = 1 / 30;
+const ANGULAR_SPEED_STEP_RAD_PER_SEC = Math.PI / 360;
+const DEFAULT_CAMERA = { x: 0, y: 0, zoom: 1, rotationRad: 0 };
 
 const DEFAULT_ORB_BEHAVIOR = {
   motion: { angularSpeedRadPerSec: Math.PI * 0.50 },
   response: { minRadiusFrac: 0.01, maxRadiusFrac: 0.80, waveformRadialDisplaceFrac: 0.10 },
-  particles: { emitPerSecond: 240, sizeMaxPx: 8, sizeMinPx: 1, sizeToMinSec: 3.0, ttlSec: 6.0, minPlacementDistancePx: 0.5 },
-  trace: { lines: true, numLines: 10, lineAlpha: 0.35, lineWidthPx: 2, lineColorMode: "dominantBand" },
+  particles: { emitPerSecond: 240, sizeMaxPx: 8, sizeMinPx: 1, sizeToMinSec: 3.0, ttlSec: 6.0, minPlacementDistanceUnits: 0.5 },
+  trace: { lines: true, numLines: 10, lineAlpha: 0.35, lineWidthPx: 2, lineColorMode: "dominantBand", fadeSegments: 0 },
 };
 
 function defaultOrb(identity) {
@@ -18,6 +20,37 @@ function defaultOrb(identity) {
    CONFIG — Canonical truth (never mutated)
    ========================================================================== */
 const CONFIG = deepFreeze({
+  // URL/protocol resource admission, not limits on Scene configuration itself.
+  // 64 MiB accommodates 4096 fully independent Orbs with all 256 selections
+  // (over one million assignments), full legacy fields and generous opaque IDs.
+  // Arbitrarily long identities still share this documented transport budget.
+  presets: {
+    maxJsonBytes: 64 * 1024 * 1024,
+    maxCompressedBytes: 64 * 1024 * 1024 + 64 * 1024,
+    maxEncodedChars: Math.ceil((64 * 1024 * 1024 + 64 * 1024) / 3) * 4,
+    maxStructureDepth: 16, // canonical Scene nesting is at most five containers
+    maxStructureNodes: 2_000_000, // includes maximum legacy numeric selections
+  },
+  // Shared camera policy; live state and authored Scene state are independent.
+  camera: {
+    defaults: DEFAULT_CAMERA,
+    // Provisional 116C interaction choices, pending owner artistic testing.
+    interaction: {
+      enabledByDefault: false,
+      panStepUnits: 50,
+      zoomFactor: 1.1,
+      rotationStepDeg: 5,
+      wheelZoomPerPixel: 0.0015,
+      wheelLinePixels: 16,
+    },
+    fit: { paddingCssPx: 16, feedbackDurationMs: 6000 },
+    keyboard: {
+      panSpeedCssPxPerSec: 320,
+      rotationSpeedDegPerSec: 60,
+      shiftMultiplier: 3,
+      maxMovementDeltaSec: 0.1,
+    },
+  },
   bandNames: [
 // 0–31  Planetary Core – The Iron-Nickel Heart of the World (deepest sub-bass)
   "Eternal Core",
@@ -381,17 +414,17 @@ const CONFIG = deepFreeze({
     outputFileNameTemplate: "auralprint-capture-{yyyy}{mm}{dd}-{hh}{min}{ss}",
 
     panelPlacement: {
-      // Future record panel dock corner inside the existing panel system.
+      // Record panel dock corner inside the workspace panel system.
       edgeX: "right",
       edgeY: "bottom",
 
-      // Future panel stacking rules relative to existing bottom-docked UI.
+      // Record panel offsets relative to existing bottom-docked UI.
       anchorAboveAudioPanel: true,
       anchorAboveQueuePanel: true,
     },
 
     launcherPlacement: {
-      // Future launcher anchor for the hidden record panel.
+      // Emits launcher edge variables; the unified launcher layout does not consume them.
       corner: "bottom-right",
     },
 
@@ -411,10 +444,10 @@ const CONFIG = deepFreeze({
     },
 
     launcherPulse: {
-      // Future recording-state pulse timing for the camera launcher.
+      // Recording-state pulse timing for the Record launcher.
       periodMs: 1400,
 
-      // Future pulse intensity bounds - consumed by UI animation, not runtime state.
+      // Pulse intensity bounds - consumed by UI animation, not runtime state.
       scaleMin: 1.0,
       scaleMax: 1.08,
       opacityMin: 0.78,
@@ -422,7 +455,11 @@ const CONFIG = deepFreeze({
     },
   },
 
+  worldGeometry: { legacyWorldUnitsPerCssPixel: 1 },
+
   defaults: {
+    sceneCamera: DEFAULT_CAMERA,
+    world: { widthUnits: 1000, heightUnits: 1000 },
     visuals: {
       backgroundColor: "#000000",
       particleColor: "#ffffff",
@@ -435,6 +472,7 @@ const CONFIG = deepFreeze({
 
       // Playback knobs (do NOT affect analysis)
       repeatMode: "none",
+      clearQueueOnSourceExit: false,
       muted: false,
       volume: 1.0,
     },
@@ -468,11 +506,8 @@ const CONFIG = deepFreeze({
     ],
 
 bands: {
-  // Ceiling adjusted (Now 22.5K) to restore band 255 functionality. Should now be 22.5K to 24K (Effectively, depending on nyquist)
-  // To others: Ceiling should be under assumed Nyquist cap: To prevent band 255 death. 
-  // If configured above the actual Nyquist ceiling: Band 255 will become effectively Nyquist to Nyquist, so: Dead.
-  // I question if this is a bug, or a configuration limit to be aware of. 
-  
+  // Configured frequency domain is independent of the actual AudioContext rate.
+  // The controller caps at Nyquist; the final open-ended band can collapse there.
   count: 256,
   floorHz: 20,
   ceilingHz: 22500,
@@ -509,12 +544,23 @@ bands: {
   },
 
   limits: {
+    // Provisional numerical support range; interaction/artistic policy is 116C.
+    camera: {
+      zoom: { min: 0.01, max: 100 },
+      panSpeedCssPxPerSec: { min: 0, max: 3200, step: 20 },
+      rotationSpeedDegPerSec: { min: 0, max: 360, step: 5 },
+    },
+    world: {
+      widthUnits: { min: 1, max: 1_000_000, step: "any" },
+      heightUnits: { min: 1, max: 1_000_000, step: "any" },
+    },
     particleSafety: {
       maxEmissionsPerFrame: { min: 0, max: 16384, step: 1 },
       maxActiveParticles: { min: 0, max: 1048576, step: 1 },
     },
     timing: { maxDeltaTimeSec: SIMULATION_MAX_DELTA_TIME_SEC, motionDiscontinuitySec: 0.5 },
     trace: {
+      fadeSegments: { min: 0, max: 20, step: 1 },
       numLines: { min: 10, max: 1000, step: 10 },
       lineAlpha: { min: 0, max: 1, step: 0.01 },
       lineWidthPx: { min: 1, max: 6, step: 1 },
@@ -526,11 +572,11 @@ bands: {
       sizeMinPx: { min: 0.5, max: 6, step: 0.1 },
       sizeToMinSec: { min: 0.1, max: 120, step: 0.1 },
       ttlSec: { min: 0.1, max: 600, step: 0.1 },
-      minPlacementDistancePx: { min: 0, max: 10, step: 0.1 },
+      minPlacementDistanceUnits: { min: 0, max: 10, step: 0.1 },
     },
 
     motion: {
-      angularSpeedRadPerSec: { min: 0.01, max: 3, step: 0.01 },
+      angularSpeedRadPerSec: { min: ANGULAR_SPEED_STEP_RAD_PER_SEC, max: 3, step: ANGULAR_SPEED_STEP_RAD_PER_SEC },
     },
 
     audio: {
@@ -542,6 +588,9 @@ bands: {
     bands: {
       // Floor band, at least one interior band, and open-ended top band.
       count: { min: 3, max: 256 },
+      // User-configured domain, independent of the live AudioContext Nyquist.
+      // Positive finite fractional Hz remain supported; no editing lattice.
+      frequencyHz: { max: 384000 },
       overlayAlpha: { min: 0, max: 1, step: 0.01 },
       overlayLineAlpha: { min: 0, max: 1, step: 0.01 },
       overlayLineWidthPx: { min: 1, max: 6, step: 1 },
@@ -549,7 +598,7 @@ bands: {
       overlayMinRadiusFrac: { min: 0.01, max: 0.4, step: 0.01 },
       overlayMaxRadiusFrac: { min: 0.3, max: 1, step: 0.01 },
       overlayWaveformRadialDisplaceFrac: { min: 0.01, max: 1.00, step: 0.01 },
-      ringSpeedRadPerSec: { min: 0, max: TAU, step: 0.01 },
+      ringSpeedRadPerSec: { min: 0, max: TAU, step: ANGULAR_SPEED_STEP_RAD_PER_SEC },
       distributionModes: ["linear", "log", "mel", "bark", "erb"],
     },
 

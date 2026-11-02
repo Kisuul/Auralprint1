@@ -1,5 +1,22 @@
 # Auralprint Changelog
 
+## v115 → v116 (Release 5 / Build 116)
+
+Owner-approved October 31, 2026. Public predecessor: Release 4 / Build 115 (`v0.1.15`, schema 10); Release 5 is `v0.1.16`, schema 16, promoted from RC #2. Build 117 performance research is excluded.
+
+- **Independent world and Camera.** World geometry and retained trails stay in world units across viewport/DPR changes. Camera controls add pan, pointer-centered zoom, rotation, reset and one-shot Fit View.
+- **Authored Scene views.** Save and restore a Scene viewpoint independently of live navigation; shared presets include the saved view.
+- **Compact preset links.** Smaller schema-16 links use frozen-default deltas, ordered band ranges and native DEFLATE, with an uncompressed fallback. Supported legacy presets retain their meaning.
+- **Optional Queue clearing.** Settings can clear the File Queue after a successful accepted switch to Mic/Stream. The Scene preference defaults off; failed or superseded requests and intervening Queue changes preserve files.
+- **Trace Fade Length.** Individual and Bulk editors fade the oldest visible drawable segments over 1–20 whole segments. The default 0 / Off preserves the continuous stroke.
+- **Numeric controls.** Sliders follow CONFIG editing steps; Orb and Ring angular speeds use 0.5°/s steps. Scene palette controls distinguish saved fractions from their editing selection. Analysis frequency drafts survive unrelated refreshes. Configured frequencies are limited to 384,000 Hz, with effective analysis bounded by the active AudioContext's Nyquist limit.
+- **Preset loading.** Repairing missing or duplicate Orb identities no longer multiplies long numeric IDs. Valid, unique explicit IDs are preserved.
+- **Seeking.** Scrubber drags cancel on window focus loss or released mouse buttons; touch seeking follows the initiating contact.
+- **Keyboard and Queue accessibility.** Playback position now supports a focusable slider with arrow/Home/End seeking and updated time values; Queue rows expose separate native Play and Remove buttons (post-RC #1, PR #101).
+- **Live-input recovery.** Microphone/shared-stream audio that ends
+  during acquisition or graph setup no longer appears live. The same source
+  button permits an intentional retry, and obsolete cleanup preserves newer inputs.
+
 ---
 
 ## v110 → v111
@@ -177,7 +194,7 @@ Build 115 (`v0.1.15`, preset schema 10) is the fourth public release. Build 114 
 ### New Features
 
 - **Independent visualizer architecture.** AnalysisFrame separates audio analysis from visualizer consumers. VisualizerRuntime manages the Spectral Ring and a stable-ID collection of zero, one or many Orbs.
-- **Complete per-Orb controls.** Add, duplicate, remove and edit individual Orbs, including channel/band targets, motion, response, particle trails, Trace, center, color and designed starting phase. Bulk Edit supports multiple selected Orbs.
+- **Complete per-Orb controls.** Add, duplicate, remove and edit individual Orbs, including channel/band targets, motion, response, particle trails, Trace, center, color and designed starting phase. Bulk Edit applies to all Orbs with mixed-value awareness.
 - **Dedicated workspaces.** Analysis owns FFT and band settings, Visualizers owns Orbs and Spectral Ring, and Settings owns shared Scene appearance and presets.
 - **Particle resource controls.** Configurable per-frame emission and live-particle budgets, minimum Orb-local placement spacing and live resource diagnostics.
 - **Recording Resources controls.** Balanced offers a five-minute automatic Stop target, while Custom and Unrestricted provide deliberate application-limit overrides. Previous successful exports survive cancelled or failed replacements.

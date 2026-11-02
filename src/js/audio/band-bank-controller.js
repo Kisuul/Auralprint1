@@ -3,7 +3,8 @@ import { runtime } from "../core/preferences.js";
 import { BandBank } from "./band-bank.js";
 
 /* =============================================================================
-   BandBank — defines 256 bands and maps FFT bins -> band energies
+   BandBankController — synchronizes band settings and actual sample rate,
+   applies the Nyquist ceiling, and coordinates BandBank rebuilds.
    ========================================================================== */
 const BandBankController = (() => {
   const bandConfig = {
@@ -43,7 +44,7 @@ const BandBankController = (() => {
     const wasKnown = Number.isFinite(sampleRateHz);
     const prevEffective = getEffectiveCeilingHz();
 
-    sampleRateHz = Number.isFinite(nextSampleRateHz) ? nextSampleRateHz : null;
+    sampleRateHz = Number.isFinite(nextSampleRateHz) && nextSampleRateHz > 0 ? nextSampleRateHz : null;
 
     const nextEffective = getEffectiveCeilingHz();
     const becameKnown = !wasKnown && Number.isFinite(sampleRateHz);

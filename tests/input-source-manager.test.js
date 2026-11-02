@@ -1,3 +1,4 @@
+import { canonicalPrefs } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -869,6 +870,7 @@ test("external shared stream end tears down the stream, resets live visuals, and
 test("teardownActiveSource stops stream-backed sessions even when the kind is mic", async () => {
   const stopCounts = { audio: 0, video: 0 };
   const fakeAudioTrack = {
+    readyState: "live",
     addEventListener() {},
     removeEventListener() {},
     stop() { stopCounts.audio += 1; },
@@ -974,9 +976,9 @@ test("URL preset serialization excludes runtime source state", () => {
   try {
     UrlPreset.writeHashFromPrefs();
     const payload = decodePresetHash(locationStub.hash);
-    assert.ok(payload && payload.prefs);
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "source"), false);
-    assert.equal(payload.schema, 10);
+    assert.ok(payload && canonicalPrefs(payload));
+    assert.equal(Object.prototype.hasOwnProperty.call(canonicalPrefs(payload), "source"), false);
+    assert.equal(payload.schema, 16);
     assert.doesNotMatch(JSON.stringify(payload), /audioChannelCount/);
   } finally {
     state.source.kind = previousSource.kind;

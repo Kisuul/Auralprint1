@@ -12,6 +12,7 @@ import { Scrubber } from "./audio/scrubber.js";
 import { Renderer } from "./render/renderer.js";
 import { RecorderEngine } from "./recording/recorder-engine.js";
 import { UI } from "./ui/ui.js";
+import { restoreSceneCamera } from "./ui/scene-camera-actions.js";
 import { initOrbs } from "./render/orb-runtime.js";
 import { VisualizerRuntime } from "./render/visualizer-runtime.js";
 
@@ -43,6 +44,7 @@ function onAnimationFrame(tsMs) {
     ? simulationDeltaSec(elapsedSec, runtime.settings.timing?.maxDeltaTimeSec) : 0;
   const nowSec = performance.now() / 1000;
 
+  UI.updateCamera(motionDtSec);
   updateAnalysisFrame(analysisFrame, AudioEngine.sample(), state.bands);
 
   visualizerFrameContext.dtSec = dtSec;
@@ -59,15 +61,21 @@ function rebaseVisualFrameClock() {
   state.time.lastTimestampMs = null;
 }
 
-function main() {
+async function main() {
   UI.setCssVarsFromConfig();
 
   state.canvas = document.getElementById("c");
   state.ctx = state.canvas.getContext("2d", { alpha: false });
 
   resolveSettings();
-  UrlPreset.applyFromLocationHash();
+  // No subsystem initialization or application frame runs before a compressed
+  // preset finishes admission. If the hash changes while decoding, load the
+  // winning request before initializing the authored/live camera and runtimes.
+  let imported;
+  do { imported = await UrlPreset.applyFromLocationHashAsync(); } while (imported.stale);
+  const presetApplied = imported.ok;
   resolveSettings();
+  if (presetApplied) restoreSceneCamera();
   InputSourceManager.init({
     onExternalLiveInputReset: UI.resetTrackVisualState,
   });

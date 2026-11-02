@@ -9,17 +9,19 @@ import { createWaveformControls } from "../ui/waveform-options.js";
 /* =============================================================================
    Scrubber
    Draws waveform overview + played progress + live playhead on #scrubberCanvas.
-   Handles click/drag seeking.
-   Decodes audio asynchronously (non-blocking): playback starts immediately;
-   waveform renders when decode completes. Explicit states are shown for
-   no-track, decoding, ready, and waveform-unavailable.
+   Handles click/drag and keyboard seeking with playback slider semantics.
+   Waveform admission coordinates bounded metadata probing and optional decoding
+   separately from playback; the overview renders when extraction completes.
+   Presents admission/extraction status without owning playback or source lifetime.
    ========================================================================== */
 
 const Scrubber = (() => {
   let _canvas = null;
   let _ctx2d = null;
   let _waveform = null;    // Float32Array of normalised peak samples, or null
-  let _dragging = false;
+  let _dragging = null; // null | mouse | touch
+  let _dragButton = 0;
+  let _dragTouchId = null;
   let _waveformStatus = "empty"; // empty | waiting | decoding | ready | unavailable
   let _waveformDetail = null;
   let _controls = null;
@@ -36,42 +38,53 @@ const Scrubber = (() => {
 
   function init(canvasEl) {
     _interactionCleanup?.();
-    _dragging = false;
+    cancelDrag();
     _canvas = canvasEl;
     _ctx2d = _canvas.getContext("2d");
+    _canvas.addEventListener("keydown", onKeyDown);
     _canvas.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("blur", cancelDrag);
     _canvas.addEventListener("touchstart", onTouchStart, { passive: false });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("touchcancel", onTouchEnd);
     const interactionWindow = window;
+    const interactionDocument = document;
+    const onVisibilityChange = () => { if (interactionDocument.hidden) cancelDrag(); };
+    interactionDocument.addEventListener("visibilitychange", onVisibilityChange);
     _interactionCleanup = () => {
+      canvasEl.removeEventListener("keydown", onKeyDown);
       canvasEl.removeEventListener("mousedown", onMouseDown);
       canvasEl.removeEventListener("touchstart", onTouchStart);
-      for (const [type,handler] of [["mousemove",onMouseMove],["mouseup",onMouseUp],["touchmove",onTouchMove],["touchend",onTouchEnd],["touchcancel",onTouchEnd]]) interactionWindow.removeEventListener(type,handler);
+      for (const [type,handler] of [["mousemove",onMouseMove],["mouseup",onMouseUp],["blur",cancelDrag],["touchmove",onTouchMove],["touchend",onTouchEnd],["touchcancel",onTouchEnd]]) interactionWindow.removeEventListener(type,handler);
+      interactionDocument.removeEventListener("visibilitychange", onVisibilityChange);
     };
     _controls?.dispose();
     _controls = createWaveformControls({generate:waveformAdmission.generate});
     _controls.update(_waveformStatus, _waveformDetail);
+    syncPlaybackAccessibility();
   }
 
   // Playback never awaits optional extraction. The coordinator alone owns work
   // admission; this module only presents the current result and seek timeline.
   async function loadFile(file, identity = {}) {
-    _dragging = false;
+    cancelDrag();
     _waveform = null;
+    syncPlaybackAccessibility();
     return waveformAdmission.loadFile(file, {media:getMediaEl(), ...identity});
   }
 
   function reset() {
-    _dragging = false;
+    cancelDrag();
     waveformAdmission.reset();
+    // Track reset precedes source teardown. Clear the previous timeline now.
+    syncPlaybackAccessibility(null);
   }
 
-  // Get the <audio> element from AudioEngine internals. AudioEngine exposes
-  // a getMediaEl() accessor added in this build for scrubber and seek use only.
+  // AudioEngine exposes the media element for seeking and scoped metadata
+  // handling through waveform admission; transport EOF retains its own owner.
   function getMediaEl() {
     return AudioEngine.getMediaEl ? AudioEngine.getMediaEl() : null;
   }
@@ -81,6 +94,44 @@ const Scrubber = (() => {
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
     return `${m}:${String(s).padStart(2, "0")}`;
+  }
+
+  function getSeekablePlayback() {
+    const el = getMediaEl();
+    return state.source.kind === "file" && state.source.status === "active"
+      && state.audio.isLoaded && el && Number.isFinite(el.duration) && el.duration > 0
+      && Number.isFinite(el.currentTime) ? el : null;
+  }
+
+  function syncPlaybackAccessibility(el = getSeekablePlayback()) {
+    if (!_canvas) return;
+    const now = el ? clamp(el.currentTime, 0, el.duration) : 0;
+    const sync = (name, value) => {
+      const text = String(value);
+      if (_canvas.getAttribute(name) !== text) _canvas.setAttribute(name, text);
+    };
+    sync("tabindex", el ? 0 : -1);
+    sync("aria-disabled", el ? "false" : "true");
+    sync("aria-valuemin", 0);
+    sync("aria-valuemax", el ? el.duration : 0);
+    sync("aria-valuenow", now);
+    sync("aria-valuetext", el ? `${formatTime(now)} of ${formatTime(el.duration)}` : "Playback unavailable");
+  }
+
+  function onKeyDown(e) {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    const key = e.key;
+    if (!["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp", "Home", "End"].includes(key)) return;
+    // Own slider keys even if playback became unavailable while focused.
+    e.preventDefault();
+    e.stopPropagation();
+    const el = getSeekablePlayback();
+    if (!el) { syncPlaybackAccessibility(null); return; }
+    const step = e.shiftKey ? 30 : 5;
+    const target = key === "Home" ? 0 : key === "End" ? el.duration
+      : el.currentTime + (key === "ArrowLeft" || key === "ArrowDown" ? -step : step);
+    el.currentTime = clamp(target, 0, el.duration);
+    syncPlaybackAccessibility(el);
   }
 
   function readLiveSourceTimeText(sourceState = state.source) {
@@ -101,6 +152,8 @@ const Scrubber = (() => {
   }
 
   function draw() {
+    // Accessibility stays current even when the canvas is hidden or has no size.
+    syncPlaybackAccessibility();
     if (!_canvas || !_ctx2d) return;
 
     // Sync canvas pixel dimensions to CSS dimensions each frame.
@@ -222,6 +275,7 @@ const Scrubber = (() => {
     const el = getMediaEl();
     if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return;
     el.currentTime = clamp(frac, 0, 1) * el.duration;
+    syncPlaybackAccessibility();
   }
 
   function fractionFromEvent(e) {
@@ -229,33 +283,60 @@ const Scrubber = (() => {
     return clamp((e.clientX - rect.left) / rect.width, 0, 1);
   }
 
-  function fractionFromTouch(e) {
+  function fractionFromTouch(touch) {
     if (!_canvas) return null;
     const rect = _canvas.getBoundingClientRect();
-    const t = e && e.touches && e.touches[0];
-    if (!t || !rect.width) return null;
-    return clamp((t.clientX - rect.left) / rect.width, 0, 1);
+    if (!touch || !rect.width) return null;
+    return clamp((touch.clientX - rect.left) / rect.width, 0, 1);
   }
 
-  function onMouseDown(e) { _dragging = true; seekToFraction(fractionFromEvent(e)); }
-  function onMouseMove(e) { if (_dragging) seekToFraction(fractionFromEvent(e)); }
-  function onMouseUp()    { _dragging = false; }
+  function ownedChangedTouch(e) {
+    const changed = e.changedTouches;
+    for (let i = 0; i < changed.length; i++) {
+      const touch = changed[i];
+      if (touch.identifier === _dragTouchId) return touch;
+    }
+    return null;
+  }
+
+  function cancelDrag() { _dragging = null; _dragButton = 0; _dragTouchId = null; }
+
+  function onMouseDown(e) {
+    _dragTouchId = null;
+    _dragging = "mouse";
+    // MouseEvent.button order differs from the buttons bitfield for middle/right.
+    // Keep existing nonprimary-button seeking, tracking whichever button began it.
+    _dragButton = e.button === 1 ? 4 : e.button === 2 ? 2 : 1 << e.button;
+    seekToFraction(fractionFromEvent(e));
+  }
+  function onMouseMove(e) {
+    if (_dragging !== "mouse") return;
+    if (!(e.buttons & _dragButton)) { cancelDrag(); return; }
+    seekToFraction(fractionFromEvent(e));
+  }
+  function onMouseUp() { if (_dragging === "mouse") cancelDrag(); }
 
   function onTouchStart(e) {
-    const frac = fractionFromTouch(e);
+    // touches includes contacts that began elsewhere. Acquire only a new
+    // contact delivered to this canvas, and retain it until its own end/cancel.
+    const touch = e.changedTouches[0];
+    const frac = fractionFromTouch(touch);
     if (frac == null) return;
     e.preventDefault();
-    _dragging = true;
+    if (_dragging === "touch") return;
+    _dragging = "touch";
+    _dragButton = 0;
+    _dragTouchId = touch.identifier;
     seekToFraction(frac);
   }
   function onTouchMove(e)  {
-    if (!_dragging) return;
-    const frac = fractionFromTouch(e);
+    if (_dragging !== "touch") return;
+    const frac = fractionFromTouch(ownedChangedTouch(e));
     if (frac == null) return;
     e.preventDefault();
     seekToFraction(frac);
   }
-  function onTouchEnd()    { _dragging = false; }
+  function onTouchEnd(e) { if (_dragging === "touch" && ownedChangedTouch(e)) cancelDrag(); }
 
   return { init, loadFile, reset, draw };
 })();

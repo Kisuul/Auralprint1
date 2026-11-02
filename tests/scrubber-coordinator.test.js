@@ -13,12 +13,12 @@ function harness(t) {
   let writes=0, text="", rects=[];
   const time={get textContent(){return text},set textContent(v){writes++;text=v}};
   const ctx=new Proxy({clearRect(){rects=[]},fillRect(...args){rects.push(args)}},{get:(o,k)=>o[k]||(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
-  const win=new EventTarget(), surface=Object.assign(new EventTarget(),{clientWidth:100,clientHeight:36,width:100,height:36,getContext:()=>ctx,getBoundingClientRect:()=>({left:0,width:100})});
+  const win=new EventTarget(), surface=Object.assign(new EventTarget(),{clientWidth:100,clientHeight:36,width:100,height:36,getAttribute(name) { return this.attributes?.[name] ?? null; }, setAttribute(name, value) { (this.attributes ??= {})[name] = String(value); }, getContext:()=>ctx,getBoundingClientRect:()=>({left:0,width:100})});
   for(const target of [win,surface]) {
     const add=target.addEventListener;
     target.addEventListener=function(type,...args){listeners.push(type);return add.call(this,type,...args)};
   }
-  globalThis.window=win;globalThis.document={getElementById:id=>id==="scrubberTime"?time:null};
+  globalThis.window=win;globalThis.document=Object.assign(new EventTarget(),{getElementById:id=>id==="scrubberTime"?time:null});
   globalThis.OfflineAudioContext=class {decodeAudioData(bytes){const f=files.find(f=>f.bytes===bytes);decodes.push(f.name);return f.decode.promise}};
   t.mock.method(AudioEngine,"getMediaEl",()=>media);
   Object.assign(state.audio,{isLoaded:true,isPlaying:true,transportError:""});
@@ -31,7 +31,7 @@ function harness(t) {
     async read(f){f.read.resolve(f.bytes);await flush()},async decode(f){f.decode.resolve(f.pcm);await flush()},
   };
 }
-function mouse(target,type,x){const e=new Event(type);e.clientX=x;target.dispatchEvent(e)}
+function mouse(target,type,x,buttons=type==="mouseup"?0:1){const e=new Event(type);e.clientX=x;e.button=0;e.buttons=buttons;target.dispatchEvent(e)}
 
 test("AUD-007 Scrubber clears old peaks, terminates drag and distinguishes waiting from decoding",async t=>{
   const h=harness(t),a=h.file("completed"),b=h.file("blocked"),c=h.file("newest");
@@ -96,4 +96,33 @@ test("AUD-007 native waveform rejection preserves an active recorder and seekabl
   mouse(h.surface,"mousedown",75);mouse(h.win,"mouseup",75);
   assert.equal(h.media.currentTime,15);assert.equal(state.audio.isPlaying,true);assert.equal(state.audio.transportError,"");
   assert.deepEqual(state.recording,recording,"optional native failure must preserve recorder state");
+});
+
+for (const gesture of ["mouse", "touch"]) test(`AUD116-004 ${gesture} cancellation fences a replacement track and preserves transport/recording`, async t => {
+  const h = harness(t), oldRecording = structuredClone(state.recording);
+  Object.assign(state.recording, { phase: "recording" });
+  const audio = structuredClone(state.audio), source = structuredClone(state.source), recording = structuredClone(state.recording);
+  t.after(() => Object.assign(state.recording, oldRecording));
+  const touch = (target, type, x) => { const e = new Event(type, { cancelable: true }); e.changedTouches = e.touches = [{ identifier: 0, clientX: x }]; target.dispatchEvent(e); return e; };
+  for (let cycle = 0; cycle < 10; cycle++) {
+    if (gesture === "mouse") mouse(h.surface, "mousedown", 25);
+    else touch(h.surface, "touchstart", 25);
+    assert.equal(h.media.currentTime, 5);
+    Scrubber.reset();
+    const replacement = { duration: 40, currentTime: 3 };
+    t.mock.method(AudioEngine, "getMediaEl", () => replacement);
+    await Scrubber.loadFile({ size: NaN });
+    mouse(h.win, "mousemove", 80);
+    assert.equal(touch(h.win, "touchmove", 80).defaultPrevented, false);
+    assert.equal(replacement.currentTime, 3, "stale input cannot seek the new track");
+    assert.equal(h.media.currentTime, 5, "cancellation must not seek the old track");
+    if (gesture === "mouse") { mouse(h.surface, "mousedown", 20); mouse(h.win, "mousemove", 40); }
+    else { touch(h.surface, "touchstart", 20); assert.equal(touch(h.win, "touchmove", 40).defaultPrevented, true); }
+    assert.equal(replacement.currentTime, 16);
+    Scrubber.reset();
+    t.mock.method(AudioEngine, "getMediaEl", () => h.media);
+  }
+  assert.deepEqual(state.audio, audio);
+  assert.deepEqual(state.source, source);
+  assert.deepEqual(state.recording, recording);
 });

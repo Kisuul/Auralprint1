@@ -1,12 +1,15 @@
+import { inflateSync } from "node:zlib";
+import { canonicalPrefs } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 
-import { PRESET_SCHEMA_VERSION, LEGACY_SCHEMA_V8 } from "../src/js/core/constants.js";
+import { PRESET_SCHEMA_VERSION, LEGACY_SCHEMA_V8, RAD_TO_DEG } from "../src/js/core/constants.js";
+import { selectConfigGrid, isOnConfigGrid } from "../src/js/ui/config-range.js";
 import { CONFIG } from "../src/js/core/config.js";
 import { normalizeOrbDef, preferences, runtime, replacePreferences, resolveSettings } from "../src/js/core/preferences.js";
-import { state } from "../src/js/core/state.js";
+import { state, setCamera } from "../src/js/core/state.js";
 import { AudioEngine } from "../src/js/audio/audio-engine.js";
 import { BandBankController } from "../src/js/audio/band-bank-controller.js";
 import { createAnalysisFrame, updateAnalysisFrame } from "../src/js/audio/analysis-frame.js";
@@ -26,7 +29,7 @@ test("version metadata and schema remain aligned", () => {
   const constants = readFileSync(new URL("../src/js/core/constants.js", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   assert.match(version, /^v[0-9][A-Za-z0-9.\-]*$/);
   assert.ok(constants.includes(`   Auralprint\n   ${version.slice(1)}\n`), "Source header must match root version");
-  assert.equal(PRESET_SCHEMA_VERSION, 10);
+  assert.equal(PRESET_SCHEMA_VERSION, 16);
 });
 
 test("per-Orb commits use one canonical runtime sync and Orb editor refresh authority", () => {
@@ -68,6 +71,9 @@ function createScrubberHarness() {
     fill() {},
   };
   const canvas = {
+    attributes: new Map(),
+    getAttribute(name) { return this.attributes.get(name) ?? null; },
+    setAttribute(name, value) { this.attributes.set(name, String(value)); },
     clientWidth: 160,
     clientHeight: 32,
     width: 0,
@@ -97,11 +103,11 @@ function createScrubberHarness() {
       if (windowListeners.get(type) === handler) windowListeners.delete(type);
     },
   };
-  globalThis.document = {
+  globalThis.document = Object.assign(new EventTarget(), {
     getElementById(id) {
       return id === "scrubberTime" ? scrubberTime : null;
     },
-  };
+  });
 
   return {
     canvas,
@@ -116,10 +122,11 @@ function createScrubberHarness() {
 }
 
 function decodePresetHash(hash) {
-  const token = hash.startsWith("#p=") ? hash.slice(3) : hash;
+  const token = /^#[pz]=/.test(hash) ? hash.slice(3) : hash;
   const padLength = (4 - (token.length % 4)) % 4;
   const b64 = token.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat(padLength);
-  return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+  const bytes = Buffer.from(b64, "base64");
+  return JSON.parse((hash.startsWith("#z=") ? inflateSync(bytes) : bytes).toString("utf8"));
 }
 
 function snapshotSourceAndAudioState() {
@@ -682,7 +689,7 @@ function createStubUiElement(tagName = "div") {
     },
     click() {
       if (this.disabled) return;
-      this.dispatch("click");
+      return this.dispatch("click");
     },
     appendChild(child) {
       if (child.parentNode) child.parentNode.children = child.parentNode.children.filter((entry) => entry !== child);
@@ -733,6 +740,9 @@ function createStubUiElement(tagName = "div") {
     getAttribute(name) {
       return attributes.has(name) ? attributes.get(name) : null;
     },
+    removeAttribute(name) {
+      attributes.delete(name);
+    },
     classList: {
       add(...names) {
         for (const name of names) classes.add(name);
@@ -782,6 +792,7 @@ function createUiWireHarness() {
   const previousCanvas = state.canvas;
   const elements = new Map();
   const windowListeners = new Map();
+  const documentListeners = new Map();
 
   function getElement(id) {
     if (!elements.has(id)) {
@@ -805,9 +816,21 @@ function createUiWireHarness() {
       entries.push(handler);
       windowListeners.set(type, entries);
     },
+    removeEventListener(type, handler) {
+      windowListeners.set(type, (windowListeners.get(type) || []).filter(entry => entry !== handler));
+    },
   };
   globalThis.document = {
     activeElement: null,
+    hidden: false,
+    addEventListener(type, handler) {
+      const entries = documentListeners.get(type) || [];
+      entries.push(handler);
+      documentListeners.set(type, entries);
+    },
+    removeEventListener(type, handler) {
+      documentListeners.set(type, (documentListeners.get(type) || []).filter(entry => entry !== handler));
+    },
     getElementById(id) {
       return getElement(id);
     },
@@ -960,10 +983,10 @@ test("URL preset schema 9 round-trips per-orb Build 115 fields", () => {
     UrlPreset.writeHashFromPrefs();
     const payload = decodePresetHash(locationStub.hash);
     assert.equal(payload.schema, PRESET_SCHEMA_VERSION);
-    assert.equal(payload.prefs.orbs[0].hueOffsetDeg, 120);
-    assert.equal(payload.prefs.orbs[0].colorSource, "angle");
-    assert.equal(payload.prefs.orbs[0].centerXFrac, 0.1);
-    assert.equal(payload.prefs.orbs[1].chanId, "C");
+    assert.equal(canonicalPrefs(payload).orbs[0].hueOffsetDeg, 120);
+    assert.equal(canonicalPrefs(payload).orbs[0].colorSource, "angle");
+    assert.equal(canonicalPrefs(payload).orbs[0].centerXFrac, 0.1);
+    assert.equal(canonicalPrefs(payload).orbs[1].chanId, "C");
 
     replacePreferences(structuredClone(CONFIG.defaults));
     resolveSettings();
@@ -1080,7 +1103,8 @@ test("scrubber touchmove does not cancel window scrolling outside an active drag
 
     let prevented = false;
     harness.windowListeners.get("touchmove")({
-      touches: [{ clientX: 70 }],
+      touches: [{ identifier: 0, clientX: 70 }],
+      changedTouches: [{ identifier: 0, clientX: 70 }],
       preventDefault() { prevented = true; },
     });
 
@@ -1103,16 +1127,18 @@ test("scrubber active touch drag still prevents default and seeks", () => {
 
     let startPrevented = false;
     harness.canvasListeners.get("touchstart")({
-      touches: [{ clientX: 60 }],
+      touches: [{ identifier: 0, clientX: 60 }],
+      changedTouches: [{ identifier: 0, clientX: 60 }],
       preventDefault() { startPrevented = true; },
     });
 
     let movePrevented = false;
     harness.windowListeners.get("touchmove")({
-      touches: [{ clientX: 90 }],
+      touches: [{ identifier: 0, clientX: 90 }],
+      changedTouches: [{ identifier: 0, clientX: 90 }],
       preventDefault() { movePrevented = true; },
     });
-    harness.windowListeners.get("touchend")({});
+    harness.windowListeners.get("touchend")({ touches: [], changedTouches: [{ identifier: 0, clientX: 90 }] });
 
     assert.equal(startPrevented, true);
     assert.equal(movePrevented, true);
@@ -1676,9 +1702,9 @@ test("URL preset serialization excludes runtime source and recording state", () 
   try {
     UrlPreset.writeHashFromPrefs();
     const payload = decodePresetHash(locationStub.hash);
-    assert.ok(payload && payload.prefs);
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "source"), false);
-    assert.equal(Object.prototype.hasOwnProperty.call(payload.prefs, "recording"), false);
+    assert.ok(payload && canonicalPrefs(payload));
+    assert.equal(Object.prototype.hasOwnProperty.call(canonicalPrefs(payload), "source"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(canonicalPrefs(payload), "recording"), false);
   } finally {
     applySourceAndAudioState({ source: previousSource, audio: previousAudio });
     Object.assign(state.recording, previousRecording);
@@ -1842,7 +1868,7 @@ test("UI clears retained live-input errors when removing the last queued file re
 
     state.ui.btnToggleQueue.dispatch("click");
     const lastRow = getElement("queueList").children[0];
-    const removeBtn = lastRow.children[2];
+    const removeBtn = lastRow.querySelector(".q-remove");
     removeBtn.dispatch("click");
     UI.refreshAllUiText();
 
@@ -2397,7 +2423,7 @@ test("UI finalizing locks destructive file transport actions while leaving non-d
     state.ui.btnToggleQueue.dispatch("click");
     const queueRows = getElement("queueList").children;
     const activeRow = queueRows[1];
-    const removeBtn = activeRow.children[2];
+    const removeBtn = activeRow.querySelector(".q-remove");
 
     assert.equal(state.ui.btnLoad.disabled, true);
     assert.equal(state.ui.btnPrev.disabled, true);
@@ -2413,7 +2439,7 @@ test("UI finalizing locks destructive file transport actions while leaving non-d
     assert.equal(state.ui.btnShuffle.disabled, false);
     assert.equal(state.ui.btnToggleQueue.disabled, false);
 
-    assert.equal(activeRow.getAttribute("aria-disabled"), "true");
+    assert.equal(activeRow.querySelector(".q-play").disabled, true);
     assert.match(activeRow.title, /Track changes are unavailable while recording finalizes/);
     assert.equal(removeBtn.disabled, true);
     assert.match(removeBtn.title, /Track changes are unavailable while recording finalizes/);
@@ -2453,12 +2479,12 @@ test("UI refreshes an already-open queue when recording enters finalizing", asyn
     UI.refreshAllUiText();
 
     const firstRow = getElement("queueList").children[0];
-    const firstRemoveBtn = firstRow.children[2];
+    const firstRemoveBtn = firstRow.querySelector(".q-remove");
 
-    assert.equal(firstRow.getAttribute("aria-disabled"), "true");
+    assert.equal(firstRow.querySelector(".q-play").disabled, true);
     assert.equal(firstRemoveBtn.disabled, true);
 
-    firstRow.dispatch("click");
+    firstRow.querySelector(".q-play").dispatch("click");
     firstRemoveBtn.dispatch("click");
     await Promise.resolve();
 
@@ -2499,9 +2525,9 @@ test("UI re-enables an already-open queue when recording leaves finalizing", asy
     UI.refreshAllUiText();
 
     const firstRow = getElement("queueList").children[0];
-    const firstRemoveBtn = firstRow.children[2];
+    const firstRemoveBtn = firstRow.querySelector(".q-remove");
 
-    assert.equal(firstRow.getAttribute("aria-disabled"), "false");
+    assert.equal(firstRow.querySelector(".q-play").disabled, false);
     assert.equal(firstRemoveBtn.disabled, false);
 
     firstRemoveBtn.dispatch("click");
@@ -2546,7 +2572,7 @@ test("UI finalizing blocks destructive file transport interactions and keeps fil
     const queueList = getElement("queueList");
     const queueRows = queueList.children;
     const firstRow = queueRows[0];
-    const firstRemoveBtn = firstRow.children[2];
+    const firstRemoveBtn = firstRow.querySelector(".q-remove");
     const initialQueueNames = Queue.snapshot().items.map((item) => item.name);
 
     state.ui.btnLoad.dispatch("click");
@@ -2555,7 +2581,7 @@ test("UI finalizing blocks destructive file transport interactions and keeps fil
     state.ui.btnPrev.dispatch("click");
     state.ui.btnNext.dispatch("click");
     state.ui.btnClearQueue.dispatch("click");
-    firstRow.dispatch("click");
+    firstRow.querySelector(".q-play").dispatch("click");
     firstRemoveBtn.dispatch("click");
     state.canvas.dispatch("drop", {
       dataTransfer: {
@@ -3113,6 +3139,7 @@ async function withSettingsActionHarness(t, run, coordinator = UI) {
   const previousBands = { ...state.bands };
   const previousOrbs = state.orbs.slice();
   const previousSourceKind = state.source.kind;
+  const previousCamera = state.camera;
   const descriptors = Object.fromEntries(["location", "history", "navigator"].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const location = { pathname: "/", search: "", hash: "", href: "https://example.test/" };
@@ -3163,21 +3190,21 @@ async function withSettingsActionHarness(t, run, coordinator = UI) {
     Object.assign(state.bands, previousBands);
     state.orbs.splice(0, state.orbs.length, ...previousOrbs);
     state.source.kind = previousSourceKind;
+    setCamera(previousCamera);
     VisualizerRuntime.rebuild(state.orbs);
   }
 }
 
 function settingsPresetHash(prefs) {
-  return `#p=${Buffer.from(JSON.stringify({ schema: PRESET_SCHEMA_VERSION, prefs }), "utf8").toString("base64url")}`;
+  return `#p=${Buffer.from(JSON.stringify({ schema: 12, prefs }), "utf8").toString("base64url")}`;
 }
 
-test("Copy Share Link writes the canonical schema-10 hash and reports only in Settings", async (t) => {
+test("Copy Share Link writes the compressed schema-16 hash and reports only in Settings", async (t) => {
   await withSettingsActionHarness(t, async ({ clipboard, location }) => {
-    const writeHash = t.mock.method(UrlPreset, "writeHashFromPrefs");
-    state.ui.btnShare.click();
-    await Promise.resolve();
+    const writeHash = t.mock.method(UrlPreset, "writeCompressedHashFromPrefs");
+    await state.ui.btnShare.click();
     assert.equal(writeHash.mock.calls.length, 1);
-    assert.equal(decodePresetHash(location.hash).schema, 10);
+    assert.equal(decodePresetHash(location.hash).schema, 16);
     assert.equal(clipboard.copied, location.href);
     assert.equal(state.ui.sceneStatus.textContent, "Share link copied to clipboard.");
     assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
@@ -3187,9 +3214,8 @@ test("Copy Share Link writes the canonical schema-10 hash and reports only in Se
 test("Share clipboard fallback retains the URL and reports only in Settings", async (t) => {
   await withSettingsActionHarness(t, async ({ location }) => {
     delete globalThis.navigator.clipboard;
-    state.ui.btnShare.click();
-    await Promise.resolve();
-    assert.equal(decodePresetHash(location.hash).schema, 10);
+    await state.ui.btnShare.click();
+    assert.equal(decodePresetHash(location.hash).schema, 16);
     assert.equal(state.ui.sceneStatus.textContent, "Share link written to URL — copy from address bar.");
     assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
   });
@@ -3202,11 +3228,15 @@ test("Apply URL Preset uses canonical apply, conditional BandBank rebuild and Se
     next.bands.distributionMode = "bark";
     next.visuals.backgroundColor = "#123456";
     next.orbs[0].startAngleRad = 1;
+    next.sceneCamera = { x: 123.456, y: -654.321, zoom: 2.75, rotationRad: .789 };
+    setCamera({ x: 900, y: -800, zoom: .1 });
     location.hash = settingsPresetHash(next);
     const rebuild = t.mock.method(BandBankController, "rebuildNow");
     const oldLowHz = state.bands.lowHz;
     state.ui.btnApplyUrl.click();
     assert.equal(preferences.visuals.backgroundColor, "#123456");
+    assert.deepEqual(state.camera, next.sceneCamera);
+    assert.notEqual(state.camera, preferences.sceneCamera);
     assert.equal(runtime.settings.bands.floorHz, 55);
     assert.equal(runtime.settings.bands.distributionMode, "bark");
     assert.notEqual(state.bands.lowHz, oldLowHz);
@@ -3222,12 +3252,14 @@ test("Apply URL Preset uses canonical apply, conditional BandBank rebuild and Se
 test("missing and invalid URL presets report only in Settings and retain preferences", async (t) => {
   await withSettingsActionHarness(t, ({ location }) => {
     const previous = structuredClone(preferences);
+    const camera = setCamera({ x: 123, y: -456, zoom: 7, rotationRad: 1.23 });
     for (const hash of ["", "#p=invalid"]) {
       location.hash = hash;
       state.ui.btnApplyUrl.click();
-      assert.equal(state.ui.sceneStatus.textContent, "No valid preset in URL.");
+      assert.equal(state.ui.sceneStatus.textContent, hash ? "Invalid preset in URL. Scene unchanged." : "No valid preset in URL.");
       assert.equal(state.ui.visualizerEditStatus.textContent, "Choose a visualizer to shape its response.");
       assert.deepEqual(preferences, previous);
+      assert.equal(state.camera, camera);
     }
   });
 });
@@ -3235,6 +3267,8 @@ test("missing and invalid URL presets report only in Settings and retain prefere
 test("Reset All Settings restores complete CONFIG defaults and reports only in Settings", async (t) => {
   await withSettingsActionHarness(t, () => {
     preferences.audio.volume = 0.25;
+    preferences.sceneCamera = { x: 123, y: -456, zoom: 3.4, rotationRad: .789 };
+    setCamera({ x: -800, zoom: .1, rotationRad: 2.5 });
     preferences.visuals.backgroundColor = "#123456";
     preferences.bands.floorHz = 55;
     preferences.orbs[0].motion.angularSpeedRadPerSec = 2;
@@ -3243,6 +3277,8 @@ test("Reset All Settings restores complete CONFIG defaults and reports only in S
     state.ui.btnResetPrefs.click();
     assert.deepEqual(preferences, CONFIG.defaults);
     assert.deepEqual(runtime.settings, CONFIG.defaults);
+    assert.deepEqual(state.camera, CONFIG.camera.defaults);
+    assert.notEqual(state.camera, preferences.sceneCamera);
     assert.equal(rebuild.mock.calls.length, 1);
     assert.equal(state.orbs[0].angleRad, CONFIG.defaults.orbs[0].startAngleRad);
     assert.equal(state.ui.sceneStatus.textContent, "All settings reset.");
@@ -3351,7 +3387,7 @@ test("M.H individual Orb and Spectral Ring edits emit only Visualizer feedback",
     const control = state.ui.orbEditorList.children[0].querySelectorAll("input").find((node) => node.id?.endsWith("angular-speed"));
     control.value = "2";
     control.dispatch("input");
-    assert.equal(runtime.settings.orbs[0].motion.angularSpeedRadPerSec, 2);
+    assert.equal(runtime.settings.orbs[0].motion.angularSpeedRadPerSec, selectConfigGrid(2/RAD_TO_DEG,CONFIG.limits.motion.angularSpeedRadPerSec));
     assert.equal(statusWrites.visualizerEditStatus.length, 1);
     assert.match(state.ui.visualizerEditStatus.textContent, /^Updated: .* angular speed$/);
     state.ui.rngBandAlpha.value = "0.4";
@@ -3419,7 +3455,7 @@ const MG_BULK_FIELDS = [
   ["rngSizeMin", "valSizeMin", "particles", "sizeMinPx", "input", 1, 2],
   ["rngSizeToMin", "valSizeToMin", "particles", "sizeToMinSec", "input", 2, 4],
   ["rngTTL", "valTTL", "particles", "ttlSec", "input", 10, 12],
-  ["rngMinPlacementDistance", "valMinPlacementDistance", "particles", "minPlacementDistancePx", "input", 0, 2],
+  ["rngMinPlacementDistance", "valMinPlacementDistance", "particles", "minPlacementDistanceUnits", "input", 0, 2],
 ];
 
 for (const [controlId, outputId, group, field, event, first, second] of MG_BULK_FIELDS) {
@@ -3432,12 +3468,13 @@ for (const [controlId, outputId, group, field, event, first, second] of MG_BULK_
       const settingsBefore = runtime.settings, runtimeOrbs = [...state.orbs];
       const unrelatedBefore = preferences.orbs.map((orb) => orb.centerXFrac);
       if (typeof first === "boolean") state.ui[controlId].checked = first;
-      else state.ui[controlId].value = String(first);
+      else state.ui[controlId].value = String(field === "angularSpeedRadPerSec" ? first*RAD_TO_DEG : first);
       state.ui[controlId].dispatch(event);
       assert.notEqual(runtime.settings, settingsBefore);
       for (const source of [preferences.orbs, runtime.settings.orbs, state.orbs]) {
         assert.equal(source.length, 2);
-        assert.ok(source.every((orb) => orb[group][field] === first), `${group}.${field}`);
+        const expected=field === "angularSpeedRadPerSec" ? selectConfigGrid(first,CONFIG.limits.motion.angularSpeedRadPerSec) : first;
+        assert.ok(source.every((orb) => orb[group][field] === expected), `${group}.${field}`);
       }
       assert.deepEqual(state.orbs, runtimeOrbs, "bulk editing retains live Orb objects");
       assert.deepEqual(preferences.orbs.map((orb) => orb.centerXFrac), unrelatedBefore);
@@ -3562,12 +3599,12 @@ test("spacing individual live edit retains Orb phase, particles, editor focus, a
     const tail=orb.trail.particles.tail;
     const control=root.querySelectorAll("input").find(node=>node.id?.endsWith("min-placement-distance"));
     control.focus(); control.value="2.3"; control.dispatch("input");
-    for(const source of [preferences.orbs,runtime.settings.orbs,state.orbs])assert.equal(source.find(o=>o.id===id).particles.minPlacementDistancePx,2.3);
+    for(const source of [preferences.orbs,runtime.settings.orbs,state.orbs])assert.equal(source.find(o=>o.id===id).particles.minPlacementDistanceUnits,2.3);
     assert.equal(state.orbs.find(o=>o.id===id),orb); assert.equal(orb.angleRad,2.5);
     assert.equal(orb.trail.particles.tail,tail); assert.equal(orb.trail.emitAccumulator,.37);
     assert.equal(state.ui.orbEditorList.children[0],root); assert.equal(document.activeElement,control);
     const commits=t.mock.method(UI,"refreshAllUiText");
-    control.value="0"; control.dispatch("input"); assert.equal(orb.particles.minPlacementDistancePx,0);
+    control.value="0"; control.dispatch("input"); assert.equal(orb.particles.minPlacementDistanceUnits,0);
     assert.ok(commits.mock.callCount()<=1,"a single input has one refresh path");
     state.ui.btnVisualizersAddOrb.click();
     assert.equal(state.ui.orbEditorList.children.find(node=>node.dataset.orbId===id),root);
@@ -3721,27 +3758,27 @@ test("RC-13: queue removal retains neighboring action focus and empty queue rest
   await withRc02FileWorkflow(t, {}, async ({ ingest, getElement }) => {
     await ingest(["A.wav", "B.wav", "C.wav"]);
     const list = getElement("queueList");
-    list.children[1].children[2].focus();
-    await list.children[1].children[2].dispatch("click");
+    list.children[1].querySelector(".q-remove").focus();
+    await list.children[1].querySelector(".q-remove").dispatch("click");
     assert.deepEqual(Queue.snapshot().items.map(item => item.name), ["A.wav", "C.wav"]);
-    assert.equal(document.activeElement, list.children[1].children[2]);
+    assert.equal(document.activeElement, list.children[1].querySelector(".q-remove"));
     await document.activeElement.dispatch("click");
-    assert.equal(document.activeElement, list.children[0].children[2]);
+    assert.equal(document.activeElement, list.children[0].querySelector(".q-remove"));
     await document.activeElement.dispatch("click");
     assert.equal(Queue.length, 0);
     assert.equal(document.activeElement, getElement("btnHideQueue"));
   });
 });
 
-test("RC-13: queue activation/refresh preserves row focus and never steals outside focus", async t => {
+test("RC-13: queue activation/refresh preserves Play focus and never steals outside focus", async t => {
   await withRc02FileWorkflow(t, {}, async ({ ingest, getElement }) => {
     await ingest(["A.wav", "B.wav"]);
     let list = getElement("queueList");
-    list.children[1].focus();
-    await list.children[1].dispatch("click");
+    list.children[1].querySelector(".q-play").focus();
+    await list.children[1].querySelector(".q-play").dispatch("click");
     for (let i = 0; i < 10; i++) await Promise.resolve();
     UI.refreshAllUiText();
-    assert.equal(document.activeElement, list.children[1]);
+    assert.equal(document.activeElement, list.children[1].querySelector(".q-play"));
     getElement("btnLoad").focus();
     await ingest(["C.wav"]);
     assert.equal(document.activeElement, getElement("btnLoad"));
@@ -3749,6 +3786,69 @@ test("RC-13: queue activation/refresh preserves row focus and never steals outsi
     await getElement("btnClearQueue").dispatch("click");
     assert.equal(document.activeElement, getElement("btnHideQueue"));
     assert.equal(Queue.length, 0);
+  });
+});
+
+test("F-02: Queue rows hold distinct sibling native buttons; Remove never selects or plays", async t => {
+  await withRc02FileWorkflow(t, {}, async ({ ingest, getElement, mutations }) => {
+    await ingest(["same.wav", "same.wav", "same.wav"]);
+    const list = getElement("queueList"), row = list.children[1];
+    const play = row.querySelector(".q-play"), remove = row.querySelector(".q-remove");
+    assert.equal(row.getAttribute("role"), null);
+    assert.equal(row.getAttribute("tabindex"), null);
+    assert.deepEqual(row.children, [play, remove]);
+    assert.equal(play.tagName, "BUTTON"); assert.equal(remove.tagName, "BUTTON");
+    assert.equal(play.type, "button"); assert.equal(remove.type, "button");
+    assert.equal(play.getAttribute("aria-label"), "Play queue item 2: same.wav");
+    assert.equal(remove.getAttribute("aria-label"), "Remove queue item 2: same.wav");
+    assert.equal(play.querySelector("button"), null);
+    const entries = [0, 1, 2].map(index => Queue.entryAt(index));
+    const media = AudioEngine.getMediaEl(), starts = mutations.filter(x => x.kind === "track-change-start").length;
+    remove.focus(); await remove.click();
+    assert.equal(Queue.currentEntry(), entries[0]);
+    assert.equal(Queue.entryAt(1), entries[2]);
+    assert.equal(AudioEngine.getMediaEl(), media);
+    assert.equal(mutations.filter(x => x.kind === "track-change-start").length, starts);
+    assert.equal(document.activeElement, list.children[1].querySelector(".q-remove"));
+  });
+});
+
+for (const action of [".q-play", ".q-remove"]) {
+  test(`F-02: ${action} focus follows the surviving entry through same-name removal and reorder`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ ingest, getElement }) => {
+      await ingest(["same.wav", "same.wav", "same.wav", "same.wav"]);
+      const list = getElement("queueList"), focusedEntry = Queue.entryAt(2);
+      list.children[2].querySelector(action).focus();
+      // Removing another entry through the API isolates focus restoration from click focus.
+      Queue.remove(0); UI.refreshRecordingUi();
+      assert.equal(Queue.entryAt(1), focusedEntry);
+      assert.equal(document.activeElement, list.children[1].querySelector(action));
+      t.mock.method(Math, "random", () => 0);
+      await getElement("btnShuffle").dispatch("click");
+      const index = [0, 1, 2].find(index => Queue.entryAt(index) === focusedEntry);
+      assert.equal(document.activeElement, list.children[index].querySelector(action));
+    });
+  });
+}
+
+test("F-02: ordinary playback refreshes retain Queue nodes, focus and accessibility attributes", async t => {
+  await withRc02FileWorkflow(t, {}, async ({ ingest, getElement }) => {
+    await ingest(["A.wav", "B.wav"]);
+    const list = getElement("queueList"), rows = [...list.children];
+    const button = rows[1].querySelector(".q-play"); button.focus();
+    let writes = 0;
+    for (const row of rows) for (const control of row.children) {
+      const set = control.setAttribute;
+      t.mock.method(control, "setAttribute", function (...args) { writes++; return set.apply(this, args); });
+    }
+    for (let i = 0; i < 50; i++) {
+      AudioEngine.getMediaEl().currentTime = i;
+      state.audio.isPlaying = i % 2 === 0;
+      UI.refreshAllUiText();
+    }
+    assert.deepEqual(list.children, rows);
+    assert.equal(document.activeElement, button);
+    assert.equal(writes, 0);
   });
 });
 
@@ -3799,7 +3899,7 @@ for (const removal of ["clear", "final-remove"]) {
       await entered.promise;
       assert.equal(Queue.length, 1);
       if (removal === "clear") await getElement("btnClearQueue").dispatch("click");
-      else await getElement("queueList").children[0].children[2].dispatch("click");
+      else await getElement("queueList").children[0].querySelector(".q-remove").dispatch("click");
       assertRc02Empty();
       const notifications = mutations.length;
       resume.resolve();
@@ -4057,7 +4157,7 @@ for (const change of ["queue-file", "media-element", "live-workflow", "teardown"
       if (change === "teardown") await InputSourceManager.teardownActiveSource({ reason: "test-owner-change" });
       state.recording.phase = "complete";
       if (change === "clear") await getElement("btnClearQueue").dispatch("click");
-      if (change === "replacement") await getElement("queueList").children[1].dispatch("click");
+      if (change === "replacement") await getElement("queueList").children[1].querySelector(".q-play").dispatch("click");
       await rc05Settle();
       const before = { cursor: Queue.currentIndex, audio: { ...state.audio }, loads: [...scrubberLoads], count: mutations.length };
       UI.refreshRecordingUi();
@@ -4138,7 +4238,7 @@ test('RC-15 phase 3: tooltip discovery indexes labels once while preserving asso
 });
 
 test('RC-15 budgets: committed Settings edits synchronize without recreating governor, Orb history or focus',async(t)=>{
-  await withSettingsActionHarness(t,({location})=>{
+  await withSettingsActionHarness(t,async({location})=>{
     const orb=state.orbs[0],g=orb.trail.governor;orb.trail.emitAt(0,0,0,{r:1,g:0,b:0});orb.trail.emitAccumulator=.75;
     const tail=orb.trail.particles.tail,phase=orb.angleRad,control=state.ui.numMaxActiveParticles;
     control.focus();control.value='65536';control.dispatch('change');
@@ -4146,7 +4246,7 @@ test('RC-15 budgets: committed Settings edits synchronize without recreating gov
     assert.equal(g.policy.maxActiveParticles,65536);assert.equal(preferences.particleSafety.maxActiveParticles,65536);assert.equal(runtime.settings.particleSafety.maxActiveParticles,65536);
     control.value='';control.dispatch('change');assert.equal(preferences.particleSafety.maxActiveParticles,65536);assert.equal(control.getAttribute('aria-invalid'),'true');
     state.ui.numMaxEmissionsPerFrame.value='4096';state.ui.numMaxEmissionsPerFrame.dispatch('change');assert.equal(g.policy.maxEmissionsPerFrame,4096);
-    state.ui.btnShare.click();const payload=JSON.parse(Buffer.from(location.hash.slice(3),'base64url').toString('utf8'));assert.deepEqual(payload.prefs.particleSafety,{maxEmissionsPerFrame:4096,maxActiveParticles:65536});
+    await state.ui.btnShare.click();const payload=decodePresetHash(location.hash);assert.deepEqual(canonicalPrefs(payload).particleSafety,{maxEmissionsPerFrame:4096,maxActiveParticles:65536});
     const imported=structuredClone(CONFIG.defaults);imported.particleSafety={maxEmissionsPerFrame:0,maxActiveParticles:0};location.hash=settingsPresetHash(imported);state.ui.btnApplyUrl.click();assert.deepEqual(g.policy,imported.particleSafety);assert.equal(g.activeParticles,0);assert.equal(state.ui.numMaxActiveParticles.value,'0');
     state.ui.btnResetPrefs.click();assert.deepEqual(g.policy,CONFIG.defaults.particleSafety);assert.equal(state.ui.numMaxActiveParticles.value,'16384');assert.equal(state.ui.numMaxEmissionsPerFrame.value,'512');
   });
@@ -4170,7 +4270,7 @@ for (const identity of ["distinct", "same-name", "same-file"]) {
       const oldEntry = Queue.currentEntry(), successor = Queue.entryAt(1);
       assert.equal(AudioEngine.getMediaEl(), null, "A is genuinely pending before allocation");
       assert.equal(state.audio.isLoaded, false);
-      await getElement("queueList").children[0].children[2].dispatch("click");
+      await getElement("queueList").children[0].querySelector(".q-remove").dispatch("click");
       assert.equal(Queue.currentEntry(), successor);
       assert.notEqual(Queue.currentEntry(), oldEntry);
       assert.equal(mutations.filter(x => x.kind === "track-change-start").length, 2, "removal must synchronously authorize a successor request");
@@ -4205,11 +4305,11 @@ for (const autoPlay of [true, false]) {
       audioEngineHarnessContext.state = "suspended"; hold = true;
       // Loaded A removal gives B the actual intent. B removal must use that
       // pending request's intent, even though teardown makes isPlaying false.
-      await getElement("queueList").children[0].children[2].dispatch("click");
+      await getElement("queueList").children[0].querySelector(".q-remove").dispatch("click");
       await entered.promise;
       assert.equal(Queue.current().name, "B.wav");
       assert.equal(state.audio.isPlaying, false);
-      await getElement("queueList").children[0].children[2].dispatch("click");
+      await getElement("queueList").children[0].querySelector(".q-remove").dispatch("click");
       await waitForActivations(2);
       const winner = AudioEngine.getMediaEl();
       assert.equal(Queue.current().name, "C.wav");
@@ -4234,10 +4334,10 @@ for (const removedIndex of [0, 2]) {
     }, async ({ ingest, getElement, waitForActivations }) => {
       await ingest(["A.wav", "B.wav", "C.wav"]);
       audioEngineHarnessContext.state = "suspended"; hold = true;
-      await getElement("queueList").children[1].dispatch("click");
+      await getElement("queueList").children[1].querySelector(".q-play").dispatch("click");
       await entered.promise;
       const selected = Queue.currentEntry();
-      await getElement("queueList").children[removedIndex].children[2].dispatch("click");
+      await getElement("queueList").children[removedIndex].querySelector(".q-remove").dispatch("click");
       assert.equal(Queue.currentEntry(), selected);
       resume.resolve(); await waitForActivations(2);
       assert.equal(state.source.status, "active");
@@ -4259,8 +4359,8 @@ test("AUD-001: A to B to C supersession authorizes only C", async t => {
   }, async ({ ingest, getElement, waitForActivations, waitForCompletions, mutations }) => {
     const pending = ingest(["A.wav", "B.wav", "C.wav"]);
     await entered.promise;
-    await getElement("queueList").children[1].dispatch("click");
-    await getElement("queueList").children[2].dispatch("click");
+    await getElement("queueList").children[1].querySelector(".q-play").dispatch("click");
+    await getElement("queueList").children[2].querySelector(".q-play").dispatch("click");
     await waitForCompletions(1);
     assert.equal(state.audio.filename, "C.wav");
     const winner = AudioEngine.getMediaEl(), notifications = mutations.length;
@@ -4285,7 +4385,7 @@ for (const outcome of ["resolve", "reject"]) {
       const pending = ingest(["A.wav", "B.wav"]);
       await entered.promise;
       assert.equal(state.audio.isLoaded, false);
-      await getElement("queueList").children[0].children[2].dispatch("click");
+      await getElement("queueList").children[0].querySelector(".q-remove").dispatch("click");
       await waitForCompletions(1);
       const winner = AudioEngine.getMediaEl(), loser = audio.mediaElements[0];
       assert.notEqual(winner, loser);
@@ -4341,7 +4441,7 @@ for (const identity of ["same-name", "same-file"]) {
       // normal row selection also supersedes the numerical request ID.
       Queue.goTo(1);
       assert.equal(AudioEngine._isLoadRequestCurrent(id), false, "File/name equality cannot authorize a different entry");
-      await getElement("queueList").children[1].dispatch("click");
+      await getElement("queueList").children[1].querySelector(".q-play").dispatch("click");
       await waitForCompletions(1);
       const winner = AudioEngine.getMediaEl();
       resume.resolve(); await pending;
@@ -4363,9 +4463,9 @@ for (const path of ["picker", "drop", "next", "prev", "row", "shortcut-next", "s
         if (path === "prev" || path === "shortcut-prev") await getElement("btnNext").dispatch("click");
         fail = true; audioEngineHarnessContext.state = "suspended";
         if (path === "next" || path === "prev") await getElement(path === "next" ? "btnNext" : "btnPrev").dispatch("click");
-        else if (path === "row") await getElement("queueList").children[1].dispatch("click");
+        else if (path === "row") await getElement("queueList").children[1].querySelector(".q-play").dispatch("click");
         else if (path === "shortcut-next" || path === "shortcut-prev") dispatchWindow("keydown", { code: path === "shortcut-next" ? "KeyN" : "KeyP", target: state.canvas });
-        else if (path === "remove-successor") await getElement("queueList").children[0].children[2].dispatch("click");
+        else if (path === "remove-successor") await getElement("queueList").children[0].querySelector(".q-remove").dispatch("click");
         else {
           const repeat = preferences.audio.repeatMode;
           preferences.audio.repeatMode = path === "repeat-one" ? "one" : "none";
@@ -4389,7 +4489,7 @@ for (const path of ["picker", "drop", "next", "prev", "row", "shortcut-next", "s
       assert.match(state.ui.audioStatus.textContent, /UI startup refused/);
       fail = false;
       const completions = mutations.filter(x => x.kind === "track-change-complete").length;
-      await getElement("queueList").children[Queue.currentIndex].dispatch("click");
+      await getElement("queueList").children[Queue.currentIndex].querySelector(".q-play").dispatch("click");
       await waitForCompletions(completions + 1);
       assert.equal(state.source.status, "active");
       assert.equal(state.audio.transportError, "");
@@ -4407,7 +4507,7 @@ for (const action of ["current", "clear", "replacement"]) {
       const pending = getElement("btnPlay").dispatch("click"); await entered.promise;
       if (action === "clear") await getElement("btnClearQueue").dispatch("click");
       else if (action === "replacement") {
-        await getElement("queueList").children[1].dispatch("click"); await waitForCompletions(2);
+        await getElement("queueList").children[1].querySelector(".q-play").dispatch("click"); await waitForCompletions(2);
         state.audio.transportError = "winner-owned error";
       }
       const audioState = state.audio, writes = [];
@@ -4468,7 +4568,7 @@ for (const path of ["picker", "drop"]) {
       assert.equal(mutations.filter(x => x.kind === "track-change-failed").length, 1);
       assert.equal(mutations.filter(x => x.kind === "track-change-complete").length, 0);
       assert.deepEqual(scrubberLoads, []); assert.equal(Queue.current().name, "corrupt.wav");
-      await getElement("queueList").children[0].dispatch("click");
+      await getElement("queueList").children[0].querySelector(".q-play").dispatch("click");
       await waitForCompletions(1);
       assert.equal(state.source.status, "active"); assert.equal(state.audio.filename, "corrupt.wav");
       assert.notEqual(AudioEngine.getMediaEl(), failed); assert.equal(state.audio.transportError, "");
@@ -4538,8 +4638,24 @@ for (const action of ['edit', 'duplicate', 'remove', 'edit-ring']) {
   });
 }
 
+for (const field of ['inpBandFloorHz', 'inpBandCeilingHz']) for (const draft of ['37.125', '']) {
+  test(`AUD-002: delayed File completion preserves focused ${field} draft ${JSON.stringify(draft)}`, async t => {
+    const entered = rc02Deferred(), resume = rc02Deferred();
+    await withRc02FileWorkflow(t, { contextState: 'suspended', onResume: () => { entered.resolve(); return resume.promise; } }, async ({ ingest, waitForCompletions }) => {
+      const pending = ingest(['analysis-draft.wav']); await entered.promise;
+      const input = state.ui[field]; input.focus(); input.value = draft;
+      const settings = runtime.settings;
+      resume.resolve(); await pending; await waitForCompletions(1); UI.refreshAllUiText();
+      assert.equal(state.audio.filename, 'analysis-draft.wav'); assert.notEqual(runtime.settings, settings);
+      assert.equal(input.value, draft); assert.equal(document.activeElement, input);
+      assert.equal(preferences.bands.floorHz, CONFIG.defaults.bands.floorHz);
+      assert.equal(preferences.bands.ceilingHz, CONFIG.defaults.bands.ceilingHz);
+    });
+  });
+}
+
 for (const bulk of [false, true]) {
-  test(`AUD-009: real UI ${bulk ? 'Bulk' : 'individual'} commits share one numeric normalization boundary`, async (t) => {
+  test(`AUD-009: real UI ${bulk ? 'Bulk' : 'individual'} edits enforce CONFIG grids while legacy persistence retains precision`, async (t) => {
     await withSettingsActionHarness(t, () => {
       preferences.orbs.forEach(orb => { orb.motion.angularSpeedRadPerSec = .123456; orb.trace.numLines = 15.5; orb.bandIds = [0, 255]; });
       preferences.bands.count = 3; UI.applyPrefs(null); hostVisualizerEditors(); UI.refreshAllUiText();
@@ -4550,19 +4666,19 @@ for (const bulk of [false, true]) {
       const runtimeOrbs = [...state.orbs]; speed.focus(); root.open = true;
       preferences.audio.playbackVolume = .4; UI.applyPrefs(null);
       assert.ok(document.activeElement === speed); assert.ok(state.ui.orbEditorList.children[0] === root); assert.equal(root.open, true);
-      assert.equal(speed.value, '0.123456'); assert.ok(preferences.orbs.every(orb => orb.motion.angularSpeedRadPerSec === .123456));
-      speed.value = '.234567'; speed.dispatch('input');
-      assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec, .234567);
-      assert.equal(preferences.orbs[1].motion.angularSpeedRadPerSec, bulk ? .234567 : .123456);
+      assert.equal(Number(speed.value), selectConfigGrid(.123456,CONFIG.limits.motion.angularSpeedRadPerSec)*RAD_TO_DEG); assert.match(speed.getAttribute('aria-valuetext'), /Current 0.123456.*slider selection/); assert.ok(preferences.orbs.every(orb => orb.motion.angularSpeedRadPerSec === .123456));
+      speed.value = String(.234567*RAD_TO_DEG); speed.dispatch('input');
+      assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec, selectConfigGrid(.234567,CONFIG.limits.motion.angularSpeedRadPerSec));
+      assert.equal(preferences.orbs[1].motion.angularSpeedRadPerSec, bulk ? selectConfigGrid(.234567,CONFIG.limits.motion.angularSpeedRadPerSec) : .123456);
       // The Node mock intentionally allows fractional range input: the canonical
       // consumer, not native snapping, must establish the integral contract.
       count.value = '17.1'; count.dispatch('input');
       for (const source of [preferences.orbs, runtime.settings.orbs, state.orbs]) {
-        assert.equal(source[0].trace.numLines, 18); assert.equal(source[1].trace.numLines, bulk ? 18 : 16);
+        assert.equal(source[0].trace.numLines, 20); assert.equal(source[1].trace.numLines, bulk ? 20 : 16);
         assert.deepEqual(source.map(orb => orb.bandIds), [[0, 255], [0, 255]]);
       }
       assert.ok(state.orbs.every((orb, i) => orb === runtimeOrbs[i]));
-      UI.refreshAllUiText(); assert.equal(Number(count.value), 18);
+      UI.refreshAllUiText(); assert.equal(Number(count.value), 20);
     });
   });
 }
@@ -4631,8 +4747,9 @@ test('AUD-004 tooltip titles are idempotent on idle, focus and unrelated setting
     assert.deepEqual(writes,[], 'unchanged tooltip title writes');
     preferences.visuals.backgroundColor='#123456';UI.applyPrefs(null);UI.refreshAllUiText();
     assert.deepEqual(writes,[], 'unrelated setting must not rewrite this tooltip');
-    control.value='.123456';await control.dispatch('input');
-    assert.match(control.title,/0\.123456 rad\/s/);assert.match(control.getAttribute('aria-valuetext'),/0\.123456 rad\/s/);
+    control.value=String(.123456*RAD_TO_DEG);await control.dispatch('input');
+    const speed=preferences.orbs[0].motion.angularSpeedRadPerSec;assert.ok(isOnConfigGrid(speed,CONFIG.limits.motion.angularSpeedRadPerSec));
+    assert.ok(control.title.includes(`${speed} rad/s`));assert.ok(control.getAttribute('aria-valuetext').includes(`${speed} rad/s`));
     assert.equal(document.activeElement,control);
   });
 });
@@ -4663,7 +4780,7 @@ test('AUD-004 hidden Visualizers reveal refreshes values, titles and focus befor
     for(let i=0;i<20;i++)UI.refreshAllUiText();
     assert.notEqual(control.value,'0.234567','hidden editor is deferred');
     state.ui.btnOpenVisualizers.click();
-    assert.equal(control.value,'0.234567','reveal must refresh canonical values synchronously');
+    assert.equal(Number(control.value),selectConfigGrid(.234567,CONFIG.limits.motion.angularSpeedRadPerSec)*RAD_TO_DEG,'reveal must refresh the CONFIG selection synchronously');assert.match(control.getAttribute('aria-valuetext'),/Current 0.234567.*slider selection/);assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec,.234567);
     assert.match(control.title,/0\.234567 rad\/s/);assert.equal(document.activeElement,state.ui.btnHideVisualizers);
     assert.equal(state.ui.orbEditorList.children[0],root);
   });
@@ -4718,3 +4835,493 @@ test('AUD-004 recorder finalization alone updates busy/status and completion unl
     assert.equal(state.ui.recordPanel.getAttribute('aria-busy'),'false');assert.equal(state.ui.btnLoad.disabled,false);
   });}finally{Object.assign(state.recording,previous);}
 });
+
+
+for (const count of [0, 1, 2, 16]) test(`116D authoring through Camera UI preserves ${count} Orbs and session owners`, async t => {
+  await withSettingsActionHarness(t, async ({ location, dispatchWindow }) => {
+    preferences.orbs = Array.from({ length: count }, (_, i) => ({ ...structuredClone(CONFIG.defaults.orbs[i % 2]), id: `capture-${i}` }));
+    UI.applyPrefs(null); initOrbs();
+    state.orbs.forEach((orb, i) => { orb.angleRad = .123 + i; orb.trail.emitAt(700 + i, -800 - i, 0, { r: 1, g: 0, b: 0 }); orb.trail.emitAccumulator = .375; });
+    const camera = setCamera({ x: 123.456789, y: -654.987654, zoom: 2.345, rotationRad: .713579 });
+    const owners = { world: state.world, audio: state.audio, time: state.time, recording: state.recording };
+    const orbs = state.orbs.slice(), particles = orbs.map(o => [...o.trail.particles]);
+    state.ui.btnSaveSceneView.click();
+    assert.deepEqual(preferences.sceneCamera, camera); assert.deepEqual(runtime.settings.sceneCamera, camera);
+    assert.notEqual(preferences.sceneCamera, camera); assert.equal(state.camera, camera);
+    assert.match(state.ui.sceneCameraStatus.textContent, /saved/);
+    setCamera({ x: 800, zoom: .5, rotationRad: 2 });
+    await state.ui.btnShare.click();
+    assert.deepEqual(canonicalPrefs(decodePresetHash(location.hash)).sceneCamera, camera);
+    const preset = structuredClone(preferences);
+    state.ui.btnRestoreSceneView.click();
+    assert.deepEqual(state.camera, camera); assert.deepEqual(preferences, preset);
+    state.ui.btnResetCamera.click();
+    assert.deepEqual(state.camera, CONFIG.camera.defaults); assert.deepEqual(preferences, preset);
+    assert.equal(state.world, owners.world);
+    orbs.forEach((orb, i) => {
+      assert.equal(state.orbs[i], orb); assert.equal(orb.angleRad, .123 + i);
+      assert.equal(orb.trail.emitAccumulator, .375);
+      assert.deepEqual([...orb.trail.particles], particles[i]);
+      assert.equal(orb.trail.particles.at(0), particles[i][0]);
+    });
+    // Both supported import callers initialize the live view, old schemas use defaults.
+    for (const schema of [10, 11, 12]) {
+      location.hash = `#p=${Buffer.from(JSON.stringify({ schema, prefs: preset })).toString("base64url")}`;
+      setCamera({ x: 900 });
+      if (schema % 2) dispatchWindow("hashchange"); else state.ui.btnApplyUrl.click();
+      assert.deepEqual(state.camera, schema === 12 ? camera : CONFIG.camera.defaults);
+    }
+    // Capture/Restore/Reset Camera above must preserve all actual identities;
+    // URL import keeps its established explicit visual-reset behavior.
+    assert.equal(owners.audio, state.audio); assert.equal(owners.time, state.time); assert.equal(owners.recording, state.recording);
+  });
+});
+
+test('Angular alignment: startup, refresh, Share and deliberate speed editing retain live simulation/history owners',async t=>{
+  await withSettingsActionHarness(t,async({location})=>{
+    assert.deepEqual(preferences,CONFIG.defaults);
+    assert.deepEqual(runtime.settings,CONFIG.defaults);
+    assert.ok(state.orbs.every(o=>o.motion.angularSpeedRadPerSec===Math.PI/2));
+    hostVisualizerEditors();UI.refreshAllUiText();
+    const original=structuredClone(preferences),orbs=[...state.orbs];
+    // Establish real moving state and retained history before exercising editing.
+    VisualizerRuntime.update({dtSec:1/60,motionDtSec:.1,nowSec:1,simPaused:false,analysisFrame:createAnalysisFrame()});
+    state.orbs.forEach((o,i)=>{o.trail.emitAt(100+i,-200-i,1,{r:1,g:0,b:0});o.trail.emitAccumulator=.375});
+    const saved=orbs.map(o=>({angle:o.angleRad,x:o.xSim,y:o.ySim,trail:o.trail,list:o.trail.particles,tail:o.trail.particles.tail,governor:o.trail.governor}));
+    const world=state.world,camera=state.camera,ring=state.bands.ringPhaseRad;
+    const retained=()=>{
+      assert.equal(state.world,world);assert.equal(state.camera,camera);assert.equal(state.bands.ringPhaseRad,ring);
+      orbs.forEach((o,i)=>{const s=saved[i];assert.equal(state.orbs[i],o);assert.equal(o.angleRad,s.angle);assert.equal(o.xSim,s.x);assert.equal(o.ySim,s.y);assert.equal(o.trail,s.trail);assert.equal(o.trail.particles,s.list);assert.equal(o.trail.particles.tail,s.tail);assert.equal(o.trail.governor,s.governor);assert.equal(o.trail.emitAccumulator,.375)});
+    };
+    const speed=state.ui.orbEditorList.children[0].querySelectorAll('input').find(c=>c.id?.endsWith('-angular-speed'));
+    assert.equal(speed.value,'90');assert.doesNotMatch(speed.getAttribute('aria-valuetext'),/Current .*slider selection/);
+    UI.applyPrefs(null);UI.refreshAllUiText();retained();assert.deepEqual(preferences,original);
+    await state.ui.btnShare.click();assert.deepEqual(canonicalPrefs(decodePresetHash(location.hash)),original);retained();
+    speed.value='90.5';speed.dispatch('input');retained();
+    const expected=structuredClone(original);expected.orbs[0].motion.angularSpeedRadPerSec=preferences.orbs[0].motion.angularSpeedRadPerSec;
+    assert.ok(Math.abs(expected.orbs[0].motion.angularSpeedRadPerSec*RAD_TO_DEG-90.5)<1e-12);assert.deepEqual(preferences,expected);
+    assert.equal(state.orbs[1].motion.angularSpeedRadPerSec,Math.PI/2);
+  });
+});
+
+test('116E: promised clipboard starts during the click and reports success only after writing', async t => {
+  await withSettingsActionHarness(t, async ({location}) => {
+    let resolveShare, resolveClipboard, called=false, text;
+    const old=Object.getOwnPropertyDescriptor(globalThis,'ClipboardItem');
+    Object.defineProperty(globalThis,'ClipboardItem',{configurable:true,value:class {constructor(items){this.items=items;}}});
+    try {
+      t.mock.method(UrlPreset,'writeCompressedHashFromPrefs',()=>new Promise(resolve=>{resolveShare=resolve;}));
+      navigator.clipboard.write=items=>{called=true;text=items[0].items['text/plain'];return new Promise(resolve=>{resolveClipboard=resolve;});};
+      const pending=state.ui.btnShare.click();
+      assert.equal(called,true,'Clipboard write lost the original activation');
+      assert.doesNotMatch(state.ui.sceneStatus.textContent,/copied/);
+      location.href='https://example.test/#z=verified';location.hash='#z=verified';resolveShare({stale:false,fallback:false,hash:location.hash});
+      assert.equal(await (await text).text(),location.href);
+      assert.doesNotMatch(state.ui.sceneStatus.textContent,/copied/);
+      resolveClipboard();await pending;
+      assert.equal(state.ui.sceneStatus.textContent,'Share link copied to clipboard.');
+    } finally {if(old)Object.defineProperty(globalThis,'ClipboardItem',old);else delete globalThis.ClipboardItem;}
+  });
+});
+
+test('116E: rejected clipboard and unavailable compression preserve a usable compatibility URL with accurate feedback', async t => {
+  await withSettingsActionHarness(t, async ({location}) => {
+    const native=globalThis.CompressionStream;
+    try {
+      globalThis.CompressionStream=undefined;
+      navigator.clipboard.writeText=async()=>{throw new Error('activation expired');};
+      const before=structuredClone(preferences);await state.ui.btnShare.click();
+      assert.match(location.hash,/^#p=/);
+      assert.deepEqual(canonicalPrefs(decodePresetHash(location.hash)),before);
+      assert.match(state.ui.sceneStatus.textContent,/written to URL.*copy from address bar.*Uncompressed schema-16/);
+      assert.doesNotMatch(state.ui.sceneStatus.textContent,/copied to clipboard/);
+    } finally {globalThis.CompressionStream=native;}
+  });
+});
+
+test('116E: failed share leaves the old URL and does not report a clipboard success', async t => {
+  await withSettingsActionHarness(t, async ({location,clipboard}) => {
+    const before=location.href;
+    t.mock.method(UrlPreset,'writeCompressedHashFromPrefs',async()=>{throw new Error('admission failed');});
+    await state.ui.btnShare.click();assert.equal(location.href,before);assert.equal(clipboard.copied,'');
+    assert.equal(state.ui.sceneStatus.textContent,'Could not create share link. URL unchanged.');
+  });
+});
+
+// Exercise the UI policy against the actual InputSourceManager cancellation and
+// commit lifecycle; only native capture/attachment and recorder side effects are
+// substituted. Queue contents remain real runtime entries throughout.
+async function with116fSourceExit({ enabled = true, sourceKind = "file", phase = "idle", capture, attach, unsupported = false } = {}, run) {
+  const previousPrefs = structuredClone(preferences);
+  const originalManager = Object.fromEntries(["activateMic", "activateStream", "teardownActiveSource"].map(key => [key, InputSourceManager[key]]));
+  const originalRecorder = { onTransportMutation: RecorderEngine.onTransportMutation, getSupportStatus: RecorderEngine.getSupportStatus };
+  const captures = [], mutations = [], streams = [];
+  function liveStream(kind) {
+    const audio = Object.assign(new EventTarget(), { id: `${kind}-${streams.length}`, label: kind, readyState: "live",
+      stop() { this.readyState = "ended"; }, getSettings() { return { channelCount: 2 }; } });
+    const stream = Object.assign(new EventTarget(), { getTracks() { return [audio]; }, getAudioTracks() { return [audio]; }, getVideoTracks() { return []; } });
+    streams.push(stream);
+    return stream;
+  }
+  const devices = unsupported ? {} : {
+    getUserMedia() { captures.push("mic"); return capture ? capture("mic", liveStream) : Promise.resolve(liveStream("mic")); },
+    getDisplayMedia() { captures.push("stream"); return capture ? capture("stream", liveStream) : Promise.resolve(liveStream("stream")); },
+  };
+  const manager = createInputSourceManager({ stateRef: state, mediaDevices: devices, audioEngine: {
+    unload() {}, async attachMediaStreamSource(stream, options) {
+      if (attach) return attach(stream, options);
+      return options.isCurrent();
+    },
+  } });
+  Object.assign(InputSourceManager, Object.fromEntries(Object.keys(originalManager).map(key => [key, manager[key]])));
+  RecorderEngine.onTransportMutation = (...args) => { mutations.push(args); return { ok: true }; };
+  RecorderEngine.getSupportStatus = () => ({ ok: true });
+  preferences.audio.clearQueueOnSourceExit = enabled;
+  try {
+    await withUiWireHarnessState({ sourceState: { kind: sourceKind, status: sourceKind === "none" ? "idle" : "active", sessionActive: sourceKind !== "none",
+      support: { mic: true, stream: true } }, audioState: { isLoaded: sourceKind === "file", isPlaying: false, filename: "old.wav" },
+      recordingState: { phase }, queueNames: ["old.wav", "next.wav"], currentIndex: 0, queueVisible: true },
+    async h => {
+      const entries = [Queue.entryAt(0), Queue.entryAt(1)];
+      try { await run({ ...h, manager, entries, captures, mutations, liveStream }); }
+      finally { await manager.teardownActiveSource({ reason: "116f-test-cleanup" }); }
+    });
+  } finally {
+    Object.assign(InputSourceManager, originalManager);
+    Object.assign(RecorderEngine, originalRecorder);
+    replacePreferences(previousPrefs); resolveSettings();
+  }
+}
+
+function pending116fCapture() {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+for (const kind of ["mic", "stream"]) {
+  for (const enabled of [false, true]) {
+    test(`116F: ${enabled ? "enabled" : "disabled"} Queue policy after accepted File → ${kind}`, async () => {
+      const held = pending116fCapture();
+      await with116fSourceExit({ enabled, capture: () => held.promise }, async ({ liveStream, entries, mutations }) => {
+        assert.equal(state.ui.chkClearQueueOnSourceExit.checked, enabled);
+        const pending = UI.dispatchSourceSwitchAction(kind);
+        assert.equal(state.source.status, "requesting");
+        assert.equal(Queue.length, 2, "permission dialog never clears Queue");
+        held.resolve(liveStream(kind));
+        assert.equal(await pending, true);
+        assert.equal(state.source.kind, kind);
+        assert.equal(state.source.status, "active");
+        assert.equal(Queue.length, enabled ? 0 : 2);
+        if (!enabled) assert.equal(Queue.entryAt(0), entries[0]);
+        assert.equal(state.ui.queueList.children.length, enabled ? 0 : 2);
+        UI.refreshAllUiText();
+        assert.equal(state.ui.btnPrev.disabled, true);
+        assert.equal(state.ui.btnNext.disabled, true);
+        assert.match(state.ui.audioStatus.textContent, kind === "mic" ? /Microphone live/ : /Stream live/);
+        assert.equal(mutations.filter(([event]) => event === "audio-unloaded").length, 1);
+        assert.equal(state.audio.isLoaded, false);
+        assert.equal(state.audio.filename, "");
+      });
+    });
+  }
+  for (const failure of ["denied", "cancelled", "unsupported", "attach-failed", "attach-cancelled", "no-audio"]) {
+    test(`116F: ${kind} ${failure} preserves Queue`, async () => {
+      await with116fSourceExit({ unsupported: failure === "unsupported",
+        capture: (target, liveStream) => {
+          if (failure === "denied" || failure === "cancelled") return Promise.reject(Object.assign(new Error("cancelled"), { name: failure === "denied" ? "NotAllowedError" : "AbortError" }));
+          if (failure === "no-audio") return Promise.resolve({ getTracks() { return []; }, getAudioTracks() { return []; } });
+          return Promise.resolve(liveStream(target));
+        }, attach: () => {
+          if (failure === "attach-failed") throw new Error("attachment failed");
+          return false;
+        } }, async ({ entries }) => {
+        assert.equal(await UI.dispatchSourceSwitchAction(kind), false);
+        assert.equal(Queue.length, 2);
+        assert.equal(Queue.entryAt(0), entries[0]);
+        assert.equal(Queue.entryAt(1), entries[1]);
+      });
+    });
+  }
+  test(`116F: returning to File cancels pending ${kind} without clearing a newer Queue`, async () => {
+    const held = pending116fCapture();
+    await with116fSourceExit({ capture: () => held.promise }, async ({ liveStream }) => {
+      const pending = UI.dispatchSourceSwitchAction(kind);
+      assert.equal(await UI.dispatchSourceSwitchAction("file"), true);
+      Queue.clear(); Queue.add({ name: "replacement.wav" }); Queue.setCursor(0);
+      const replacement = Queue.currentEntry();
+      held.resolve(liveStream(kind));
+      assert.equal(await pending, false);
+      assert.equal(state.source.kind, "none");
+      assert.equal(Queue.length, 1);
+      assert.equal(Queue.currentEntry(), replacement);
+    });
+  });
+  test(`116F: a newer Queue mutation during ${kind} activation preserves all entries`, async () => {
+    const held = pending116fCapture();
+    await with116fSourceExit({ capture: () => held.promise }, async ({ liveStream, entries }) => {
+      const pending = UI.dispatchSourceSwitchAction(kind);
+      Queue.add({ name: "new-intent.wav" });
+      held.resolve(liveStream(kind));
+      assert.equal(await pending, true);
+      assert.equal(Queue.length, 3);
+      assert.equal(Queue.entryAt(0), entries[0]);
+    });
+  });
+  test(`116F: ${kind} success that ended before UI continuation preserves Queue`, async () => {
+    const held = pending116fCapture();
+    await with116fSourceExit({ capture: () => held.promise }, async ({ liveStream, manager, entries }) => {
+      const original = InputSourceManager[kind === "mic" ? "activateMic" : "activateStream"];
+      InputSourceManager[kind === "mic" ? "activateMic" : "activateStream"] = async () => {
+        const result = await original();
+        await manager.teardownActiveSource({ reason: "ended-before-ui" });
+        return result;
+      };
+      const pending = UI.dispatchSourceSwitchAction(kind);
+      held.resolve(liveStream(kind));
+      assert.equal(await pending, true, "activation had succeeded before ending");
+      assert.equal(state.source.kind, "none");
+      assert.equal(Queue.entryAt(0), entries[0]);
+    });
+  });
+}
+
+for (const phase of ["recording", "finalizing"]) {
+  test(`116F: ${phase} source lock preserves Queue without starting capture`, async () => {
+    await with116fSourceExit({ phase }, async ({ entries, captures, mutations }) => {
+      assert.equal(await UI.dispatchSourceSwitchAction("mic"), false);
+      assert.equal(await UI.dispatchSourceSwitchAction("stream"), false);
+      assert.deepEqual(captures, []); assert.deepEqual(mutations, []);
+      assert.equal(Queue.entryAt(0), entries[0]);
+    });
+  });
+}
+
+for (const [from, to] of [["mic", "mic"], ["stream", "stream"], ["mic", "stream"], ["stream", "mic"], ["mic", "file"], ["stream", "file"], ["file", "file"]]) {
+  test(`116F: ${from} → ${to} never applies File-exit Queue clearance`, async () => {
+    await with116fSourceExit({ sourceKind: from }, async ({ entries }) => {
+      await UI.dispatchSourceSwitchAction(to);
+      assert.equal(Queue.entryAt(0), entries[0]);
+      assert.equal(Queue.length, 2);
+    });
+  });
+}
+
+test("116F: a newer live-source choice invalidates the departing File policy", async () => {
+  const held = pending116fCapture();
+  await with116fSourceExit({ capture: (kind, liveStream) => kind === "mic" ? held.promise : Promise.resolve(liveStream(kind)) }, async ({ liveStream, entries }) => {
+    const pending = UI.dispatchSourceSwitchAction("mic");
+    assert.equal(await UI.dispatchSourceSwitchAction("stream"), true);
+    held.resolve(liveStream("mic"));
+    assert.equal(await pending, false);
+    assert.equal(state.source.kind, "stream");
+    assert.equal(Queue.entryAt(0), entries[0]);
+  });
+});
+
+
+for (const initiallyEnabled of [false, true]) {
+  test(`116F: Queue policy captured as ${initiallyEnabled} applies only to its transition`, async () => {
+    const held = pending116fCapture();
+    await with116fSourceExit({ enabled: initiallyEnabled, capture: () => held.promise }, async ({ liveStream }) => {
+      const pending = UI.dispatchSourceSwitchAction("mic");
+      preferences.audio.clearQueueOnSourceExit = !initiallyEnabled;
+      UI.applyPrefs();
+      assert.equal(Queue.length, 2);
+      held.resolve(liveStream("mic"));
+      assert.equal(await pending, true);
+      assert.equal(Queue.length, initiallyEnabled ? 0 : 2);
+    });
+  });
+}
+
+for (const kind of ["mic", "stream"]) {
+  test(`116F: stale successful ${kind} UI continuation cannot clear the reaccepted same source`, async () => {
+    const released = pending116fCapture(), accepted = pending116fCapture();
+    await with116fSourceExit({}, async ({ entries }) => {
+      const method = kind === "mic" ? "activateMic" : "activateStream";
+      const original = InputSourceManager[method];
+      let first = true;
+      InputSourceManager[method] = async () => {
+        const result = await original();
+        if (first) {
+          first = false;
+          accepted.resolve();
+          await released.promise;
+        }
+        return result;
+      };
+      const obsolete = UI.dispatchSourceSwitchAction(kind);
+      await accepted.promise;
+      assert.equal(Queue.length, 2);
+      await UI.dispatchSourceSwitchAction("file");
+      preferences.audio.clearQueueOnSourceExit = false; UI.applyPrefs();
+      assert.equal(await UI.dispatchSourceSwitchAction(kind), true);
+      released.resolve();
+      assert.equal(await obsolete, true, "old manager success is historical, not current UI intent");
+      assert.equal(state.source.kind, kind);
+      assert.equal(Queue.entryAt(0), entries[0]);
+      assert.equal(Queue.length, 2);
+    });
+  });
+  test(`116F: leaving ${kind} during pending attachment preserves Queue`, async () => {
+    const held = pending116fCapture(), entered = pending116fCapture();
+    await with116fSourceExit({ attach: async (_stream, options) => {
+      entered.resolve(); await held.promise; return options.isCurrent();
+    } }, async ({ entries }) => {
+      const pending = UI.dispatchSourceSwitchAction(kind);
+      await entered.promise;
+      assert.equal(Queue.length, 2);
+      await UI.dispatchSourceSwitchAction("file");
+      held.resolve();
+      assert.equal(await pending, false);
+      assert.equal(Queue.entryAt(0), entries[0]);
+    });
+  });
+}
+
+test("116F: shared preset and reset synchronize Queue policy without serializing or deleting runtime Queue", async () => {
+  const previousLocation = globalThis.location;
+  globalThis.location = { pathname: "/", search: "", hash: `#p=${Buffer.from(JSON.stringify({ schema: 16, prefs: { audio: { clearQueueOnSourceExit: true } } })).toString("base64url")}` };
+  try {
+    await with116fSourceExit({ enabled: false }, async ({ entries }) => {
+      await state.ui.btnApplyUrl.dispatch("click");
+      assert.equal(preferences.audio.clearQueueOnSourceExit, true);
+      assert.equal(state.ui.chkClearQueueOnSourceExit.checked, true);
+      assert.equal(Queue.entryAt(0), entries[0]);
+      const payload = JSON.stringify((await import("../src/js/presets/preset-codec.js")).encodePresetPayload(preferences));
+      assert.ok(!payload.includes("old.wav"));
+      assert.ok(!payload.includes("next.wav"));
+      assert.ok(!payload.includes("cursor"));
+      await state.ui.btnResetPrefs.dispatch("click");
+      assert.equal(preferences.audio.clearQueueOnSourceExit, false);
+      assert.equal(state.ui.chkClearQueueOnSourceExit.checked, false);
+      assert.equal(Queue.entryAt(0), entries[0]);
+      assert.equal(await UI.dispatchSourceSwitchAction("mic"), true);
+      assert.equal(Queue.entryAt(0), entries[0], "reset disables future automatic clearing");
+    });
+  } finally { globalThis.location = previousLocation; }
+});
+
+test("116F: shared preset enables future Queue clearance while legacy import restores disabled policy", async () => {
+  const previousLocation = globalThis.location;
+  const hash = payload => `#p=${Buffer.from(JSON.stringify(payload)).toString("base64url")}`;
+  globalThis.location = { pathname: "/", search: "", hash: hash({ schema: 16, prefs: { audio: { clearQueueOnSourceExit: true } } }) };
+  try {
+    await with116fSourceExit({ enabled: false }, async ({ entries }) => {
+      await state.ui.btnApplyUrl.dispatch("click");
+      assert.equal(Queue.entryAt(0), entries[0]);
+      assert.equal(await UI.dispatchSourceSwitchAction("stream"), true);
+      assert.equal(Queue.length, 0, "imported opt-in affects the next source exit");
+    });
+    globalThis.location.hash = hash({ schema: 13, prefs: {} });
+    await with116fSourceExit({ enabled: true }, async ({ entries }) => {
+      await state.ui.btnApplyUrl.dispatch("click");
+      assert.equal(preferences.audio.clearQueueOnSourceExit, false);
+      assert.equal(state.ui.chkClearQueueOnSourceExit.checked, false);
+      assert.equal(Queue.entryAt(0), entries[0]);
+      assert.equal(await UI.dispatchSourceSwitchAction("mic"), true);
+      assert.equal(Queue.entryAt(0), entries[0]);
+    });
+  } finally { globalThis.location = previousLocation; }
+});
+
+// AUD116-R2-002 uses the existing transport harness and real coordinator paths.
+for (const entry of ["picker", "drop"]) {
+  test(`AUD116-R2-002: repeated wiring admits one ${entry} batch and one action per control`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ ingest, getElement, scrubberLoads, mutations }) => {
+      for (let i = 0; i < 6; i++) UI.wireControls();
+      preferences.audio.repeatMode = "none";
+      for (const mode of ["one", "all", "none", "one", "all", "none"]) {
+        await getElement("btnRepeat").dispatch("click");
+        assert.equal(preferences.audio.repeatMode, mode);
+      }
+      await ingest(["A.wav", "B.wav", "C.wav"], entry);
+      assert.equal(Queue.length, 3);
+      assert.deepEqual(scrubberLoads, ["A.wav"]);
+      await getElement("btnNext").dispatch("click");
+      assert.equal(Queue.currentIndex, 1);
+      await getElement("btnPrev").dispatch("click");
+      assert.equal(Queue.currentIndex, 0);
+      await getElement("btnPlay").dispatch("click");
+      assert.equal(state.audio.isPlaying, false);
+      await getElement("btnPlay").dispatch("click");
+      assert.equal(state.audio.isPlaying, true);
+      assert.deepEqual(scrubberLoads, ["A.wav", "B.wav", "A.wav"]);
+      assert.equal(mutations.filter(x => x.kind === "track-change-start").length, 3);
+      const stop = t.mock.method(AudioEngine, "stop");
+      await getElement("btnStop").dispatch("click");
+      assert.equal(stop.mock.callCount(), 1);
+    });
+  });
+}
+
+for (const boundary of ["resume", "play"]) {
+  for (const outcome of ["complete", "clear", "replacement"]) {
+    test(`AUD116-R2-002: pending ${boundary} File survives rewiring and ${outcome} retains request authority`, async t => {
+      const entered = rc02Deferred(), release = rc02Deferred();
+      await withRc02FileWorkflow(t, boundary === "resume" ? {
+        contextState: "suspended", onResume() { entered.resolve(); return release.promise; },
+      } : {}, async ({ audio, ingest, getElement, scrubberLoads, mutations }) => {
+        if (boundary === "play") {
+          const play = audio.audioEl.play.bind(audio.audioEl);
+          audio.audioEl.play = async () => { entered.resolve(); await release.promise; return play(); };
+        }
+        const pending = ingest(["A.wav"]);
+        await entered.promise;
+        const guard = AudioEngine._isLoadRequestCurrent, ended = AudioEngine._onTrackEnded;
+        const requestId = mutations.find(x => x.kind === "track-change-start").details.requestId;
+        const entry = Queue.currentEntry();
+        for (let i = 0; i < 6; i++) UI.wireControls();
+        assert.equal(AudioEngine._isLoadRequestCurrent, guard);
+        assert.equal(AudioEngine._onTrackEnded, ended);
+        assert.equal(guard(requestId), true);
+        assert.equal(Queue.currentEntry(), entry);
+        assert.equal(mutations.filter(x => x.kind === "track-change-start").length, 1);
+        if (outcome !== "complete") await getElement("btnClearQueue").dispatch("click");
+        if (outcome === "replacement") {
+          // Restore ordinary activation so B wins before the held A settles.
+          audio.audioEl.play = () => { audio.audioEl.paused = false; audio.audioEl.dispatch("play"); return Promise.resolve(); };
+          const replacement = ingest(["B.wav"]);
+          release.resolve(); await replacement;
+        } else release.resolve();
+        await pending;
+        if (outcome === "complete") {
+          assert.equal(guard(requestId), true);
+          assert.equal(state.audio.filename, "A.wav");
+          assert.deepEqual(scrubberLoads, ["A.wav"]);
+          assert.equal(mutations.filter(x => x.kind === "track-change-complete").length, 1);
+        } else {
+          assert.equal(guard(requestId), false);
+          assert.deepEqual(scrubberLoads, outcome === "replacement" ? ["B.wav"] : []);
+          assert.equal(state.audio.filename, outcome === "replacement" ? "B.wav" : "");
+          assert.equal(Queue.length, outcome === "replacement" ? 1 : 0);
+        }
+      });
+    });
+  }
+}
+
+for (const repeat of ["none", "one", "all"]) {
+  test(`AUD116-R2-002: rewiring preserves deferred EOF (${repeat}) through recording finalization`, async t => {
+    await withRc02FileWorkflow(t, {}, async ({ audio, ingest, scrubberLoads, mutations, getElement }) => {
+      await ingest(["A.wav", "B.wav"]);
+      if (repeat === "all") await getElement("btnNext").dispatch("click");
+      preferences.audio.repeatMode = repeat;
+      state.recording.phase = "finalizing";
+      rc05End(audio);
+      const starts = mutations.filter(x => x.kind === "track-change-start").length;
+      for (let i = 0; i < 5; i++) UI.wireControls();
+      assert.equal(mutations.filter(x => x.kind === "track-change-start").length, starts);
+      // Repeat is captured at EOF; later preference changes cannot replace it.
+      preferences.audio.repeatMode = repeat === "one" ? "none" : "one";
+      state.recording.phase = "complete";
+      UI.refreshRecordingUi(); await rc05Settle();
+      assert.equal(state.audio.filename, repeat === "none" ? "B.wav" : "A.wav");
+      assert.equal(mutations.filter(x => x.kind === "track-change-start").length, starts + 1);
+      const completed = [...scrubberLoads];
+      for (let i = 0; i < 5; i++) { UI.wireControls(); UI.refreshAllUiText(); }
+      await rc05Settle(); assert.deepEqual(scrubberLoads, completed);
+    });
+  });
+}

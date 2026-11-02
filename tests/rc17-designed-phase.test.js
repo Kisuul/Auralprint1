@@ -1,3 +1,4 @@
+import { canonicalPrefs } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -65,9 +66,9 @@ for (let schema = 2; schema <= 10; schema++) test(`RC-17 presets: schema ${schem
   const next = sanitizePreset(decodePresetPayload(payload));
   assert.deepEqual(next.orbs.map(o => o.startAngleRad), [0, 3 * Math.PI / 2, Math.PI / 2, .5 / RAD_TO_DEG]);
   assert.deepEqual(next.orbs[0].bandIds, [7, 3, 0]); assert.equal(next.orbs[0].hueOffsetDeg, 42);
-  assert.deepEqual(next.particleSafety, payload.prefs.particleSafety);
+  assert.deepEqual(next.particleSafety, canonicalPrefs(payload).particleSafety);
   assert.ok(!("unknown" in next) && !("unknown" in next.orbs[3]));
-  const encoded = encodePresetPayload(next); assert.equal(encoded.schema, 10);
+  const encoded = encodePresetPayload(next); assert.equal(encoded.schema, 16);
   assert.deepEqual(sanitizePreset(decodePresetPayload(encoded)), next);
   assert.notEqual(next.orbs[0].motion, next.orbs[1].motion);
   // Missing, invalid and explicit zero respect corresponding collection defaults.
@@ -91,11 +92,11 @@ test("RC-17 presets: historical fixtures and both schema-9 formats retain unrela
       assert.equal(sanitizePreset(decodePresetPayload(changed)).orbs[0].startAngleRad, 3 * Math.PI / 2);
     }
   }
-  const development = sanitizePreset({ schema: 10, prefs: { orbs: [{ startAngleRad: 4 * Math.PI,
+  const development = sanitizePreset({ schema: 11, prefs: { orbs: [{ startAngleRad: 4 * Math.PI,
     particles: { overlapRadiusPx: 99 } }] } });
   assert.equal(development.orbs[0].startAngleRad, 0);
   assert.ok(!("overlapRadiusPx" in development.orbs[0].particles));
-  assert.equal(development.orbs[0].particles.minPlacementDistancePx, defaultOrb.particles.minPlacementDistancePx);
+  assert.equal(development.orbs[0].particles.minPlacementDistanceUnits, defaultOrb.particles.minPlacementDistanceUnits);
 });
 
 test("RC-17 collection: defaults, creation and independent duplication use canonical designed phase", () => {
@@ -122,15 +123,16 @@ function withScene(callback) {
 }
 
 test("RC-17 URL/replacement: import/export preserve precise phase, canonical shape and independent runtime history", () => withScene(() => {
-  assert.equal(PRESET_SCHEMA_VERSION, 10);
-  location.hash = rawHash({ schema: 10, prefs: { orbs: [{ id: "A", startAngleRad: 4 * Math.PI },
+  assert.equal(PRESET_SCHEMA_VERSION, 16);
+  location.hash = rawHash({ schema: 11, prefs: { orbs: [{ id: "A", startAngleRad: 4 * Math.PI },
     { id: "B", startAngleRad: 1.5 / RAD_TO_DEG }] } });
   assert.equal(UrlPreset.applyFromLocationHash(), true); resolveSettings(); initOrbs();
   const [a, b] = state.orbs; a.angleRad = 1.25;
   a.trail.emitAt(1, 2, 1, { r: 1, g: 0, b: 0 }); const tail = a.trail.particles.tail;
   UrlPreset.writeHashFromPrefs();
   const payload = JSON.parse(Buffer.from(location.hash.slice(3), "base64url"));
-  assert.deepEqual(payload.prefs.orbs.map(o => o.startAngleRad), [0, 1.5 / RAD_TO_DEG]);
+  assert.deepEqual(canonicalPrefs(payload).orbs.map(o => o.startAngleRad), [0, 1.5 / RAD_TO_DEG]);
+  payload.prefs = canonicalPrefs(payload); payload.schema = 12;
   payload.prefs.orbs.reverse(); payload.prefs.orbs[1].startAngleRad = 5 * Math.PI / 2;
   location.hash = rawHash(payload); assert.equal(UrlPreset.applyFromLocationHash(), true);
   resolveSettings(); reconcileOrbs();
@@ -141,7 +143,7 @@ test("RC-17 URL/replacement: import/export preserve precise phase, canonical sha
   assert.notEqual(copy, a); assert.equal(copy.angleRad, Math.PI / 2); assert.equal(copy.startAngleRad, a.startAngleRad);
   assert.equal(copy.trail.particles.length, 0); assert.equal(a.trail.particles.tail, tail);
   const before = structuredClone(preferences);
-  location.hash = rawHash({ schema: 11, prefs: {} }); assert.equal(UrlPreset.applyFromLocationHash(), false);
+  location.hash = rawHash({ schema: 15, prefs: {} }); assert.equal(UrlPreset.applyFromLocationHash(), false);
   assert.deepEqual(preferences, before);
   replacePreferences(structuredClone(CONFIG.defaults)); resolveSettings(); initOrbs(); resetOrbsToDesignedPhases();
   assert.deepEqual(preferences, CONFIG.defaults); assert.deepEqual(state.orbs.map(o => o.angleRad), [0, Math.PI]);
@@ -158,7 +160,7 @@ test("RC-17 geometry: equivalent phases produce actual matching coordinates, wav
         for (let i = 0; i < 10000; i++) {
           for (const orb of [a, b]) orb.step(0, i / 10, { energy01: .6, waveform }, null, 7, null, i ? .1 : 0);
           close(a.xSim, b.xSim, "x coordinate"); close(a.ySim, b.ySim, "y coordinate");
-          assert.equal(a.radialDispPx, b.radialDispPx);
+          assert.equal(a.radialDispUnits, b.radialDispUnits);
           assert.deepEqual(ColorPolicy.pickParticleColorRgb01(a.angleRad, a), ColorPolicy.pickParticleColorRgb01(b.angleRad, b));
           assert.ok(a.angleRad >= 0 && a.angleRad < TAU);
         }
@@ -170,7 +172,7 @@ test("RC-17 geometry: equivalent phases produce actual matching coordinates, wav
 }));
 
 for (const phaseMode of ["orb", "free"]) test(`RC-17 lifecycle: moving edit and ${phaseMode} Ring preserve history until explicit visual reset`, () => withScene(() => {
-  replacePreferences(sanitizePreset({ schema: 10, prefs: { orbs: [{ id: "A", startAngleRad: .25, chirality: 1,
+  replacePreferences(sanitizePreset({ schema: 11, prefs: { orbs: [{ id: "A", startAngleRad: .25, chirality: 1,
     motion: { angularSpeedRadPerSec: 2 } }, { id: "B", startAngleRad: Math.PI }],
     bands: { overlay: { phaseMode, ringSpeedRadPerSec: 1 } } } }));
   resolveSettings(); initOrbs(); const a = state.orbs[0], b = state.orbs[1];

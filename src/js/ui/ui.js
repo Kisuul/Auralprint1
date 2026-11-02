@@ -21,6 +21,10 @@ import { createVisualizersPanelUi } from "./visualizers-panel.js";
 import { createAnalysisPanelUi } from "./analysis-panel.js";
 import { createSpectralRingEditorUi } from "./spectral-ring-editor.js";
 import { createScenePanelUi } from "./scene-panel.js";
+import { createCameraControlsUi } from "./camera-controls.js";
+import { createCameraInteraction } from "./camera-interaction.js";
+import { fitCamera } from "./camera-actions.js";
+import { restoreSceneCamera } from "./scene-camera-actions.js";
 
 /* =============================================================================
    UI
@@ -231,6 +235,7 @@ const UI = (() => {
   const ui = state.ui;
   let sourceSwitchDispatcher = async () => false;
   let maybeConsumePendingTrackEnd = () => {};
+  let rebindCoordinatorControls = null;
 
   function readRecordPanelEdgeVars() {
     const placement = CONFIG.recording && CONFIG.recording.panelPlacement
@@ -349,6 +354,31 @@ const UI = (() => {
       refreshAllUiText(latestAnalysisFrame); // Settle presentation before restoring focus.
     },
   });
+  let cameraFitFeedbackTimer = null;
+  function fitView() {
+    const result = fitCamera(latestAnalysisFrame);
+    const message = result.reason === "minimum-zoom"
+      ? `Fit limited: minimum zoom ${CONFIG.limits.camera.zoom.min} cannot contain all content.`
+      : result.reason === "screen-margin"
+        ? "Cannot fit: screen-sized marks and margins exceed the viewport. Enlarge the viewport or reduce mark sizes."
+        : !result.applied
+          ? "Cannot fit: viewport or drawable geometry is invalid."
+          : result.reason === "maximum-zoom"
+            ? `View fitted at maximum zoom ${CONFIG.limits.camera.zoom.max}.`
+            : "View fitted to world and composition.";
+    clearTimeout(cameraFitFeedbackTimer);
+    ui.cameraFitStatus.textContent = message;
+    ui.cameraFitStatus.hidden = false;
+    // Operational feedback stays visible even with the Camera panel hidden.
+    // This timer is request-scoped; the frame path does no status DOM work.
+    cameraFitFeedbackTimer = setTimeout(() => {
+      ui.cameraFitStatus.hidden = true;
+    }, CONFIG.camera.fit.feedbackDurationMs);
+    return result;
+  }
+  const cameraInteraction = createCameraInteraction({ fitView });
+  const cameraControlsUi = createCameraControlsUi({ ui, interaction: cameraInteraction, fitView,
+    commitPreferences: reason => applyPrefs(reason) });
   const scenePanelUi = createScenePanelUi({ ui, preferences, getSettings: () => runtime.settings, getParticleStats: () => VisualizerRuntime.getParticleStats(), commitPreferences: (reason) => applyPrefs(reason, { showStatus: sceneStatusToast }) });
   const analysisPanelUi = createAnalysisPanelUi({
     ui,
@@ -431,12 +461,17 @@ const UI = (() => {
   }
 
   function applyPrefs(reason, options = {}) {
-    const { rebuildBandsOnDefinitionChange = false, showStatus = null } = options;
+    UrlPreset.cancelPendingImport();
+    const { rebuildBandsOnDefinitionChange = false, showStatus = null, initializeCamera = false, replaceDrafts = false } = options;
     const prevBandDefKey = BandBankController.readBandDefKey(runtime.settings);
 
     preferences.orbs = normalizeOrbCollection(preferences.orbs);
 
     resolveSettings();
+    if (initializeCamera) {
+      cameraInteraction.cancelInput();
+      restoreSceneCamera();
+    }
     VisualizerRuntime.syncSettings(runtime.settings);
     syncOrbsFromSettings();
 
@@ -448,46 +483,81 @@ const UI = (() => {
 
     AudioEngine.applyAnalyserSettingsLive();
     AudioEngine.applyPlaybackSettingsLive();
-    orbEditorUi.refresh();
-    scenePanelUi.refresh(runtime.settings);
+    orbEditorUi.refresh(runtime.settings, { replaceDrafts });
+    scenePanelUi.refresh(runtime.settings, { replaceDrafts });
+    if (replaceDrafts) {
+      analysisPanelUi.syncControls(runtime.settings, { replaceDrafts });
+      if (_visualizerEditStatusToastTimer !== null) clearTimeout(_visualizerEditStatusToastTimer);
+      _visualizerEditStatusToastTimer = null;
+      ui.visualizerEditStatus.textContent = STATUS_DEFAULT_VISUALIZER_EDIT;
+    }
+    cameraControlsUi.refresh();
 
     if (reason && typeof showStatus === "function") showStatus(`Updated: ${reason}`);
   }
 
 
   function resetPrefs() {
+    UrlPreset.cancelPendingImport();
     replacePreferences(deepClone(CONFIG.defaults));
-    applyPrefs(null, { rebuildBandsOnDefinitionChange: true });
+    applyPrefs(null, { rebuildBandsOnDefinitionChange: true, initializeCamera: true, replaceDrafts: true });
     initOrbs();
     resetVisualizers("visuals");
     sceneStatusToast("All settings reset.", 4000);
   }
 
   async function shareLink() {
-    UrlPreset.writeHashFromPrefs();
-    const url = location.href;
+    const pending = UrlPreset.writeCompressedHashFromPrefs();
+    // Safari and other activation-sensitive clipboard implementations can
+    // accept a promised Blob while the original click is still active.
+    let promisedClipboard = null;
+    if (typeof globalThis.ClipboardItem === "function" && navigator.clipboard?.write) {
+      try {
+        const text = pending.then(result => {
+          if (result.stale) throw new Error("Share superseded");
+          return new Blob([location.href], { type: "text/plain" });
+        });
+        text.catch(() => {}); // Constructor/write may reject before observing it.
+        promisedClipboard = Promise.resolve(navigator.clipboard.write([
+          new ClipboardItem({ "text/plain": text }),
+        ])).then(() => true, () => false);
+      } catch { /* Continue with writeText/address-bar fallback. */ }
+    }
     try {
-      await navigator.clipboard.writeText(url);
-      sceneStatusToast("Share link copied to clipboard.", 4000);
+      const result = await pending;
+      if (result.stale) return;
+      let copied = promisedClipboard ? await promisedClipboard : false;
+      if (!copied) {
+        try { await navigator.clipboard.writeText(location.href); copied = true; }
+        catch { /* The valid complete link is already in the address bar. */ }
+      }
+      if (location.hash !== result.hash) return;
+      const fallback = result.fallback ? " Uncompressed schema-16 link: native DEFLATE unavailable." : "";
+      sceneStatusToast((copied ? "Share link copied to clipboard."
+        : "Share link written to URL — copy from address bar.") + fallback, 6000);
     } catch {
-      sceneStatusToast("Share link written to URL — copy from address bar.", 4000);
+      sceneStatusToast("Could not create share link. URL unchanged.", 4000);
     }
   }
 
-  function applyUrlNow() {
-    const ok = UrlPreset.applyFromLocationHash();
-    if (ok) {
-      applyPrefs(null, { rebuildBandsOnDefinitionChange: true });
-      initOrbs();
-      resetVisualizers("visuals");
-      sceneStatusToast("Preset applied from URL.", 4000);
-    } else {
-      sceneStatusToast("No valid preset in URL.", 4000);
+  function applyUrlNow(showInvalid = true) {
+    function finish({ ok, stale }) {
+      if (stale) return;
+      if (ok) {
+        applyPrefs(null, { rebuildBandsOnDefinitionChange: true, initializeCamera: true, replaceDrafts: true });
+        initOrbs();
+        resetVisualizers("visuals");
+        sceneStatusToast("Preset applied from URL.", 4000);
+      } else if (showInvalid || UrlPreset.getValidationMessage()) {
+        sceneStatusToast(UrlPreset.getValidationMessage() || "No valid preset in URL.", 4000);
+      }
     }
+    if (location.hash?.startsWith("#z=")) return UrlPreset.applyFromLocationHashAsync().then(finish);
+    // Keep the accepted synchronous #p interactive contract; only #z yields.
+    finish({ ok: UrlPreset.applyFromLocationHash(), stale: false });
   }
 
   function collectOperatorFacingControls() {
-    // 112 
     // This intentionally excludes buttons and transport-only affordances.
     const selectors = [
       "#audioPanel input",
@@ -498,6 +568,7 @@ const UI = (() => {
       "#visualizersPanel select",
       "#scenePanel input",
       "#scenePanel select",
+      "#cameraPanel input",
       "#recordPanel input",
       "#recordPanel select",
     ];
@@ -572,7 +643,7 @@ const UI = (() => {
     ui.configTooltipByControl = new Map();
     for (const spec of ui.configTooltipSpecs) {
       ui.configTooltipByControl.set(spec.control, spec);
-      const panel = [ui.audioPanel, ui.analysisPanel, ui.visualizersPanel, ui.scenePanel, ui.recordPanel]
+      const panel = [ui.audioPanel, ui.analysisPanel, ui.visualizersPanel, ui.scenePanel, ui.cameraPanel, ui.recordPanel]
         .find(candidate => candidate?.contains(spec.control)) || null;
       if (!tooltipGroups.has(panel)) tooltipGroups.set(panel, { specs: [], dirty: true });
       tooltipGroups.get(panel).specs.push(spec);
@@ -703,7 +774,7 @@ const UI = (() => {
   }
 
   let recordingResourceControls = null;
-  const wiredRecordingControls = new WeakSet();
+  const presetIntentDocuments = new WeakSet();
   function formatRecordingPrimaryStatus(recording) {
     if (!recording || !recording.hooksEnabled) return "Recording disabled";
     if (shouldSurfaceRecordingLastMessage(recording)) return recording.lastMessage;
@@ -1245,9 +1316,12 @@ const UI = (() => {
 
     analysisPanelUi.refresh(analysisFrame);
     scenePanelUi.refresh(runtime.settings);
+    cameraControlsUi.refresh();
 
     // Settings/definition replacement invalidates meaning, not every animation frame.
     // Comparing generated titles ensures unrelated changes do not rewrite controls.
+    // Camera readouts change continuously. Tooltips refresh on focus/hover/edit
+    // and panel reveal, without invalidating any panel on each camera frame.
     if (tooltipSettingsRef !== runtime.settings || tooltipBandEdgesRef !== state.bands.lowHz) {
       tooltipSettingsRef = runtime.settings;
       tooltipBandEdgesRef = state.bands.lowHz;
@@ -1270,14 +1344,42 @@ const UI = (() => {
   function wireControls() {
     primeDomCache();
 
+    // User intent wins over pending imports, including live camera navigation
+    // and uncommitted control drafts. Register once per document, in capture
+    // phase so a new Apply click can start its own request after cancellation.
+    if (!presetIntentDocuments.has(document)) {
+      presetIntentDocuments.add(document);
+      for (const event of ["pointerdown", "click", "keydown", "input", "change", "wheel"]) {
+        document.addEventListener(event, UrlPreset.cancelPendingImport, { capture: true, passive: true });
+      }
+    }
+
     orbEditorUi.init();
     spectralRingEditorUi.init();
     scenePanelUi.init();
+    cameraInteraction.init();
+    cameraControlsUi.init();
     visualizersPanelUi.init();
 
     initConfigTooltips();
 
 
+    // Recache and feature initialization remain repeatable. Only the coordinator
+    // owns File requests and deferred EOF work, for the lifetime of this UI.
+    if (!rebindCoordinatorControls) rebindCoordinatorControls = createControlCoordinator();
+    rebindCoordinatorControls();
+    wireConfigTooltipFeedbackEvents();
+    workspace.init({ onRefreshQueuePanel: queuePanelRefresher });
+    analysisPanelUi.init();
+    recordingResourceControls = createRecordingResourcesControls();
+    refreshRecordingUi();
+
+    // Startup decodes before the controls exist. Retain its domain rejection
+    // for the established preset status owner once wiring is complete.
+    if (UrlPreset.getValidationMessage()) sceneStatusToast(UrlPreset.getValidationMessage(), 4000);
+  }
+
+  function createControlCoordinator() {
     /* -------------------------------------------------------------------------
        clearAudioState() — canonical clean-slate reset for all stop/clear paths.
 
@@ -1362,13 +1464,27 @@ const UI = (() => {
       activeLoadRequestId += 1;
     }
 
+    function maybeClearQueueAfterSourceExit(activation, kind, enabled, requestId, queueRevision) {
+      // InputSourceManager owns source acceptance/cancellation. Reuse the File
+      // request fence and Queue's mutation fence so a completion cannot delete
+      // files belonging to a newer source or Queue action.
+      if (!enabled || !activation?.ok || requestId !== activeLoadRequestId
+        || queueRevision !== Queue.revision || state.source.kind !== kind
+        || state.source.status !== "active" || state.source.sessionActive !== true) return;
+      Queue.clear();
+    }
+
     async function switchToMicMode() {
       if (isSourceSwitchLocked()) return false;
       if (state.source.kind === "mic" && (state.source.status === "requesting" || state.source.status === "active")) {
         return false;
       }
 
+      const clearQueueOnExit = isFileWorkflowMode(state.source)
+        && runtime.settings.audio.clearQueueOnSourceExit === true;
       invalidatePendingTrackLoads();
+      const sourceExitRequestId = activeLoadRequestId;
+      const queueRevision = Queue.revision;
       clearAudioStatusToast();
       clearAudioState();
       workspace.hideQueuePanel();
@@ -1376,6 +1492,7 @@ const UI = (() => {
         reason: "switch-to-mic",
       });
       const activation = await InputSourceManager.activateMic();
+      maybeClearQueueAfterSourceExit(activation, "mic", clearQueueOnExit, sourceExitRequestId, queueRevision);
       RecorderEngine.getSupportStatus();
       refreshQueuePanel();
       return !!(activation && activation.ok);
@@ -1387,7 +1504,11 @@ const UI = (() => {
         return false;
       }
 
+      const clearQueueOnExit = isFileWorkflowMode(state.source)
+        && runtime.settings.audio.clearQueueOnSourceExit === true;
       invalidatePendingTrackLoads();
+      const sourceExitRequestId = activeLoadRequestId;
+      const queueRevision = Queue.revision;
       clearAudioStatusToast();
       clearAudioState();
       workspace.hideQueuePanel();
@@ -1395,6 +1516,7 @@ const UI = (() => {
         reason: "switch-to-stream",
       });
       const activation = await InputSourceManager.activateStream();
+      maybeClearQueueAfterSourceExit(activation, "stream", clearQueueOnExit, sourceExitRequestId, queueRevision);
       RecorderEngine.getSupportStatus();
       refreshQueuePanel();
       return !!(activation && activation.ok);
@@ -1499,8 +1621,6 @@ const UI = (() => {
        Single source of truth for queue-aware repeat behavior on natural track end.
        The hook survives teardown() intentionally — registered once at boot,
        must persist across track loads. Documented in 111c/111d. */
-    AudioEngine._isLoadRequestCurrent = isCurrentFileRequest;
-
     function enqueueFileBatch(files) {
       const wasEmpty = Queue.length === 0;
       const firstIndex = Queue.length;
@@ -1536,8 +1656,8 @@ const UI = (() => {
         if (file) loadAndPlay(file);
         return;
       }
-      // mode=none at queue end: playback ends, but active recording continues
-      // until the user explicitly stops it.
+      // Queue exhaustion ends playback without stopping active capture.
+      // RecorderEngine retains its own Stop and resource-policy handling.
       RecorderEngine.onTransportMutation("audio-unloaded", {
         reason: "track-ended-no-next",
       });
@@ -1556,7 +1676,7 @@ const UI = (() => {
       applyTrackEndedPolicy(pending);
     };
 
-    AudioEngine._onTrackEnded = () => {
+    function onTrackEnded() {
       const context = {
         file: Queue.current(),
         entry: Queue.currentEntry(),
@@ -1569,7 +1689,7 @@ const UI = (() => {
         return;
       }
       applyTrackEndedPolicy(context);
-    };
+    }
 
     function activateQueueRow(trackIndex) {
       if (isFinalizingFileTransportLocked()) {
@@ -1580,15 +1700,17 @@ const UI = (() => {
       if (file) loadAndPlay(file);
     }
 
-    /* Queue panel renderer — rebuilds list DOM from Queue.snapshot().
-       each row is keyboard-reachable and declared as a button-like activator. */
+    const queueRowEntries = new WeakMap();
+    // Non-interactive rows contain sibling native Play and Remove buttons.
     function refreshQueuePanel() {
       if (!ui.queueList) return;
       const snap = Queue.snapshot();
       const focused = document.activeElement;
       const oldRows = Array.from(ui.queueList.children);
       const focusIndex = oldRows.findIndex(row => row.contains(focused));
-      const focusWasRemove = focusIndex >= 0 && oldRows[focusIndex].children[2] === focused;
+      const focusWasRemove = focusIndex >= 0 && oldRows[focusIndex].querySelector(".q-remove") === focused;
+      const focusEntry = focusIndex >= 0 ? queueRowEntries.get(oldRows[focusIndex]) : null;
+      let survivingFocusRow = null;
       const clearedFocus = snap.length === 0 && focused === ui.btnClearQueue;
       const fileTransportMutationLocked = isFinalizingFileTransportLocked();
       const allowQueueInteraction = isFileWorkflowMode(state.source) && !fileTransportMutationLocked;
@@ -1604,18 +1726,22 @@ const UI = (() => {
       for (const item of snap.items) {
         const itemIsActive = shouldShowActiveQueueItem(state.source, state.audio, item);
         const row = document.createElement("div");
+        const entry = Queue.entryAt(item.index);
+        queueRowEntries.set(row, entry);
+        if (entry === focusEntry) survivingFocusRow = row;
         row.className = "queue-item" + (itemIsActive ? " active" : "");
         row.title = fileTransportMutationLocked ? `${item.name} - ${queueLockText}` : item.name;
-        row.tabIndex = allowQueueInteraction ? 0 : -1;
-        row.setAttribute("role", "button");
-        row.setAttribute(
+        const playBtn = document.createElement("button");
+        playBtn.type = "button";
+        playBtn.className = "q-play";
+        playBtn.disabled = !allowQueueInteraction;
+        playBtn.setAttribute(
           "aria-label",
           allowQueueInteraction
             ? `Play queue item ${item.index + 1}: ${item.name}`
-            : `Queue item ${item.index + 1}: ${item.name}. ${fileTransportMutationLocked ? queueLockText : readFileModeOnlyAffordanceText("Queue")}`
+            : `Play queue item ${item.index + 1}: ${item.name}. ${fileTransportMutationLocked ? queueLockText : readFileModeOnlyAffordanceText("Queue")}`
         );
-        row.setAttribute("aria-current", itemIsActive ? "true" : "false");
-        row.setAttribute("aria-disabled", allowQueueInteraction ? "false" : "true");
+        playBtn.setAttribute("aria-current", itemIsActive ? "true" : "false");
 
         const idx = document.createElement("span");
         idx.className = "q-idx";
@@ -1626,21 +1752,14 @@ const UI = (() => {
         name.textContent = item.name;
 
         const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
         removeBtn.className = "q-remove";
         removeBtn.textContent = "×";
         removeBtn.title = fileTransportMutationLocked ? queueLockText : "Remove from queue";
         removeBtn.disabled = !allowQueueInteraction;
-        removeBtn.addEventListener("keydown", (e) => {
+        removeBtn.setAttribute("aria-label", `Remove queue item ${item.index + 1}: ${item.name}`);
+        removeBtn.addEventListener("click", () => {
           if (isQueueInteractionBlocked()) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.stopPropagation();
-            removeBtn.click();
-          }
-        });
-        removeBtn.addEventListener("click", (e) => {
-          if (isQueueInteractionBlocked()) return;
-          e.stopPropagation(); // prevent row click-to-jump
           const removedEntry = Queue.entryAt(item.index);
           const ownsRequest = activeFileRequest?.entry === removedEntry
             && isCurrentFileRequest(activeFileRequest.requestId);
@@ -1665,29 +1784,23 @@ const UI = (() => {
           refreshQueuePanel();
         });
 
-        row.appendChild(idx);
-        row.appendChild(name);
+        playBtn.appendChild(idx);
+        playBtn.appendChild(name);
+        row.appendChild(playBtn);
         row.appendChild(removeBtn);
 
-        // Row activation: click or keyboard (Enter/Space) jumps to that track.
-        row.addEventListener("click", () => {
+        // Native buttons provide Tab/Enter/Space without custom keyboard dispatch.
+        playBtn.addEventListener("click", () => {
           if (isQueueInteractionBlocked()) return;
           activateQueueRow(item.index);
-        });
-        row.addEventListener("keydown", (e) => {
-          if (isQueueInteractionBlocked()) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            activateQueueRow(item.index);
-          }
         });
 
         ui.queueList.appendChild(row);
       }
       if ((focusIndex >= 0 || clearedFocus) && workspace.isPanelVisible(ui.queuePanel)) {
-        const row = ui.queueList.children[Math.min(focusIndex, snap.length - 1)];
+        const row = survivingFocusRow || ui.queueList.children[Math.min(focusIndex, snap.length - 1)];
         const target = row && allowQueueInteraction
-          ? (focusWasRemove ? row.children[2] : row)
+          ? row.querySelector(focusWasRemove ? ".q-remove" : ".q-play")
           : ui.btnHideQueue;
         target?.focus();
       }
@@ -1695,298 +1808,299 @@ const UI = (() => {
     }
     queuePanelRefresher = refreshQueuePanel;
 
-    wireConfigTooltipFeedbackEvents();
-    workspace.init({ onRefreshQueuePanel: refreshQueuePanel });
-    analysisPanelUi.init();
-    recordingResourceControls = createRecordingResourcesControls();
-    refreshRecordingUi();
-
-    if (ui.btnRecordStart && !wiredRecordingControls.has(ui.btnRecordStart)) {
-      wiredRecordingControls.add(ui.btnRecordStart);
-    if (ui.btnRecordCancel) ui.btnRecordCancel.addEventListener("click", () => {
-      dispatchRecordingAction("cancel");
-      // The terminal action is now disabled; keep keyboard focus in Record.
-      (state.recording.lastExportUrl ? ui.btnRecordDownloadLast
-        : state.recording.recorderEnabled !== false ? ui.btnRecordStart : ui.btnHideRecord)?.focus();
-    });
-    if (ui.btnRecordStart) ui.btnRecordStart.addEventListener("click", () => {
-      dispatchRecordingAction("start");
-    });
-    if (ui.btnRecordStop) ui.btnRecordStop.addEventListener("click", () => {
-      dispatchRecordingAction("stop");
-    });
-    if (ui.selRecordMime) ui.selRecordMime.addEventListener("change", () => {
-      dispatchRecordingAction("selectMime", { mimeType: ui.selRecordMime.value });
-    });
-    if (ui.chkRecordIncludeAudio) ui.chkRecordIncludeAudio.addEventListener("change", () => {
-      dispatchRecordingAction("setIncludeAudio", { enabled: ui.chkRecordIncludeAudio.checked });
-    });
-    if (ui.selRecordTargetFps) ui.selRecordTargetFps.addEventListener("change", () => {
-      dispatchRecordingAction("setTargetFps", { fps: Number(ui.selRecordTargetFps.value) });
-    });
-    if (ui.btnRecordDownloadLast) ui.btnRecordDownloadLast.addEventListener("click", () => {
-      downloadLastRecording();
-    });
-
+    // Rebind only our listeners after recaching: surviving controls stay bounded,
+    // replaced controls work, and detached controls lose coordinator authority.
+    // The request/EOF closure and callback identities are retained across calls.
+    const listenerCleanups = [];
+    function listen(target, event, handler, options) {
+      target.addEventListener(event, handler, options);
+      listenerCleanups.push(() => target.removeEventListener(event, handler, options));
     }
+    return () => {
+      for (const cleanup of listenerCleanups) cleanup();
+      listenerCleanups.length = 0;
+      AudioEngine._isLoadRequestCurrent = isCurrentFileRequest;
+      AudioEngine._onTrackEnded = onTrackEnded;
 
-    function toastFileModeOnlyAction() {
-      audioStatusToast("Switch to File mode to use file playback controls.", 2500);
-    }
-
-    /* Events */
-    if (ui.btnSourceFile) ui.btnSourceFile.addEventListener("click", () => {
-      dispatchSourceSwitchAction("file");
-    });
-    if (ui.btnSourceMic) ui.btnSourceMic.addEventListener("click", () => {
-      dispatchSourceSwitchAction("mic");
-    });
-    if (ui.btnSourceStream) ui.btnSourceStream.addEventListener("click", () => {
-      dispatchSourceSwitchAction("stream");
-    });
-
-    // fileInput.value reset (checklist 3.7): cleared before every picker open so
-    // the same file can be loaded a second time. The drag-drop path uses
-    // dataTransfer.files directly — it never touches fileInput — so no reset
-    // is needed there. This is the only fileInput add path; invariant maintained.
-    ui.btnLoad.addEventListener("click", () => {
-      if (!isFileWorkflowMode(state.source)) {
-        toastFileModeOnlyAction();
-        return;
-      }
-      if (isFinalizingFileTransportLocked()) {
-        toastFinalizingTransportLock();
-        return;
-      }
-      ui.fileInput.value = "";
-      ui.fileInput.click();
-    });
-
-    ui.fileInput.addEventListener("change", async () => {
-      if (!isFileWorkflowMode(state.source)) {
-        toastFileModeOnlyAction();
-        return;
-      }
-      if (isFinalizingFileTransportLocked()) {
-        toastFinalizingTransportLock();
-        return;
-      }
-      const files = Array.from(ui.fileInput.files || []);
-      if (!files.length) return;
-
-      await enqueueFileBatch(files);
-    });
-
-    ui.btnPlay.addEventListener("click", async () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      const target = AudioEngine.getMediaEl();
-      try {
-        await AudioEngine.playPause();
-      } catch (err) {
-        // Contain an unexpected engine rejection at this UI boundary without
-        // unloading a recoverable File or reporting an obsolete operation.
-        if (!target || AudioEngine.getMediaEl() !== target) return;
-        state.audio.isPlaying = !target.paused;
-        state.audio.transportError = `Playback failed: ${err?.message || err?.name || "unknown error"}`;
-      }
-      if (!target || AudioEngine.getMediaEl() !== target) return;
-      if (state.audio.transportError) audioStatusToast(state.audio.transportError, 6000);
-    });
-    ui.btnStop.addEventListener("click", () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      AudioEngine.stop();
-      state.audio.transportError = "";
-    });
-
-    function pickManualPrevFile() {
-      if (Queue.canPrev()) return Queue.prev();
-      if (preferences.audio.repeatMode === "all" && Queue.length > 1) return Queue.goTo(Queue.length - 1);
-      return null;
-    }
-
-    function pickManualNextFile() {
-      if (Queue.canNext()) return Queue.next();
-      if (preferences.audio.repeatMode === "all" && Queue.length > 1) return Queue.goTo(0);
-      return null;
-    }
-
-    ui.btnPrev.addEventListener("click", async () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      if (isFinalizingFileTransportLocked()) {
-        toastFinalizingTransportLock();
-        return;
-      }
-      const file = pickManualPrevFile();
-      if (file) await loadAndPlay(file);
-    });
-    ui.btnNext.addEventListener("click", async () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      if (isFinalizingFileTransportLocked()) {
-        toastFinalizingTransportLock();
-        return;
-      }
-      const file = pickManualNextFile();
-      if (file) await loadAndPlay(file);
-    });
-
-    ui.btnToggleQueue.addEventListener("click", () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      if (workspace.isPanelVisible(ui.queuePanel)) workspace.hideQueuePanel(); else workspace.showQueuePanel();
-    });
-
-
-    ui.btnClearQueue.addEventListener("click", () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      if (isFinalizingFileTransportLocked()) {
-        toastFinalizingTransportLock();
-        return;
-      }
-      // Cancel file activation, clear queue, then release source and reset state.
-      resetEmptyFileWorkflowState("queue-cleared"); // sets isLoaded/isPlaying/filename, resets scrubber + trails
-      RecorderEngine.onTransportMutation("audio-unloaded", {
-        reason: "queue-cleared",
+      if (ui.btnRecordCancel) listen(ui.btnRecordCancel, "click", () => {
+        dispatchRecordingAction("cancel");
+        // The terminal action is now disabled; keep keyboard focus in Record.
+        (state.recording.lastExportUrl ? ui.btnRecordDownloadLast
+          : state.recording.recorderEnabled !== false ? ui.btnRecordStart : ui.btnHideRecord)?.focus();
       });
-      refreshQueuePanel();
-    });
-
-    ui.btnRepeat.addEventListener("click", () => {
-      if (!isFileWorkflowMode(state.source)) return;
-      const mode = preferences.audio.repeatMode;
-      preferences.audio.repeatMode = mode === "none" ? "one" : (mode === "one" ? "all" : "none");
-      applyPrefs("repeat", { showStatus: audioStatusToast });
-    });
-    if (ui.btnShuffle) {
-      ui.btnShuffle.addEventListener("click", () => {
-        if (!isFileWorkflowMode(state.source)) return;
-        if (Queue.shuffle()) refreshQueuePanel();
+      if (ui.btnRecordStart) listen(ui.btnRecordStart, "click", () => {
+        dispatchRecordingAction("start");
       });
-    }
-    ui.chkMute.addEventListener("change", () => { preferences.audio.muted = !!ui.chkMute.checked; applyPrefs("mute", { showStatus: audioStatusToast }); });
+      if (ui.btnRecordStop) listen(ui.btnRecordStop, "click", () => {
+        dispatchRecordingAction("stop");
+      });
+      if (ui.selRecordMime) listen(ui.selRecordMime, "change", () => {
+        dispatchRecordingAction("selectMime", { mimeType: ui.selRecordMime.value });
+      });
+      if (ui.chkRecordIncludeAudio) listen(ui.chkRecordIncludeAudio, "change", () => {
+        dispatchRecordingAction("setIncludeAudio", { enabled: ui.chkRecordIncludeAudio.checked });
+      });
+      if (ui.selRecordTargetFps) listen(ui.selRecordTargetFps, "change", () => {
+        dispatchRecordingAction("setTargetFps", { fps: Number(ui.selRecordTargetFps.value) });
+      });
+      if (ui.btnRecordDownloadLast) listen(ui.btnRecordDownloadLast, "click", () => {
+        downloadLastRecording();
+      });
 
-    ui.rngVol.addEventListener("input", () => {
-      preferences.audio.volume = Number(ui.rngVol.value);
-      applyPrefs("volume (playback only)", { showStatus: audioStatusToast });
-    });
-
-
-    ui.btnShare.addEventListener("click", shareLink);
-    ui.btnApplyUrl.addEventListener("click", applyUrlNow);
-    ui.btnResetPrefs.addEventListener("click", resetPrefs);
-    ui.btnResetVisuals.addEventListener("click", () => { resetVisualizers("visuals"); visualizerEditStatusToast("Visuals reset."); });
-
-
-    /* Drag-drop onto canvas — multi-file entry point.
-       All dropped audio files are enqueued. If the queue was empty before the
-       drop, the first file starts playing immediately. Additional files append
-       silently. MIME metadata is only a hint; the media decoder owns support
-       decisions and reports unsupported/unreadable files through load errors. */
-    state.canvas.addEventListener("dragover", (e) => {
-      e.preventDefault(); // required to allow drop
-      e.dataTransfer.dropEffect = "copy";
-    });
-    state.canvas.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      if (!isFileWorkflowMode(state.source)) {
-        toastFileModeOnlyAction();
-        return;
-      }
-      if (isFinalizingFileTransportLocked()) {
-        toastFinalizingTransportLock();
-        return;
-      }
-      const files = Array.from(e.dataTransfer.files);
-      if (!files.length) return;
-      await enqueueFileBatch(files);
-    });
-
-    // Safety net: dropping files outside the canvas should never navigate away.
-    // Canvas keeps ownership of the actual queue add/load behavior above.
-    window.addEventListener("dragover", (e) => {
-      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")) e.preventDefault();
-    });
-    window.addEventListener("drop", (e) => {
-      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")) e.preventDefault();
-    });
-
-    function hasFocusedInteractiveTarget(event) {
-      const target = event.target;
-      if (!(target instanceof Element)) return false;
-      if (target.closest('input, select, textarea, button, summary, [contenteditable="true"], [role="button"]')) return true;
-      return false;
-    }
-
-    // Global shortcuts are intentionally suppressed while a control has focus,
-    // so typing/adjusting controls never triggers transport/panel side effects.
-    window.addEventListener("keydown", (e) => {
-      if (e.altKey || e.ctrlKey || e.metaKey) return;
-      if (hasFocusedInteractiveTarget(e)) return;
-
-      if (e.code === "KeyH") {
-        workspace.togglePanels();
-        return;
-      }
-      if (e.code === "Space") {
-        e.preventDefault();
-        state.time.simPaused = !state.time.simPaused;
-        return;
-      }
-      if (e.code === "KeyR") {
-        resetVisualizers("visuals");
-        return;
+      function toastFileModeOnlyAction() {
+        audioStatusToast("Switch to File mode to use file playback controls.", 2500);
       }
 
-      // Track navigation — N: next, P: prev (Repeat=All wraps at boundaries).
-      if (e.code === "KeyN") {
-        if (!isFileWorkflowMode(state.source)) return;
+      /* Events */
+      if (ui.btnSourceFile) listen(ui.btnSourceFile, "click", () => {
+        dispatchSourceSwitchAction("file");
+      });
+      if (ui.btnSourceMic) listen(ui.btnSourceMic, "click", () => {
+        dispatchSourceSwitchAction("mic");
+      });
+      if (ui.btnSourceStream) listen(ui.btnSourceStream, "click", () => {
+        dispatchSourceSwitchAction("stream");
+      });
+
+      // fileInput.value reset (checklist 3.7): cleared before every picker open so
+      // the same file can be loaded a second time. The drag-drop path uses
+      // dataTransfer.files directly — it never touches fileInput — so no reset
+      // is needed there. This is the only fileInput add path; invariant maintained.
+      listen(ui.btnLoad, "click", () => {
+        if (!isFileWorkflowMode(state.source)) {
+          toastFileModeOnlyAction();
+          return;
+        }
         if (isFinalizingFileTransportLocked()) {
           toastFinalizingTransportLock();
           return;
         }
-        const file = pickManualNextFile();
-        if (file) loadAndPlay(file);
-        return;
+        ui.fileInput.value = "";
+        ui.fileInput.click();
+      });
+
+      listen(ui.fileInput, "change", async () => {
+        if (!isFileWorkflowMode(state.source)) {
+          toastFileModeOnlyAction();
+          return;
+        }
+        if (isFinalizingFileTransportLocked()) {
+          toastFinalizingTransportLock();
+          return;
+        }
+        const files = Array.from(ui.fileInput.files || []);
+        if (!files.length) return;
+
+        await enqueueFileBatch(files);
+      });
+
+      listen(ui.btnPlay, "click", async () => {
+        if (!isFileWorkflowMode(state.source)) return;
+        const target = AudioEngine.getMediaEl();
+        try {
+          await AudioEngine.playPause();
+        } catch (err) {
+          // Contain an unexpected engine rejection at this UI boundary without
+          // unloading a recoverable File or reporting an obsolete operation.
+          if (!target || AudioEngine.getMediaEl() !== target) return;
+          state.audio.isPlaying = !target.paused;
+          state.audio.transportError = `Playback failed: ${err?.message || err?.name || "unknown error"}`;
+        }
+        if (!target || AudioEngine.getMediaEl() !== target) return;
+        if (state.audio.transportError) audioStatusToast(state.audio.transportError, 6000);
+      });
+      listen(ui.btnStop, "click", () => {
+        if (!isFileWorkflowMode(state.source)) return;
+        AudioEngine.stop();
+        state.audio.transportError = "";
+      });
+
+      function pickManualPrevFile() {
+        if (Queue.canPrev()) return Queue.prev();
+        if (preferences.audio.repeatMode === "all" && Queue.length > 1) return Queue.goTo(Queue.length - 1);
+        return null;
       }
-      if (e.code === "KeyP") {
+
+      function pickManualNextFile() {
+        if (Queue.canNext()) return Queue.next();
+        if (preferences.audio.repeatMode === "all" && Queue.length > 1) return Queue.goTo(0);
+        return null;
+      }
+
+      listen(ui.btnPrev, "click", async () => {
         if (!isFileWorkflowMode(state.source)) return;
         if (isFinalizingFileTransportLocked()) {
           toastFinalizingTransportLock();
           return;
         }
         const file = pickManualPrevFile();
-        if (file) loadAndPlay(file);
-        return;
-      }
-
-      // Seek — arrow keys ±5 seconds, Shift+arrows ±30 seconds.
-      // preventDefault stops page scroll.
-      if (e.code === "ArrowRight" || e.code === "ArrowLeft") {
+        if (file) await loadAndPlay(file);
+      });
+      listen(ui.btnNext, "click", async () => {
         if (!isFileWorkflowMode(state.source)) return;
-        e.preventDefault();
-        const el = AudioEngine.getMediaEl();
-        if (el && Number.isFinite(el.duration)) {
-          const step = e.shiftKey ? 30 : 5;
-          const delta = (e.code === "ArrowRight" ? step : -step);
-          el.currentTime = clamp(el.currentTime + delta, 0, el.duration);
+        if (isFinalizingFileTransportLocked()) {
+          toastFinalizingTransportLock();
+          return;
         }
-      }
-    }, { passive: false });
+        const file = pickManualNextFile();
+        if (file) await loadAndPlay(file);
+      });
 
-    window.addEventListener("hashchange", () => {
-      const ok = UrlPreset.applyFromLocationHash();
-      if (ok) {
-        applyPrefs(null, { rebuildBandsOnDefinitionChange: true });
-        initOrbs();
-        resetVisualizers("visuals");
-        sceneStatusToast("Preset applied from URL.", 4000);
-      }
-    });
+      listen(ui.btnToggleQueue, "click", () => {
+        if (!isFileWorkflowMode(state.source)) return;
+        if (workspace.isPanelVisible(ui.queuePanel)) workspace.hideQueuePanel(); else workspace.showQueuePanel();
+      });
 
-  } // end wireControls
+
+      listen(ui.btnClearQueue, "click", () => {
+        if (!isFileWorkflowMode(state.source)) return;
+        if (isFinalizingFileTransportLocked()) {
+          toastFinalizingTransportLock();
+          return;
+        }
+        // Cancel file activation, clear queue, then release source and reset state.
+        resetEmptyFileWorkflowState("queue-cleared"); // sets isLoaded/isPlaying/filename, resets scrubber + trails
+        RecorderEngine.onTransportMutation("audio-unloaded", {
+          reason: "queue-cleared",
+        });
+        refreshQueuePanel();
+      });
+
+      listen(ui.btnRepeat, "click", () => {
+        if (!isFileWorkflowMode(state.source)) return;
+        const mode = preferences.audio.repeatMode;
+        preferences.audio.repeatMode = mode === "none" ? "one" : (mode === "one" ? "all" : "none");
+        applyPrefs("repeat", { showStatus: audioStatusToast });
+      });
+      if (ui.btnShuffle) {
+        listen(ui.btnShuffle, "click", () => {
+          if (!isFileWorkflowMode(state.source)) return;
+          if (Queue.shuffle()) refreshQueuePanel();
+        });
+      }
+      listen(ui.chkMute, "change", () => { preferences.audio.muted = !!ui.chkMute.checked; applyPrefs("mute", { showStatus: audioStatusToast }); });
+
+      listen(ui.rngVol, "input", () => {
+        preferences.audio.volume = Number(ui.rngVol.value);
+        applyPrefs("volume (playback only)", { showStatus: audioStatusToast });
+      });
+
+
+      listen(ui.btnShare, "click", shareLink);
+      listen(ui.btnApplyUrl, "click", applyUrlNow);
+      listen(ui.btnResetPrefs, "click", resetPrefs);
+      listen(ui.btnResetVisuals, "click", () => { resetVisualizers("visuals"); visualizerEditStatusToast("Visuals reset."); });
+
+
+      /* Drag-drop onto canvas — multi-file entry point.
+         All dropped audio files are enqueued. If the queue was empty before the
+         drop, the first file starts playing immediately. Additional files append
+         silently. MIME metadata is only a hint; the media decoder owns support
+         decisions and reports unsupported/unreadable files through load errors. */
+      listen(state.canvas, "dragover", (e) => {
+        e.preventDefault(); // required to allow drop
+        e.dataTransfer.dropEffect = "copy";
+      });
+      listen(state.canvas, "drop", async (e) => {
+        e.preventDefault();
+        if (!isFileWorkflowMode(state.source)) {
+          toastFileModeOnlyAction();
+          return;
+        }
+        if (isFinalizingFileTransportLocked()) {
+          toastFinalizingTransportLock();
+          return;
+        }
+        const files = Array.from(e.dataTransfer.files);
+        if (!files.length) return;
+        await enqueueFileBatch(files);
+      });
+
+      // Safety net: dropping files outside the canvas should never navigate away.
+      // Canvas keeps ownership of the actual queue add/load behavior above.
+      listen(window, "dragover", (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")) e.preventDefault();
+      });
+      listen(window, "drop", (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")) e.preventDefault();
+      });
+
+      function hasFocusedInteractiveTarget(event) {
+        const target = event.target;
+        if (!(target instanceof Element)) return false;
+        if (target.closest('input, select, textarea, button, summary, [contenteditable="true"], [role="button"], [role="slider"]')) return true;
+        return false;
+      }
+
+      // Global shortcuts are intentionally suppressed while a control has focus,
+      // so typing/adjusting controls never triggers transport/panel side effects.
+      listen(window, "keydown", (e) => {
+        if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+        if (hasFocusedInteractiveTarget(e)) return;
+
+        if (e.code === "KeyH") {
+          workspace.togglePanels();
+          return;
+        }
+        if (e.code === "Space") {
+          e.preventDefault();
+          state.time.simPaused = !state.time.simPaused;
+          return;
+        }
+        if (e.code === "KeyR") {
+          resetVisualizers("visuals");
+          return;
+        }
+
+        // Track navigation — N: next, P: prev (Repeat=All wraps at boundaries).
+        if (e.code === "KeyN") {
+          if (!isFileWorkflowMode(state.source)) return;
+          if (isFinalizingFileTransportLocked()) {
+            toastFinalizingTransportLock();
+            return;
+          }
+          const file = pickManualNextFile();
+          if (file) loadAndPlay(file);
+          return;
+        }
+        if (e.code === "KeyP") {
+          if (!isFileWorkflowMode(state.source)) return;
+          if (isFinalizingFileTransportLocked()) {
+            toastFinalizingTransportLock();
+            return;
+          }
+          const file = pickManualPrevFile();
+          if (file) loadAndPlay(file);
+          return;
+        }
+
+        // Seek — arrow keys ±5 seconds, Shift+arrows ±30 seconds.
+        // preventDefault stops page scroll.
+        if (e.code === "ArrowRight" || e.code === "ArrowLeft") {
+          if (!isFileWorkflowMode(state.source)) return;
+          e.preventDefault();
+          const el = AudioEngine.getMediaEl();
+          if (el && Number.isFinite(el.duration)) {
+            const step = e.shiftKey ? 30 : 5;
+            const delta = (e.code === "ArrowRight" ? step : -step);
+            el.currentTime = clamp(el.currentTime + delta, 0, el.duration);
+          }
+        }
+      }, { passive: false });
+
+      listen(window, "hashchange", () => applyUrlNow(false));
+    };
+  } // end createControlCoordinator
 
   return {
     setCssVarsFromConfig,
     wireControls,
     refreshAllUiText,
+    updateCamera(elapsedSec) {
+      const changed = cameraInteraction.tick(elapsedSec);
+      if (changed) UrlPreset.cancelPendingImport();
+      return changed;
+    },
     refreshRecordingUi,
     getRecordingUiModel,
     dispatchSourceSwitchAction,

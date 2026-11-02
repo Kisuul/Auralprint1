@@ -1,3 +1,4 @@
+import { canonicalPrefs } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -158,7 +159,7 @@ for (const count of [3, 4, 32, 256]) {
       for (const floorHz of [Number.MIN_VALUE, 1e-307, 1e-200, 1e-100, 20, 22500 - 1e-10, 22500]) {
         replacePreferences(sanitizePreset({ schema: 10, prefs: { bands: { count, floorHz, ceilingHz: 22500, distributionMode: 'log' } } })); resolveSettings();
         assert.equal(preferences.bands.floorHz, floorHz);
-        assert.equal(encodePresetPayload(preferences).prefs.bands.floorHz, floorHz);
+        assert.equal(canonicalPrefs(encodePresetPayload(preferences)).bands.floorHz, floorHz);
         BandBank.rebuild(22500, 48000);
         const edges = state.bands.lowHz.slice(1), interior = count - 2;
         assert.equal(edges[0], floorHz); assert.equal(edges.at(-1), 22500);
@@ -199,7 +200,11 @@ test('AUD-008: other distributions retain their transformation and linear interp
   for (const [mode, to, from] of [['linear', x => x, x => x], ['mel', hzToMel, melToHz], ['bark', hzToBark, barkToHz], ['erb', hzToErb, erbToHz]]) {
     for (const n of [1, 2, 30, 254]) {
       const edges = computeInteriorEdges(mode, n, 20, 22500);
-      for (let i = 0; i <= n; i++) assert.equal(edges[i], from(to(20) + (to(22500) - to(20)) * (i / n)));
+      assert.equal(edges[0],20); assert.equal(edges[n],22500);
+      for (let i = 0; i <= n; i++) {
+        const expected = from(to(20) + (to(22500) - to(20)) * (i / n));
+        assert.ok(Math.abs(edges[i]-expected) <= expected*3e-12, 'same perceptual definition within round-trip precision');
+      }
     }
   }
 });

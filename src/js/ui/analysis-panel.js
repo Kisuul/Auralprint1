@@ -1,5 +1,7 @@
+import { bindConfigRange, readConfigRange, syncConfigRange } from "./config-range.js";
 import { clamp, fmt, rgb01ToCss } from "../core/utils.js";
 import { CONFIG } from "../core/config.js";
+import { frequencyLimitMessage } from "../core/band-frequency.js";
 import { BAND_NAMES, preferences, runtime } from "../core/preferences.js";
 import { state } from "../core/state.js";
 import { BandBank } from "../audio/band-bank.js";
@@ -27,18 +29,24 @@ function createAnalysisPanelUi({
       option.value = String(value); option.textContent = String(value); select.appendChild(option);
     }
   }
-  function bindRange(el, limit) { if (!el) return; el.min=String(limit.min); el.max=String(limit.max); el.step=String(limit.step); }
+  const bindRange = bindConfigRange;
+  const dirtyFrequencies = new Set();
   function status(text) { if (ui.analysisStatus) ui.analysisStatus.textContent = text; }
-  function syncControls(settings = getSettings()) {
-    if (!settings || settings === lastSettingsRef) return false;
+  function syncControls(settings = getSettings(), { replaceDrafts = false } = {}) {
+    if (!settings || (!replaceDrafts && settings === lastSettingsRef)) return false;
     lastSettingsRef = settings;
+    if (replaceDrafts) status("");
     const a=settings.audio, b=settings.bands;
-    ui.rngRmsGain.value=String(a.rmsGain); ui.valRmsGain.textContent=fmt(a.rmsGain,2);
-    ui.rngSmooth.value=String(a.smoothingTimeConstant); ui.valSmooth.textContent=fmt(a.smoothingTimeConstant,2);
+    syncConfigRange(ui.rngRmsGain,ui.valRmsGain,a.rmsGain);
+    syncConfigRange(ui.rngSmooth,ui.valSmooth,a.smoothingTimeConstant);
     ui.selFFT.value=String(a.fftSize); ui.valFFT.textContent=String(a.fftSize);
     ui.selDistMode.value=b.distributionMode; ui.valDistMode.textContent=b.distributionMode;
-    ui.inpBandFloorHz.value=String(b.floorHz); ui.valBandFloorHz.textContent=`${b.floorHz} Hz`;
-    ui.inpBandCeilingHz.value=String(b.ceilingHz); ui.valBandCeilingHz.textContent=`${b.ceilingHz} Hz`;
+    for (const [input, output, field] of [[ui.inpBandFloorHz, ui.valBandFloorHz, "floorHz"], [ui.inpBandCeilingHz, ui.valBandCeilingHz, "ceilingHz"]]) {
+      if (replaceDrafts || (document.activeElement !== input && !dirtyFrequencies.has(input))) {
+        input.value = String(b[field]); dirtyFrequencies.delete(input);
+      }
+      output.textContent = `${b[field]} Hz`;
+    }
     ui.valBandCount.textContent=`${b.count} bands`;
     return true;
   }
@@ -48,8 +56,13 @@ function createAnalysisPanelUi({
     const value=Number(input.value), floor=kind === "floor" ? value : settings.bands.floorHz, ceiling=kind === "ceiling" ? value : settings.bands.ceilingHz;
     let message="";
     if (!Number.isFinite(value) || value <= 0) message=`Band ${kind === "floor" ? "floor" : "ceiling"} must be a positive finite number.`;
+    else if (value > CONFIG.limits.bands.frequencyHz.max) message=frequencyLimitMessage();
     else if (floor > ceiling) message=kind === "floor" ? "Band floor cannot exceed configured ceiling." : "Configured ceiling cannot be below band floor.";
+    dirtyFrequencies.delete(input);
     if (message) { input.value=String(settings.bands[field]); status(message); return false; }
+    // Change can follow blur or explicit replacement; never recommit an obsolete
+    // draft or a value already committed by the established change handler.
+    if (value === mutablePreferences.bands[field]) return false;
     mutablePreferences.bands[field]=value;
     commitPreferences(`band ${kind}`, { rebuildBandsOnDefinitionChange:true });
     status(`${kind === "floor" ? "Band floor" : "Configured ceiling"} updated.`);
@@ -113,10 +126,12 @@ function createAnalysisPanelUi({
     if(initializedOn===ui.analysisPanel) return false; initializedOn=ui.analysisPanel;
     bindRange(ui.rngRmsGain,CONFIG.limits.audio.rmsGain); bindRange(ui.rngSmooth,CONFIG.limits.audio.smoothingTimeConstant);
     addOptions(ui.selFFT,CONFIG.limits.audio.fftSizes); addOptions(ui.selDistMode,CONFIG.limits.bands.distributionModes);
-    ui.rngRmsGain.addEventListener("input",()=>{mutablePreferences.audio.rmsGain=Number(ui.rngRmsGain.value);commitPreferences("rms gain (analysis)");});
-    ui.rngSmooth.addEventListener("input",()=>{mutablePreferences.audio.smoothingTimeConstant=Number(ui.rngSmooth.value);commitPreferences("smoothing");});
+    for (const input of [ui.inpBandFloorHz, ui.inpBandCeilingHz]) input.max=String(CONFIG.limits.bands.frequencyHz.max);
+    ui.rngRmsGain.addEventListener("input",()=>{const value=readConfigRange(ui.rngRmsGain);if(value!==null){mutablePreferences.audio.rmsGain=value;commitPreferences("rms gain (analysis)");}});
+    ui.rngSmooth.addEventListener("input",()=>{const value=readConfigRange(ui.rngSmooth);if(value!==null){mutablePreferences.audio.smoothingTimeConstant=value;commitPreferences("smoothing");}});
     ui.selFFT.addEventListener("change",()=>{mutablePreferences.audio.fftSize=Number(ui.selFFT.value);commitPreferences("fft size");});
     ui.selDistMode.addEventListener("change",()=>{mutablePreferences.bands.distributionMode=ui.selDistMode.value;commitPreferences("band distribution mode",{rebuildBandsOnDefinitionChange:true});});
+    for (const input of [ui.inpBandFloorHz, ui.inpBandCeilingHz]) input.addEventListener("input", () => dirtyFrequencies.add(input));
     ui.inpBandFloorHz.addEventListener("change",()=>commitFrequency("floor")); ui.inpBandCeilingHz.addEventListener("change",()=>commitFrequency("ceiling"));
     syncControls(); return true;
   }

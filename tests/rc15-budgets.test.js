@@ -1,3 +1,4 @@
+import { canonicalPrefs } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -15,7 +16,7 @@ import { initOrbs, reconcileOrbs, createRuntimeOrb, duplicateRuntimeOrb, removeR
 
 const defaults = CONFIG.defaults.particleSafety;
 const rgb = {r:.2,g:.4,b:.6};
-const particles = {...CONFIG.defaults.orbs[0].particles, minPlacementDistancePx:0, emitPerSecond:1000, ttlSec:60};
+const particles = {...CONFIG.defaults.orbs[0].particles, minPlacementDistanceUnits:0, emitPerSecond:1000, ttlSec:60};
 function scene(count, policy=defaults) {
   const g=new ParticleGovernor(policy), trails=Array.from({length:count},()=>new TrailSystem());
   trails.forEach(t=>t.setGovernor(g)); g.setTrails(trails); return {g,trails};
@@ -49,21 +50,21 @@ test("budgets: one integer normalization contract for sanitation, resolution and
     for(const [value,expected] of [[undefined,defaults[key]],[null,defaults[key]],[NaN,defaults[key]],[Infinity,defaults[key]],[-Infinity,defaults[key]],['0',defaults[key]],[{},defaults[key]],[.5,defaults[key]],[-1,0],[0,0],[max,max],[Number.MAX_SAFE_INTEGER,max]]) {
       const input={[key]:value,heap:[123],emissions:999}; const normalized=normalizeParticleSafety(input);
       assert.equal(normalized[key],expected); assert.equal(Object.keys(normalized).length,2);
-      const sanitized=sanitizePreset({schema:10,prefs:{particleSafety:input}});assert.deepEqual(sanitized.particleSafety,normalized);
+      const sanitized=sanitizePreset({schema:11,prefs:{particleSafety:input}});assert.deepEqual(sanitized.particleSafety,normalized);
       replacePreferences({...structuredClone(CONFIG.defaults),particleSafety:input});resolveSettings();
       assert.deepEqual(runtime.settings.particleSafety,normalized); assert.deepEqual(new ParticleGovernor(input).policy,normalized);
-      assert.deepEqual(encodePresetPayload({...sanitized,governor:{heap:[1]},particleSafety:{...normalized,retentionEvictionsTotal:3}}).prefs,sanitized);
+      assert.deepEqual(canonicalPrefs(encodePresetPayload({...sanitized,governor:{heap:[1]},particleSafety:{...normalized,retentionEvictionsTotal:3}})),sanitized);
     }
   }}finally{replacePreferences(old);runtime.settings=settings;}
 });
 
 test("budgets: schema 10 zero/upper limits round trip, historical missing defaults and Orb spacing survive",()=>{
   for(const policy of [{maxEmissionsPerFrame:0,maxActiveParticles:0},{maxEmissionsPerFrame:16384,maxActiveParticles:1048576}]) {
-    const prefs=structuredClone(CONFIG.defaults);prefs.particleSafety=policy;prefs.orbs[0].particles.minPlacementDistancePx=0;
+    const prefs=structuredClone(CONFIG.defaults);prefs.particleSafety=policy;prefs.orbs[0].particles.minPlacementDistanceUnits=0;
     prefs.orbs[0].particles.overlapRadiusPx=9;
-    const payload=encodePresetPayload(prefs);assert.equal(payload.schema,10);assert.deepEqual(payload.prefs.particleSafety,policy);
-    assert.deepEqual(sanitizePreset(payload),payload.prefs);assert.equal(payload.prefs.orbs[0].particles.minPlacementDistancePx,0);
-    assert.equal('overlapRadiusPx' in payload.prefs.orbs[0].particles,false);
+    const payload=encodePresetPayload(prefs);assert.equal(payload.schema, 16);assert.deepEqual(canonicalPrefs(payload).particleSafety,policy);
+    assert.deepEqual(sanitizePreset(payload),canonicalPrefs(payload));assert.equal(canonicalPrefs(payload).orbs[0].particles.minPlacementDistanceUnits,0);
+    assert.equal('overlapRadiusPx' in canonicalPrefs(payload).orbs[0].particles,false);
   }
   const historical=JSON.parse(readFileSync(new URL('./fixtures/legacy-presets.json',import.meta.url),'utf8'));
   for(const payload of [...historical,...Array.from({length:9},(_,i)=>({schema:i+2,prefs:{}}))]) assert.deepEqual(sanitizePreset(payload).particleSafety,defaults);
@@ -124,12 +125,12 @@ test("budgets: fairness survives changing/zero budgets, fractions and spacing re
     for(let f=0;f<4;f++){g.applyPolicy({maxEmissionsPerFrame:f===1?0:1,maxActiveParticles:100});frame(g,trails,f/60);for(const t of trails)if(t.particles.length)served.add(t);}
     frame(g,trails,4/60);assert.equal(served.size,3);assert.ok(trails.every(t=>t.particles.length===1));
     g.applyPolicy({maxEmissionsPerFrame:2,maxActiveParticles:100});
-    const s=frame(g,trails,5/60,{...particles,minPlacementDistancePx:.5},1/60,100);
+    const s=frame(g,trails,5/60,{...particles,minPlacementDistanceUnits:.5},1/60,100);
     assert.equal(s.emissions,2);assert.equal(s.budgetRejectedDemand,2);assert.equal(s.spatiallyRejectedDemand,s.requestedDemand-4);
-    const stationary=frame(g,trails,6/60,{...particles,minPlacementDistancePx:.5},1/60,100);
+    const stationary=frame(g,trails,6/60,{...particles,minPlacementDistanceUnits:.5},1/60,100);
     assert.equal(stationary.emissions,2,"the previously unserved eligible owners still get service");
     assert.equal(stationary.budgetRejectedDemand,0);assert.equal(stationary.spatiallyRejectedDemand,stationary.requestedDemand-2);
-    assert.equal(frame(g,trails,7/60,{...particles,minPlacementDistancePx:.5},1/60,100).emissions,0);
+    assert.equal(frame(g,trails,7/60,{...particles,minPlacementDistanceUnits:.5},1/60,100).emissions,0);
     assert.equal(frame(g,trails,8/60,particles).emissions,2,"zero spacing restores dense eligible demand");
     const guarded=frame(g,trails,9/60,particles,10);assert.ok(guarded.rateLimitedDemand>0);assert.equal(guarded.spatiallyRejectedDemand,0);
     g.applyPolicy({maxEmissionsPerFrame:100,maxActiveParticles:100});trails.forEach(t=>t.emitAccumulator=0);
@@ -140,7 +141,7 @@ test("budgets: fairness survives changing/zero budgets, fractions and spacing re
 
 function activeRuntime(policy, injection) {
   const settingsRef={settings:{...structuredClone(CONFIG.defaults),particleSafety:policy}};
-  const def=structuredClone(CONFIG.defaults.orbs[0]);def.particles.minPlacementDistancePx=0;
+  const def=structuredClone(CONFIG.defaults.orbs[0]);def.particles.minPlacementDistanceUnits=0;
   const orb=new Orb(def),v=createVisualizerRuntime({settingsRef,particlePolicy:injection,createSpectralRing:()=>({type:'spectral-ring',update(){},render(){},reset(){},dispose(){},isVisible(){return false;}})});
   v.rebuild([orb]);return {settingsRef,orb,v};
 }
@@ -168,9 +169,9 @@ test("budgets: canonical lifecycle, preset replacement and default reset never r
     const source=state.orbs[0],g=source.trail.governor,tail=source.trail.particles.tail;
     const copy=duplicateRuntimeOrb(source.id),added=createRuntimeOrb();assert.deepEqual(g.policy,p.particleSafety);
     preferences.orbs.reverse();resolveSettings();reconcileOrbs();assert.equal(source.trail.particles.tail,tail);assert.equal(source.trail.governor,g);
-    const payload=encodePresetPayload(preferences);payload.prefs.particleSafety={maxEmissionsPerFrame:2,maxActiveParticles:1};replacePreferences(sanitizePreset(payload));resolveSettings();reconcileOrbs();assert.deepEqual(g.policy,payload.prefs.particleSafety);assert.equal(g.activeParticles,1);
-    removeRuntimeOrb(copy.id);removeRuntimeOrb(added.id);resetOrbTrailsForTrack();resetVisualizers('visuals');VisualizerRuntime.rebuild(state.orbs);assert.deepEqual(g.policy,payload.prefs.particleSafety);
-    VisualizerRuntime.dispose();initOrbs();assert.equal(state.orbs[0].trail.governor,g);assert.deepEqual(g.policy,payload.prefs.particleSafety);
+    const payload=encodePresetPayload(preferences);payload.prefs.particleSafety={maxEmissionsPerFrame:2,maxActiveParticles:1};replacePreferences(sanitizePreset(payload));resolveSettings();reconcileOrbs();assert.deepEqual(g.policy,canonicalPrefs(payload).particleSafety);assert.equal(g.activeParticles,1);
+    removeRuntimeOrb(copy.id);removeRuntimeOrb(added.id);resetOrbTrailsForTrack();resetVisualizers('visuals');VisualizerRuntime.rebuild(state.orbs);assert.deepEqual(g.policy,canonicalPrefs(payload).particleSafety);
+    VisualizerRuntime.dispose();initOrbs();assert.equal(state.orbs[0].trail.governor,g);assert.deepEqual(g.policy,canonicalPrefs(payload).particleSafety);
     replacePreferences(structuredClone(CONFIG.defaults));resolveSettings();initOrbs();assert.deepEqual(g.policy,defaults);
     replacePreferences({...structuredClone(CONFIG.defaults),orbs:[],particleSafety:{maxEmissionsPerFrame:0,maxActiveParticles:0}});resolveSettings();initOrbs();VisualizerRuntime.update(context);assert.deepEqual(g.policy,{maxEmissionsPerFrame:0,maxActiveParticles:0});assert.equal(g.activeParticles,0);
   }finally{VisualizerRuntime.dispose();replacePreferences(oldPrefs);runtime.settings=oldSettings;state.orbs=oldOrbs;}

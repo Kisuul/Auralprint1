@@ -1,8 +1,13 @@
 import { normalizeMaxDeltaTimeSec } from "./timing.js";
 import { normalizeParticleSafety } from "./particle-safety.js";
+import { normalizeWorldSettings } from "./world-settings.js";
+import { createWorldGeometry } from "./world-geometry.js";
+import { normalizeSceneCamera } from "./camera-state.js";
+import { state } from "./state.js";
 import { CONFIG } from "./config.js";
 import { TAU } from "./constants.js";
 import { assertOrbAdmission } from "./orb-admission.js";
+import { assertSupportedBandFrequencies } from "./band-frequency.js";
 import { clamp, deepClone } from "./utils.js";
 
 /* =============================================================================
@@ -11,17 +16,20 @@ import { clamp, deepClone } from "./utils.js";
 const preferences = deepClone(CONFIG.defaults);
 const runtime = { settings: deepClone(CONFIG.defaults) };
 
-function normalizeMinPlacementDistancePx(value, fallback = CONFIG.defaults.orbs[0].particles.minPlacementDistancePx) {
-  const limits = CONFIG.limits.particles.minPlacementDistancePx;
+function normalizeMinPlacementDistanceUnits(value, fallback = CONFIG.defaults.orbs[0].particles.minPlacementDistanceUnits) {
+  const limits = CONFIG.limits.particles.minPlacementDistanceUnits;
   const raw = Number.isFinite(value) ? value : fallback;
-  return clamp(Number.isFinite(raw) ? raw : CONFIG.defaults.orbs[0].particles.minPlacementDistancePx, limits.min, limits.max);
+  return clamp(Number.isFinite(raw) ? raw : CONFIG.defaults.orbs[0].particles.minPlacementDistanceUnits, limits.min, limits.max);
 }
 
 function replacePreferences(next) {
   const replacement = (next && typeof next === "object") ? next : deepClone(CONFIG.defaults);
   assertOrbAdmission(replacement.orbs);
+  assertSupportedBandFrequencies(replacement.bands);
+  const sceneCamera = normalizeSceneCamera(replacement.sceneCamera);
   for (const key of Object.keys(preferences)) delete preferences[key];
   Object.assign(preferences, replacement);
+  preferences.sceneCamera = sceneCamera;
   return preferences;
 }
 
@@ -37,7 +45,18 @@ function normalizeBandCount(count) {
 
 function resolveSettings() {
   assertOrbAdmission(preferences.orbs);
+  assertSupportedBandFrequencies(preferences.bands);
   runtime.settings = deepClone(preferences);
+  runtime.settings.audio.clearQueueOnSourceExit = typeof preferences.audio?.clearQueueOnSourceExit === "boolean"
+    ? preferences.audio.clearQueueOnSourceExit : CONFIG.defaults.audio.clearQueueOnSourceExit;
+  runtime.settings.world = normalizeWorldSettings(preferences.world);
+  runtime.settings.sceneCamera = normalizeSceneCamera(preferences.sceneCamera);
+  const { widthUnits, heightUnits } = runtime.settings.world;
+  // Resolved Scene settings alone own world state. Preserve the descriptor on
+  // unrelated settings updates; canvas sizing has no path to this assignment.
+  if (state.world?.widthUnits !== widthUnits || state.world?.heightUnits !== heightUnits) {
+    state.world = createWorldGeometry(widthUnits, heightUnits);
+  }
   runtime.settings.bands.count = normalizeBandCount(preferences.bands.count);
   runtime.settings.timing = { maxDeltaTimeSec: normalizeMaxDeltaTimeSec(preferences.timing?.maxDeltaTimeSec) };
   runtime.settings.particleSafety = normalizeParticleSafety(preferences.particleSafety);
@@ -104,7 +123,7 @@ function normalizeOrbPhaseRad(value, fallback = 0) {
 }
 
 function normalizeOrbDef(incomingOrb, fallbackOrb) {
-  // Canonical orb fields (v10 schema): see agents.md §4.2.
+  // This normalizer owns canonical Orb fields, using CONFIG defaults and limits.
   const fallback = fallbackOrb || {};
   const orb = (incomingOrb && typeof incomingOrb === "object") ? incomingOrb : {};
   const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
@@ -168,7 +187,7 @@ function normalizeOrbDef(incomingOrb, fallbackOrb) {
   for (const key of ["emitPerSecond", "sizeMaxPx", "sizeMinPx", "sizeToMinSec", "ttlSec"]) {
     particles[key] = nestedNumber("particles", key, CONFIG.limits.particles[key]);
   }
-  particles.minPlacementDistancePx = normalizeMinPlacementDistancePx(orb.particles?.minPlacementDistancePx, fallback.particles?.minPlacementDistancePx);
+  particles.minPlacementDistanceUnits = normalizeMinPlacementDistanceUnits(orb.particles?.minPlacementDistanceUnits, fallback.particles?.minPlacementDistanceUnits);
   particles.sizeMinPx = Math.min(particles.sizeMinPx, particles.sizeMaxPx);
   particles.ttlSec = Math.max(particles.ttlSec, particles.sizeToMinSec);
   const traceSource = orb.trace && typeof orb.trace === "object" ? orb.trace : {};
@@ -181,6 +200,9 @@ function normalizeOrbDef(incomingOrb, fallbackOrb) {
     lineAlpha: nestedNumber("trace", "lineAlpha", CONFIG.limits.trace.lineAlpha),
     lineWidthPx: nestedNumber("trace", "lineWidthPx", CONFIG.limits.trace.lineWidthPx),
     lineColorMode: ["fixed", "lastParticle", "dominantBand"].includes(mode) ? mode : "dominantBand",
+    fadeSegments: Math.round(clamp(Number.isFinite(traceSource.fadeSegments) ? traceSource.fadeSegments
+      : (Number.isFinite(traceFallback.fadeSegments) ? traceFallback.fadeSegments : CONFIG.defaults.orbs[0].trace.fadeSegments),
+    CONFIG.limits.trace.fadeSegments.min, CONFIG.limits.trace.fadeSegments.max)),
   };
 
   return {
@@ -200,4 +222,7 @@ function normalizeOrbDef(incomingOrb, fallbackOrb) {
   };
 }
 
-export { preferences, runtime, replacePreferences, BAND_NAMES, BAND_NAME_TO_INDEX, resolveSettings, normalizeBandCount, normalizeOrbChannelId, sanitizeOrbBandIds, normalizeOrbDef, normalizeOrbPhaseRad, normalizeMinPlacementDistancePx };
+// Initialize through the same canonical pipeline used at boot and on edits.
+resolveSettings();
+
+export { preferences, runtime, replacePreferences, BAND_NAMES, BAND_NAME_TO_INDEX, resolveSettings, normalizeBandCount, normalizeOrbChannelId, sanitizeOrbBandIds, normalizeOrbDef, normalizeOrbPhaseRad, normalizeMinPlacementDistanceUnits };

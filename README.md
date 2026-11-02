@@ -2,15 +2,18 @@
 
 Offline-capable audio analysis, playback, visualization, and recording. Spectral analysis drives the visualizers.
 
-**Current release:** Release 4 / Build 115 (`v0.1.15`), preset schema 10. Released following 115N RC testing and owner acceptance. Build 114 (`v0.1.14`) was internal; previous public release was Release 3 / Build 113.
+**Current public release:** Release 5 / Build 116 (`v0.1.16`), preset schema 16. [Canonical portable HTML](docs/Canon/0.1.16/auralprint_0.1.16.html); [acceptance and platform qualifications](ROADMAP.md#build-116-simulation-world-camera-and-projection).
 
-- [ROADMAP.md](ROADMAP.md): current scope, future builds, acceptance gates, and deferrals.
-- [agents.md](agents.md): binding architecture and development contracts.
-- [Build 115 history](docs/development/build-115.md): engineering chronology and corrective dispositions.
-- [Build 115 release comparison](docs/development/build-115-release-delta.md): public Build 113 and internal Build 114 baselines.
-- [Canonical changelog](docs/Canon/changelog.md): chronological build changes, including internal milestones.
+**Current source checkout:** Build 116 / Release 5, promoted from owner-accepted RC #2 ([PR #103](https://github.com/cosmicdance-4-2-0/Auralprint1/pull/103)); only release identity, the archived artifact and release documentation differ. Build 116 adds world/Camera separation, authored Scene views, compact sharing, optional File Queue clearing and Trace fading. Build 117 optimization research is not part of Release 5.
 
-## Developer and agent bootstrap
+- [ROADMAP](ROADMAP.md): current scope, future builds, acceptance gates and deferrals.
+- [AGENTS](AGENTS.md): binding architecture and development contracts.
+- [Build 115 history](docs/development/build-115.md) and [Build 116 history/contract](docs/development/build-116.md): engineering decisions, chronology and evidence.
+- [Changelog](docs/Canon/changelog.md) and [Build 115 release comparison](docs/development/build-115-release-delta.md): release differences and historical internal-build comparisons.
+
+<a id="developer-and-agent-bootstrap"></a>
+
+## Developer bootstrap
 
 Requires **Node 24** and **Python 3.12**. Run sequentially from the repository root:
 
@@ -19,97 +22,82 @@ npm ci
 npm test
 npm run build
 python scripts/verify_distribution.py
+npm run test:browser
+npm run test:browser:editing
+npm run test:browser:presets
+node scripts/validate-116-candidate.cjs
+node scripts/validate-116-accessibility.cjs
 ```
 
 Do not run test and build concurrently: tests temporarily rename build directories.
 
+Before the native browser checks, install Playwright's matching Chromium headless shell and required platform dependencies. Ubuntu CI uses `npx playwright install --with-deps chromium --only-shell`; local installations need the browser and dependencies appropriate to their OS. Commands and CI setup are defined in [package.json](package.json) and the [CI workflow](.github/workflows/ci.yml).
+
 Build outputs:
 
-- **Portable:** `dist/auralprint_<version-without-leading-v>.html` (for this release: `dist/auralprint_0.1.15.html`); application JS/CSS and favicon embedded.
-- **Hosted:** `dist/hosted/index.html` plus the included icons and `site.webmanifest`. Deploy the whole directory, including at subdirectory paths, with appropriate MIME types.
+- **Portable:** `dist/auralprint_<version-without-leading-v>.html`, derived from the root [version](version) file (this checkout: `dist/auralprint_0.1.16.html`); application JS/CSS and favicon embedded. The immutable [Release 5 / Build 116 HTML](docs/Canon/0.1.16/auralprint_0.1.16.html) is archived separately.
+- **Hosted (official site only):** deploy the contents of `dist/hosted/` at `https://auralprint.idiw.net/`. Includes `index.html`, favicon/touch icons, `site.webmanifest` and the versioned OG preview in `og/`. The build emits package-local icon links, an official-origin manifest launch/scope, and absolute canonical, Open Graph and X/Twitter metadata from `src/assets/branding/hosted-site.json`. Other hosting origins or subdirectories require editing that branding configuration and the hosted manifest's launch/scope assumptions.
 
-`npm run watch` watches JS/CSS, the HTML template, root `version`, and branding inputs. Build and watch share the distribution contract. CI checks Linux and Windows builds. Browser tooling is optional.
+`npm run watch` watches JS/CSS, the HTML template, root `version`, and branding inputs. Build and watch share the distribution contract. CI runs Node tests, build and distribution verification on Ubuntu and Windows; the three standard Chromium browser checks and focused Queue/Trace and accessibility checks are mandatory on Ubuntu. Chromium CI uses local HTTP and does not certify Windows browser interaction, Firefox, Safari, physical devices, native audio permissions, direct `file://` operation or offline launch.
 
-The portable file is designed to run without adjacent assets. Direct local-file usage has owner-reported browser coverage, but fully network-disabled operation remains an open acceptance check. Hosted packaging does not provide a service worker or offline caching.
+The portable file is designed to run without adjacent assets. Direct local-file usage has owner-reported browser coverage, but fully network-disabled operation remains an open acceptance check. Hosted packaging does not provide a service worker or offline caching. When preparing a new release, replace the version-specific OG artwork and update the `image`/`image_alt` entries in the hosted-site configuration; the assembler updates the HTML automatically.
+
+## Sharing in Build 116
+
+**Copy Share Link** writes a compact schema-16 link using native DEFLATE (`#z=`) when compression and decompression work. It shares the authored Scene view. If compression is unavailable, it writes an uncompressed schema-16 link (`#p=`) and explains the fallback. If clipboard access fails, copy the complete link from the address bar.
+
+Opening a compressed link requires working native DEFLATE decompression. Unsupported browsers retain the active Scene and show an explanation; an uncompressed link is the compatibility option. Schemas 2–13 retain their decoding meanings. Experimental schemas 14/15 are reserved and rejected without changing the Scene. Older builds cannot read schema 16. Link length depends on the Scene and the sharing service's limits.
+
+See [116E protocol, measurements, reproducible checks and owner device matrix](docs/development/build-116.md#116e-compact-presets). Optional Firefox/WebKit checks remain separate from mandatory Chromium CI.
+
+<a id="build-115--v0115-visualizer-architecture--orb-overhaul-v1"></a>
+
+## Current capabilities
+
+The public Build 116 release retains:
+
+- **Playback and analysis:** File, permission-gated Mic and Stream sources; a multi-file queue with picker/drop, navigation, remove/clear, shuffle/repeat and waveform seeking. Analysis offers L/R/C channels, a 256-band default, five distributions and Nyquist-aware frequency limits.
+- **Visualizers:** a singleton Spectral Ring and zero, one or many stable-ID Orbs with independent channel/band targets, motion, response, particles, Trace, position, color and designed phase. Add, duplicate, remove and edit Orbs; Bulk Edit applies to all Orbs with mixed-value awareness. Scene appearance owns shared colors and palette.
+- **Resources and presets:** configurable particle emission/retention limits and placement spacing; URL sharing and supported legacy preset migration. Scene presets contain configuration; queue, playback position, recording sessions and live-input permissions remain runtime state. Build 116 additionally provides the world and authored Camera behavior below.
 
 ## Using Auralprint
 
-Load audio in **File**, or select **Mic** / **Stream** with browser permission. **Audio** controls sources and playback; **Queue** controls the playlist; **Analysis** owns spectral configuration; **Visualizers** owns Orbs and the Spectral Ring; **Settings** owns Scene appearance, particle resources, and presets; **Record** owns capture. **H** hides/restores panels outside text inputs; **Space** pauses visual motion/emission, not audio analysis.
+Load audio in **File**, or select **Mic** / **Stream** with browser permission. **Audio** controls sources and playback; **Queue** controls the playlist; **Analysis** owns spectral configuration; **Visualizers** owns Orbs and the Spectral Ring; **Settings** owns Scene appearance, particle resources and presets; **Record** owns capture. Build 116 adds **Camera** for live view and authored Scene view actions. **H** hides/restores panels outside text inputs; **Space** pauses visual motion/emission while analysis and particle aging continue. **Reset Visuals** applies designed Orb phases and clears trails.
+
+In Build 116, Tab to the playback-position scrubber to seek with arrows (5 seconds, or 30 with Shift), Home or End. Queue rows have separately focusable Play and Remove buttons. These controls were corrected after RC #1 in PR #101.
 
 **Waveforms:** Audio → Waveforms has optional 4/8/15-minute stereo-equivalent workload profiles, separate encoded-input and estimated-PCM admission limits, and manual generation. Playback does not require waveform preparation. These limits do not bound total browser memory.
 
-**Recording Resources:** Record → Settings defaults to **Balanced** (five-minute automatic Stop, encoded-data admission limits). **Custom** allows independent Off settings; **Unrestricted** disables application size, chunk, and duration restrictions. Neither mode eliminates browser/device limits. Recording settings persist locally, outside Scene presets. Cancel Current Capture preserves the previous successful export.
+**Recording:** choose a browser-supported WebM/MP4 format, frame rate and optional source audio. Start capture, then Stop and download the latest export. Record → Settings defaults to **Balanced** (five-minute automatic Stop, encoded-data admission limits). **Custom** allows independent Off settings; **Unrestricted** disables application size, chunk and duration restrictions. Neither mode eliminates browser/device limits. Recording settings persist locally, outside Scene presets. Cancel Current Capture preserves the previous successful export.
 
-## Versioning and what the numbers mean
+Firefox does not supply shared-display audio for Stream mode; Stream requires an audio track and rejects video-only sessions. File and Mic are separate workflows. Browser/codec support and native permissions vary; see the [release qualifications](ROADMAP.md#build-115-release-acceptance-and-qualifications).
 
-- **App version:** `v0.1.xx` (with lettered development revisions before release).
-- **Build:** `100 + xx` for the `v0.1.xx` series (e.g., `v0.1.13` = Build 113).
-- **Release:** public published bundle; may skip internal builds. Only one public release is canonical at a time.
+## Queue and Trace in Build 116
 
-Interfaces are canon; modules are mutable. Shipped builds and published preset contracts are immutable.
+Settings → Source Behavior offers **Clear File Queue when switching sources**, off by default. It clears only after an accepted File-to-Mic/Stream switch; failed, cancelled or superseded requests and intervening Queue changes preserve files. The choice is saved in Scene presets; Queue contents remain runtime-only.
+
+Individual and Bulk Orb Trace editors offer **Fade Length** in whole segments: **0 / Off** (default) preserves the established continuous stroke; **1–20** fades that many oldest visible drawable segments toward the Scene background, using the available count for short histories. Mixed Bulk values remain unchanged until edited. The twenty-segment limit is a feature bound, not a frame-rate guarantee.
+
+## Camera in Build 116
+
+Build 116 separates the simulation world from the viewport. Settings → **Simulation World** dimensions define Orb/Ring reference geometry, **not** clipping/collision bounds; particle placement spacing uses world units independently of viewport/DPR. Camera movement changes the view, preserving simulation and retained history; marks retain CSS-screen sizing.
+
+The live performance view is separate from the authored Scene viewpoint. **Save Current View as Scene View** explicitly persists the live pose into the Scene; **Restore Scene View** stops input and restores that authored view to the live camera. **Copy Share Link** serializes the authored Scene, including its saved viewpoint; live navigation never implicitly saves or shares its current pose.
+
+Enable camera mode for drag-to-pan and pointer-centered wheel zoom. On the canvas, one finger pans; two fingers pan, pinch to zoom and twist the visible scene in the fingers' direction. The world point beneath their midpoint follows that midpoint; lifting either finger continues one-finger pan. With canvas keyboard focus, hold WASD/QE to move/turn and Shift to boost; **C** resets to the factory view and **F** performs a one-shot world/composition fit while preserving rotation. Slow visible frames retain held input. Camera mode and keyboard focus are distinct from panel visibility: hiding Camera preserves mode/view, while losing canvas focus stops input. Mode, movement speeds, input state and panel state remain runtime-only. See the [touch contract](docs/development/build-116.md#camera-touch-completion) and [authored-view contract](docs/development/build-116.md#116d-authored-scene-camera) for implementation detail and [ROADMAP](ROADMAP.md#build-116-simulation-world-camera-and-projection) for pending acceptance.
+
+<a id="build-113--v0113-release-3--shipped---canonical-recording--capture"></a>
 
 ## Canonical release history
 
-| Release | Build | Version | Status |
+| Public release | Build / version | Accepted artifact | Changes |
 | --- | --- | --- | --- |
-| 1 | 110 | `v0.1.10` | Shipped, legacy |
-| 2 | 111 | `v0.1.11` | Shipped, previous |
-| 3 | 113 | `v0.1.13` | Shipped, previous |
-| 4 | 115 | `v0.1.15` | Current canonical |
+| 1 | 110 / `v0.1.10` | [HTML](docs/Canon/0.1.10/index.html) | Legacy baseline |
+| 2 | 111 / `v0.1.11` | [HTML](docs/Canon/0.1.11/index.html) | [Changelog](docs/Canon/changelog.md#v110--v111) |
+| 3 | 113 / `v0.1.13` | [HTML](docs/Canon/0.1.13/auralprint_0.1.13.html) | [Changelog](docs/Canon/changelog.md#v112--v113) |
+| 4 | 115 / `v0.1.15` | [HTML](docs/Canon/0.1.15/auralprint_0.1.15.html) | [Changelog](docs/Canon/changelog.md#v114--v115-release-4--build-115) |
+| 5 (current) | 116 / `v0.1.16` | [HTML](docs/Canon/0.1.16/auralprint_0.1.16.html) | [Changelog](docs/Canon/changelog.md#v115--v116-release-5--build-116) |
 
-Builds 112 and 114 were shipped internally, not as new public releases.
+Builds [112](docs/Canon/changelog.md#v111--v112) and [114](docs/Canon/changelog.md#v113--v114) shipped internally, without additional public releases. Public Release 3 → 4 includes the internal Build 114 Mic/Stream work as well as Build 115.
 
-## Build status overview
-
-| Build | Status | Scope |
-| --- | --- | --- |
-| 112 | Internal shipped | Queue and scrubber |
-| 114 | Internal shipped | Microphone and stream input |
-| 115 | Release 4, shipped | Analysis/visualizer separation and independent Orbs |
-| 116–120 | Planned | See [ROADMAP.md](ROADMAP.md) |
-
-## Build 111 — v0.1.11 (Release 2, ✅ shipped - previous canonical)
-
-Stereo L/R/C analysis, Orbs, band overlay, URL presets, and panel controls. Playback, preset migration, and audio teardown remain compatibility requirements.
-
-## Build 112 — v0.1.12 (✅ shipped - internal): “Scrubber + Queue”
-
-Waveform seeking, multi-file queue, navigation, drag/drop, repeat and track-end handling. Queue and playback position remain runtime state, not presets.
-
-## Build 113 — v0.1.13 (Release 3, ✅ shipped - canonical): Recording / Capture
-
-Recording panel with browser-supported WebM/MP4, optional source audio, frame-rate choice, latest export/download, and five band-distribution modes. Previously the public release baseline.
-
-## Build 114 — v0.1.14: Live Input Sources
-
-Permission-gated microphone and stream analysis, source switching, and source-aware recording. Shipped internally.
-
-## Build 115 — v0.1.15: Visualizer Architecture + Orb Overhaul v1
-
-Release 4, accepted and shipped. AnalysisFrame separates analysis from visualizer consumers; VisualizerRuntime owns lifecycle. The Spectral Ring is a singleton, while zero/one/N Orbs have stable IDs and independent configuration/editors. Scene owns shared color; particle limits and recorder-resource policy are configurable. Schema 10 preserves supported legacy preset migration.
-
-**Release artifact:** [Canonical portable HTML](docs/Canon/0.1.15/auralprint_0.1.15.html). Firefox does not supply shared-display audio for Stream mode; File and Mic are separate workflows. See [release acceptance and qualifications](ROADMAP.md#build-115-release-acceptance-and-qualifications).
-
-## Build 116 — v0.1.16: Camera Controls (Render ≠ Sim)
-
-Planned projection-only pan, zoom, and rotation. Simulation/analysis must remain unaffected. [Acceptance requirements](ROADMAP.md#build-116-camera-controls-render-separate-from-simulation).
-
-## Build 117 — v0.1.17: UX + Performance Hardening
-
-Planned measured resource/performance and interaction improvements. [Acceptance requirements](ROADMAP.md#build-117-ux-and-performance-hardening).
-
-## Build 118 — v0.1.18: Richer Spectral Selection
-
-Planned frequency-oriented inspection and configurable band-table choices. [Acceptance requirements](ROADMAP.md#build-118-richer-spectral-selection).
-
-## Build 119 — v0.1.19: Workflow Upgrades
-
-Planned preset file import/export alongside URL sharing. [Acceptance requirements](ROADMAP.md#build-119-preset-workflow-upgrades).
-
-## Build 120 — v0.1.20: 3D Orbs + Perspective
-
-Optional exploration after the 2D/camera baseline stabilizes. [Acceptance requirements](ROADMAP.md#build-120-optional-3d-and-perspective).
-
-## Release discipline notes
-
-Changes to published preset schemas require versioning and migrations. Runtime state—queue, playback position, recording sessions, live-input permissions—does not belong in Scene presets. Changelog fixes describe defects present in the compared shipped baseline, not problems introduced and corrected only during unpublished development. Release 4 public comparison spans Build 113 through the internal 114 milestone and Build 115.
+For the `v0.1.xx` series, Build = `100 + xx`; letter suffixes identify development revisions. A Release is a published public bundle and may skip internal builds. Shipped builds and published preset contracts are immutable; [schema changes require versioning and migration](AGENTS.md#21-schema-discipline).

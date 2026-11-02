@@ -1,5 +1,5 @@
-// Optional native RC-02 regression against the unmodified built HTML.
-// Playwright is developer tooling, not a project dependency.
+// Optional historical RC-02 probe against unmodified built HTML; applicability is checkpoint-specific.
+// Playwright is a project dev dependency; Ubuntu CI requires test:browser and test:browser:editing.
 // RC02_PLAYWRIGHT_MODULE, RC02_CHROMIUM_PATH, RC02_ARTIFACT, RC02_REPORT are optional.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -102,11 +102,14 @@ function makeWav() {
       if (entry === 'picker') {
         await page.locator('#fileInput').setInputFiles(names.map(name => ({ name, mimeType: 'audio/wav', buffer: makeWav() })));
       } else {
-        await page.evaluate(({ names, bytes }) => {
+        // Transfer the same WAV bytes without serializing millions of numeric
+        // array entries while the already-loaded append control is playing.
+        await page.evaluate(({ names, encoded }) => {
+          const bytes = Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
           const data = new DataTransfer();
-          for (const name of names) data.items.add(new File([new Uint8Array(bytes)], name, { type: 'audio/wav' }));
+          for (const name of names) data.items.add(new File([bytes], name, { type: 'audio/wav' }));
           document.getElementById('c').dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }));
-        }, { names, bytes: [...makeWav()] });
+        }, { names, encoded: makeWav().toString('base64') });
       }
     }
     const settled = (page, count = 1) => page.waitForFunction(count => window.rc02.settled >= count, count);

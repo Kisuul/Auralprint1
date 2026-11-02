@@ -1,3 +1,4 @@
+import { canonicalPrefs } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CONFIG } from "../src/js/core/config.js";
@@ -68,8 +69,8 @@ test("schema 10 round-trip preserves divergent Orbs and omits obsolete globals",
   replacePreferences(next); resolveSettings(); UrlPreset.writeHashFromPrefs();
   const payload = JSON.parse(Buffer.from(location.hash.slice(3), "base64url"));
   assert.equal(payload.schema, PRESET_SCHEMA_VERSION);
-  for (const key of ["motion", "particles", "trace"]) assert.equal(key in payload.prefs, false);
-  assert.equal("minRadiusFrac" in payload.prefs.audio, false);
+  for (const key of ["motion", "particles", "trace"]) assert.equal(key in canonicalPrefs(payload), false);
+  assert.equal("minRadiusFrac" in canonicalPrefs(payload).audio, false);
   replacePreferences(structuredClone(CONFIG.defaults)); resolveSettings();
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   assert.equal(preferences.orbs[0].motion.angularSpeedRadPerSec, .2);
@@ -85,12 +86,12 @@ test("runtime Orbs use independent motion, response, waveform, and particle sett
   aDef.response = { minRadiusFrac: .1, maxRadiusFrac: .2, waveformRadialDisplaceFrac: 0 };
   bDef.response = { minRadiusFrac: .4, maxRadiusFrac: .8, waveformRadialDisplaceFrac: .5 };
   // This assertion compares rates with placement filtering intentionally disabled.
-  aDef.particles.minPlacementDistancePx = bDef.particles.minPlacementDistancePx = 0;
+  aDef.particles.minPlacementDistanceUnits = bDef.particles.minPlacementDistanceUnits = 0;
   aDef.particles.emitPerSecond = 10; bDef.particles.emitPerSecond = 100;
   const a = new Orb(aDef); const b = new Orb(bDef); const band = { energy01: .5, waveform: [1, 1] };
   a.step(.1, 1, band, .5, 0); b.step(.1, 1, band, .5, 0);
-  assert.notEqual(a.angleRad, b.angleRad); assert.notEqual(a.baseRadiusPx, b.baseRadiusPx);
-  assert.equal(a.radialDispPx, 0); assert.notEqual(b.radialDispPx, 0);
+  assert.notEqual(a.angleRad, b.angleRad); assert.notEqual(a.baseRadiusUnits, b.baseRadiusUnits);
+  assert.equal(a.radialDispUnits, 0); assert.notEqual(b.radialDispUnits, 0);
   assert.ok(b.trail.particles.length > a.trail.particles.length);
   assert.equal(a.trail.emitAccumulator, 0);
   assert.equal(b.trail.emitAccumulator, 0, "refused whole demand is discarded");

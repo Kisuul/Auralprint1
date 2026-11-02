@@ -77,7 +77,7 @@ test("Settings copy retains canonical Scene IDs alongside Visualizers", () => {
   assert.equal(byId("btnHideScene").attrs["aria-label"], "Hide Scene Settings panel");
   assert.equal(templateNodes.find((node) => node.tag === "h2" && node.ancestors.includes("scenePanel")).text, "Scene Settings");
   assert.equal(templateNodes.find((node) => node.tag === "h2" && node.ancestors.includes("visualizersPanel")).text, "Visualizers");
-  assert.deepEqual(templateNodes.filter((node) => node.tag === "summary" && node.ancestors.includes("scenePanel")).map((node) => node.text), ["Canvas", "Particle Defaults", "Band Palette", "Performance", "PresetsShare or restore configuration"]);
+  assert.deepEqual(templateNodes.filter((node) => node.tag === "summary" && node.ancestors.includes("scenePanel")).map((node) => node.text), ["Source Behavior", "Simulation World", "Canvas", "Particle Defaults", "Band Palette", "Performance", "PresetsShare or restore configuration"]);
 });
 
 function element(tag = "div") {
@@ -88,12 +88,13 @@ function element(tag = "div") {
     get options() { return this.tagName === "SELECT" ? this.children : undefined; },
     get selectedIndex() { return this.tagName === "SELECT" ? this.children.findIndex((option) => option.value === this.value) : -1; },
     addEventListener(name, fn) { const list = listeners.get(name) || []; list.push(fn); listeners.set(name, list); },
-    dispatch(name) { for (const fn of listeners.get(name) || []) fn({ target: this }); },
+    dispatch(name, details = {}) { for (const fn of listeners.get(name) || []) fn({ target: this, ...details }); },
+    dispatchEvent(event) { this.dispatch(event.type, event); return true; },
     appendChild(child) { this.children.push(child); return child; }
   };
 }
 function harness(getParticleStats) {
-  const ids = ["clrBg","valBg","clrParticle","valParticle","selParticleColorSrc","valParticleSrc","rngHueOff","valHueOff","rngSat","valSat","rngVal","valVal","numMaxActiveParticles","valMaxActiveParticles","maxActiveParticlesError","numMaxEmissionsPerFrame","valMaxEmissionsPerFrame","maxEmissionsPerFrameError","statParticleLive","statParticleEmitted","statParticleSpacingRejected","statParticleBudgetRejected","statParticleRateLimited","statParticleRetentionRejected","statParticleExpired","statParticleRetentionRetired"];
+  const ids = ["chkClearQueueOnSourceExit","numWorldWidth","valWorldWidth","worldWidthError","numWorldHeight","valWorldHeight","worldHeightError","clrBg","valBg","clrParticle","valParticle","selParticleColorSrc","valParticleSrc","rngHueOff","valHueOff","rngSat","valSat","rngVal","valVal","numMaxActiveParticles","valMaxActiveParticles","maxActiveParticlesError","numMaxEmissionsPerFrame","valMaxEmissionsPerFrame","maxEmissionsPerFrameError","statParticleLive","statParticleEmitted","statParticleSpacingRejected","statParticleBudgetRejected","statParticleRateLimited","statParticleRetentionRejected","statParticleExpired","statParticleRetentionRetired"];
   const ui = Object.fromEntries(ids.map((id) => [id, element(id === "selParticleColorSrc" ? "select" : "div")]));
   ui.scenePanel = element();
   const preferences = structuredClone(CONFIG.defaults);
@@ -101,6 +102,112 @@ function harness(getParticleStats) {
   const panel = createScenePanelUi({ ui, preferences, getSettings: () => settings, getParticleStats, commitPreferences: () => { commits += 1; } });
   return { ui, preferences, panel, commits: () => commits, replaceSettings(next) { settings = next; } };
 }
+
+test("AUD116-002: Scene palette retains canonical precision and uses the shared editing grid", () => {
+  const oldDocument = globalThis.document; globalThis.document = { createElement: tag => element(tag) };
+  try {
+    const h = harness(); h.panel.init(); h.panel.init();
+    const fields = [["hueOffsetDeg", "rngHueOff", "valHueOff", 12.5, 12, 13], ["saturation", "rngSat", "valSat", .375, .37, .38], ["value", "rngVal", "valVal", .425, .42, .43]];
+    for (const [key, input, output, canonical, left, right] of fields) {
+      const control = h.ui[input], limit = CONFIG.limits.sceneColor[key];
+      assert.deepEqual([control.min, control.max, control.step], [limit.min, limit.max, limit.step].map(String));
+      assert.equal(control.listenerCount("input"), 1); assert.equal(control.listenerCount("keydown"), 1);
+      for (const [arrow, expected] of [["ArrowLeft", left], ["ArrowRight", right]]) {
+        h.preferences.bands.rainbow[key] = canonical;
+        h.replaceSettings(structuredClone(h.preferences));
+        const before = structuredClone(h.preferences), count = h.commits(); h.panel.refresh(); h.panel.refresh();
+        assert.deepEqual(h.preferences, before); assert.equal(h.commits(), count);
+        assert.match(h.ui[output].textContent, new RegExp(`Current ${canonical}.*slider selection`));
+        assert.equal(control.getAttribute("aria-valuetext"), h.ui[output].textContent);
+        control.dispatch("keydown", { key: arrow, preventDefault() {} });
+        assert.equal(h.preferences.bands.rainbow[key], expected); assert.equal(h.commits(), count + 1);
+        h.replaceSettings(structuredClone(h.preferences)); h.panel.refresh();
+        assert.equal(Number(control.value), expected); assert.doesNotMatch(h.ui[output].textContent, /Current/);
+      }
+      control.value = String(left + limit.step / 3); control.dispatch("input");
+      assert.equal(h.preferences.bands.rainbow[key], left, "input admission uses CONFIG grid");
+    }
+  } finally { globalThis.document = oldDocument; }
+});
+
+for (const [group, key, input, output, error] of [
+  ["world", "widthUnits", "numWorldWidth", "valWorldWidth", "worldWidthError"],
+  ["world", "heightUnits", "numWorldHeight", "valWorldHeight", "worldHeightError"],
+  ["particleSafety", "maxActiveParticles", "numMaxActiveParticles", "valMaxActiveParticles", "maxActiveParticlesError"],
+  ["particleSafety", "maxEmissionsPerFrame", "numMaxEmissionsPerFrame", "valMaxEmissionsPerFrame", "maxEmissionsPerFrameError"],
+]) test(`AUD116-003: ${key} replacement clears same-value rejected and active drafts, fencing delayed change`, () => {
+  const oldDocument = globalThis.document; globalThis.document = { createElement: tag => element(tag) };
+  try {
+    const h = harness(); h.panel.init(); const control = h.ui[input], canonical = h.preferences[group][key];
+    for (const draft of ["-1", "", String(canonical + 1)]) {
+      control.focus(); control.value = draft;
+      if (draft === "-1") control.dispatch("change");
+      const settings = structuredClone(h.preferences); h.replaceSettings(settings); h.panel.refresh();
+      assert.equal(control.value, draft, "ordinary unrelated refresh retains the draft");
+      assert.equal(h.panel.refresh(settings, { replaceDrafts: true }), true, "replacement bypasses reference guard");
+      assert.equal(control.value, String(canonical)); assert.equal(control.getAttribute("aria-invalid"), "false");
+      assert.equal(h.ui[error].textContent, ""); assert.ok(h.ui[output].textContent.includes(String(canonical)));
+      control.dispatch("blur"); control.dispatch("change"); control.dispatch("change");
+      assert.equal(h.commits(), 0); assert.equal(h.preferences[group][key], canonical);
+    }
+  } finally { globalThis.document = oldDocument; }
+});
+
+test("116A: world controls have one Scene owner and accessible units/help/errors", () => {
+  for (const [input, error] of [["numWorldWidth", "worldWidthError"], ["numWorldHeight", "worldHeightError"]]) {
+    const controls = templateNodes.filter(n => n.attrs.id === input);
+    assert.equal(controls.length, 1);
+    const control = controls[0]; assert.equal(control.attrs.type, "number");
+    assert.ok(control.ancestors.includes("worldSection")); assert.ok(control.ancestors.includes("scenePanel"));
+    assert.equal(control.attrs["aria-describedby"], `worldDimensionsHelp ${error}`);
+    assert.match(templateNodes.find(n => n.tag === "label" && n.attrs.for === input).text, /world units/);
+    assert.equal(templateNodes.find(n => n.attrs.id === error).attrs.role, "alert");
+  }
+});
+
+test("116A: world inputs validate without coercing drafts, bind CONFIG limits and commit independent axes", () => {
+  const oldDocument = globalThis.document; globalThis.document = { createElement: tag => element(tag) };
+  try {
+    const h = harness(); h.panel.init(); h.panel.init();
+    for (const [key, input, output, error] of [["widthUnits", "numWorldWidth", "valWorldWidth", "worldWidthError"], ["heightUnits", "numWorldHeight", "valWorldHeight", "worldHeightError"]]) {
+      const control = h.ui[input], limits = CONFIG.limits.world[key];
+      assert.equal(control.min, String(limits.min)); assert.equal(control.max, String(limits.max)); assert.equal(control.step, String(limits.step));
+      assert.equal(control.listenerCount("change"), 1); assert.equal(control.value, "1000");
+      assert.equal(h.ui[output].textContent, "1000 world units");
+      const baseline = structuredClone(h.preferences), commits = h.commits();
+      for (const invalid of ["", "0", "-1", "NaN", "Infinity", "1x", String(limits.max + 1)]) {
+        control.focus(); control.value = invalid; control.dispatch("input"); assert.equal(h.commits(), commits);
+        control.dispatch("change"); assert.equal(h.commits(), commits); assert.deepEqual(h.preferences, baseline);
+        assert.equal(control.getAttribute("aria-invalid"), "true"); assert.match(h.ui[error].textContent, /world units/);
+        h.replaceSettings(structuredClone(baseline)); h.panel.refresh(); assert.equal(control.value, invalid, "unrelated refresh retains invalid draft");
+      }
+      for (const value of [limits.min, 2345.678, limits.max]) {
+        control.value = String(value); control.dispatch("change");
+        assert.equal(h.preferences.world[key], value);
+        assert.equal(control.getAttribute("aria-invalid"), "false"); assert.equal(h.ui[error].textContent, "");
+        const expected = structuredClone(baseline); expected.world[key] = value;
+        assert.deepEqual(h.preferences, expected, "only this axis changed");
+        h.replaceSettings(structuredClone(h.preferences)); h.panel.refresh();
+      }
+      const count = h.commits(); control.dispatch("change"); assert.equal(h.commits(), count, "unchanged choice does not commit");
+      const restored = structuredClone(CONFIG.defaults); h.replaceSettings(restored); h.panel.refresh();
+      assert.equal(control.value, "1000"); assert.equal(h.ui[output].textContent, "1000 world units");
+    }
+  } finally { globalThis.document = oldDocument; }
+});
+
+test("116A: preset replacement clears obsolete world drafts without accumulating listeners", () => {
+  const oldDocument = globalThis.document; globalThis.document = { createElement: tag => element(tag) };
+  try {
+    const h = harness(); h.panel.init();
+    const control = h.ui.numWorldWidth; control.focus(); control.value = ""; control.dispatch("change");
+    const next = structuredClone(CONFIG.defaults); next.world = { widthUnits: 2400.5, heightUnits: 1600.25 };
+    h.replaceSettings(next); h.panel.refresh(); h.panel.init();
+    assert.equal(control.value, "2400.5"); assert.equal(control.getAttribute("aria-invalid"), "false");
+    assert.equal(h.ui.worldWidthError.textContent, ""); assert.equal(h.ui.numWorldHeight.value, "1600.25");
+    assert.equal(control.listenerCount("change"), 1); assert.equal(document.activeElement, control);
+  } finally { globalThis.document = oldDocument; }
+});
 
 test("Scene panel initializes idempotently from the canonical source enum", () => {
   const oldDocument = globalThis.document; globalThis.document = { createElement: (tag) => element(tag) };
@@ -120,10 +227,10 @@ test("Scene controls mutate only historical schema-10 fields", () => {
   finally { globalThis.document = oldDocument; }
 });
 
-const BULK_CONTROL_IDS = ["rngOmega", "rngMinRad", "rngMaxRad", "rngWfDisp", "chkLines", "rngNumLines", "selLineColorMode", "rngEmit", "rngSizeMax", "rngSizeMin", "rngSizeToMin", "rngTTL", "rngMinPlacementDistance"];
+const BULK_CONTROL_IDS = ["rngOmega", "rngMinRad", "rngMaxRad", "rngWfDisp", "chkLines", "rngNumLines", "rngFadeSegments", "selLineColorMode", "rngEmit", "rngSizeMax", "rngSizeMin", "rngSizeToMin", "rngTTL", "rngMinPlacementDistance"];
 const RING_CONTROL_IDS = ["chkBandOverlay", "chkBandConnect", "rngBandAlpha", "rngBandPoint", "rngBandOverlayMinRad", "rngBandOverlayMaxRad", "rngBandOverlayWfDisp", "rngBandLineAlpha", "rngBandLineWidth", "selRingPhaseMode", "rngRingSpeed"];
 
-test("Visualizers contains one inventory, Ring editor, Orb editor host, management and all 13 bulk fields", () => {
+test("Visualizers contains one inventory, Ring editor, Orb editor host, management and all 14 bulk fields", () => {
   for (const id of ["visualizerList", "visualizersStatus", "visualizerEditStatus", "spectralRingEditor", "orbEditorList", "btnVisualizersAddOrb", "btnResetVisuals", ...BULK_CONTROL_IDS, ...RING_CONTROL_IDS]) {
     const matches = templateNodes.filter((node) => node.attrs.id === id);
     assert.equal(matches.length, 1, `${id} must exist exactly once`);
@@ -187,4 +294,67 @@ test("diagnostics read actual governor fields even with unchanged settings; unch
     assert.equal(h.ui.statParticleSpacingRejected.textContent,'12');assert.equal(h.ui.statParticleBudgetRejected.textContent,'4');assert.equal(h.ui.statParticleRateLimited.textContent,'5');assert.equal(h.ui.statParticleRetentionRejected.textContent,'6');assert.equal(h.ui.statParticleExpired.textContent,'7');assert.equal(h.ui.statParticleRetentionRetired.textContent,'8');
     assert.ok(templateNodes.some(n=>n.text.includes('Retention retirements (since runtime initialization)')));
   }finally{globalThis.document=old;}
+});
+
+test("116C.A Camera controls have one dedicated workspace owner, accessible runtime speeds and canvas focus action", () => {
+  const byId = id => templateNodes.filter(node => node.attrs.id === id);
+  for (const id of ["cameraSection", "numCameraX", "numCameraY", "numCameraZoom", "numCameraRotation", "chkCameraInteraction",
+    "numCameraPanSpeed", "numCameraRotationSpeed", "btnResetCamera", "btnFocusCameraCanvas"]) {
+    assert.equal(byId(id).length, 1, id);
+    assert.ok(byId(id)[0].ancestors.includes("cameraPanel"), id);
+    assert.ok(!byId(id)[0].ancestors.includes("scenePanel"), id);
+  }
+  const launcher = byId("btnOpenCamera")[0];
+  assert.equal(launcher.text, "Camera"); assert.equal(launcher.attrs["aria-controls"], "cameraPanel");
+  assert.ok(launcher.ancestors.includes("workspaceLauncher"));
+  assert.equal(byId("cameraPanel")[0].attrs["aria-labelledby"], "cameraPanelTitle");
+  assert.equal(byId("btnHideCamera")[0].attrs["aria-label"], "Hide Camera panel");
+  for (const [input, error, unit] of [["numCameraPanSpeed", "cameraPanSpeedError", /CSS pixels\/second/],
+    ["numCameraRotationSpeed", "cameraRotationSpeedError", /degrees\/second/]]) {
+    assert.equal(byId(input)[0].attrs.type, "number");
+    assert.match(byId(input)[0].attrs["aria-describedby"], new RegExp(error));
+    assert.equal(byId(error)[0].attrs.role, "alert");
+    assert.match(templateNodes.find(node => node.tag === "label" && node.attrs.for === input).text, unit);
+  }
+});
+
+test("116F: Queue policy has one accessible Scene owner and explains shared-preset behavior", () => {
+  const controls = templateNodes.filter(node => node.attrs.id === "chkClearQueueOnSourceExit");
+  assert.equal(controls.length, 1);
+  assert.ok(controls[0].ancestors.includes("scenePanel"));
+  assert.ok(!controls[0].ancestors.includes("visualizersPanel"));
+  assert.equal(controls[0].attrs.type, "checkbox");
+  assert.equal(controls[0].attrs["aria-describedby"], "clearQueueOnSourceExitHelp");
+  assert.equal(templateNodes.find(node => node.tag === "label" && node.attrs.for === "chkClearQueueOnSourceExit").text,
+    "Clear File Queue when switching sources");
+  assert.equal(templateNodes.find(node => node.attrs.id === "clearQueueOnSourceExitHelp").text,
+    "Clears the File Queue after successfully switching to Mic or Stream. This choice is saved in presets, including shared presets.");
+});
+
+test("116F: Scene Queue checkbox commits once and refresh follows canonical settings without repeated DOM work", () => {
+  const old = globalThis.document;
+  globalThis.document = { createElement: element };
+  try {
+    const h = harness();
+    h.panel.init();
+    assert.equal(h.ui.chkClearQueueOnSourceExit.checked, false);
+    assert.equal(h.panel.init(), false);
+    assert.equal(h.ui.chkClearQueueOnSourceExit.listenerCount("change"), 1);
+    h.ui.chkClearQueueOnSourceExit.checked = true;
+    h.ui.chkClearQueueOnSourceExit.dispatch("change");
+    assert.equal(h.preferences.audio.clearQueueOnSourceExit, true);
+    assert.equal(h.commits(), 1);
+    h.ui.chkClearQueueOnSourceExit.dispatch("change");
+    assert.equal(h.commits(), 1);
+    const enabled = structuredClone(CONFIG.defaults);
+    enabled.audio.clearQueueOnSourceExit = true;
+    h.replaceSettings(enabled); h.panel.refresh();
+    assert.equal(h.ui.chkClearQueueOnSourceExit.checked, true);
+    h.replaceSettings(structuredClone(CONFIG.defaults)); h.panel.refresh();
+    assert.equal(h.ui.chkClearQueueOnSourceExit.checked, false);
+    let writes = 0;
+    Object.defineProperty(h.ui.chkClearQueueOnSourceExit, "checked", { get: () => false, set: () => { writes++; } });
+    assert.equal(h.panel.refresh(), false);
+    assert.equal(writes, 0);
+  } finally { globalThis.document = old; }
 });

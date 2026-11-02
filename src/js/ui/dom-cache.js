@@ -17,10 +17,24 @@ function primeDomCache() {
     ui.analysisStatus = document.getElementById("analysisStatus");
     ui.btnHideAnalysis = document.getElementById("btnHideAnalysis");
     ui.scenePanel = document.getElementById("scenePanel");
-    for (const id of ["numMaxActiveParticles", "valMaxActiveParticles", "maxActiveParticlesError",
+    ui.chkClearQueueOnSourceExit = document.getElementById("chkClearQueueOnSourceExit");
+    for (const id of ["numWorldWidth", "valWorldWidth", "worldWidthError", "numWorldHeight", "valWorldHeight", "worldHeightError",
+      "numMaxActiveParticles", "valMaxActiveParticles", "maxActiveParticlesError",
       "numMaxEmissionsPerFrame", "valMaxEmissionsPerFrame", "maxEmissionsPerFrameError",
       "statParticleLive", "statParticleEmitted", "statParticleSpacingRejected", "statParticleBudgetRejected",
       "statParticleRateLimited", "statParticleRetentionRejected", "statParticleExpired", "statParticleRetentionRetired"]) {
+      ui[id] = document.getElementById(id);
+    }
+    for (const id of ["cameraPanel", "btnHideCamera", "openCamera", "btnOpenCamera", "btnFocusCameraCanvas",
+      "numCameraPanSpeed", "valCameraPanSpeed", "cameraPanSpeedError",
+      "numCameraRotationSpeed", "valCameraRotationSpeed", "cameraRotationSpeedError",
+      "cameraSection", "numCameraX", "numCameraY", "numCameraZoom", "numCameraRotation",
+      "valCameraX", "valCameraY", "valCameraZoom", "valCameraRotation",
+      "cameraXError", "cameraYError", "cameraZoomError", "cameraRotationError",
+      "chkCameraInteraction", "valCameraInteraction", "btnCameraPanLeft", "btnCameraPanRight",
+      "btnCameraPanUp", "btnCameraPanDown", "btnCameraZoomIn", "btnCameraZoomOut",
+      "btnCameraRotateCW", "btnCameraRotateCCW", "btnResetCamera", "btnFitCamera", "cameraFitStatus",
+      "btnSaveSceneView", "btnRestoreSceneView", "sceneCameraReadout", "sceneCameraStatus"]) {
       ui[id] = document.getElementById(id);
     }
     ui.visualizersPanel = document.getElementById("visualizersPanel");
@@ -79,6 +93,8 @@ function primeDomCache() {
     ui.valLines = document.getElementById("valLines");
     ui.rngNumLines = document.getElementById("rngNumLines");
     ui.valNumLines = document.getElementById("valNumLines");
+    ui.rngFadeSegments = document.getElementById("rngFadeSegments");
+    ui.valFadeSegments = document.getElementById("valFadeSegments");
 
     ui.selLineColorMode = document.getElementById("selLineColorMode");
     ui.valLineColorMode = document.getElementById("valLineColorMode");
@@ -201,13 +217,14 @@ function primeDomCache() {
 
     bindRange(ui.rngVol, CONFIG.ui.volume);
     bindRange(ui.rngNumLines, CONFIG.limits.trace.numLines);
+    bindRange(ui.rngFadeSegments, CONFIG.limits.trace.fadeSegments);
 
     bindRange(ui.rngEmit, CONFIG.limits.particles.emitPerSecond);
     bindRange(ui.rngSizeMax, CONFIG.limits.particles.sizeMaxPx);
     bindRange(ui.rngSizeMin, CONFIG.limits.particles.sizeMinPx);
     bindRange(ui.rngSizeToMin, CONFIG.limits.particles.sizeToMinSec);
     bindRange(ui.rngTTL, CONFIG.limits.particles.ttlSec);
-    bindRange(ui.rngMinPlacementDistance, CONFIG.limits.particles.minPlacementDistancePx);
+    bindRange(ui.rngMinPlacementDistance, CONFIG.limits.particles.minPlacementDistanceUnits);
 
     bindRange(ui.rngOmega, CONFIG.limits.motion.angularSpeedRadPerSec);
     bindRange(ui.rngWfDisp, CONFIG.limits.orbs.response.waveformRadialDisplaceFrac);

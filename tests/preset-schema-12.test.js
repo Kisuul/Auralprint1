@@ -1,3 +1,4 @@
+import { canonicalPrefs, canonicalPayload, with116Defaults } from "./helpers/preset-semantics.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -13,7 +14,8 @@ import { UrlPreset } from "../src/js/presets/url-preset.js";
 // Produced by executing eae5e1f446aeb7bea4a2d8097dd5e53c5867ea35's
 // actual writer, including its Scene persistence and Orb-settings modules.
 const scene9 = JSON.parse(readFileSync(new URL("./fixtures/schema-9-scene.json", import.meta.url), "utf8"));
-const full = JSON.parse(readFileSync(new URL("./fixtures/schema-10-full.json", import.meta.url), "utf8"));
+const historicalFull = JSON.parse(readFileSync(new URL("./fixtures/schema-12-full.json", import.meta.url), "utf8"));
+const full = with116Defaults(historicalFull);
 // Schemas 5–8 use archived shipped sources, later 9 uses 2ae4191. Schemas
 // 2–4 exercise formats explicitly accepted by the 0.1.10/schema-5 decoder;
 // their original writers are not in this repository. See fixture provenance.
@@ -82,42 +84,42 @@ test("Schema 9 — Scene-node historical format recovers the actual emitted loss
   assert.equal(preferences.bands.overlay.enabled, true);
   assert.equal(preferences.bands.overlay.alpha, .42);
   assert.equal(preferences.bands.overlay.lineWidthPx, 4);
-  // Node-relative centers used half the Scene bounds; schema-10 centers use
-  // min(canvas dimensions), so they have no direct configuration equivalent.
+  // Node-relative centers used half the Scene bounds; schema-12 centers use the
+  // independent world reference span. No direct modern equivalent is approved,
+  // so migration intentionally discards these abandoned coordinates.
   assert.equal(preferences.orbs[0].centerXFrac, 0);
   assert.equal(preferences.orbs[0].centerYFrac, 0);
   assert.equal("scene" in preferences, false);
 }));
 
-test("schema constants preserve 10 and every supported legacy integer 2–9", () => {
-  assert.equal(constants.PRESET_SCHEMA_VERSION, 10);
-  for (let schema = 2; schema <= 9; schema++) assert.equal(constants[`LEGACY_SCHEMA_V${schema}`], schema);
-  assert.equal("LEGACY_SCHEMA_V10" in constants, false);
-  assert.equal(Object.values(constants).includes(11), false);
+test("schema constants preserve 16 and every supported legacy integer 2–13", () => {
+  assert.equal(constants.PRESET_SCHEMA_VERSION, 16);
+  for (let schema = 2; schema <= 13; schema++) assert.equal(constants[`LEGACY_SCHEMA_V${schema}`], schema);
+  assert.equal(constants.LEGACY_SCHEMA_V10, 10);
 });
 
-test("field inventory recursively covers every CONFIG default with distinguishable legal fixture values", () => {
-  // A new default automatically adds a path here; it must be represented in
-  // the non-default fixture AND survive the independent round-trip assertion.
-  // This guard does not use a second handwritten persistence field list.
-  assert.deepEqual(paths(full), paths(CONFIG.defaults));
-  assert.equal(paths(full).length, 54);
-  for (const orb of full.orbs) assert.deepEqual(paths(orb), paths(CONFIG.defaults.orbs[0]));
-  for (const path of paths(full).filter((path) => !path.startsWith("orbs[]"))) {
-    assert.notDeepEqual(readPath(full, path), readPath(CONFIG.defaults, path), path);
+test("schema-12 fixture still covers every historical default with distinguishable legal values", () => {
+  // Keep the frozen historical fixture unchanged. Schema-16 tests independently
+  // cover the two newly persisted fields and their non-default values.
+  const added = ["audio.clearQueueOnSourceExit", "orbs[].trace.fadeSegments"];
+  assert.deepEqual(paths(historicalFull), paths(CONFIG.defaults).filter(path => !added.includes(path)));
+  assert.equal(paths(historicalFull).length, 60);
+  for (const orb of historicalFull.orbs) assert.deepEqual(paths(orb), paths(CONFIG.defaults.orbs[0]).filter(path => !["trace.fadeSegments"].includes(path)));
+  for (const path of paths(historicalFull).filter((path) => !path.startsWith("orbs[]"))) {
+    assert.notDeepEqual(readPath(historicalFull, path), readPath(CONFIG.defaults, path), path);
   }
-  for (const path of paths(full.orbs[0])) {
-    assert.ok(full.orbs.some((orb, i) => !isDeepStrictEqual(readPath(orb, path), readPath(CONFIG.defaults.orbs[i % 2], path))), `non-default Orb value: ${path}`);
+  for (const path of paths(historicalFull.orbs[0])) {
+    assert.ok(historicalFull.orbs.some((orb, i) => !isDeepStrictEqual(readPath(orb, path), readPath(CONFIG.defaults.orbs[i % 2], path))), `non-default Orb value: ${path}`);
   }
 });
 
-test("complete non-default schema-10 fixture round-trips every field through URL and canonical replacement", () => withUrl((location) => {
+test("complete non-default schema-12 fixture round-trips every field through URL and canonical replacement", () => withUrl((location) => {
   const payload = roundTrip(full, location);
-  assert.deepEqual(payload, { schema: 10, prefs: full });
+  assert.deepEqual(canonicalPayload(payload), { schema: 16, prefs: full });
   assert.deepEqual(preferences, full);
   assert.deepEqual(preferences.orbs.map((orb) => orb.id), ["ORB-Z", "ORB-A", "CUSTOM-7"]);
   assert.deepEqual(Object.keys(payload).sort(), ["prefs", "schema"]);
-  assert.deepEqual(Object.keys(payload.prefs).sort(), ["audio", "bands", "orbs", "particleSafety", "timing", "visuals"]);
+  assert.deepEqual(Object.keys(canonicalPrefs(payload)).sort(), ["audio", "bands", "orbs", "particleSafety", "sceneCamera", "timing", "visuals", "world"]);
 }));
 
 test("pure codec round-trips the same complete fixture without browser globals or preference mutation", () => {
@@ -140,33 +142,33 @@ test("CONFIG.defaults round-trips semantically and remains immutable", () => wit
   const expected = { ...structuredClone(CONFIG.defaults), orbs: normalizeOrbCollection(CONFIG.defaults.orbs) };
   const snapshot = structuredClone(CONFIG.defaults);
   const payload = roundTrip(CONFIG.defaults, location);
-  assert.deepEqual(payload.prefs, expected);
+  assert.deepEqual(canonicalPrefs(payload), expected);
   assert.deepEqual(preferences, expected);
   assert.deepEqual(CONFIG.defaults, snapshot);
 }));
 
 test("zero Orbs round-trip without fabricating defaults", () => withUrl((location) => {
   const empty = { ...structuredClone(full), orbs: [] };
-  assert.deepEqual(roundTrip(empty, location).prefs, empty);
+  assert.deepEqual(canonicalPrefs(roundTrip(empty, location)), empty);
   assert.deepEqual(preferences, empty);
 }));
 
-test("schema-10 URL import preserves opaque identities including the Ring type name", () => withUrl((location) => {
+test("schema-12 URL import preserves opaque identities including the Ring type name", () => withUrl((location) => {
   const ids = ["HISTORICAL-Z", "spectral-ring", "CUSTOM-7"];
-  location.hash = rawHash({ schema: 10, prefs: { orbs: ids.map((id) => ({ id })) } });
+  location.hash = rawHash({ schema: 12, prefs: { orbs: ids.map((id) => ({ id })) } });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   assert.deepEqual(preferences.orbs.map((orb) => orb.id), ids);
   const expected = structuredClone(preferences);
-  assert.deepEqual(roundTrip(expected, location), { schema: 10, prefs: expected });
+  assert.deepEqual(canonicalPayload(roundTrip(expected, location)), { schema: 16, prefs: expected });
   assert.deepEqual(preferences.orbs.map((orb) => orb.id), ids);
 }));
 
 test("duplicate Orb IDs retain canonical collection repair and array order", () => withUrl((location) => {
   const incoming = structuredClone(full);
   incoming.orbs = ["ORB0", "ORB0", "custom-id", "custom-id", ""].map((id, i) => ({ ...structuredClone(full.orbs[i % 3]), id }));
-  location.hash = rawHash({ schema: 10, prefs: incoming });
+  location.hash = rawHash({ schema: 12, prefs: incoming });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
-  assert.deepEqual(preferences.orbs.map((orb) => orb.id), ["ORB0", "ORB1", "custom-id", "ORB2", "ORB3"]);
+  assert.deepEqual(preferences.orbs.map((orb) => orb.id), ["ORB0", "orb-0", "custom-id", "orb-1", "orb-2"]);
   assert.deepEqual(preferences.orbs.map((orb) => orb.startAngleRad), incoming.orbs.map((orb) => orb.startAngleRad));
 }));
 
@@ -175,12 +177,12 @@ test("unknown fields at every nesting level are stripped on both encode and deco
   dirty.unknown = { marker: "UNKNOWN-ROOT" };
   for (const group of [dirty.visuals, dirty.audio, dirty.bands, dirty.bands.overlay, dirty.bands.rainbow, dirty.timing,
     ...dirty.orbs.flatMap((orb) => [orb, orb.motion, orb.response, orb.particles, orb.trace])]) group.unknown = "UNKNOWN-NESTED";
-  assert.deepEqual(encodePresetPayload(dirty), { schema: 10, prefs: full });
-  location.hash = rawHash({ schema: 10, prefs: dirty, unknown: true, runtime: { marker: true } });
+  assert.deepEqual(canonicalPayload(encodePresetPayload(dirty)), { schema: 16, prefs: full });
+  location.hash = rawHash({ schema: 12, prefs: dirty, unknown: true, runtime: { marker: true } });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   assert.deepEqual(preferences, full);
   UrlPreset.writeHashFromPrefs();
-  assert.deepEqual(decodeRawHash(location.hash), { schema: 10, prefs: full });
+  assert.deepEqual(canonicalPayload(decodeRawHash(location.hash)), { schema: 16, prefs: full });
 }));
 
 test("runtime/session mutations and injected preference runtime fields never enter encoded payloads", () => withUrl((location) => {
@@ -221,7 +223,7 @@ test("runtime/session mutations and injected preference runtime fields never ent
     preferences.orbs[0].motion.lastTimestampMs = 42;
     UrlPreset.writeHashFromPrefs();
     assert.deepEqual(decodeRawHash(location.hash), before);
-    assert.deepEqual(before, { schema: 10, prefs: full });
+    assert.deepEqual(canonicalPayload(before), { schema: 16, prefs: full });
   } finally {
     for (const key of Object.keys(state)) delete state[key];
     Object.assign(state, oldState);
@@ -255,56 +257,61 @@ test("malformed values preserve existing clamps, defaults, enum rejection and de
   Object.assign(expected.bands.rainbow, { hueOffsetDeg: 0, saturation: 1 });
   expected.orbs = [{ ...structuredClone(CONFIG.defaults.orbs[0]), id: "BAD", chanId: "C", bandIds: [7, 19], chirality: 1,
     hueOffsetDeg: 360, colorSource: "inherit", centerXFrac: -.95, centerYFrac: .95,
-    motion: { angularSpeedRadPerSec: .01 },
+    motion: { angularSpeedRadPerSec: CONFIG.limits.motion.angularSpeedRadPerSec.min },
     response: { minRadiusFrac: .01, maxRadiusFrac: 1, waveformRadialDisplaceFrac: .1 },
-    particles: { emitPerSecond: 1000, sizeMaxPx: 2, sizeMinPx: 2, sizeToMinSec: 8, ttlSec: 8, minPlacementDistancePx: 0.5 },
-    trace: { lines: true, numLines: 1000, lineAlpha: 0, lineWidthPx: 6, lineColorMode: "dominantBand" } }];
-  location.hash = rawHash({ schema: 10, prefs: input });
+    particles: { emitPerSecond: 1000, sizeMaxPx: 2, sizeMinPx: 2, sizeToMinSec: 8, ttlSec: 8, minPlacementDistanceUnits: 0.5 },
+    trace: { lines: true, numLines: 1000, lineAlpha: 0, lineWidthPx: 6, lineColorMode: "dominantBand", fadeSegments: 0 } }];
+  location.hash = rawHash({ schema: 12, prefs: input });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   assert.deepEqual(preferences, expected);
-  assert.deepEqual(encodePresetPayload(input).prefs, expected);
+  assert.throws(() => encodePresetPayload(input), error => error.code === "invalid-frequency");
+  // AUD-004 requires a strict frequency writer; unrelated field sanitation
+  // below retains its established encoding contract.
+  input.bands.floorHz = expected.bands.floorHz;
+  input.bands.ceilingHz = expected.bands.ceilingHz;
+  assert.deepEqual(canonicalPrefs(encodePresetPayload(input)), expected);
   // RC-16 rejects numeric strings; deliberate numeric selections still survive.
   input.orbs[0].bandIds = [7, 2, 19];
   expected.orbs[0].bandIds = [7, 2, 19];
-  location.hash = rawHash({ schema: 10, prefs: input });
+  location.hash = rawHash({ schema: 12, prefs: input });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   assert.deepEqual(preferences, expected);
-  assert.deepEqual(encodePresetPayload(input).prefs, expected);
+  assert.deepEqual(canonicalPrefs(encodePresetPayload(input)), expected);
 }));
 
 test("nonfinite numbers and wrong nested types default without creating new sanitation semantics", () => {
   for (const invalid of [NaN, Infinity, -Infinity, null, "12", {}, []]) {
-    const next = sanitizePreset({ schema: 10, prefs: { audio: { rmsGain: invalid }, timing: { maxDeltaTimeSec: invalid },
+    const next = sanitizePreset({ schema: 12, prefs: { audio: { rmsGain: invalid }, timing: { maxDeltaTimeSec: invalid },
       bands: { floorHz: invalid }, orbs: [{ ...CONFIG.defaults.orbs[0], motion: invalid, response: invalid, particles: invalid, trace: invalid }] } });
     assert.deepEqual(next, { ...structuredClone(CONFIG.defaults), orbs: [structuredClone(CONFIG.defaults.orbs[0])] });
   }
   for (const invalid of [-1, 0]) {
-    assert.equal(sanitizePreset({ schema: 10, prefs: { timing: { maxDeltaTimeSec: invalid } } }).timing.maxDeltaTimeSec, CONFIG.defaults.timing.maxDeltaTimeSec);
+    assert.equal(sanitizePreset({ schema: 12, prefs: { timing: { maxDeltaTimeSec: invalid } } }).timing.maxDeltaTimeSec, CONFIG.defaults.timing.maxDeltaTimeSec);
   }
   // Independent CONFIG safety ceiling also bounds positive finite imports.
-  assert.equal(sanitizePreset({ schema: 10, prefs: { timing: { maxDeltaTimeSec: 1e9 } } }).timing.maxDeltaTimeSec, CONFIG.limits.timing.maxDeltaTimeSec);
+  assert.equal(sanitizePreset({ schema: 12, prefs: { timing: { maxDeltaTimeSec: 1e9 } } }).timing.maxDeltaTimeSec, CONFIG.limits.timing.maxDeltaTimeSec);
 });
 
 test("URL application replaces preferences only and leaves runtime derivation caller-owned", () => withUrl((location) => {
   const settings = runtime.settings;
   replacePreferences({ ...structuredClone(CONFIG.defaults), stale: true });
-  location.hash = rawHash({ schema: 10, prefs: full });
+  location.hash = rawHash({ schema: 12, prefs: full });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   assert.deepEqual(preferences, full);
   assert.equal(runtime.settings, settings);
 }));
 
 test("codec distinguishes malformed and unsupported payloads while URL failures return false atomically", () => withUrl((location) => {
-  for (const payload of [null, [], {}, { schema: 10 }, { schema: 10, prefs: null }, { schema: 10, prefs: [] }, { schema: 10, prefs: true }]) {
+  for (const payload of [null, [], {}, { schema: 12 }, { schema: 12, prefs: null }, { schema: 12, prefs: [] }, { schema: 12, prefs: true }]) {
     assert.deepEqual(decodePresetPayload(payload), { ok: false, code: "malformed-payload" });
   }
-  for (const schema of [1, 11, 0, "10", 10.5, undefined]) {
+  for (const schema of [1, 15, 0, "12", 12.5, undefined]) {
     assert.deepEqual(decodePresetPayload({ schema, prefs: {} }), { ok: false, code: "unsupported-schema" });
   }
   const before = structuredClone(preferences);
   const settings = runtime.settings;
   for (const hash of ["", "#other=value", "#p=%%%", "#p=", "#p=" + Buffer.from("{bad JSON").toString("base64url"),
-    rawHash({ schema: 11, prefs: full }), rawHash({ schema: 10 }), rawHash({ schema: 10, prefs: [] })]) {
+    rawHash({ schema: 13, prefs: full }), rawHash({ schema: 12 }), rawHash({ schema: 12, prefs: [] })]) {
     location.hash = hash;
     assert.equal(UrlPreset.applyFromLocationHash(), false, hash);
     assert.deepEqual(preferences, before);
@@ -316,8 +323,8 @@ test("URL sanitation exceptions return false without replacing canonical prefere
   const before = structuredClone(preferences);
   const oldParse = JSON.parse;
   const incoming = { get audio() { throw new Error("application failure"); } };
-  location.hash = rawHash({ schema: 10, prefs: {} });
-  JSON.parse = () => ({ schema: 10, prefs: incoming });
+  location.hash = rawHash({ schema: 12, prefs: {} });
+  JSON.parse = () => ({ schema: 12, prefs: incoming });
   try { assert.equal(UrlPreset.applyFromLocationHash(), false); assert.deepEqual(preferences, before); }
   finally { JSON.parse = oldParse; }
 }));
@@ -330,34 +337,34 @@ test("URL hash stays unpadded base64url UTF-8 JSON and preserves pathname/search
   const payload = roundTrip(next, location);
   assert.match(location.hash, /^#p=[A-Za-z0-9_-]+$/);
   assert.equal(writtenUrl, location.pathname + location.search + location.hash);
-  assert.deepEqual(payload, { schema: 10, prefs: next });
+  assert.deepEqual(canonicalPayload(payload), { schema: 16, prefs: next });
   assert.deepEqual(preferences, next);
 }));
 
-for (const path of paths(full).filter((path) => !path.startsWith("orbs[]"))) {
-  test(`schema-10 field survives independently: ${path}`, () => withUrl((location) => {
+for (const path of paths(historicalFull).filter((path) => !path.startsWith("orbs[]"))) {
+  test(`schema-12 field survives independently: ${path}`, () => withUrl((location) => {
     const expected = structuredClone(CONFIG.defaults);
     setPath(expected, path, readPath(full, path));
-    assert.deepEqual(roundTrip(expected, location).prefs, expected);
+    assert.deepEqual(canonicalPrefs(roundTrip(expected, location)), expected);
     assert.deepEqual(preferences, expected);
   }));
 }
 
 for (const fixture of legacy) {
   const name = fixture.schema === 9 ? "Schema 9 — later top-level format" : `Schema ${fixture.schema} — documented legacy input`;
-  test(`${name} migrates meaningful configuration and re-encodes as canonical schema 10`, () => withUrl((location) => {
+  test(`${name} migrates meaningful configuration and re-encodes as canonical schema 12`, () => withUrl((location) => {
     const beforeInput = structuredClone(fixture);
     // Missing legacy fields must never inherit current settings.
     replacePreferences(structuredClone(full));
     location.hash = rawHash({ schema: fixture.schema, prefs: fixture.prefs });
     assert.equal(UrlPreset.applyFromLocationHash(), true);
-    for (const [path, value] of Object.entries(fixture.expected)) assert.deepEqual(readPath(preferences, path), value, `schema ${fixture.schema}: ${path}`);
+    for (const [path, value] of Object.entries(fixture.expected)) assert.deepEqual(readPath(preferences, path.replace("minPlacementDistancePx", "minPlacementDistanceUnits")), value, `schema ${fixture.schema}: ${path}`);
     assert.deepEqual(paths(preferences), paths(CONFIG.defaults));
     if (fixture.schema <= 4) assert.deepEqual(preferences.orbs, CONFIG.defaults.orbs);
     UrlPreset.writeHashFromPrefs();
     const payload = decodeRawHash(location.hash);
-    assert.equal(payload.schema, 10);
-    assert.deepEqual(payload.prefs, preferences);
+    assert.equal(payload.schema, 16);
+    assert.deepEqual(canonicalPrefs(payload), preferences);
     assert.deepEqual(sanitizePreset(decodePresetPayload(payload)), preferences);
     assert.deepEqual(fixture, beforeInput);
   }));
@@ -414,7 +421,7 @@ test("schema-9 Scene layout/visibility and node-relative placement are intention
   assert.equal(normalized.orbs[0].centerYFrac, 0);
   assert.equal("scene" in normalized, false);
   assert.equal("bounds" in normalized.orbs[0], false);
-  assert.deepEqual(encodePresetPayload(normalized).prefs, normalized);
+  assert.deepEqual(canonicalPrefs(encodePresetPayload(normalized)), normalized);
 });
 
 test("schema-9 Scene recovery handles empty Orbs and malformed/unknown nodes safely", () => {
@@ -424,7 +431,7 @@ test("schema-9 Scene recovery handles empty Orbs and malformed/unknown nodes saf
   assert.deepEqual(sanitizePreset({ schema: 9, prefs }).orbs, []);
   assert.deepEqual(sanitizePreset({ schema: 9, prefs: { scene: { nodes: "bad" } } }), CONFIG.defaults);
   // Scene form belongs only to the collided legacy schema, never schema 10.
-  assert.deepEqual(sanitizePreset({ schema: 10, prefs: { scene: scene9.prefs.scene } }), CONFIG.defaults);
+  assert.deepEqual(sanitizePreset({ schema: 12, prefs: { scene: scene9.prefs.scene } }), CONFIG.defaults);
   prefs.orbs = null; // present-but-invalid top-level values still win
   prefs.bands.overlay = null;
   const next = sanitizePreset({ schema: 9, prefs });
@@ -483,12 +490,12 @@ test("legacy audio.loop migrates with valid canonical repeatMode precedence", ()
   assert.equal(sanitizePreset({ schema: 5, prefs: { audio: { repeatMode: "bad", loop: true } } }).audio.repeatMode, "one");
 });
 
-test("schema-10 output strips all legacy aliases, global behavior and historical Scene state", () => withUrl((location) => {
+test("schema-12 output strips all legacy aliases, global behavior and historical Scene state", () => withUrl((location) => {
   for (const fixture of [...legacy, scene9]) {
     location.hash = rawHash({ schema: fixture.schema, prefs: fixture.prefs });
     assert.equal(UrlPreset.applyFromLocationHash(), true);
     UrlPreset.writeHashFromPrefs();
-    const { prefs } = decodeRawHash(location.hash);
+    const prefs = canonicalPrefs(decodeRawHash(location.hash));
     for (const key of ["motion", "particles", "trace", "scene"]) assert.equal(key in prefs, false);
     for (const key of ["loop", "minRadiusFrac", "maxRadiusFrac"]) assert.equal(key in prefs.audio, false);
     for (const key of ["names", "logSpacing"]) assert.equal(key in prefs.bands, false);
@@ -512,12 +519,12 @@ test("encoding polluted current preferences strips legacy-only paths without ove
   prefs.bands.logSpacing = true;
   prefs.orbs[0].bandId = "C";
   prefs.orbs[0].bandNames = ["Eternal Core"];
-  assert.deepEqual(encodePresetPayload(prefs), { schema: 10, prefs: full });
+  assert.deepEqual(canonicalPayload(encodePresetPayload(prefs)), { schema: 16, prefs: full });
 });
 
 test("partial presets replace live preferences with canonical defaults for omitted settings", () => withUrl((location) => {
   replacePreferences(structuredClone(full));
-  location.hash = rawHash({ schema: 10, prefs: { visuals: { backgroundColor: "#654321" } } });
+  location.hash = rawHash({ schema: 12, prefs: { visuals: { backgroundColor: "#654321" } } });
   assert.equal(UrlPreset.applyFromLocationHash(), true);
   const expected = structuredClone(CONFIG.defaults);
   expected.visuals.backgroundColor = "#654321";
