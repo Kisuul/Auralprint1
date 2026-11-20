@@ -2,20 +2,19 @@
 
 ## v115 → v116 (Release 5 / Build 116)
 
-Owner-approved October 31, 2026. Public predecessor: Release 4 / Build 115 (`v0.1.15`, schema 10); Release 5 is `v0.1.16`, schema 16, promoted from RC #2. Build 117 performance research is excluded.
+The owner approved Release 5 (`v0.1.16`, schema 16) on October 31, 2026. It follows Release 4 / Build 115 (`v0.1.15`, schema 10).
 
-- **Independent world and Camera.** World geometry and retained trails stay in world units across viewport/DPR changes. Camera controls add pan, pointer-centered zoom, rotation, reset and one-shot Fit View.
-- **Authored Scene views.** Save and restore a Scene viewpoint independently of live navigation; shared presets include the saved view.
-- **Compact preset links.** Smaller schema-16 links use frozen-default deltas, ordered band ranges and native DEFLATE, with an uncompressed fallback. Supported legacy presets retain their meaning.
-- **Optional Queue clearing.** Settings can clear the File Queue after a successful accepted switch to Mic/Stream. The Scene preference defaults off; failed or superseded requests and intervening Queue changes preserve files.
-- **Trace Fade Length.** Individual and Bulk editors fade the oldest visible drawable segments over 1–20 whole segments. The default 0 / Off preserves the continuous stroke.
-- **Numeric controls.** Sliders follow CONFIG editing steps; Orb and Ring angular speeds use 0.5°/s steps. Scene palette controls distinguish saved fractions from their editing selection. Analysis frequency drafts survive unrelated refreshes. Configured frequencies are limited to 384,000 Hz, with effective analysis bounded by the active AudioContext's Nyquist limit.
-- **Preset loading.** Repairing missing or duplicate Orb identities no longer multiplies long numeric IDs. Valid, unique explicit IDs are preserved.
-- **Seeking.** Scrubber drags cancel on window focus loss or released mouse buttons; touch seeking follows the initiating contact.
-- **Keyboard and Queue accessibility.** Playback position now supports a focusable slider with arrow/Home/End seeking and updated time values; Queue rows expose separate native Play and Remove buttons (post-RC #1, PR #101).
-- **Live-input recovery.** Microphone/shared-stream audio that ends
-  during acquisition or graph setup no longer appears live. The same source
-  button permits an intentional retry, and obsolete cleanup preserves newer inputs.
+- **World and Camera.** Resizing the window preserves world geometry and retained trails. Pan, zoom at the pointer, and rotate the view without changing simulation coordinates. Reset to the factory view or use **Fit View** for a one-time fit. Touch controls support one-finger pan and two-finger pan, zoom, and rotation.
+- **Saved Scene views.** Save or restore a viewpoint independently of live Camera movement. Shared presets include the saved view.
+- **Compact preset links.** Schema 16 uses native DEFLATE for compressed links and falls back to uncompressed links when needed. Supported legacy presets keep their meaning.
+- **Optional Queue clearing.** Enable clearing after a successful switch from File to Mic or Stream. The setting defaults to off. Failed, cancelled, or superseded requests and intervening Queue changes preserve files.
+- **Trace Fade Length.** Individual and Bulk editors fade up to 20 of the oldest drawable segments. The default, **0 / Off**, keeps the continuous stroke.
+- **Numeric controls.** Orb and Ring angular speeds use 0.5°/s steps. Palette controls show the saved fraction and the slider's selection separately. Analysis keeps in-progress frequency edits when other controls refresh.
+- **Frequency limits.** The configured ceiling can be up to 384,000 Hz. Once the app knows the sample rate, the effective ceiling is the lower of the configured ceiling and half the sample rate (Nyquist).
+- **Preset loading.** The app repairs missing or duplicate Orb IDs. Long numeric IDs no longer block repair. Valid, unique IDs are preserved.
+- **Seeking.** Scrubber drags end when the window loses focus or the mouse button is released. Touch seeking follows the finger that started the drag.
+- **Keyboard seeking and Queue.** Tab to the playback scrubber and seek with the arrow keys, **Home**, or **End**. Each Queue row provides separate, focusable **Play** and **Remove** buttons.
+- **Live-input recovery.** The app reports capture that ends during startup as unavailable. Select the same source again to retry.
 
 ---
 
